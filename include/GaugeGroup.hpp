@@ -1,3 +1,4 @@
+#pragma once
 #include "GLOBAL.hpp"
 
 namespace klft {
@@ -20,6 +21,7 @@ namespace klft {
       this->v[7] = h;
       this->v[8] = i;
     }
+
     KOKKOS_INLINE_FUNCTION SU3(const T v_in[9]) {
       this->v[0] = v_in[0];
       this->v[1] = v_in[1];
@@ -30,6 +32,18 @@ namespace klft {
       this->v[6] = v_in[6];
       this->v[7] = v_in[7];
       this->v[8] = v_in[8];
+    }
+
+    KOKKOS_INLINE_FUNCTION SU3(const T &v_in) {
+      this->v[0] = v_in;
+      this->v[1] = v_in;
+      this->v[2] = v_in;
+      this->v[3] = v_in;
+      this->v[4] = v_in;
+      this->v[5] = v_in;
+      this->v[6] = v_in;
+      this->v[7] = v_in;
+      this->v[8] = v_in;
     }
   };
 
@@ -52,6 +66,13 @@ namespace klft {
       this->v[1] = v_in[1];
       this->v[2] = v_in[2];
       this->v[3] = v_in[3];
+    }
+
+    KOKKOS_INLINE_FUNCTION SU2(const T &v_in) {
+      this->v[0] = v_in;
+      this->v[1] = v_in;
+      this->v[2] = v_in;
+      this->v[3] = v_in;
     }
 
     template <typename Tin>
