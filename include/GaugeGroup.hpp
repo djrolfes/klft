@@ -45,6 +45,18 @@ namespace klft {
       this->v[7] = v_in;
       this->v[8] = v_in;
     }
+
+    KOKKOS_INLINE_FUNCTION void set_identity() {
+      this->v[0] = 1.0;
+      this->v[1] = 0.0;
+      this->v[2] = 0.0;
+      this->v[3] = 0.0;
+      this->v[4] = 1.0;
+      this->v[5] = 0.0;
+      this->v[6] = 0.0;
+      this->v[7] = 0.0;
+      this->v[8] = 1.0;
+    } 
   };
 
   template <typename T>
@@ -81,6 +93,13 @@ namespace klft {
       this->v[1] = in.v[1];
       this->v[2] = in.v[2];
       this->v[3] = in.v[3];
+    }
+
+    KOKKOS_INLINE_FUNCTION void set_identity() {
+      this->v[0] = 1.0;
+      this->v[1] = 0.0;
+      this->v[2] = 0.0;
+      this->v[3] = 0.0;
     }
 
     KOKKOS_INLINE_FUNCTION T operator()(const int &i) {
@@ -158,6 +177,20 @@ namespace klft {
       this->v[2] /= norm;
       this->v[3] /= norm;
     }
+
+    template <class RNG>
+    KOKKOS_INLINE_FUNCTION void get_random(RNG &generator, T delta) {
+      T alpha = generator.drand(0.0,delta*2*Kokkos::numbers::pi_v<T>);
+      T u = generator.drand(-1.0,1.0);
+      T theta = generator.drand(0.0,2.0*Kokkos::numbers::pi_v<T>);
+      T salpha = Kokkos::sin(alpha);
+      T n1 = Kokkos::sqrt(1.0 - u*u)*Kokkos::sin(theta);
+      T n2 = Kokkos::sqrt(1.0 - u*u)*Kokkos::cos(theta);
+      this->v[0] = Kokkos::cos(alpha);
+      this->v[1] = u*salpha;
+      this->v[2] = n1*salpha;
+      this->v[3] = n2*salpha;
+    }
   };
 
   template <typename T>
@@ -167,20 +200,20 @@ namespace klft {
     return tmp;
   }
 
-  template <typename T, class GaugeGroup, class RNG>
-  KOKKOS_INLINE_FUNCTION GaugeGroup get_random(RNG &generator, T delta) {}
+  // template <typename T, class GaugeGroup, class RNG>
+  // KOKKOS_INLINE_FUNCTION GaugeGroup get_random(RNG &generator, T delta) {}
 
-  template <typename T, class RNG>
-  KOKKOS_INLINE_FUNCTION SU2<T> get_random(RNG &generator, T delta) {
-    T alpha = generator.drand(0.0,delta*2*Kokkos::numbers::pi_v<T>);
-    T u = generator.drand(-1.0,1.0);
-    T theta = generator.drand(0.0,2.0*Kokkos::numbers::pi_v<T>);
-    T salpha = Kokkos::sin(alpha);
-    T n1 = Kokkos::sqrt(1.0 - u*u)*Kokkos::sin(theta);
-    T n2 = Kokkos::sqrt(1.0 - u*u)*Kokkos::cos(theta);
-    SU2<T> R(Kokkos::cos(alpha),u*salpha,n1*salpha,n2*salpha);
-    return R;
-  }
+  // template <typename T, class RNG>
+  // KOKKOS_INLINE_FUNCTION SU2<T> get_random(RNG &generator, T delta) {
+  //   T alpha = generator.drand(0.0,delta*2*Kokkos::numbers::pi_v<T>);
+  //   T u = generator.drand(-1.0,1.0);
+  //   T theta = generator.drand(0.0,2.0*Kokkos::numbers::pi_v<T>);
+  //   T salpha = Kokkos::sin(alpha);
+  //   T n1 = Kokkos::sqrt(1.0 - u*u)*Kokkos::sin(theta);
+  //   T n2 = Kokkos::sqrt(1.0 - u*u)*Kokkos::cos(theta);
+  //   SU2<T> R(Kokkos::cos(alpha),u*salpha,n1*salpha,n2*salpha);
+  //   return R;
+  // }
 
   template <typename T>
   struct U1 {
@@ -195,6 +228,14 @@ namespace klft {
 
     KOKKOS_INLINE_FUNCTION U1(const U1<T> &in) {
       this->v = in.v;
+    }
+
+    KOKKOS_INLINE_FUNCTION U1(const T v_in[1]) {
+      this->v = v_in[0];
+    }
+
+    KOKKOS_INLINE_FUNCTION void set_identity() {
+      this->v = 0.0;
     }
 
     KOKKOS_INLINE_FUNCTION T operator()(const int &i) {
@@ -246,6 +287,11 @@ namespace klft {
     KOKKOS_INLINE_FUNCTION void restoreGauge() {
       this->v = Kokkos::acos(Kokkos::cos(this->v));
     }
+
+    template <class RNG>
+    KOKKOS_INLINE_FUNCTION void get_random(RNG &generator, T delta) {
+      this->v = generator.drand(-delta*Kokkos::numbers::pi_v<T>,delta*Kokkos::numbers::pi_v<T>);
+    }
   };
 
   template <typename T>
@@ -253,9 +299,9 @@ namespace klft {
     return U1<T>(-in.v);
   }
 
-  template <typename T, class RNG>
-  KOKKOS_INLINE_FUNCTION U1<T> get_random(RNG &generator, T delta) {
-    return U1<T>(generator.drand(-delta*Kokkos::numbers::pi_v<T>,delta*Kokkos::numbers::pi_v<T>));
-  }
+  // template <typename T, class G, class RNG, std::enable_if_t<std::is_same<G,U1<T>>::value,int> = 0>
+  // KOKKOS_INLINE_FUNCTION U1<T> get_random(RNG &generator, T delta) {
+  //   return U1<T>(generator.drand(-delta*Kokkos::numbers::pi_v<T>,delta*Kokkos::numbers::pi_v<T>));
+  // }
 
 } // namespace klqcd

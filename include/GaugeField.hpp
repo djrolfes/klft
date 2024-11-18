@@ -6,8 +6,6 @@ namespace klft {
   template <typename T, class GaugeGroup, int Ndim = 4, int Nc = 3>
   class GaugeField {
     public:
-      struct initGauge_cold_s {};
-      template <class RNG, RNG &rng> struct initGauge_hot_s {};
       struct plaq_s {};
       using DeviceView = Kokkos::View<T****[Ndim][Nc*Nc]>;
       using HostView = typename DeviceView::HostMirror;
@@ -20,35 +18,38 @@ namespace klft {
 
       GaugeField() = default;
 
-      template <std::enable_if<Ndim == 4, int>::type = 0>
+      template <int N = Ndim, typename std::enable_if<N == 4, int>::type = 0>
       GaugeField(const int &_LX, const int &_LY, const int &_LZ, const int &_LT) {
         this->LT = _LT;
         this->LX = _LX;
         this->LY = _LY;
         this->LZ = _LZ;
         this->gauge = DeviceView("gauge", LX, LY, LZ, LT);
+        Kokkos::deep_copy(gauge, 0.0);
         this->dims = {LX,LY,LZ,LT};
         this->gauge_host = Kokkos::create_mirror_view(gauge);
       }
 
-      template <std::enable_if<Ndim == 3, int>::type = 0>
+      template <int N = Ndim, typename std::enable_if<N == 3, int>::type = 0>
       GaugeField(const int &_LX, const int &_LY, const int &_LT) {
         this->LT = _LT;
         this->LX = _LX;
         this->LY = _LY;
         this->LZ = 1;
         this->gauge = DeviceView("gauge", LX, LY, LZ, LT);
+        Kokkos::deep_copy(gauge, 0.0);
         this->dims = {LX,LY,LZ,LT};
         this->gauge_host = Kokkos::create_mirror_view(gauge);
       }
 
-      template <std::enable_if<Ndim == 2, int>::type = 0>
+      template <int N = Ndim, typename std::enable_if<N == 2, int>::type = 0>
       GaugeField(const int &_LX, const int &_LT) {
         this->LT = _LT;
         this->LX = _LX;
         this->LY = 1;
         this->LZ = 1;
         this->gauge = DeviceView("gauge", LX, LY, LZ, LT);
+        Kokkos::deep_copy(gauge, 0.0);
         this->dims = {LX,LY,LZ,LT};
         this->gauge_host = Kokkos::create_mirror_view(gauge);
       }
@@ -91,31 +92,6 @@ namespace klft {
         for(int i = 0; i < Nc*Nc; i++) {
           this->gauge(site[0],site[1],site[2],site[3],mu,i) = U(i);
         }
-      }
-
-      KOKKOS_INLINE_FUNCTION void operator()(initGauge_cold_s, const int &x, const int &y, const int &z, const int &t, const int &mu) const {
-        this->gauge(x,y,z,t,mu,0) = (Nc == 1) ? 0.0 : 1.0;
-        for(int i = 1; i < Nc*Nc; i++) {
-          this->gauge(x,y,z,t,mu,i) = 0.0;
-        }
-      }
-
-      template <class RNG, RNG &rng>
-      KOKKOS_INLINE_FUNCTION void operator()(initGauge_hot_s<RNG,rng>, const int &x, const int &y, const int &z, const int &t, const int &mu) const {
-        auto generator = rng.get_state();
-        this->set_link(x,y,z,t,mu,get_random<T,GaugeGroup,rng>(generator,0.01));
-        rng.free_state(generator);
-      }
-
-      void initGauge() {
-        auto BulkPolicy = Kokkos::MDRangePolicy<initGauge_cold_s,Kokkos::Rank<5>>({0,0,0,0,0},{this->LX,this->LY,this->LZ,this->LT,Ndim});
-        Kokkos::parallel_for("initGauge_cold", BulkPolicy, *this);
-      }
-
-      template <class RNG>
-      void initGauge(RNG &rng) {
-        auto BulkPolicy = Kokkos::MDRangePolicy<initGauge_hot_s<RNG,rng>,Kokkos::Rank<5>>({0,0,0,0,0},{this->LX,this->LY,this->LZ,this->LT,Ndim});
-        Kokkos::parallel_for("initGauge_hot", BulkPolicy, *this);
       }
 
       KOKKOS_INLINE_FUNCTION void operator()(plaq_s, const int &x, const int &y, const int &z, const int &t, const int &mu, T &plaq) const {

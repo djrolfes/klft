@@ -6,6 +6,8 @@ namespace klft {
   template <typename T, class GaugeGroup, class GaugeFieldType, class RNG>
   class Metropolis {
     public:
+      struct initGauge_cold_s {};
+      struct initGauge_hot_s {};
       template <int odd_even> struct sweep_s {};
       GaugeFieldType gauge_field;
       RNG rng;
@@ -28,6 +30,20 @@ namespace klft {
       KOKKOS_FUNCTION T get_delta() const { return delta; }
 
       KOKKOS_FUNCTION T get_plaq() const { return gauge_field.get_plaquette(); }
+
+      KOKKOS_INLINE_FUNCTION void operator()(initGauge_cold_s, const int &x, const int &y, const int &z, const int &t, const int &mu) const {
+        GaugeGroup U;
+        U.set_identity();
+        this->gauge_field.set_link(x,y,z,t,mu,U);
+      }
+
+      KOKKOS_INLINE_FUNCTION void operator()(initGauge_hot_s, const int &x, const int &y, const int &z, const int &t, const int &mu) const {
+        auto generator = rng.get_state();
+        GaugeGroup U;
+        U.get_random(generator,delta);
+        this->gauge_field.set_link(x,y,z,t,mu,U);
+        rng.free_state(generator);
+      }
       
       template <int odd_even>
       KOKKOS_INLINE_FUNCTION void operator()(sweep_s<odd_even>, const int &x, const int &y, const int &z, const int &t, const int &mu, T &update) const {
@@ -38,8 +54,9 @@ namespace klft {
         GaugeGroup U = gauge_field.get_link(x,y,z,t,mu);
         GaugeGroup staple = gauge_field.get_staple(x,y,z,t,mu);
         GaugeGroup tmp1 = U*staple;
+        GaugeGroup R;
         for(int i = 0; i < n_hit; ++i) {
-          GaugeGroup R = get_random(generator, delta);
+          R.get_random(generator, delta);
           GaugeGroup U_new = U*R;
           GaugeGroup tmp2 = U_new*staple;
           delS = (beta/static_cast<T>(gauge_field.get_Nc()))*(tmp1.retrace() - tmp2.retrace());
@@ -56,6 +73,16 @@ namespace klft {
         }
         rng.free_state(generator);
         update += num_accepted;
+      }
+
+      void initGauge(const bool cold_start) {
+        if(cold_start) {
+          auto BulkPolicy = Kokkos::MDRangePolicy<initGauge_cold_s,Kokkos::Rank<5>>({0,0,0,0,0},{gauge_field.get_dim(0),gauge_field.get_dim(1),gauge_field.get_dim(2),gauge_field.get_dim(3),gauge_field.get_Ndim()});
+          Kokkos::parallel_for("initGauge_cold", BulkPolicy, *this);
+        } else {
+          auto BulkPolicy = Kokkos::MDRangePolicy<initGauge_hot_s,Kokkos::Rank<5>>({0,0,0,0,0},{gauge_field.get_dim(0),gauge_field.get_dim(1),gauge_field.get_dim(2),gauge_field.get_dim(3),gauge_field.get_Ndim()});
+          Kokkos::parallel_for("initGauge_hot", BulkPolicy, *this);
+        }
       }
 
       T sweep() {
