@@ -60,7 +60,7 @@ int main(int argc, char **argv) {
     if(std::string(argv[i]) == "--help") {
       std::cout << "Usage: " << argv[0] << " [options]" << std::endl;
       std::cout << "Options:" << std::endl;
-      std::cout << "--gauge_group SU2 or U1" << std::endl;
+      std::cout << "--gauge-group SU2 or U1" << std::endl;
       std::cout << "--ndim 2, 3, or 4" << std::endl;
       std::cout << "--LX lattice size in x direction" << std::endl;
       std::cout << "--LY lattice size in y direction" << std::endl;
