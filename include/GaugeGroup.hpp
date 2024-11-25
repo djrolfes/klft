@@ -62,25 +62,25 @@ namespace klft {
   template <typename T>
   struct SU2 {
 
-    Kokkos::Array<T,4> v;
+    Kokkos::Array<Kokkos::complex<T>,4> v;
 
     SU2() = default;
 
-    KOKKOS_INLINE_FUNCTION SU2(const T &a, const T &b, const T &c, const T &d) {
+    KOKKOS_INLINE_FUNCTION SU2(const Kokkos::complex<T> &a, const Kokkos::complex<T> &b, const Kokkos::complex<T> &c, const Kokkos::complex<T> &d) {
       this->v[0] = a;
       this->v[1] = b;
       this->v[2] = c;
       this->v[3] = d;
     }
 
-    KOKKOS_INLINE_FUNCTION SU2(const T v_in[4]) {
+    KOKKOS_INLINE_FUNCTION SU2(const Kokkos::complex<T> v_in[4]) {
       this->v[0] = v_in[0];
       this->v[1] = v_in[1];
       this->v[2] = v_in[2];
       this->v[3] = v_in[3];
     }
 
-    KOKKOS_INLINE_FUNCTION SU2(const T &v_in) {
+    KOKKOS_INLINE_FUNCTION SU2(const Kokkos::complex<T> &v_in) {
       this->v[0] = v_in;
       this->v[1] = v_in;
       this->v[2] = v_in;
@@ -96,24 +96,25 @@ namespace klft {
     }
 
     KOKKOS_INLINE_FUNCTION void set_identity() {
-      this->v[0] = 1.0;
-      this->v[1] = 0.0;
-      this->v[2] = 0.0;
-      this->v[3] = 0.0;
+      this->v[0] = Kokkos::complex<T>(1.0,0.0);
+      this->v[1] = Kokkos::complex<T>(0.0,0.0);
+      this->v[2] = Kokkos::complex<T>(0.0,0.0);
+      this->v[3] = Kokkos::complex<T>(1.0,0.0);
     }
 
-    KOKKOS_INLINE_FUNCTION T operator()(const int &i) {
+    KOKKOS_INLINE_FUNCTION Kokkos::complex<T> operator()(const int &i) {
       return this->v[i];
     }
 
-    KOKKOS_INLINE_FUNCTION T operator()(const int &i) const {
+    KOKKOS_INLINE_FUNCTION Kokkos::complex<T> operator()(const int &i) const {
       return this->v[i];
     }
 
     KOKKOS_INLINE_FUNCTION void dagger() {
-      this->v[1] = -this->v[1];
-      this->v[2] = -this->v[2];
-      this->v[3] = -this->v[3];
+      this->v[0].imag(-this->v[0].imag());
+      this->v[1] *= -1.0;
+      this->v[2] *= -1.0;
+      this->v[3].imag(-this->v[3].imag());
     }
 
     template <typename Tin>
@@ -146,32 +147,32 @@ namespace klft {
 
     template <typename Tin>
     KOKKOS_INLINE_FUNCTION void operator*=(const SU2<Tin> &in) {
-      T a = this->v[0]*in.v[0] - this->v[1]*in.v[1] - this->v[2]*in.v[2] - this->v[3]*in.v[3];
-      T b = this->v[0]*in.v[1] + this->v[1]*in.v[0] + this->v[2]*in.v[3] - this->v[3]*in.v[2];
-      T c = this->v[0]*in.v[2] - this->v[1]*in.v[3] + this->v[2]*in.v[0] + this->v[3]*in.v[1];
-      T d = this->v[0]*in.v[3] + this->v[1]*in.v[2] - this->v[2]*in.v[1] + this->v[3]*in.v[0];
-      this->v[0] = a;
-      this->v[1] = b;
-      this->v[2] = c;
-      this->v[3] = d;
+      T a = this->v[0].real()*in.v[0].real() - this->v[0].imag()*in.v[0].imag() - this->v[1].real()*in.v[1].real() - this->v[1].imag()*in.v[1].imag();
+      T b = this->v[0].real()*in.v[0].imag() + this->v[0].imag()*in.v[0].real() + this->v[1].real()*in.v[1].imag() - this->v[1].imag()*in.v[1].real();
+      T c = this->v[0].real()*in.v[1].real() - this->v[0].imag()*in.v[1].imag() + this->v[1].real()*in.v[0].real() + this->v[1].imag()*in.v[0].imag();
+      T d = this->v[0].real()*in.v[1].imag() + this->v[0].imag()*in.v[1].real() - this->v[1].real()*in.v[0].imag() + this->v[1].imag()*in.v[0].real();
+      this->v[0] = Kokkos::complex<T>(a,b);
+      this->v[1] = Kokkos::complex<T>(c,d);
+      this->v[2] = Kokkos::complex<T>(-c,d);
+      this->v[3] = Kokkos::complex<T>(a,-b);
     }
   
     template <typename Tin>
     KOKKOS_INLINE_FUNCTION SU2<T> operator*(const SU2<Tin> &in) const {
-      T a = this->v[0]*in.v[0] - this->v[1]*in.v[1] - this->v[2]*in.v[2] - this->v[3]*in.v[3];
-      T b = this->v[0]*in.v[1] + this->v[1]*in.v[0] + this->v[2]*in.v[3] - this->v[3]*in.v[2];
-      T c = this->v[0]*in.v[2] - this->v[1]*in.v[3] + this->v[2]*in.v[0] + this->v[3]*in.v[1];
-      T d = this->v[0]*in.v[3] + this->v[1]*in.v[2] - this->v[2]*in.v[1] + this->v[3]*in.v[0];
-      SU2<T> tmp(a, b, c, d);
+      T a = this->v[0].real()*in.v[0].real() - this->v[0].imag()*in.v[0].imag() - this->v[1].real()*in.v[1].real() - this->v[1].imag()*in.v[1].imag();
+      T b = this->v[0].real()*in.v[0].imag() + this->v[0].imag()*in.v[0].real() + this->v[1].real()*in.v[1].imag() - this->v[1].imag()*in.v[1].real();
+      T c = this->v[0].real()*in.v[1].real() - this->v[0].imag()*in.v[1].imag() + this->v[1].real()*in.v[0].real() + this->v[1].imag()*in.v[0].imag();
+      T d = this->v[0].real()*in.v[1].imag() + this->v[0].imag()*in.v[1].real() - this->v[1].real()*in.v[0].imag() + this->v[1].imag()*in.v[0].real();
+      SU2<T> tmp(Kokkos::complex<T>(a,b),Kokkos::complex<T>(c,d),Kokkos::complex<T>(-c,d),Kokkos::complex<T>(a,-b));
       return tmp;
     }
 
     KOKKOS_INLINE_FUNCTION T retrace() const {
-      return this->v[0]*2.0;
+      return this->v[0].real()*2.0;
     }
 
     KOKKOS_INLINE_FUNCTION void restoreGauge() {
-      T norm = Kokkos::sqrt(this->v[0]*this->v[0] + this->v[1]*this->v[1] + this->v[2]*this->v[2] + this->v[3]*this->v[3]);
+      T norm = Kokkos::sqrt(this->v[0].real()*this->v[0].real() + this->v[0].imag()*this->v[0].imag() + this->v[1].real()*this->v[1].real() + this->v[1].imag()*this->v[1].imag());
       this->v[0] /= norm;
       this->v[1] /= norm;
       this->v[2] /= norm;
@@ -186,10 +187,10 @@ namespace klft {
       T salpha = Kokkos::sin(alpha);
       T n1 = Kokkos::sqrt(1.0 - u*u)*Kokkos::sin(theta);
       T n2 = Kokkos::sqrt(1.0 - u*u)*Kokkos::cos(theta);
-      this->v[0] = Kokkos::cos(alpha);
-      this->v[1] = u*salpha;
-      this->v[2] = n1*salpha;
-      this->v[3] = n2*salpha;
+      this->v[0] = Kokkos::complex<T>(Kokkos::cos(alpha),u*salpha);
+      this->v[1] = Kokkos::complex<T>(n1*salpha,n2*salpha);
+      this->v[2] = Kokkos::complex<T>(-this->v[1].real(),this->v[1].imag());
+      this->v[3] = Kokkos::complex<T>(this->v[0].real(),-this->v[0].imag());
     }
   };
 
@@ -218,11 +219,11 @@ namespace klft {
   template <typename T>
   struct U1 {
 
-    T v;
+    Kokkos::complex<T> v;
 
     U1() = default;
 
-    KOKKOS_INLINE_FUNCTION U1(const T &a) {
+    KOKKOS_INLINE_FUNCTION U1(const Kokkos::complex<T> &a) {
       this->v = a;
     }
 
@@ -230,73 +231,74 @@ namespace klft {
       this->v = in.v;
     }
 
-    KOKKOS_INLINE_FUNCTION U1(const T v_in[1]) {
+    KOKKOS_INLINE_FUNCTION U1(const Kokkos::complex<T> v_in[1]) {
       this->v = v_in[0];
     }
 
     KOKKOS_INLINE_FUNCTION void set_identity() {
-      this->v = 0.0;
+      this->v = Kokkos::complex<T>(1.0,0.0);
     }
 
-    KOKKOS_INLINE_FUNCTION T operator()(const int &i) {
+    KOKKOS_INLINE_FUNCTION Kokkos::complex<T> operator()(const int &i) {
       return this->v;
     }
 
-    KOKKOS_INLINE_FUNCTION T operator()(const int &i) const {
+    KOKKOS_INLINE_FUNCTION Kokkos::complex<T> operator()(const int &i) const {
       return this->v;
     }
 
     KOKKOS_INLINE_FUNCTION void dagger() {
-      this->v = -this->v;
+      this->v.imag(-this->v.imag());
     }
 
     template <typename Tin>
     KOKKOS_INLINE_FUNCTION void operator+=(const U1<Tin> &in) {
-      this->v = Kokkos::acos((Kokkos::exp(Kokkos::complex<T>(0.0,this->v)) + Kokkos::exp(Kokkos::complex<T>(0.0,in.v))).real());
-    }
-
-    template <typename Tin>
-    KOKKOS_INLINE_FUNCTION void operator-=(const U1<Tin> &in) {
-      this->v = Kokkos::acos((Kokkos::exp(Kokkos::complex<T>(0.0,this->v)) - Kokkos::exp(Kokkos::complex<T>(0.0,in.v))).real());
-    }
-
-    template <typename Tin>
-    KOKKOS_INLINE_FUNCTION U1<T> operator+(const U1<Tin> &in) const {
-      return U1<T>(Kokkos::acos((Kokkos::exp(Kokkos::complex<T>(0.0,this->v)) + Kokkos::exp(Kokkos::complex<T>(0.0,in.v))).real()));
-    }
-
-    template <typename Tin>
-    KOKKOS_INLINE_FUNCTION U1<T> operator-(const U1<Tin> &in) const {
-      return U1<T>(Kokkos::acos((Kokkos::exp(Kokkos::complex<T>(0.0,this->v)) - Kokkos::exp(Kokkos::complex<T>(0.0,in.v))).real()));
-    }
-
-    template <typename Tin>
-    KOKKOS_INLINE_FUNCTION void operator*=(const U1<Tin> &in) {
       this->v += in.v;
     }
 
     template <typename Tin>
-    KOKKOS_INLINE_FUNCTION U1<T> operator*(const U1<Tin> &in) const {
+    KOKKOS_INLINE_FUNCTION void operator-=(const U1<Tin> &in) {
+      this->v -= in.v;
+    }
+
+    template <typename Tin>
+    KOKKOS_INLINE_FUNCTION U1<T> operator+(const U1<Tin> &in) const {
       return U1<T>(this->v + in.v);
     }
 
+    template <typename Tin>
+    KOKKOS_INLINE_FUNCTION U1<T> operator-(const U1<Tin> &in) const {
+      return U1<T>(this->v - in.v);
+    }
+
+    template <typename Tin>
+    KOKKOS_INLINE_FUNCTION void operator*=(const U1<Tin> &in) {
+      this->v.real(this->v.real()*in.v.real() - this->v.imag()*in.v.imag());
+      this->v.imag(this->v.real()*in.v.imag() + this->v.imag()*in.v.real());
+    }
+
+    template <typename Tin>
+    KOKKOS_INLINE_FUNCTION U1<T> operator*(const U1<Tin> &in) const {
+      return U1<T>(Kokkos::complex<T>(this->v.real()*in.v.real() - this->v.imag()*in.v.imag(),this->v.real()*in.v.imag() + this->v.imag()*in.v.real()));
+    }
+
     KOKKOS_INLINE_FUNCTION T retrace() const {
-      return Kokkos::cos(this->v);
+      return this->v.real();
     }
 
     KOKKOS_INLINE_FUNCTION void restoreGauge() {
-      this->v = Kokkos::acos(Kokkos::cos(this->v));
+      this->v /= Kokkos::sqrt(this->v.real()*this->v.real() + this->v.imag()*this->v.imag());
     }
 
     template <class RNG>
     KOKKOS_INLINE_FUNCTION void get_random(RNG &generator, T delta) {
-      this->v = generator.drand(-delta*Kokkos::numbers::pi_v<T>,delta*Kokkos::numbers::pi_v<T>);
+      this->v = Kokkos::exp(Kokkos::complex(0.0,generator.drand(-delta*Kokkos::numbers::pi_v<T>,delta*Kokkos::numbers::pi_v<T>)));
     }
   };
 
   template <typename T>
   KOKKOS_INLINE_FUNCTION U1<T> dagger(const U1<T> &in) {
-    return U1<T>(-in.v);
+    return U1<T>(Kokkos::complex(in.v.real(),-in.v.imag()));
   }
 
   // template <typename T, class G, class RNG, std::enable_if_t<std::is_same<G,U1<T>>::value,int> = 0>
