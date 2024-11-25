@@ -7,7 +7,7 @@ namespace klft {
   class GaugeField {
     public:
       struct plaq_s {};
-      using DeviceView = Kokkos::View<T****[Ndim][Nc*Nc]>;
+      using DeviceView = Kokkos::View<Kokkos::Complex<T>****[Ndim][Nc*Nc]>;
       using HostView = typename DeviceView::HostMirror;
 
       DeviceView gauge;
@@ -67,7 +67,7 @@ namespace klft {
       }
 
       KOKKOS_INLINE_FUNCTION GaugeGroup get_link(const int &x, const int &y, const int &z, const int &t, const int &mu) const {
-        T link[Nc*Nc];
+        Kokkos::Complex<T> link[Nc*Nc];
         for(int i = 0; i < Nc*Nc; i++) {
           link[i] = this->gauge(x,y,z,t,mu,i);
         }
@@ -75,7 +75,7 @@ namespace klft {
       }
 
       KOKKOS_INLINE_FUNCTION GaugeGroup get_link(const Kokkos::Array<int,4> &site, const int &mu) const {
-        T link[Nc*Nc];
+        Kokkos::Complex<T> link[Nc*Nc];
         for(int i = 0; i < Nc*Nc; i++) {
           link[i] = this->gauge(site[0],site[1],site[2],site[3],mu,i);
         }
