@@ -6,12 +6,13 @@ namespace klft {
   template <typename T, class GaugeGroup, int Ndim = 4, int Nc = 3>
   class GaugeField {
     public:
+      struct set_one_s {};
       struct plaq_s {};
       using DeviceView = Kokkos::View<Kokkos::complex<T>****[Ndim][Nc*Nc]>;
-      using HostView = typename DeviceView::HostMirror;
+      // using HostView = typename DeviceView::HostMirror;
 
       DeviceView gauge;
-      HostView gauge_host;
+      // HostView gauge_host;
       
       int LT,LX,LY,LZ;
       Kokkos::Array<int,4> dims;
@@ -24,10 +25,8 @@ namespace klft {
         this->LX = _LX;
         this->LY = _LY;
         this->LZ = _LZ;
-        this->gauge = DeviceView("gauge", LX, LY, LZ, LT);
-        Kokkos::deep_copy(gauge, 0.0);
+        this->gauge = DeviceView(Kokkos::view_alloc(Kokkos::WithoutInitializing, "gauge"), LX, LY, LZ, LT);
         this->dims = {LX,LY,LZ,LT};
-        this->gauge_host = Kokkos::create_mirror_view(gauge);
       }
 
       template <int N = Ndim, typename std::enable_if<N == 3, int>::type = 0>
@@ -36,10 +35,8 @@ namespace klft {
         this->LX = _LX;
         this->LY = _LY;
         this->LZ = 1;
-        this->gauge = DeviceView("gauge", LX, LY, LZ, LT);
-        Kokkos::deep_copy(gauge, 0.0);
+        this->gauge = DeviceView(Kokkos::view_alloc(Kokkos::WithoutInitializing, "gauge"), LX, LY, LZ, LT);
         this->dims = {LX,LY,LZ,LT};
-        this->gauge_host = Kokkos::create_mirror_view(gauge);
       }
 
       template <int N = Ndim, typename std::enable_if<N == 2, int>::type = 0>
@@ -48,10 +45,8 @@ namespace klft {
         this->LX = _LX;
         this->LY = 1;
         this->LZ = 1;
-        this->gauge = DeviceView("gauge", LX, LY, LZ, LT);
-        Kokkos::deep_copy(gauge, 0.0);
+        this->gauge = DeviceView(Kokkos::view_alloc(Kokkos::WithoutInitializing, "gauge"), LX, LY, LZ, LT);
         this->dims = {LX,LY,LZ,LT};
-        this->gauge_host = Kokkos::create_mirror_view(gauge);
       }
 
       KOKKOS_FUNCTION int get_Ndim() const { return Ndim; }
@@ -64,6 +59,20 @@ namespace klft {
 
       KOKKOS_FUNCTION int get_dim(const int &mu) const {
         return this->gauge.extent_int(mu);
+      }
+
+      KOKKOS_INLINE_FUNCTION void operator()(set_one_s, const int &x, const int &y, const int &z, const int &t, const int &mu) const {
+        for(int i = 0; i < Nc*Nc; i++) {
+          this->gauge(x,y,z,t,mu,i) = Kokkos::complex<T>(0.0,0.0);
+        }
+        for(int i = 0; i < Nc; i++) {
+          this->gauge(x,y,z,t,mu,i*Nc+i) = Kokkos::complex<T>(1.0,0.0);
+        }
+      }
+
+      void set_one() {
+        auto BulkPolicy = Kokkos::MDRangePolicy<set_one_s,Kokkos::Rank<5>>({0,0,0,0,0},{this->LX,this->LY,this->LZ,this->LT,Ndim});
+        Kokkos::parallel_for("set_one", BulkPolicy, *this);
       }
 
       KOKKOS_INLINE_FUNCTION GaugeGroup get_link(const int &x, const int &y, const int &z, const int &t, const int &mu) const {
@@ -99,14 +108,16 @@ namespace klft {
         Kokkos::Array<int,4> site = {x,y,z,t};
         Kokkos::Array<int,4> site_plus_mu = {x,y,z,t};
         site_plus_mu[mu] = (site_plus_mu[mu] + 1) % this->dims[mu];
+        U1 = this->get_link(site,mu);
         for(int nu = 0; nu < mu; ++nu){
           Kokkos::Array<int,4> site_plus_nu = {x,y,z,t};
           site_plus_nu[nu] = (site_plus_nu[nu] + 1) % this->dims[nu];
-          U1 = this->get_link(site,mu);
           U2 = this->get_link(site_plus_mu,nu);
           U3 = this->get_link(site_plus_nu,mu);
           U4 = this->get_link(site,nu);
-          tmp = U1*U2*dagger(U3)*dagger(U4);
+          tmp = U1*U2;
+          tmp *= dagger(U3);
+          tmp *= dagger(U4);
           plaq += tmp.retrace();
         }
       }
