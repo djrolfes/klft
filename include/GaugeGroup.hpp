@@ -178,6 +178,62 @@ namespace klft {
       return (v[0] + v[4] + v[8]).real();
     }
 
+    KOKKOS_INLINE_FUNCTION void restoreGauge() {
+      Kokkos::complex<T> norm = v[0]*(v[4]*v[8] - v[5]*v[7]) - v[1]*(v[3]*v[8] - v[5]*v[6]) + v[2]*(v[3]*v[7] - v[4]*v[6]);
+      v[0] = v[0]/norm;
+      v[1] = v[1]/norm;
+      v[2] = v[2]/norm;
+    }
+
+    template <class RNG>
+    KOKKOS_INLINE_FUNCTION void get_random(RNG &generator, T delta) {
+      T r1[6],r2[6],norm, fact;
+      Kokkos::complex<T> z1[3], z2[3], z3[3], z, znorm;
+      while(1) {
+        for(int i = 0; i < 6; i++) {
+          r1[i] = generator.drand(0,delta);
+        }
+        norm = Kokkos::sqrt(r1[0]*r1[0] + r1[1]*r1[1] + r1[2]*r1[2] + r1[3]*r1[3] + r1[4]*r1[4] + r1[5]*r1[5]);
+        if(1.0 != (1.0 + norm)) break;
+      }
+      z1[0] = Kokkos::complex<T>(r1[0],r1[1])/norm;
+      z1[1] = Kokkos::complex<T>(r1[2],r1[3])/norm;
+      z1[2] = Kokkos::complex<T>(r1[4],r1[5])/norm;
+      while(1) {
+        while(1) {
+          for(int i = 0; i < 6; i++) {
+            r2[i] = generator.drand(0,delta);
+          }
+          norm = Kokkos::sqrt(r2[0]*r2[0] + r2[1]*r2[1] + r2[2]*r2[2] + r2[3]*r2[3] + r2[4]*r2[4] + r2[5]*r2[5]);
+          if(1.0 != (1.0 + norm)) break;
+        }
+        z2[0] = Kokkos::complex<T>(r2[0],r2[1])/norm;
+        z2[1] = Kokkos::complex<T>(r2[2],r2[3])/norm;
+        z2[2] = Kokkos::complex<T>(r2[4],r2[5])/norm;
+        z = Kokkos::conj(z1[0])*z2[0] + Kokkos::conj(z1[1])*z2[1] + Kokkos::conj(z1[2])*z2[2];
+        z2[0] -= z * z1[0];
+        z2[1] -= z * z1[1];
+        z2[2] -= z * z1[2];
+        znorm = Kokkos::sqrt(Kokkos::conj(z2[0])*z2[0] + Kokkos::conj(z2[1])*z2[1] + Kokkos::conj(z2[2])*z2[2]);
+        if(1.0 != (1.0 + norm)) break;
+      }
+      z2[0] /= znorm;
+      z2[1] /= znorm;
+      z2[2] /= znorm;
+      z3[0] = Kokkos::conj((z1[1]*z2[2]) - (z1[2]*z2[1]));
+      z3[1] = Kokkos::conj((z1[2]*z2[0]) - (z1[0]*z2[2]));
+      z3[2] = Kokkos::conj((z1[0]*z2[1]) - (z1[1]*z2[0]));
+      v[0] = z1[0];
+      v[1] = z1[1];
+      v[2] = z1[2];
+      v[3] = z2[0];
+      v[4] = z2[1];
+      v[5] = z2[2];
+      v[6] = z3[0];
+      v[7] = z3[1];
+      v[8] = z3[2];
+    }
+
   };
 
   template <typename T>
@@ -199,6 +255,13 @@ namespace klft {
       v[1] = b;
       v[2] = c;
       v[3] = d;
+    }
+
+    KOKKOS_INLINE_FUNCTION SU2(const Kokkos::Array<Kokkos::complex<T>,4> &v_in) {
+      v[0] = v_in[0];
+      v[1] = v_in[1];
+      v[2] = v_in[2];
+      v[3] = v_in[3];
     }
 
     KOKKOS_INLINE_FUNCTION SU2(const Kokkos::complex<T> v_in[4]) {
@@ -360,6 +423,10 @@ namespace klft {
     }
 
     KOKKOS_INLINE_FUNCTION U1(const Kokkos::complex<T> v_in[1]) {
+      v = v_in[0];
+    }
+
+    KOKKOS_INLINE_FUNCTION U1(const Kokkos::Array<Kokkos::complex<T>,1> &v_in) {
       v = v_in[0];
     }
 

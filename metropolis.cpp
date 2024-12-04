@@ -60,7 +60,7 @@ int main(int argc, char **argv) {
     if(std::string(argv[i]) == "--help") {
       std::cout << "Usage: " << argv[0] << " [options]" << std::endl;
       std::cout << "Options:" << std::endl;
-      std::cout << "--gauge-group SU2 or U1" << std::endl;
+      std::cout << "--gauge-group SU3, SU2 or U1" << std::endl;
       std::cout << "--ndim 2, 3, or 4" << std::endl;
       std::cout << "--LX lattice size in x direction" << std::endl;
       std::cout << "--LY lattice size in y direction" << std::endl;
@@ -82,5 +82,8 @@ int main(int argc, char **argv) {
   if(gauge_group == "U1" && ndim == 4) klft::Metropolis_U1_4D<real_t>(LX,LY,LZ,LT,n_hit,beta,delta,seed,n_sweep,cold_start,outfilename);
   if(gauge_group == "U1" && ndim == 3) klft::Metropolis_U1_3D<real_t>(LX,LY,LT,n_hit,beta,delta,seed,n_sweep,cold_start,outfilename);
   if(gauge_group == "U1" && ndim == 2) klft::Metropolis_U1_2D<real_t>(LX,LT,n_hit,beta,delta,seed,n_sweep,cold_start,outfilename);
+  if(gauge_group == "SU3" && ndim == 4) klft::Metropolis_SU3_4D<real_t>(LX,LY,LZ,LT,n_hit,beta,delta,seed,n_sweep,cold_start,outfilename);
+  if(gauge_group == "SU3" && ndim == 3) klft::Metropolis_SU3_3D<real_t>(LX,LY,LT,n_hit,beta,delta,seed,n_sweep,cold_start,outfilename);
+  if(gauge_group == "SU3" && ndim == 2) klft::Metropolis_SU3_2D<real_t>(LX,LT,n_hit,beta,delta,seed,n_sweep,cold_start,outfilename);
   return 0;
 }

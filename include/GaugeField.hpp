@@ -8,10 +8,11 @@ namespace klft {
     public:
       struct set_one_s {};
       struct plaq_s {};
-      using DeviceView = Kokkos::View<Kokkos::complex<T>****[Ndim][Nc*Nc]>;
+      using complex_t = Kokkos::complex<T>;
+      using DeviceView = Kokkos::View<complex_t****>;
       // using HostView = typename DeviceView::HostMirror;
 
-      DeviceView gauge;
+      DeviceView gauge[Ndim][Nc*Nc];
       // HostView gauge_host;
       
       int LT,LX,LY,LZ;
@@ -25,7 +26,12 @@ namespace klft {
         this->LX = _LX;
         this->LY = _LY;
         this->LZ = _LZ;
-        this->gauge = DeviceView(Kokkos::view_alloc(Kokkos::WithoutInitializing, "gauge"), LX, LY, LZ, LT);
+        for(int i = 0; i < Nc*Nc; ++i) {
+          for(int mu = 0; mu < Ndim; ++mu) {
+            this->gauge[mu][i] = DeviceView(Kokkos::view_alloc(Kokkos::WithoutInitializing, "gauge"), LX, LY, LZ, LT);
+          }
+        }
+        // this->gauge = DeviceView(Kokkos::view_alloc(Kokkos::WithoutInitializing, "gauge"), LX, LY, LZ, LT);
         this->dims = {LX,LY,LZ,LT};
       }
 
@@ -35,7 +41,12 @@ namespace klft {
         this->LX = _LX;
         this->LY = _LY;
         this->LZ = 1;
-        this->gauge = DeviceView(Kokkos::view_alloc(Kokkos::WithoutInitializing, "gauge"), LX, LY, LZ, LT);
+        for(int i = 0; i < Nc*Nc; ++i) {
+          for(int mu = 0; mu < Ndim; ++mu) {
+            this->gauge[mu][i] = DeviceView(Kokkos::view_alloc(Kokkos::WithoutInitializing, "gauge"), LX, LY, LZ, LT);
+          }
+        }
+        // this->gauge = DeviceView(Kokkos::view_alloc(Kokkos::WithoutInitializing, "gauge"), LX, LY, LZ, LT);
         this->dims = {LX,LY,LZ,LT};
       }
 
@@ -45,7 +56,12 @@ namespace klft {
         this->LX = _LX;
         this->LY = 1;
         this->LZ = 1;
-        this->gauge = DeviceView(Kokkos::view_alloc(Kokkos::WithoutInitializing, "gauge"), LX, LY, LZ, LT);
+        for(int i = 0; i < Nc*Nc; ++i) {
+          for(int mu = 0; mu < Ndim; ++mu) {
+            this->gauge[mu][i] = DeviceView(Kokkos::view_alloc(Kokkos::WithoutInitializing, "gauge"), LX, LY, LZ, LT);
+          }
+        }
+        // this->gauge = DeviceView(Kokkos::view_alloc(Kokkos::WithoutInitializing, "gauge"), LX, LY, LZ, LT);
         this->dims = {LX,LY,LZ,LT};
       }
 
@@ -58,15 +74,15 @@ namespace klft {
       KOKKOS_FUNCTION size_t get_size() const { return this->LX*this->LY*this->LZ*this->LT*Ndim*Nc*Nc; }
 
       KOKKOS_FUNCTION int get_dim(const int &mu) const {
-        return this->gauge.extent_int(mu);
+        return this->dims[mu];
       }
 
       KOKKOS_INLINE_FUNCTION void operator()(set_one_s, const int &x, const int &y, const int &z, const int &t, const int &mu) const {
         for(int i = 0; i < Nc*Nc; i++) {
-          this->gauge(x,y,z,t,mu,i) = Kokkos::complex<T>(0.0,0.0);
+          this->gauge[mu][i](x,y,z,t) = Kokkos::complex<T>(0.0,0.0);
         }
         for(int i = 0; i < Nc; i++) {
-          this->gauge(x,y,z,t,mu,i*Nc+i) = Kokkos::complex<T>(1.0,0.0);
+          this->gauge[mu][i*Nc+i](x,y,z,t) = Kokkos::complex<T>(1.0,0.0);
         }
       }
 
@@ -76,49 +92,84 @@ namespace klft {
       }
 
       KOKKOS_INLINE_FUNCTION GaugeGroup get_link(const int &x, const int &y, const int &z, const int &t, const int &mu) const {
-        Kokkos::complex<T> link[Nc*Nc];
+        Kokkos::Array<Kokkos::complex<T>,Nc*Nc> link;
         for(int i = 0; i < Nc*Nc; i++) {
-          link[i] = this->gauge(x,y,z,t,mu,i);
+          link[i] = this->gauge[mu][i](x,y,z,t);
         }
         return GaugeGroup(link);
       }
 
       KOKKOS_INLINE_FUNCTION GaugeGroup get_link(const Kokkos::Array<int,4> &site, const int &mu) const {
-        Kokkos::complex<T> link[Nc*Nc];
+        Kokkos::Array<Kokkos::complex<T>,Nc*Nc> link;
         for(int i = 0; i < Nc*Nc; i++) {
-          link[i] = this->gauge(site[0],site[1],site[2],site[3],mu,i);
+          link[i] = this->gauge[mu][i](site[0],site[1],site[2],site[3]);
         }
         return GaugeGroup(link);
       }
 
       KOKKOS_INLINE_FUNCTION void set_link(const int &x, const int &y, const int &z, const int &t, const int &mu, const GaugeGroup &U) const {
         for(int i = 0; i < Nc*Nc; i++) {
-          this->gauge(x,y,z,t,mu,i) = U(i);
+          this->gauge[mu][i](x,y,z,t) = U(i);
         }
       }
 
       KOKKOS_INLINE_FUNCTION void set_link(const Kokkos::Array<int,4> &site, const int &mu, const GaugeGroup &U) {
         for(int i = 0; i < Nc*Nc; i++) {
-          this->gauge(site[0],site[1],site[2],site[3],mu,i) = U(i);
+          this->gauge[mu][i](site[0],site[1],site[2],site[3]) = U(i);
         }
       }
 
+      T trace_U_mu_nu(const int &mu, const int &nu) {
+        T trace = 0.0;
+        auto BulkPolicy = Kokkos::MDRangePolicy<Kokkos::Rank<4>>({0,0,0,0},{this->LX,this->LY,this->LZ,this->LT});
+        Kokkos::parallel_reduce("trace_U_mu_nu", BulkPolicy, KOKKOS_CLASS_LAMBDA(const int &x, const int &y, const int &z, const int &t, T &trace) {
+          complex_t tmp1[Nc*Nc], tmp2[Nc*Nc];
+          Kokkos::Array<int,4> site_plus_mu = {x,y,z,t};
+          Kokkos::Array<int,4> site_plus_nu = {x,y,z,t};
+          site_plus_mu[mu] = (site_plus_mu[mu] + 1) % this->dims[mu];
+          site_plus_nu[nu] = (site_plus_nu[nu] + 1) % this->dims[nu];
+          for(int a = 0; a < Nc; a++) {
+            for(int b = 0; b < Nc; b++) {
+              tmp1[a*Nc+b] = complex_t(0.0,0.0);
+              tmp2[a*Nc+b] = complex_t(0.0,0.0);
+              for(int c = 0; c < Nc; c++) {
+                tmp1[a*Nc+b] += this->gauge[mu][a*Nc+c](x,y,z,t)*this->gauge[nu][c*Nc+b](site_plus_mu[0],site_plus_mu[1],site_plus_mu[2],site_plus_mu[3]);
+                tmp2[a*Nc+b] += Kokkos::conj(this->gauge[mu][c*Nc+a](site_plus_nu[0],site_plus_nu[1],site_plus_nu[2],site_plus_nu[3]))*Kokkos::conj(this->gauge[nu][b*Nc+c](x,y,z,t));
+              }
+            }
+          }
+          for(int a = 0; a < Nc; a++) {
+            for(int b = 0; b < Nc; b++) {
+              trace += (tmp1[a*Nc+b]*tmp2[b*Nc+a]).real();
+            }
+          }
+        }, trace);
+        return trace;
+      }
+
+      T get_plaquette_2() {
+        T plaq = 0.0;
+        for(int mu = 0; mu < Ndim; ++mu) {
+          for(int nu = 0; nu < mu; ++nu) {
+            plaq += trace_U_mu_nu(mu,nu);
+          }
+        }
+        return plaq/(this->get_volume()*((Ndim-1)*Ndim/2)*Nc);
+      }
+
       KOKKOS_INLINE_FUNCTION void operator()(plaq_s, const int &x, const int &y, const int &z, const int &t, const int &mu, T &plaq) const {
-        GaugeGroup U1, U2, U3, U4, tmp;
+        GaugeGroup U1, U2, U3, U4;
         Kokkos::Array<int,4> site = {x,y,z,t};
         Kokkos::Array<int,4> site_plus_mu = {x,y,z,t};
         site_plus_mu[mu] = (site_plus_mu[mu] + 1) % this->dims[mu];
-        U1 = this->get_link(site,mu);
         for(int nu = 0; nu < mu; ++nu){
           Kokkos::Array<int,4> site_plus_nu = {x,y,z,t};
           site_plus_nu[nu] = (site_plus_nu[nu] + 1) % this->dims[nu];
+          U1 = this->get_link(site,mu);
           U2 = this->get_link(site_plus_mu,nu);
           U3 = this->get_link(site_plus_nu,mu);
           U4 = this->get_link(site,nu);
-          tmp = U1*U2;
-          tmp *= dagger(U3);
-          tmp *= dagger(U4);
-          plaq += tmp.retrace();
+          plaq += (U1*U2*dagger(U3)*dagger(U4)).retrace();
         }
       }
 
