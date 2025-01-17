@@ -87,9 +87,9 @@ namespace klft {
       v[8] = Kokkos::complex<T>(1.0,0.0);
     }
 
-    KOKKOS_INLINE_FUNCTION Kokkos::complex<T> operator()(const int &i) {
-      return v[i];
-    }
+    // KOKKOS_INLINE_FUNCTION Kokkos::complex<T> operator()(const int &i) {
+    //   return v[i];
+    // }
 
     KOKKOS_INLINE_FUNCTION Kokkos::complex<T> operator()(const int &i) const {
       return v[i];
@@ -105,6 +105,7 @@ namespace klft {
       v[5] = Kokkos::conj(v[7]);
       v[6] = Kokkos::conj(tmp[1]);
       v[7] = Kokkos::conj(tmp[2]);
+      v[8] = Kokkos::conj(v[8]);
     }
 
     template <typename Tin>
@@ -179,16 +180,28 @@ namespace klft {
     }
 
     KOKKOS_INLINE_FUNCTION void restoreGauge() {
-      Kokkos::complex<T> norm = v[0]*(v[4]*v[8] - v[5]*v[7]) - v[1]*(v[3]*v[8] - v[5]*v[6]) + v[2]*(v[3]*v[7] - v[4]*v[6]);
-      v[0] = v[0]/norm;
-      v[1] = v[1]/norm;
-      v[2] = v[2]/norm;
+      // T norm = Kokkos::sqrt((Kokkos::conj(v[0])*v[0] + Kokkos::conj(v[1])*v[1] + Kokkos::conj(v[2])*v[2]).real());
+      // v[0] /= norm;
+      // v[1] /= norm;
+      // v[2] /= norm;
+      // Kokkos::complex<T> z = Kokkos::conj(v[0])*v[3] + Kokkos::conj(v[1])*v[4] + Kokkos::conj(v[2])*v[5];
+      // v[3] -= z * v[0];
+      // v[4] -= z * v[1];
+      // v[5] -= z * v[2];
+      // norm = Kokkos::sqrt((Kokkos::conj(v[3])*v[3] + Kokkos::conj(v[4])*v[4] + Kokkos::conj(v[5])*v[5]).real());
+      // v[3] /= norm;
+      // v[4] /= norm;
+      // v[5] /= norm;
+      // v[6] = Kokkos::conj((v[1]*v[5]) - (v[5]*v[1]));
+      // v[7] = Kokkos::conj((v[2]*v[3]) - (v[3]*v[2]));
+      // v[8] = Kokkos::conj((v[0]*v[4]) - (v[4]*v[0]));
+      return;
     }
 
     template <class RNG>
     KOKKOS_INLINE_FUNCTION void get_random(RNG &generator, T delta) {
       T r1[6],r2[6],norm, fact;
-      Kokkos::complex<T> z1[3], z2[3], z3[3], z, znorm;
+      Kokkos::complex<T> z1[3], z2[3], z3[3], z;
       while(1) {
         for(int i = 0; i < 6; i++) {
           r1[i] = generator.drand(0,delta);
@@ -196,9 +209,10 @@ namespace klft {
         norm = Kokkos::sqrt(r1[0]*r1[0] + r1[1]*r1[1] + r1[2]*r1[2] + r1[3]*r1[3] + r1[4]*r1[4] + r1[5]*r1[5]);
         if(1.0 != (1.0 + norm)) break;
       }
-      z1[0] = Kokkos::complex<T>(r1[0],r1[1])/norm;
-      z1[1] = Kokkos::complex<T>(r1[2],r1[3])/norm;
-      z1[2] = Kokkos::complex<T>(r1[4],r1[5])/norm;
+      fact = 1.0 / norm;
+      z1[0] = fact * Kokkos::complex<T>(r1[0],r1[1]);
+      z1[1] = fact * Kokkos::complex<T>(r1[2],r1[3]);
+      z1[2] = fact * Kokkos::complex<T>(r1[4],r1[5]);
       while(1) {
         while(1) {
           for(int i = 0; i < 6; i++) {
@@ -207,19 +221,21 @@ namespace klft {
           norm = Kokkos::sqrt(r2[0]*r2[0] + r2[1]*r2[1] + r2[2]*r2[2] + r2[3]*r2[3] + r2[4]*r2[4] + r2[5]*r2[5]);
           if(1.0 != (1.0 + norm)) break;
         }
-        z2[0] = Kokkos::complex<T>(r2[0],r2[1])/norm;
-        z2[1] = Kokkos::complex<T>(r2[2],r2[3])/norm;
-        z2[2] = Kokkos::complex<T>(r2[4],r2[5])/norm;
+        fact = 1.0 / norm;
+        z2[0] = fact * Kokkos::complex<T>(r2[0],r2[1]);
+        z2[1] = fact * Kokkos::complex<T>(r2[2],r2[3]);
+        z2[2] = fact * Kokkos::complex<T>(r2[4],r2[5]);
         z = Kokkos::conj(z1[0])*z2[0] + Kokkos::conj(z1[1])*z2[1] + Kokkos::conj(z1[2])*z2[2];
         z2[0] -= z * z1[0];
         z2[1] -= z * z1[1];
         z2[2] -= z * z1[2];
-        znorm = Kokkos::sqrt(Kokkos::conj(z2[0])*z2[0] + Kokkos::conj(z2[1])*z2[1] + Kokkos::conj(z2[2])*z2[2]);
+        norm = Kokkos::sqrt(z2[0].real()*z2[0].real() + z2[0].imag()*z2[0].imag() + z2[1].real()*z2[1].real() + z2[1].imag()*z2[1].imag() + z2[2].real()*z2[2].real() + z2[2].imag()*z2[2].imag());
         if(1.0 != (1.0 + norm)) break;
       }
-      z2[0] /= znorm;
-      z2[1] /= znorm;
-      z2[2] /= znorm;
+      fact = 1.0 / norm;
+      z2[0] *= fact;
+      z2[1] *= fact;
+      z2[2] *= fact;
       z3[0] = Kokkos::conj((z1[1]*z2[2]) - (z1[2]*z2[1]));
       z3[1] = Kokkos::conj((z1[2]*z2[0]) - (z1[0]*z2[2]));
       z3[2] = Kokkos::conj((z1[0]*z2[1]) - (z1[1]*z2[0]));
@@ -232,6 +248,10 @@ namespace klft {
       v[6] = z3[0];
       v[7] = z3[1];
       v[8] = z3[2];
+    }
+
+    KOKKOS_INLINE_FUNCTION Kokkos::complex<T> det() const {
+      return v[0]*(v[4]*v[8] - v[5]*v[7]) - v[1]*(v[3]*v[8] - v[5]*v[6]) + v[2]*(v[3]*v[7] - v[4]*v[6]);
     }
 
   };
