@@ -119,44 +119,6 @@ namespace klft {
         }
       }
 
-      T trace_U_mu_nu(const int &mu, const int &nu) {
-        T trace = 0.0;
-        auto BulkPolicy = Kokkos::MDRangePolicy<Kokkos::Rank<4>>({0,0,0,0},{this->LX,this->LY,this->LZ,this->LT});
-        Kokkos::parallel_reduce("trace_U_mu_nu", BulkPolicy, KOKKOS_CLASS_LAMBDA(const int &x, const int &y, const int &z, const int &t, T &trace) {
-          complex_t tmp1[Nc*Nc], tmp2[Nc*Nc];
-          Kokkos::Array<int,4> site_plus_mu = {x,y,z,t};
-          Kokkos::Array<int,4> site_plus_nu = {x,y,z,t};
-          site_plus_mu[mu] = (site_plus_mu[mu] + 1) % this->dims[mu];
-          site_plus_nu[nu] = (site_plus_nu[nu] + 1) % this->dims[nu];
-          for(int a = 0; a < Nc; a++) {
-            for(int b = 0; b < Nc; b++) {
-              tmp1[a*Nc+b] = complex_t(0.0,0.0);
-              tmp2[a*Nc+b] = complex_t(0.0,0.0);
-              for(int c = 0; c < Nc; c++) {
-                tmp1[a*Nc+b] += this->gauge[mu][a*Nc+c](x,y,z,t)*this->gauge[nu][c*Nc+b](site_plus_mu[0],site_plus_mu[1],site_plus_mu[2],site_plus_mu[3]);
-                tmp2[a*Nc+b] += Kokkos::conj(this->gauge[mu][c*Nc+a](site_plus_nu[0],site_plus_nu[1],site_plus_nu[2],site_plus_nu[3]))*Kokkos::conj(this->gauge[nu][b*Nc+c](x,y,z,t));
-              }
-            }
-          }
-          for(int a = 0; a < Nc; a++) {
-            for(int b = 0; b < Nc; b++) {
-              trace += (tmp1[a*Nc+b]*tmp2[b*Nc+a]).real();
-            }
-          }
-        }, trace);
-        return trace;
-      }
-
-      T get_plaquette_2() {
-        T plaq = 0.0;
-        for(int mu = 0; mu < Ndim; ++mu) {
-          for(int nu = 0; nu < mu; ++nu) {
-            plaq += trace_U_mu_nu(mu,nu);
-          }
-        }
-        return plaq/(this->get_volume()*((Ndim-1)*Ndim/2)*Nc);
-      }
-
       KOKKOS_INLINE_FUNCTION void operator()(plaq_s, const int &x, const int &y, const int &z, const int &t, const int &mu, T &plaq) const {
         GaugeGroup U1, U2, U3, U4;
         Kokkos::Array<int,4> site = {x,y,z,t};
