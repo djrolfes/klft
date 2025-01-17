@@ -31,6 +31,29 @@ namespace klft {
 
       KOKKOS_FUNCTION T get_plaq() const { return gauge_field.get_plaquette(); }
 
+      Kokkos::complex<T> get_det() const {
+        Kokkos::complex<T> det = 1.0;
+        auto BulkPolicy = Kokkos::MDRangePolicy<Kokkos::Rank<5>>({0,0,0,0,0},{gauge_field.get_dim(0),gauge_field.get_dim(1),gauge_field.get_dim(2),gauge_field.get_dim(3),gauge_field.get_Ndim()}); 
+        Kokkos::parallel_reduce("get_det", BulkPolicy, KOKKOS_CLASS_LAMBDA(const int &x, const int &y, const int &z, const int &t, const int &mu, Kokkos::complex<T> &det) {
+          det += this->gauge_field.get_link(x,y,z,t,mu).det();
+        }, det);
+        Kokkos::fence();
+        return det/(gauge_field.get_volume()*gauge_field.get_Ndim());
+      }
+
+      Kokkos::complex<T> check_gauge() const {
+        Kokkos::complex<T> check = 0.0;
+        auto BulkPolicy = Kokkos::MDRangePolicy<Kokkos::Rank<5>>({0,0,0,0,0},{gauge_field.get_dim(0),gauge_field.get_dim(1),gauge_field.get_dim(2),gauge_field.get_dim(3),gauge_field.get_Ndim()});
+        Kokkos::parallel_reduce("check_gauge", BulkPolicy, KOKKOS_CLASS_LAMBDA(const int &x, const int &y, const int &z, const int &t, const int &mu, Kokkos::complex<T> &check) {
+          GaugeGroup c = dagger(this->gauge_field.get_link(x,y,z,t,mu))*this->gauge_field.get_link(x,y,z,t,mu);
+          for(int i = 0; i < gauge_field.get_Nc(); i++) {
+            check += c(i*gauge_field.get_Nc()+i);
+          }
+        }, check);
+        Kokkos::fence();
+        return check/(gauge_field.get_volume()*gauge_field.get_Ndim()*gauge_field.get_Nc());
+      }
+
       KOKKOS_INLINE_FUNCTION void operator()(initGauge_cold_s, const int &x, const int &y, const int &z, const int &t, const int &mu) const {
         GaugeGroup U;
         U.set_identity();
