@@ -16,7 +16,10 @@ namespace klft {
       // HostView gauge_host;
       
       int LT,LX,LY,LZ;
-      Kokkos::Array<int,4> dims;
+      Kokkos::Array<int,Ndim> dims;
+      Kokkos::Array<int,4> max_dims;
+      Kokkos::Array<int,4> array_dims;
+
 
       typedef Group gauge_group_t;
 
@@ -35,6 +38,8 @@ namespace klft {
         }
         // this->gauge = DeviceView(Kokkos::view_alloc(Kokkos::WithoutInitializing, "gauge"), LX, LY, LZ, LT);
         this->dims = {LX,LY,LZ,LT};
+        this->max_dims = {LX,LY,LZ,LT};
+        this->array_dims = {0,1,2,3};
       }
 
       template <int N = Ndim, typename std::enable_if<N == 3, int>::type = 0>
@@ -49,7 +54,9 @@ namespace klft {
           }
         }
         // this->gauge = DeviceView(Kokkos::view_alloc(Kokkos::WithoutInitializing, "gauge"), LX, LY, LZ, LT);
-        this->dims = {LX,LY,LZ,LT};
+        this->dims = {LX,LY,LT};
+        this->max_dims = {LX,LY,LZ,LT};
+        this->array_dims = {0,1,3,-100};
       }
 
       template <int N = Ndim, typename std::enable_if<N == 2, int>::type = 0>
@@ -64,7 +71,9 @@ namespace klft {
           }
         }
         // this->gauge = DeviceView(Kokkos::view_alloc(Kokkos::WithoutInitializing, "gauge"), LX, LY, LZ, LT);
-        this->dims = {LX,LY,LZ,LT};
+        this->dims = {LX,LT};
+        this->max_dims = {LX,LY,LZ,LT};
+        this->array_dims = {0,3,-100,-100};
       }
 
       KOKKOS_FUNCTION int get_Ndim() const { return Ndim; }
@@ -79,6 +88,14 @@ namespace klft {
         return this->dims[mu];
       }
 
+      KOKKOS_FUNCTION int get_max_dim(const int &mu) const {
+        return this->max_dims[mu];
+      }
+
+      KOKKOS_FUNCTION int get_array_dim(const int &mu) const {
+        return this->array_dims[mu];
+      }
+
       KOKKOS_INLINE_FUNCTION void operator()(set_one_s, const int &x, const int &y, const int &z, const int &t, const int &mu) const {
         #pragma unroll
         for(int i = 0; i < Nc*Nc; i++) {
@@ -91,7 +108,7 @@ namespace klft {
       }
 
       void set_one() {
-        auto BulkPolicy = Kokkos::MDRangePolicy<set_one_s,Kokkos::Rank<5>>({0,0,0,0,0},{this->LX,this->LY,this->LZ,this->LT,Ndim});
+        auto BulkPolicy = Kokkos::MDRangePolicy<set_one_s,Kokkos::Rank<5>>({0,0,0,0,0},{this->get_max_dim(0),this->get_max_dim(1),this->get_max_dim(2),this->get_max_dim(3),Ndim});
         Kokkos::parallel_for("set_one", BulkPolicy, *this);
       }
 
@@ -131,11 +148,11 @@ namespace klft {
         Group U1, U2, U3, U4;
         Kokkos::Array<int,4> site = {x,y,z,t};
         Kokkos::Array<int,4> site_plus_mu = {x,y,z,t};
-        site_plus_mu[mu] = (site_plus_mu[mu] + 1) % this->dims[mu];
+        site_plus_mu[this->array_dims[mu]] = (site_plus_mu[this->array_dims[mu]] + 1) % this->dims[mu];
         #pragma unroll
         for(int nu = 0; nu < mu; ++nu){
           Kokkos::Array<int,4> site_plus_nu = {x,y,z,t};
-          site_plus_nu[nu] = (site_plus_nu[nu] + 1) % this->dims[nu];
+          site_plus_nu[this->array_dims[nu]] = (site_plus_nu[this->array_dims[nu]] + 1) % this->dims[nu];
           U1 = this->get_link(site,mu);
           U2 = this->get_link(site_plus_mu,nu);
           U3 = this->get_link(site_plus_nu,mu);
@@ -145,7 +162,7 @@ namespace klft {
       }
 
       T get_plaquette(bool Normalize = true) {
-        auto BulkPolicy = Kokkos::MDRangePolicy<plaq_s,Kokkos::Rank<5>>({0,0,0,0,0},{this->LX,this->LY,this->LZ,this->LT,Ndim});
+        auto BulkPolicy = Kokkos::MDRangePolicy<plaq_s,Kokkos::Rank<5>>({0,0,0,0,0},{this->get_max_dim(0),this->get_max_dim(1),this->get_max_dim(2),this->get_max_dim(3),Ndim});
         T plaq = 0.0;
         Kokkos::parallel_reduce("plaquette", BulkPolicy, *this, plaq);
         if(Normalize) plaq /= this->get_volume()*((Ndim-1)*Ndim/2)*Nc;
@@ -157,29 +174,29 @@ namespace klft {
         Group U1, U2, U3;
         Kokkos::Array<int,4> site = {x,y,z,t};
         Kokkos::Array<int,4> site_plus_mu = {x,y,z,t};
-        site_plus_mu[mu] = (site_plus_mu[mu] + 1) % this->dims[mu];
+        site_plus_mu[this->array_dims[mu]] = (site_plus_mu[this->array_dims[mu]] + 1) % this->dims[mu];
         Kokkos::Array<int,4> site_pm_nu = {x,y,z,t};
         #pragma unroll
         for(int nu = 0; nu < Ndim; ++nu) {
           if(nu == mu) continue;
-          site_pm_nu[nu] = (site_pm_nu[nu] + 1) % this->dims[nu];
+          site_pm_nu[this->array_dims[nu]] = (site_pm_nu[this->array_dims[nu]] + 1) % this->dims[nu];
           U1 = get_link(site_plus_mu,nu);
           U2 = get_link(site_pm_nu,mu);
           U3 = get_link(site,nu);
           staple += U1*dagger(U2)*dagger(U3);
-          site_pm_nu[nu] = (site_pm_nu[nu] - 1 + this->dims[nu]) % this->dims[nu];
+          site_pm_nu[this->array_dims[nu]] = (site_pm_nu[this->array_dims[nu]] - 1 + this->dims[nu]) % this->dims[nu];
         }
         #pragma unroll
         for(int nu = 0; nu < Ndim; ++nu) {
           if(nu == mu) continue;
-          site_plus_mu[nu] = (site_plus_mu[nu] - 1 + this->dims[nu]) % this->dims[nu];
-          site_pm_nu[nu] = (site_pm_nu[nu] - 1 + this->dims[nu]) % this->dims[nu];
+          site_plus_mu[this->array_dims[nu]] = (site_plus_mu[this->array_dims[nu]] - 1 + this->dims[nu]) % this->dims[nu];
+          site_pm_nu[this->array_dims[nu]] = (site_pm_nu[this->array_dims[nu]] - 1 + this->dims[nu]) % this->dims[nu];
           U1 = get_link(site_plus_mu,nu);
           U2 = get_link(site_pm_nu,mu);
           U3 = get_link(site_pm_nu,nu);
           staple += dagger(U1)*dagger(U2)*U3;
-          site_pm_nu[nu] = (site_pm_nu[nu] + 1) % this->dims[nu];
-          site_plus_mu[nu] = (site_plus_mu[nu] + 1) % this->dims[nu];
+          site_pm_nu[this->array_dims[nu]] = (site_pm_nu[this->array_dims[nu]] + 1) % this->dims[nu];
+          site_plus_mu[this->array_dims[nu]] = (site_plus_mu[this->array_dims[nu]] + 1) % this->dims[nu];
         }
         return staple;
       }
