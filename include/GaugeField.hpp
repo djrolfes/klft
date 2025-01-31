@@ -3,7 +3,7 @@
 
 namespace klft {
 
-  template <typename T, class GaugeGroup, int Ndim = 4, int Nc = 3>
+  template <typename T, class Group, int Ndim = 4, int Nc = 3>
   class GaugeField {
     public:
       struct set_one_s {};
@@ -17,6 +17,8 @@ namespace klft {
       
       int LT,LX,LY,LZ;
       Kokkos::Array<int,4> dims;
+
+      typedef Group gauge_group_t;
 
       GaugeField() = default;
 
@@ -78,9 +80,11 @@ namespace klft {
       }
 
       KOKKOS_INLINE_FUNCTION void operator()(set_one_s, const int &x, const int &y, const int &z, const int &t, const int &mu) const {
+        #pragma unroll
         for(int i = 0; i < Nc*Nc; i++) {
           this->gauge[mu][i](x,y,z,t) = Kokkos::complex<T>(0.0,0.0);
         }
+        #pragma unroll
         for(int i = 0; i < Nc; i++) {
           this->gauge[mu][i*Nc+i](x,y,z,t) = Kokkos::complex<T>(1.0,0.0);
         }
@@ -91,39 +95,44 @@ namespace klft {
         Kokkos::parallel_for("set_one", BulkPolicy, *this);
       }
 
-      KOKKOS_INLINE_FUNCTION GaugeGroup get_link(const int &x, const int &y, const int &z, const int &t, const int &mu) const {
+      KOKKOS_INLINE_FUNCTION Group get_link(const int &x, const int &y, const int &z, const int &t, const int &mu) const {
         Kokkos::Array<Kokkos::complex<T>,Nc*Nc> link;
+        #pragma unroll
         for(int i = 0; i < Nc*Nc; i++) {
           link[i] = this->gauge[mu][i](x,y,z,t);
         }
-        return GaugeGroup(link);
+        return Group(link);
       }
 
-      KOKKOS_INLINE_FUNCTION GaugeGroup get_link(const Kokkos::Array<int,4> &site, const int &mu) const {
+      KOKKOS_INLINE_FUNCTION Group get_link(const Kokkos::Array<int,4> &site, const int &mu) const {
         Kokkos::Array<Kokkos::complex<T>,Nc*Nc> link;
+        #pragma unroll
         for(int i = 0; i < Nc*Nc; i++) {
           link[i] = this->gauge[mu][i](site[0],site[1],site[2],site[3]);
         }
-        return GaugeGroup(link);
+        return Group(link);
       }
 
-      KOKKOS_INLINE_FUNCTION void set_link(const int &x, const int &y, const int &z, const int &t, const int &mu, const GaugeGroup &U) const {
+      KOKKOS_INLINE_FUNCTION void set_link(const int &x, const int &y, const int &z, const int &t, const int &mu, const Group &U) const {
+        #pragma unroll
         for(int i = 0; i < Nc*Nc; i++) {
           this->gauge[mu][i](x,y,z,t) = U(i);
         }
       }
 
-      KOKKOS_INLINE_FUNCTION void set_link(const Kokkos::Array<int,4> &site, const int &mu, const GaugeGroup &U) {
+      KOKKOS_INLINE_FUNCTION void set_link(const Kokkos::Array<int,4> &site, const int &mu, const Group &U) {
+        #pragma unroll
         for(int i = 0; i < Nc*Nc; i++) {
           this->gauge[mu][i](site[0],site[1],site[2],site[3]) = U(i);
         }
       }
 
       KOKKOS_INLINE_FUNCTION void operator()(plaq_s, const int &x, const int &y, const int &z, const int &t, const int &mu, T &plaq) const {
-        GaugeGroup U1, U2, U3, U4;
+        Group U1, U2, U3, U4;
         Kokkos::Array<int,4> site = {x,y,z,t};
         Kokkos::Array<int,4> site_plus_mu = {x,y,z,t};
         site_plus_mu[mu] = (site_plus_mu[mu] + 1) % this->dims[mu];
+        #pragma unroll
         for(int nu = 0; nu < mu; ++nu){
           Kokkos::Array<int,4> site_plus_nu = {x,y,z,t};
           site_plus_nu[nu] = (site_plus_nu[nu] + 1) % this->dims[nu];
@@ -135,20 +144,22 @@ namespace klft {
         }
       }
 
-      T get_plaquette() {
+      T get_plaquette(bool Normalize = true) {
         auto BulkPolicy = Kokkos::MDRangePolicy<plaq_s,Kokkos::Rank<5>>({0,0,0,0,0},{this->LX,this->LY,this->LZ,this->LT,Ndim});
         T plaq = 0.0;
         Kokkos::parallel_reduce("plaquette", BulkPolicy, *this, plaq);
-        return plaq/(this->get_volume()*((Ndim-1)*Ndim/2)*Nc);
+        if(Normalize) plaq /= this->get_volume()*((Ndim-1)*Ndim/2)*Nc;
+        return plaq;
       }
 
-      KOKKOS_INLINE_FUNCTION GaugeGroup get_staple(const int &x, const int &y, const int &z, const int &t, const int &mu) const {
-        GaugeGroup staple(0.0);
-        GaugeGroup U1, U2, U3;
+      KOKKOS_INLINE_FUNCTION Group get_staple(const int &x, const int &y, const int &z, const int &t, const int &mu) const {
+        Group staple(0.0);
+        Group U1, U2, U3;
         Kokkos::Array<int,4> site = {x,y,z,t};
         Kokkos::Array<int,4> site_plus_mu = {x,y,z,t};
         site_plus_mu[mu] = (site_plus_mu[mu] + 1) % this->dims[mu];
         Kokkos::Array<int,4> site_pm_nu = {x,y,z,t};
+        #pragma unroll
         for(int nu = 0; nu < Ndim; ++nu) {
           if(nu == mu) continue;
           site_pm_nu[nu] = (site_pm_nu[nu] + 1) % this->dims[nu];
@@ -158,6 +169,7 @@ namespace klft {
           staple += U1*dagger(U2)*dagger(U3);
           site_pm_nu[nu] = (site_pm_nu[nu] - 1 + this->dims[nu]) % this->dims[nu];
         }
+        #pragma unroll
         for(int nu = 0; nu < Ndim; ++nu) {
           if(nu == mu) continue;
           site_plus_mu[nu] = (site_plus_mu[nu] - 1 + this->dims[nu]) % this->dims[nu];
@@ -170,6 +182,14 @@ namespace klft {
           site_plus_mu[nu] = (site_plus_mu[nu] + 1) % this->dims[nu];
         }
         return staple;
+      }
+
+      void copy(const GaugeField<T,Group,Ndim,Nc> &in) {
+        for(int i = 0; i < Nc*Nc; ++i) {
+          for(int mu = 0; mu < Ndim; ++mu) {
+            Kokkos::deep_copy(this->gauge[mu][i], in.gauge[mu][i]);
+          }
+        }
       }
   };
 

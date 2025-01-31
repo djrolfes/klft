@@ -3,7 +3,7 @@
 
 namespace klft {
 
-  template <typename T, class GaugeGroup, class GaugeFieldType, class RNG>
+  template <typename T, class Group, class GaugeFieldType, class RNG>
   class Metropolis {
     public:
       struct initGauge_cold_s {};
@@ -32,14 +32,14 @@ namespace klft {
       KOKKOS_FUNCTION T get_plaq() const { return gauge_field.get_plaquette(); }
 
       KOKKOS_INLINE_FUNCTION void operator()(initGauge_cold_s, const int &x, const int &y, const int &z, const int &t, const int &mu) const {
-        GaugeGroup U;
+        Group U;
         U.set_identity();
         this->gauge_field.set_link(x,y,z,t,mu,U);
       }
 
       KOKKOS_INLINE_FUNCTION void operator()(initGauge_hot_s, const int &x, const int &y, const int &z, const int &t, const int &mu) const {
         auto generator = rng.get_state();
-        GaugeGroup U;
+        Group U;
         U.get_random(generator,delta);
         this->gauge_field.set_link(x,y,z,t,mu,U);
         rng.free_state(generator);
@@ -51,14 +51,14 @@ namespace klft {
         auto generator = rng.get_state();
         T num_accepted = 0.0;
         T delS = 0.0;
-        GaugeGroup U = gauge_field.get_link(x,y,z,t,mu);
-        GaugeGroup staple = gauge_field.get_staple(x,y,z,t,mu);
-        GaugeGroup tmp1 = U*staple;
-        GaugeGroup R;
+        Group U = gauge_field.get_link(x,y,z,t,mu);
+        Group staple = gauge_field.get_staple(x,y,z,t,mu);
+        Group tmp1 = U*staple;
+        Group R;
         for(int i = 0; i < n_hit; ++i) {
           R.get_random(generator, delta);
-          GaugeGroup U_new = U*R;
-          GaugeGroup tmp2 = U_new*staple;
+          Group U_new = U*R;
+          Group tmp2 = U_new*staple;
           delS = (beta/static_cast<T>(gauge_field.get_Nc()))*(tmp1.retrace() - tmp2.retrace());
           bool accept = delS < 0.0;
           if(!accept) {
