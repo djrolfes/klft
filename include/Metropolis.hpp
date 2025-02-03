@@ -50,7 +50,7 @@ namespace klft {
         auto generator = rng.get_state();
         T num_accepted = 0.0;
         T delS = 0.0;
-        const int tt = t + 1*odd_even;
+        const int tt = 2*t + 1*odd_even;
         Group U = gauge_field.get_link(x,y,z,tt,mu);
         Group staple = gauge_field.get_staple(x,y,z,tt,mu);
         Group tmp1 = U*staple;
