@@ -229,11 +229,11 @@ namespace klft {
     U1.copy(Umu);
     Unu.absorb_direction(gauge,nu);
     U2.copy(Unu);
-    for(int i = 0; i < Lmu; ++i) {
+    for(int i = 1; i < Lmu; ++i) {
       Umu.shift_plus(tmp,mu,1);
       U1.UxU(Umu);
     }
-    for(int i = 0; i < Lnu; ++i) {
+    for(int i = 1; i < Lnu; ++i) {
       Unu.shift_plus(tmp,nu,1);
       U2.UxU(Unu);
     }
