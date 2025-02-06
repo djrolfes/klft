@@ -8,6 +8,7 @@ namespace klft {
   public:
     struct set_one_s {};
     struct plaq_s {};
+    struct restoreGauge_s {};
     using complex_t = Kokkos::complex<T>;
     using DeviceView = Kokkos::View<complex_t****>;
     // using HostView = typename DeviceView::HostMirror;
@@ -42,6 +43,23 @@ namespace klft {
       this->array_dims = {0,1,2,3};
     }
 
+    template <int N = Ndim, typename std::enable_if<N == 4, int>::type = 0>
+    GaugeField(const Kokkos::Array<int,4> &_dims) {
+      this->LT = _dims[0];
+      this->LX = _dims[1];
+      this->LY = _dims[2];
+      this->LZ = _dims[3];
+      for(int i = 0; i < Nc*Nc; ++i) {
+        for(int mu = 0; mu < Ndim; ++mu) {
+          this->gauge[mu][i] = DeviceView(Kokkos::view_alloc(Kokkos::WithoutInitializing, "gauge"), LX, LY, LZ, LT);
+        }
+      }
+      // this->gauge = DeviceView(Kokkos::view_alloc(Kokkos::WithoutInitializing, "gauge"), LX, LY, LZ, LT);
+      this->dims = {LX,LY,LZ,LT};
+      this->max_dims = {LX,LY,LZ,LT};
+      this->array_dims = {0,1,2,3};
+    }
+
     template <int N = Ndim, typename std::enable_if<N == 3, int>::type = 0>
     GaugeField(const int &_LX, const int &_LY, const int &_LT) {
       this->LT = _LT;
@@ -59,10 +77,44 @@ namespace klft {
       this->array_dims = {0,1,3,-100};
     }
 
+    template <int N = Ndim, typename std::enable_if<N == 3, int>::type = 0>
+    GaugeField(const Kokkos::Array<int,3> &_dims) {
+      this->LT = _dims[0];
+      this->LX = _dims[1];
+      this->LY = _dims[2];
+      this->LZ = 1;
+      for(int i = 0; i < Nc*Nc; ++i) {
+        for(int mu = 0; mu < Ndim; ++mu) {
+          this->gauge[mu][i] = DeviceView(Kokkos::view_alloc(Kokkos::WithoutInitializing, "gauge"), LX, LY, LZ, LT);
+        }
+      }
+      // this->gauge = DeviceView(Kokkos::view_alloc(Kokkos::WithoutInitializing, "gauge"), LX, LY, LZ, LT);
+      this->dims = {LX,LY,LT};
+      this->max_dims = {LX,LY,LZ,LT};
+      this->array_dims = {0,1,3,-100};
+    }
+
     template <int N = Ndim, typename std::enable_if<N == 2, int>::type = 0>
     GaugeField(const int &_LX, const int &_LT) {
       this->LT = _LT;
       this->LX = _LX;
+      this->LY = 1;
+      this->LZ = 1;
+      for(int i = 0; i < Nc*Nc; ++i) {
+        for(int mu = 0; mu < Ndim; ++mu) {
+          this->gauge[mu][i] = DeviceView(Kokkos::view_alloc(Kokkos::WithoutInitializing, "gauge"), LX, LY, LZ, LT);
+        }
+      }
+      // this->gauge = DeviceView(Kokkos::view_alloc(Kokkos::WithoutInitializing, "gauge"), LX, LY, LZ, LT);
+      this->dims = {LX,LT};
+      this->max_dims = {LX,LY,LZ,LT};
+      this->array_dims = {0,3,-100,-100};
+    }
+
+    template <int N = Ndim, typename std::enable_if<N == 2, int>::type = 0>
+    GaugeField(const Kokkos::Array<int,2> &_dims) {
+      this->LT = _dims[0];
+      this->LX = _dims[1];
       this->LY = 1;
       this->LZ = 1;
       for(int i = 0; i < Nc*Nc; ++i) {
@@ -208,6 +260,30 @@ namespace klft {
         }
       }
     }
+
+    KOKKOS_INLINE_FUNCTION void operator()(restoreGauge_s, const int &x, const int &y, const int &z, const int &t, const int &mu) const {
+      Group tmp = this->get_link(x,y,z,t,mu);
+      tmp.restoreGauge();
+      this->set_link(x,y,z,t,mu,tmp);
+    }
+
+    void restoreGauge() {
+      auto BulkPolicy = Kokkos::MDRangePolicy<restoreGauge_s,Kokkos::Rank<5>>({0,0,0,0,0},{this->get_max_dim(0),this->get_max_dim(1),this->get_max_dim(2),this->get_max_dim(3),Ndim});
+      Kokkos::parallel_for("restoreGauge", BulkPolicy, *this);
+    }
+
+    template <class RNG>
+    void set_random(T delta, RNG rng) {
+      auto BulkPolicy = Kokkos::MDRangePolicy<Kokkos::Rank<5>>({0,0,0,0,0},{this->get_max_dim(0),this->get_max_dim(1),this->get_max_dim(2),this->get_max_dim(3),Ndim});
+      Kokkos::parallel_for("set_random", BulkPolicy, KOKKOS_CLASS_LAMBDA(const int &x, const int &y, const int &z, const int &t, const int &mu) {
+        auto generator = rng.get_state();
+        Group U;
+        U.get_random(generator,delta);
+        this->set_link(x,y,z,t,mu,U);
+        rng.free_state(generator);
+      });
+    }
+    
   };
 
 }

@@ -3,6 +3,7 @@
 #include "HMC_Params.hpp"
 #include "HamiltonianField.hpp"
 #include "Integrator.hpp"
+#include <random>
 
 namespace klft {
 
@@ -12,62 +13,61 @@ namespace klft {
     struct randomize_momentum_s {};
     HMC_Params params;
     HamiltonianField<T,Group,Adjoint,Ndim,Nc> hamiltonian_field;
-    std::list<Monomial<T,Group,Adjoint,Ndim,Nc>> monomials;
-    // Integrator<T,Group,Adjoint,Ndim,Nc> &integrator;
+    std::vector<std::unique_ptr<Monomial<T,Group,Adjoint,Ndim,Nc>>> monomials;
+    Integrator<T,Group,Adjoint,Ndim,Nc> *integrator;
     RNG rng;
+    std::mt19937 mt;
+    std::uniform_real_distribution<T> dist;
 
     HMC() = default;
 
-    HMC(const HMC_Params _params, RNG _rng) : params(_params), rng(_rng) {}
+    HMC(const HMC_Params _params, RNG _rng, std::uniform_real_distribution<T> _dist, std::mt19937 _mt) : params(_params), rng(_rng), dist(_dist), mt(_mt) {}
 
-    void add_monomial(Monomial<T,Group,Adjoint,Ndim,Nc> &monomial) {
-      monomials.push_back(monomial);
+    void add_gauge_monomial(const T _beta, const unsigned int _time_scale) {
+      monomials.emplace_back(std::make_unique<GaugeMonomial<T,Group,Adjoint,Ndim,Nc>>(_beta,_time_scale));
+    }
+
+    void add_kinetic_monomial(const unsigned int _time_scale) {
+      monomials.emplace_back(std::make_unique<KineticMonomial<T,Group,Adjoint,Ndim,Nc>>(_time_scale));
     }
 
     void add_hamiltonian_field(const HamiltonianField<T,Group,Adjoint,Ndim,Nc> _hamiltonian_field) {
       hamiltonian_field = _hamiltonian_field;
     }
 
-    // void set_integrator(Integrator<T,Group,Adjoint,Ndim,Nc> &_integrator) {
-    //   integrator = _integrator;
-    // }
+    void set_integrator(const IntegratorType _integrator_type) {
+      switch(_integrator_type) {
+        case LEAPFROG:
+          integrator = new Leapfrog<T,Group,Adjoint,Ndim,Nc>();
+          break;
+        default:
+          break;
+      }
+    }
 
-    // KOKKOS_INLINE_FUNCTION void operator()(randomize_momentum_s, const int &x, const int &y, const int &z, const int &t, const int &mu) const {
-    //   auto generator = rng.get_state();
-    //   Adjoint U;
-    //   U.get_random(generator);
-    //   hamiltonian_field.adjoint_field.set_adjoint(x,y,z,t,mu,U);
-    //   rng.free_state(generator);
-    // }
-
-    // void randomize_momentum() {
-    //   auto BulkPolicy = Kokkos::MDRangePolicy<randomize_momentum_s,Kokkos::Rank<5>>({0,0,0,0,0},{hamiltonian_field.adjoint_field.get_dim(0),hamiltonian_field.adjoint_field.get_dim(1),hamiltonian_field.adjoint_field.get_dim(2),hamiltonian_field.adjoint_field.get_dim(3),hamiltonian_field.adjoint_field.get_Ndim()});
-    //   Kokkos::parallel_for("randomize_momentum", BulkPolicy, *this);
-    // }
-
-    // void hmc_step() {
-    //   randomize_momentum();
-    //   GaugeField<T,Group,Ndim,Nc> gauge_old(hamiltonian_field.gauge_field.get_dim(0),hamiltonian_field.gauge_field.get_dim(1),hamiltonian_field.gauge_field.get_dim(2),hamiltonian_field.gauge_field.get_dim(3));
-    //   gauge_old.copy(hamiltonian_field.gauge_field);
-    //   for(auto monomial : monomials) {
-    //     monomial->heatbath(hamiltonian_field);
-    //   }
-    //   integrator.integrate(monomials, hamiltonian_field, params);
-    //   T delta_H = 0.0;
-    //   for(auto monomial : monomials) {
-    //     monomial->accept();
-    //     delta_H += monomial->get_delta_H();
-    //   }
-    //   bool accept = true;
-    //   if(delta_H > 0.0) {
-    //     if(rng() > exp(-delta_H)) {
-    //       accept = false;
-    //     }
-    //   }
-    //   if(!accept) {
-    //     hamiltonian_field.gauge_field.copy(gauge_old);
-    //   }
-    // }
+    void hmc_step() {
+      hamiltonian_field.randomize_momentum(rng);
+      GaugeField<T,Group,Ndim,Nc> gauge_old(hamiltonian_field.gauge_field.dims);
+      gauge_old.copy(hamiltonian_field.gauge_field);
+      for(int i = 0; i < monomials.size(); ++i) {
+        monomials[i]->heatbath(hamiltonian_field);
+      }
+      integrator->integrate(monomials, hamiltonian_field, params);
+      T delta_H = 0.0;
+      for(int i = 0; i < monomials.size(); ++i) {
+        monomials[i]->accept(hamiltonian_field);
+        delta_H += monomials[i]->get_delta_H();
+      }
+      bool accept = true;
+      if(delta_H > 0.0) {
+        if(dist(mt) > Kokkos::exp(-delta_H)) {
+          accept = false;
+        }
+      }
+      if(!accept) {
+        hamiltonian_field.gauge_field.copy(gauge_old);
+      }
+    }
 
   };
 } // namespace klft

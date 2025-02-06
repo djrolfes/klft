@@ -55,6 +55,10 @@ namespace klft {
       v[2] = -v[2];
     }
 
+    KOKKOS_INLINE_FUNCTION T norm2() {
+      return v[0]*v[0] + v[1]*v[1] + v[2]*v[2];
+    }
+
     template <class RNG>
     KOKKOS_INLINE_FUNCTION void get_random(RNG &generator) {
       v[0] = generator.normal(0.,1.);
@@ -121,8 +125,17 @@ namespace klft {
       v = in.v;
     }
 
+    template <typename Tin>
+    KOKKOS_INLINE_FUNCTION AdjointU1(const Kokkos::Array<Tin,1> &v_in) {
+      v = v_in[0];
+    }
+
     KOKKOS_INLINE_FUNCTION void flip_sign() {
       v = -v;
+    }
+
+    KOKKOS_INLINE_FUNCTION T norm2() {
+      return v*v;
     }
 
     template <class RNG>
@@ -130,7 +143,7 @@ namespace klft {
       v = generator.normal(0.,1.);
     }
 
-    KOKKOS_INLINE_FUNCTION Kokkos::complex<T> operator()(const int &i) const {
+    KOKKOS_INLINE_FUNCTION T operator()(const int &i) const {
       return v;
     }
 

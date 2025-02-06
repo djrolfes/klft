@@ -13,6 +13,8 @@ namespace klft {
 
     int LT,LX,LY,LZ;
     Kokkos::Array<int,4> dims;
+    Kokkos::Array<int,4> max_dims;
+    Kokkos::Array<int,4> array_dims;
 
     typedef Adjoint adjoint_group_t;
 
@@ -30,6 +32,24 @@ namespace klft {
         }
       }
       this->dims = {LX,LY,LZ,LT};
+      this->max_dims = {LX,LY,LZ,LT};
+      this->array_dims = {0,1,2,3};
+    }
+
+    template <int N = Ndim, typename std::enable_if<N == 4, int>::type = 0>
+    AdjointField(const Kokkos::Array<int,4> &_dims) {
+      this->LT = _dims[0];
+      this->LX = _dims[1];
+      this->LY = _dims[2];
+      this->LZ = _dims[3];
+      for(int i = 0; i < 2*Nc-1; ++i) {
+        for(int mu = 0; mu < Ndim; ++mu) {
+          this->adjoint[mu][i] = DeviceView(Kokkos::view_alloc(Kokkos::WithoutInitializing, "adjoint"), LX, LY, LZ, LT);
+        }
+      }
+      this->dims = {LX,LY,LZ,LT};
+      this->max_dims = {LX,LY,LZ,LT};
+      this->array_dims = {0,1,2,3};
     }
 
     template <int N = Ndim, typename std::enable_if<N == 3, int>::type = 0>
@@ -43,7 +63,25 @@ namespace klft {
           this->adjoint[mu][i] = DeviceView(Kokkos::view_alloc(Kokkos::WithoutInitializing, "adjoint"), LX, LY, LZ, LT);
         }
       }
-      this->dims = {LX,LY,LZ,LT};
+      this->dims = {LX,LY,LT};
+      this->max_dims = {LX,LY,LZ,LT};
+      this->array_dims = {0,1,3,-100};
+    }
+
+    template <int N = Ndim, typename std::enable_if<N == 3, int>::type = 0>
+    AdjointField(const Kokkos::Array<int,3> &_dims) {
+      this->LT = _dims[0];
+      this->LX = _dims[1];
+      this->LY = _dims[2];
+      this->LZ = 1;
+      for(int i = 0; i < 2*Nc-1; ++i) {
+        for(int mu = 0; mu < Ndim; ++mu) {
+          this->adjoint[mu][i] = DeviceView(Kokkos::view_alloc(Kokkos::WithoutInitializing, "adjoint"), LX, LY, LZ, LT);
+        }
+      }
+      this->dims = {LX,LY,LT};
+      this->max_dims = {LX,LY,LZ,LT};
+      this->array_dims = {0,1,3,-100};
     }
 
     template <int N = Ndim, typename std::enable_if<N == 2, int>::type = 0>
@@ -57,7 +95,25 @@ namespace klft {
           this->adjoint[mu][i] = DeviceView(Kokkos::view_alloc(Kokkos::WithoutInitializing, "adjoint"), LX, LY, LZ, LT);
         }
       }
-      this->dims = {LX,LY,LZ,LT};
+      this->dims = {LX,LT};
+      this->max_dims = {LX,LY,LZ,LT};
+      this->array_dims = {0,3,-100,-100};
+    }
+
+    template <int N = Ndim, typename std::enable_if<N == 2, int>::type = 0>
+    AdjointField(const Kokkos::Array<int,2> &_dims) {
+      this->LT = _dims[0];
+      this->LX = _dims[1];
+      this->LY = 1;
+      this->LZ = 1;
+      for(int i = 0; i < 2*Nc-1; ++i) {
+        for(int mu = 0; mu < Ndim; ++mu) {
+          this->adjoint[mu][i] = DeviceView(Kokkos::view_alloc(Kokkos::WithoutInitializing, "adjoint"), LX, LY, LZ, LT);
+        }
+      }
+      this->dims = {LX,LT};
+      this->max_dims = {LX,LY,LZ,LT};
+      this->array_dims = {0,3,-100,-100};
     }
 
     KOKKOS_INLINE_FUNCTION int get_Ndim() const { return Ndim; }
@@ -70,6 +126,14 @@ namespace klft {
 
     KOKKOS_INLINE_FUNCTION int get_dim(const int &mu) const {
       return this->dims[mu];
+    }
+
+    KOKKOS_FUNCTION int get_max_dim(const int &mu) const {
+      return this->max_dims[mu];
+    }
+
+    KOKKOS_FUNCTION int get_array_dim(const int &mu) const {
+      return this->array_dims[mu];
     }
 
     KOKKOS_INLINE_FUNCTION Adjoint get_adjoint(const int &x, const int &y, const int &z, const int &t, const int &mu) const {
