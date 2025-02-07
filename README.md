@@ -8,6 +8,8 @@ make
 ```
 
 ## Usage
+
+### Metropolis
 ```bash
 Usage: ./metropolis [options]
 Options:
@@ -23,5 +25,23 @@ Options:
 --seed random number generator seed
 --n-sweep number of sweeps
 --cold-start true or false
+--outfilename output filename
+```
+
+### HMC
+```bash
+Usage: ./hmc [options]
+Options:
+--gauge-group SU2 or U1
+--ndim 2, 3, or 4
+--LX lattice size in x direction
+--LY lattice size in y direction
+--LZ lattice size in z direction
+--LT lattice size in t direction
+--n-traj number of trajectories
+--n-steps number of steps in leapfrog
+--tau trajectory length
+--beta inverse coupling constant
+--seed random number generator seed
 --outfilename output filename
 ```
