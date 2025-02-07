@@ -45,7 +45,7 @@ namespace klft {
       }
     }
 
-    void hmc_step() {
+    bool hmc_step() {
       hamiltonian_field.randomize_momentum(rng);
       GaugeField<T,Group,Ndim,Nc> gauge_old(hamiltonian_field.gauge_field.dims);
       gauge_old.copy(hamiltonian_field.gauge_field);
@@ -67,6 +67,7 @@ namespace klft {
       if(!accept) {
         hamiltonian_field.gauge_field.copy(gauge_old);
       }
+      return accept;
     }
 
   };

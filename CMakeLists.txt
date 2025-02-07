@@ -15,3 +15,7 @@ target_link_libraries(klft Kokkos::kokkos)
 add_executable(metropolis metropolis.cpp)
 target_compile_features(metropolis PRIVATE cxx_std_17)
 target_link_libraries(metropolis klft Kokkos::kokkos)
+
+add_executable(hmc hmc.cpp)
+target_compile_features(hmc PRIVATE cxx_std_17)
+target_link_libraries(hmc klft Kokkos::kokkos)

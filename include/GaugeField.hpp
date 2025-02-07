@@ -28,10 +28,10 @@ namespace klft {
 
     template <int N = Ndim, typename std::enable_if<N == 4, int>::type = 0>
     GaugeField(const int &_LX, const int &_LY, const int &_LZ, const int &_LT) {
-      this->LT = _LT;
       this->LX = _LX;
       this->LY = _LY;
       this->LZ = _LZ;
+      this->LT = _LT;
       for(int i = 0; i < Nc*Nc; ++i) {
         for(int mu = 0; mu < Ndim; ++mu) {
           this->gauge[mu][i] = DeviceView(Kokkos::view_alloc(Kokkos::WithoutInitializing, "gauge"), LX, LY, LZ, LT);
@@ -45,10 +45,10 @@ namespace klft {
 
     template <int N = Ndim, typename std::enable_if<N == 4, int>::type = 0>
     GaugeField(const Kokkos::Array<int,4> &_dims) {
-      this->LT = _dims[0];
-      this->LX = _dims[1];
-      this->LY = _dims[2];
-      this->LZ = _dims[3];
+      this->LX = _dims[0];
+      this->LY = _dims[1];
+      this->LZ = _dims[2];
+      this->LT = _dims[3];
       for(int i = 0; i < Nc*Nc; ++i) {
         for(int mu = 0; mu < Ndim; ++mu) {
           this->gauge[mu][i] = DeviceView(Kokkos::view_alloc(Kokkos::WithoutInitializing, "gauge"), LX, LY, LZ, LT);
@@ -62,9 +62,9 @@ namespace klft {
 
     template <int N = Ndim, typename std::enable_if<N == 3, int>::type = 0>
     GaugeField(const int &_LX, const int &_LY, const int &_LT) {
-      this->LT = _LT;
       this->LX = _LX;
       this->LY = _LY;
+      this->LT = _LT;
       this->LZ = 1;
       for(int i = 0; i < Nc*Nc; ++i) {
         for(int mu = 0; mu < Ndim; ++mu) {
@@ -79,9 +79,9 @@ namespace klft {
 
     template <int N = Ndim, typename std::enable_if<N == 3, int>::type = 0>
     GaugeField(const Kokkos::Array<int,3> &_dims) {
-      this->LT = _dims[0];
-      this->LX = _dims[1];
-      this->LY = _dims[2];
+      this->LX = _dims[0];
+      this->LY = _dims[1];
+      this->LT = _dims[2];
       this->LZ = 1;
       for(int i = 0; i < Nc*Nc; ++i) {
         for(int mu = 0; mu < Ndim; ++mu) {
@@ -96,8 +96,8 @@ namespace klft {
 
     template <int N = Ndim, typename std::enable_if<N == 2, int>::type = 0>
     GaugeField(const int &_LX, const int &_LT) {
-      this->LT = _LT;
       this->LX = _LX;
+      this->LT = _LT;
       this->LY = 1;
       this->LZ = 1;
       for(int i = 0; i < Nc*Nc; ++i) {
@@ -113,8 +113,8 @@ namespace klft {
 
     template <int N = Ndim, typename std::enable_if<N == 2, int>::type = 0>
     GaugeField(const Kokkos::Array<int,2> &_dims) {
-      this->LT = _dims[0];
-      this->LX = _dims[1];
+      this->LX = _dims[0];
+      this->LT = _dims[1];
       this->LY = 1;
       this->LZ = 1;
       for(int i = 0; i < Nc*Nc; ++i) {
