@@ -87,9 +87,9 @@ namespace klft {
       v[8] = Kokkos::complex<T>(1.0,0.0);
     }
 
-    // KOKKOS_INLINE_FUNCTION Kokkos::complex<T> operator()(const int &i) {
-    //   return v[i];
-    // }
+    KOKKOS_INLINE_FUNCTION Kokkos::complex<T> operator()(const int &i) {
+      return v[i];
+    }
 
     KOKKOS_INLINE_FUNCTION Kokkos::complex<T> operator()(const int &i) const {
       return v[i];
@@ -149,8 +149,11 @@ namespace klft {
     template <typename Tin>
     KOKKOS_INLINE_FUNCTION void operator*=(const SU3<Tin> &in) {
       Kokkos::Array<Kokkos::complex<T>,9> tmp{0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
+      #pragma unroll
       for(int i = 0; i < 3; i++) {
+        #pragma unroll
         for(int j = 0; j < 3; j++) {
+          #pragma unroll
           for(int k = 0; k < 3; k++) {
             tmp[3*i+j] += v[3*i+k]*in.v[3*k+j];
           }
@@ -164,8 +167,11 @@ namespace klft {
     template <typename Tin>
     KOKKOS_INLINE_FUNCTION SU3<T> operator*(const SU3<Tin> &in) const {
       Kokkos::Array<Kokkos::complex<T>,9> tmp{0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
+      #pragma unroll
       for(int i = 0; i < 3; i++) {
+        #pragma unroll
         for(int j = 0; j < 3; j++) {
+          #pragma unroll
           for(int k = 0; k < 3; k++) {
             tmp[3*i+j] += v[3*i+k]*in.v[3*k+j];
           }
@@ -180,22 +186,20 @@ namespace klft {
     }
 
     KOKKOS_INLINE_FUNCTION void restoreGauge() {
-      // T norm = Kokkos::sqrt((Kokkos::conj(v[0])*v[0] + Kokkos::conj(v[1])*v[1] + Kokkos::conj(v[2])*v[2]).real());
-      // v[0] /= norm;
-      // v[1] /= norm;
-      // v[2] /= norm;
-      // Kokkos::complex<T> z = Kokkos::conj(v[0])*v[3] + Kokkos::conj(v[1])*v[4] + Kokkos::conj(v[2])*v[5];
-      // v[3] -= z * v[0];
-      // v[4] -= z * v[1];
-      // v[5] -= z * v[2];
-      // norm = Kokkos::sqrt((Kokkos::conj(v[3])*v[3] + Kokkos::conj(v[4])*v[4] + Kokkos::conj(v[5])*v[5]).real());
-      // v[3] /= norm;
-      // v[4] /= norm;
-      // v[5] /= norm;
-      // v[6] = Kokkos::conj((v[1]*v[5]) - (v[5]*v[1]));
-      // v[7] = Kokkos::conj((v[2]*v[3]) - (v[3]*v[2]));
-      // v[8] = Kokkos::conj((v[0]*v[4]) - (v[4]*v[0]));
-      return;
+      T n0 = Kokkos::sqrt((Kokkos::conj(v[0])*v[0] + Kokkos::conj(v[1])*v[1] + Kokkos::conj(v[2])*v[2]).real());
+      T n1 = Kokkos::sqrt((Kokkos::conj(v[3])*v[3] + Kokkos::conj(v[4])*v[4] + Kokkos::conj(v[5])*v[5]).real());
+      v[0] /= n0;
+      v[1] /= n0;
+      v[2] /= n0;
+      v[3] /= n1;
+      v[4] /= n1;
+      v[5] /= n1;
+      v[6] = Kokkos::conj((v[1]*v[5]) - (v[2]*v[4]));
+      v[7] = Kokkos::conj((v[2]*v[3]) - (v[0]*v[5]));
+      v[8] = Kokkos::conj((v[0]*v[4]) - (v[1]*v[3]));
+      v[3] = Kokkos::conj((v[7]*v[2]) - (v[8]*v[1]));
+      v[4] = Kokkos::conj((v[8]*v[0]) - (v[6]*v[2]));
+      v[5] = Kokkos::conj((v[6]*v[1]) - (v[7]*v[0]));
     }
 
     template <class RNG>
