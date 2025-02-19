@@ -25,7 +25,6 @@ namespace klft {
     Leapfrog() : Integrator<T,Group,Adjoint,Ndim,Nc>::Integrator() {}
     void integrate(std::vector<std::unique_ptr<Monomial<T,Group,Adjoint,Ndim,Nc>>> &monomials, HamiltonianField<T,Group,Adjoint,Ndim,Nc> h, HMC_Params params) override {
       AdjointField<T,Adjoint,Ndim,Nc> deriv(h.gauge_field.dims);
-
       for (int mu = 0; mu < 4; ++mu) {
       for (int j = 0; j < deriv.adj_dim; ++j) {
         auto host_mirror = Kokkos::create_mirror_view(deriv.adjoint[mu][j]);
@@ -68,7 +67,7 @@ namespace klft {
         h.update_momentum(deriv,dtau);
         h.update_gauge(dtau);
       }
-      
+
       // final half step
       deriv.set_zero();
       Kokkos::fence();
