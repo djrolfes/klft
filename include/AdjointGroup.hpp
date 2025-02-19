@@ -122,7 +122,7 @@ namespace klft {
     }
 
     KOKKOS_INLINE_FUNCTION AdjointSU3(Kokkos::Array<T,8> &in) {
-      for(int i; i<8; i++){
+      for(int i = 0; i<8; i++){
         v[i] = in[i];
       }
     }
@@ -208,7 +208,7 @@ namespace klft {
     const SU3<T> X(a.asMatrix());
     
     //Use first Taylor approx. (for now?)
-    return SU3<T>(ident + X * Kokkos::complex<T>(0.0, 1.0) + X * X * (-0.5) - X*X*X * (Kokkos::complex<T>(0.0, -1.0)/6.0));
+    return SU3<T>(ident + X * Kokkos::complex<T>(0.0, 1.0));// + X * X * (-0.5) - X*X*X * (Kokkos::complex<T>(0.0, -1.0)/6.0));
   }
 
 

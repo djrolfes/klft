@@ -29,12 +29,7 @@ namespace klft {
 
     void derivative(AdjointField<T,Adjoint,Ndim,Nc> deriv, 
                 HamiltonianField<T,Group,Adjoint,Ndim,Nc> h) override {
-                  constexpr int nAdj  = Adjoint::nElements;
-                  if constexpr(nAdj != 1){
-                  for (int i = 0; i < nAdj; i++){
-          Kokkos::printf("derivBeforeParallel (mu=%d): v[%d] = (%f);\n", 1, i, deriv.adjoint[1][i](1,1,1,1));
-        }}
-
+                  
   auto BulkPolicy = Kokkos::MDRangePolicy<Kokkos::Rank<5>>(
       {0,0,0,0,0},
       { h.gauge_field.get_max_dim(0),
@@ -48,14 +43,21 @@ namespace klft {
     
     // Compute the staple S at this site and direction.
     Group S = h.gauge_field.get_staple(x,y,z,t,mu);
+
+    constexpr int nLink = Group::nElements;
+      constexpr int nAdj  = Adjoint::nElements;   
+    if constexpr(nLink != 1) {
+      if (x == 1 && y == 1 && z == 1 && t == 1 && mu== 1){
+      Kokkos::printf("determinant SLink_start: (%f, %f)\n", h.gauge_field.get_link(x,y,z,t,mu).det().real(), h.gauge_field.get_link(x,y,z,t,mu).det().imag());}
+    }
     S = h.gauge_field.get_link(x,y,z,t,mu) * S;
-    if (x == 1 && y == 1 && z == 1 && t == 1 && mu== 1) {
+    if (x == 1 && y == 1 && z == 1 && t == 1 && mu== 1&&false) {
       constexpr int nLink = Group::nElements;
       constexpr int nAdj  = Adjoint::nElements;   
 
       if constexpr(nAdj != 1) {
         for (int i = 0; i < nAdj; i++){
-          Kokkos::printf("derivAdjoint (mu=%d): v[%d] = (%f);\n", mu, i, deriv.adjoint[mu][i](x,y,z,t));
+          Kokkos::printf("derivAdjoint (mu=%d): v[%d] = (%f);\n", mu, i, deriv.get_adjoint(x,y,z,t,mu).v[i]);
         }}}
     // Construct an adjoint element from S.
     Adjoint dS(S);
@@ -64,11 +66,11 @@ namespace klft {
     
     // For debugging: if we are at a chosen site (say, x=y=z=t=1),
     // print all entries for each object on one line.
-    if (x == 1 && y == 1 && z == 1 && t == 1 && mu==1 &&false) {
+    if (x == 1 && y == 1 && z == 1 && t == 1 && mu==1) {
       constexpr int nLink = Group::nElements;    // e.g. 9 for SU3, 1 for U1
       constexpr int nAdj  = Adjoint::nElements;    // e.g. 8 for SU3, 1 for U1
       
-      // Print the adjoint field dS:
+      // Print the adjoint field dS:a
       if constexpr(nAdj != 1) {
         for (int i = 0; i < nAdj; i++){
           Kokkos::printf("dSAdjoint (mu=%d): v[%d] = (%f);\n", mu, i, dS.v[i]);
@@ -81,6 +83,7 @@ namespace klft {
         for (int i = 0; i < nLink; i++){
           Kokkos::printf("SLink (mu=%d): v[%d] = (%f, %f);\n", i, S.v[i].real(), mu,  S.v[i].imag());
         }
+          Kokkos::printf("determinant SLink: (%f, %f)\n", S.det().real(), S.det().imag());
         Kokkos::printf("\n");
         Kokkos::printf("\n");
       }

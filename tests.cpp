@@ -25,6 +25,7 @@ void test_su3_adjoint_roundtrip() {
   // Create a SU3 element and perturb it randomly.
   SU3<T> U;
   U.get_random(rng, T(0.5));  // Fill U with a random perturbation of amplitude 0.5.
+  Kokkos::printf("randU det: (%f, %f)\n", U.det().real(), U.det().imag());
 
   // Release the RNG state.
   rng_pool.free_state(rng);
@@ -56,9 +57,11 @@ void test_su3_adjoint_roundtrip() {
   // Convert the adjoint back to an SU3 matrix.
   // asMatrix() returns a Kokkos::Array<Kokkos::complex<T>, 9>; use that to construct a new SU3.
   auto U_rec_array = exp(randAdjU);
+  Kokkos::printf("randU_rec det: (%f, %f)\n", U_rec_array.det().real(), U_rec_array.det().imag());
 
   for (int i=0; i<9; i++){
     std::cout << "U_rec_array Matrix element " << i << ": " << U_rec_array.v[i] << std::endl;
+
   }
 
 

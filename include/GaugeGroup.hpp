@@ -449,6 +449,10 @@ namespace klft {
       v[3] /= norm;
     }
 
+    KOKKOS_INLINE_FUNCTION Kokkos::complex<T> det() const {
+      return v[0]*v[3] - v[1]*v[2];
+    }
+
     template <class RNG>
     KOKKOS_INLINE_FUNCTION void get_random(RNG &generator, T delta) {
       T alpha = generator.drand(0.0,delta*2*Kokkos::numbers::pi_v<T>);
