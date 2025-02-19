@@ -4,6 +4,7 @@
 #include "HamiltonianField.hpp"
 #include "Integrator.hpp"
 #include <random>
+#include <iostream>
 
 namespace klft {
 
@@ -58,6 +59,7 @@ namespace klft {
         monomials[i]->accept(hamiltonian_field);
         delta_H += monomials[i]->get_delta_H();
       }
+      std::cout << "delta_H: " << delta_H << "\n";
       bool accept = true;
       if(delta_H > 0.0) {
         if(dist(mt) > Kokkos::exp(-delta_H)) {

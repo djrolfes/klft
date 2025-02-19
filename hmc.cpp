@@ -4,17 +4,17 @@
 using real_t = double;
 
 int main(int argc, char **argv) {
-  std::string gauge_group = "SU2";
+  std::string gauge_group = "SU3";
   int ndim = 4;
-  size_t LX = 8;
-  size_t LY = 8;
-  size_t LZ = 8;
-  size_t LT = 16;
-  size_t n_traj = 1000;
-  size_t n_steps = 50;
+  size_t LX = 4;
+  size_t LY = 4;
+  size_t LZ = 4;
+  size_t LT = 4;
+  size_t n_traj = 1;
+  size_t n_steps = 2;
   real_t tau = 1.0;
-  real_t beta = 2.0;
-  size_t seed = 1234;
+  real_t beta = 3.5;
+  size_t seed = 12345;
   std::string outfilename = "";
   for(int i = 1; i < argc; i++) {
     if(std::string(argv[i]) == "--gauge-group") {
@@ -56,7 +56,7 @@ int main(int argc, char **argv) {
     if(std::string(argv[i]) == "--help") {
       std::cout << "Usage: " << argv[0] << " [options]" << std::endl;
       std::cout << "Options:" << std::endl;
-      std::cout << "--gauge-group SU2 or U1" << std::endl;
+      std::cout << "--gauge-group SU3, SU2 or U1" << std::endl;
       std::cout << "--ndim 2, 3, or 4" << std::endl;
       std::cout << "--LX lattice size in x direction" << std::endl;
       std::cout << "--LY lattice size in y direction" << std::endl;
@@ -71,6 +71,9 @@ int main(int argc, char **argv) {
       return 0;
     }
   }
+  if(gauge_group == "SU3" && ndim == 4) klft::HMC_SU3_4D<real_t>(LX,LY,LZ,LT,n_traj,n_steps,tau,beta,seed,outfilename);
+  if(gauge_group == "SU3" && ndim == 3) klft::HMC_SU3_3D<real_t>(LX,LY,LT,n_traj,n_steps,tau,beta,seed,outfilename);
+  if(gauge_group == "SU3" && ndim == 2) klft::HMC_SU3_2D<real_t>(LX,LT,n_traj,n_steps,tau,beta,seed,outfilename);
   if(gauge_group == "SU2" && ndim == 4) klft::HMC_SU2_4D<real_t>(LX,LY,LZ,LT,n_traj,n_steps,tau,beta,seed,outfilename);
   if(gauge_group == "SU2" && ndim == 3) klft::HMC_SU2_3D<real_t>(LX,LY,LT,n_traj,n_steps,tau,beta,seed,outfilename);
   if(gauge_group == "SU2" && ndim == 2) klft::HMC_SU2_2D<real_t>(LX,LT,n_traj,n_steps,tau,beta,seed,outfilename);

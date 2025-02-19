@@ -1,10 +1,12 @@
 #pragma once
 #include "GLOBAL.hpp"
+#include <type_traits>
 
 namespace klft {
 
   template <typename T>
   struct SU3 {
+    static constexpr int nElements = 9;
 
     Kokkos::Array<Kokkos::complex<T>,9> v;
 
@@ -108,6 +110,21 @@ namespace klft {
       v[8] = Kokkos::conj(v[8]);
     }
 
+    KOKKOS_INLINE_FUNCTION  SU3<T> dagger() const {
+    SU3<T> out;
+    Kokkos::Array<Kokkos::complex<T>,3> tmp = {v[1],v[2],v[5]};
+      out.v[0] = Kokkos::conj(v[0]);
+      out.v[1] = Kokkos::conj(v[3]);
+      out.v[2] = Kokkos::conj(v[6]);
+      out.v[3] = Kokkos::conj(tmp[0]);
+      out.v[4] = Kokkos::conj(v[4]);
+      out.v[5] = Kokkos::conj(v[7]);
+      out.v[6] = Kokkos::conj(tmp[1]);
+      out.v[7] = Kokkos::conj(tmp[2]);
+      out.v[8] = Kokkos::conj(v[8]);
+    return out;
+  }
+
     template <typename Tin>
     KOKKOS_INLINE_FUNCTION void operator+=(const SU3<Tin> &in) {
       v[0] += in.v[0];
@@ -175,8 +192,44 @@ namespace klft {
       return out;
     }
 
+  template <typename Scalar,
+    typename = std::enable_if_t<std::is_arithmetic<Scalar>::value>>
+  KOKKOS_INLINE_FUNCTION SU3 operator*(Scalar s) const {
+    SU3 result;
+    for (int i = 0; i < 9; i++) {
+      result.v[i] = v[i] * s;
+    }
+    return result;
+  }
+
+  template <typename Tin>
+  KOKKOS_INLINE_FUNCTION SU3 operator*(Kokkos::complex<Tin> s) const {
+    SU3 result;
+    for (int i = 0; i < 9; i++) {
+      result.v[i] = v[i] * s;
+    }
+    return result;
+  }
+
+
+  template <typename Scalar,
+    typename = std::enable_if_t<std::is_arithmetic<Scalar>::value>>
+  KOKKOS_INLINE_FUNCTION void operator*=(Scalar s) {
+    for (int i = 0; i < 9; i++) {
+      v[i] *= s;
+    }
+  }
+
+    KOKKOS_INLINE_FUNCTION Kokkos::complex<T> trace() const {
+      return (v[0] + v[4] + v[8]);
+    }
+
     KOKKOS_INLINE_FUNCTION T retrace() const {
       return (v[0] + v[4] + v[8]).real();
+    }
+
+    KOKKOS_INLINE_FUNCTION T imtrace() const {
+      return (v[0] + v[4] + v[8]).imag();
     }
 
     KOKKOS_INLINE_FUNCTION void restoreGauge() {
@@ -262,9 +315,11 @@ namespace klft {
     out.dagger();
     return out;
   }
+  
 
   template <typename T>
   struct SU2 {
+    static constexpr int nElements = 4;
 
     Kokkos::Array<Kokkos::complex<T>,4> v;
 
@@ -429,6 +484,7 @@ namespace klft {
 
   template <typename T>
   struct U1 {
+    static constexpr int nElements = 1;
 
     Kokkos::complex<T> v;
 
