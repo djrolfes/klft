@@ -68,6 +68,7 @@ namespace klft {
         h.update_momentum(deriv,dtau);
         h.update_gauge(dtau);
       }
+      
       // final half step
       deriv.set_zero();
       Kokkos::fence();
