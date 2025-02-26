@@ -382,6 +382,11 @@ namespace klft {
       return tmp;
     }
 
+    KOKKOS_INLINE_FUNCTION SU2<T> operator*(const T &in) const {
+      SU2<T> tmp(in*v[0],in*v[1],in*v[2],in*v[3]);
+      return tmp;
+    }
+
     KOKKOS_INLINE_FUNCTION T retrace() const {
       return v[0].real()*2.0;
     }

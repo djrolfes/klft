@@ -3,6 +3,8 @@
 #include "HMC_Params.hpp"
 #include "HamiltonianField.hpp"
 #include "Integrator.hpp"
+#include "PTBCDefect.hpp"
+#include "PTBCGaugeMonomial.hpp"
 #include <random>
 
 namespace klft {
@@ -22,6 +24,10 @@ namespace klft {
     HMC() = default;
 
     HMC(const HMC_Params _params, RNG _rng, std::uniform_real_distribution<T> _dist, std::mt19937 _mt) : params(_params), rng(_rng), dist(_dist), mt(_mt) {}
+
+    void add_gauge_monomial(const T _beta, const unsigned int _time_scale, const PTBCDefect<T, Ndim> _defect) {
+      monomials.emplace_back(std::make_unique<PTBCGaugeMonomial<T,Group,Adjoint,Ndim,Nc>>(_beta,_time_scale, _defect));
+    }
 
     void add_gauge_monomial(const T _beta, const unsigned int _time_scale) {
       monomials.emplace_back(std::make_unique<GaugeMonomial<T,Group,Adjoint,Ndim,Nc>>(_beta,_time_scale));

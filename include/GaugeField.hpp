@@ -1,5 +1,6 @@
 #pragma once
 #include "GaugeGroup.hpp"
+#include "PTBCDefect.hpp"
 
 namespace klft {
 
@@ -253,7 +254,7 @@ namespace klft {
       return staple;
     }
 
-    KOKKOS_INLINE_FUNCTION Group get_staple_PTBC(const int &x, const int &y, const int &z, const int &t, const int &mu) const {
+    KOKKOS_INLINE_FUNCTION Group get_staple(const int &x, const int &y, const int &z, const int &t, const int &mu, const PTBCDefect<T, Ndim> &defect) const {
       Group staple(0.0);
       Group U1, U2, U3;
       Kokkos::Array<int,4> site = {x,y,z,t};
@@ -264,9 +265,9 @@ namespace klft {
       for(int nu = 0; nu < Ndim; ++nu) {
         if(nu == mu) continue;
         site_pm_nu[this->array_dims[nu]] = (site_pm_nu[this->array_dims[nu]] + 1) % this->dims[nu];
-        U1 = get_link(site_plus_mu,nu);
-        U2 = get_link(site_pm_nu,mu);
-        U3 = get_link(site,nu);
+        U1 = get_link(site_plus_mu,nu)*defect(site_plus_mu,nu);
+        U2 = get_link(site_pm_nu,mu)*defect(site_pm_nu,mu);
+        U3 = get_link(site,nu)*defect(site,nu);
         staple += U1*dagger(U2)*dagger(U3);
         site_pm_nu[this->array_dims[nu]] = (site_pm_nu[this->array_dims[nu]] - 1 + this->dims[nu]) % this->dims[nu];
       }
@@ -275,9 +276,9 @@ namespace klft {
         if(nu == mu) continue;
         site_plus_mu[this->array_dims[nu]] = (site_plus_mu[this->array_dims[nu]] - 1 + this->dims[nu]) % this->dims[nu];
         site_pm_nu[this->array_dims[nu]] = (site_pm_nu[this->array_dims[nu]] - 1 + this->dims[nu]) % this->dims[nu];
-        U1 = get_link(site_plus_mu,nu);
-        U2 = get_link(site_pm_nu,mu);
-        U3 = get_link(site_pm_nu,nu);
+        U1 = get_link(site_plus_mu,nu)*defect(site_plus_mu,nu);
+        U2 = get_link(site_pm_nu,mu)*defect(site_pm_nu,mu);
+        U3 = get_link(site_pm_nu,nu)*defect(site_pm_nu,nu);
         staple += dagger(U1)*dagger(U2)*U3;
         site_pm_nu[this->array_dims[nu]] = (site_pm_nu[this->array_dims[nu]] + 1) % this->dims[nu];
         site_plus_mu[this->array_dims[nu]] = (site_plus_mu[this->array_dims[nu]] + 1) % this->dims[nu];
