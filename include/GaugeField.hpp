@@ -253,6 +253,40 @@ namespace klft {
       return staple;
     }
 
+    KOKKOS_INLINE_FUNCTION Group get_staple_PTBC(const int &x, const int &y, const int &z, const int &t, const int &mu) const {
+      Group staple(0.0);
+      Group U1, U2, U3;
+      Kokkos::Array<int,4> site = {x,y,z,t};
+      Kokkos::Array<int,4> site_plus_mu = {x,y,z,t};
+      site_plus_mu[this->array_dims[mu]] = (site_plus_mu[this->array_dims[mu]] + 1) % this->dims[mu];
+      Kokkos::Array<int,4> site_pm_nu = {x,y,z,t};
+      #pragma unroll
+      for(int nu = 0; nu < Ndim; ++nu) {
+        if(nu == mu) continue;
+        site_pm_nu[this->array_dims[nu]] = (site_pm_nu[this->array_dims[nu]] + 1) % this->dims[nu];
+        U1 = get_link(site_plus_mu,nu);
+        U2 = get_link(site_pm_nu,mu);
+        U3 = get_link(site,nu);
+        staple += U1*dagger(U2)*dagger(U3);
+        site_pm_nu[this->array_dims[nu]] = (site_pm_nu[this->array_dims[nu]] - 1 + this->dims[nu]) % this->dims[nu];
+      }
+      #pragma unroll
+      for(int nu = 0; nu < Ndim; ++nu) {
+        if(nu == mu) continue;
+        site_plus_mu[this->array_dims[nu]] = (site_plus_mu[this->array_dims[nu]] - 1 + this->dims[nu]) % this->dims[nu];
+        site_pm_nu[this->array_dims[nu]] = (site_pm_nu[this->array_dims[nu]] - 1 + this->dims[nu]) % this->dims[nu];
+        U1 = get_link(site_plus_mu,nu);
+        U2 = get_link(site_pm_nu,mu);
+        U3 = get_link(site_pm_nu,nu);
+        staple += dagger(U1)*dagger(U2)*U3;
+        site_pm_nu[this->array_dims[nu]] = (site_pm_nu[this->array_dims[nu]] + 1) % this->dims[nu];
+        site_plus_mu[this->array_dims[nu]] = (site_plus_mu[this->array_dims[nu]] + 1) % this->dims[nu];
+      }
+      return staple;
+    }
+
+
+
     void copy(const GaugeField<T,Group,Ndim,Nc> &in) {
       for(int i = 0; i < Nc*Nc; ++i) {
         for(int mu = 0; mu < Ndim; ++mu) {
