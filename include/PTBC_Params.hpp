@@ -5,6 +5,7 @@ namespace klft {
 
   template<typename T, int Ndim = 4>
   class PTBC_Params {
+    public:
     // Do I want to use this to save all simulation parameters for the PTBC?
     size_t N_simulations;
     size_t defect_size;
@@ -14,7 +15,7 @@ namespace klft {
     PTBC_Params() = default;
 
     template <int N = Ndim, typename std::enable_if<N == 4, int>::type = 0>
-    PTBC_Params(const size_t &_N_simulations, const size_t &_defect_size, const size_t &LX,const size_t &LY, const size_t &_LZ,const size_t &LT) {
+    PTBC_Params(const size_t &_N_simulations, const size_t &_defect_size, const size_t &_LX,const size_t &_LY, const size_t &_LZ,const size_t &_LT) {
       this->LX = _LX;
       this->LY = _LY;
       this->LZ = _LZ;
@@ -24,7 +25,7 @@ namespace klft {
     }
 
     template <int N = Ndim, typename std::enable_if<N == 3, int>::type = 0>
-    PTBC_Params(const size_t &_N_simulations, const size_t &_defect_size, const size_t &LX,const size_t &LY,const size_t &LT) {
+    PTBC_Params(const size_t &_N_simulations, const size_t &_defect_size, const size_t &_LX,const size_t &_LY,const size_t &_LT) {
       this->LX = _LX;
       this->LY = _LY;
       this->LT = _LT;
@@ -34,7 +35,7 @@ namespace klft {
     }
 
     template <int N = Ndim, typename std::enable_if<N == 2, int>::type = 0>
-    PTBC_Params(const size_t &_N_simulations, const size_t &_defect_size, const size_t &LX,const size_t &LT) {
+    PTBC_Params(const size_t &_N_simulations, const size_t &_defect_size, const size_t &_LX,const size_t &_LT) {
       this->LX = _LX;
       this->LT = _LT;
       this->LY = 1;

@@ -6,6 +6,7 @@ namespace klft {
     public:
       size_t n_steps;
       double tau;
+      HMC_Params() = default;
       HMC_Params(size_t _n_steps, double _tau) : n_steps(_n_steps), tau(_tau) {}
 
       double get_tau() const { return tau; }
