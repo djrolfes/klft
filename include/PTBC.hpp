@@ -22,6 +22,7 @@ namespace klft {
     std::mt19937 mt;
     std::uniform_real_distribution<T> dist;
     std::vector<std::unique_ptr<HMC<T, Group, Adjoint, RNG, Ndim, Nc>>> hmcSims;
+    std::vector<std::unique_ptr<HamiltonianFieldType>> hamiltonian_fields;
     std::vector<std::unique_ptr<PTBCDefect<T, Ndim>>> defects;
 
 
@@ -55,22 +56,24 @@ namespace klft {
 
     T get_gauge_depression(int i){
       // returns the linearly interpolated gauge depression at lattice site i
-      if (i == (ptcb_params.N_simulations-1)){return T(0);}; //I don't think this is required.
-      return T(1 - i/(ptcb_params.N_simulations-1));
+      //if (i == (ptcb_params.N_simulations-1)){return T(0.0);}; //I don't think this is required.
+      return T(1.0) - T(i)/T(ptcb_params.N_simulations-1);
     }
 
     void init_defects(){
       for (int i = 0; i< ptcb_params.N_simulations; i++){
         defects.emplace_back(std::make_unique<PTBCDefect<T, Ndim>>(get_gauge_depression(i), ptcb_params.defect_size, ptcb_params.LX));
+        Kokkos::printf("defect[%d]: %f; defect(7,0,0,0,0): %f\n", i, defects[i]->gauge_depression, (*defects[i])(ptcb_params.LX-1,0,0,0,0));
       }
     }
 
     void add_hamiltonian_fields(){
       for (int i = 0; i<ptcb_params.N_simulations; i++){
         GaugeFieldType gauge_field = GaugeFieldType(ptcb_params.get_lattice_dims());
+        gauge_field.set_random(0.5,RNG(1234*2));//TODO: why was the seed used here and what should I use?
         AdjointFieldType adjoint_field = AdjointFieldType(ptcb_params.get_lattice_dims());
-        HamiltonianFieldType hamiltonian_field = HamiltonianFieldType(gauge_field,adjoint_field);
-        hmcSims[i]->add_hamiltonian_field(hamiltonian_field);
+        hamiltonian_fields.emplace_back(std::make_unique<HamiltonianFieldType>(gauge_field,adjoint_field));
+        hmcSims[i]->add_hamiltonian_field(*hamiltonian_fields[i]);
       }
     }
 
@@ -86,54 +89,69 @@ namespace klft {
       }
     }
 
-    void swap_areas(int r, int s){
-      //swaps the areas defined by the defect in hmcSims[r] with hmcSims[s]
+ KOKKOS_INLINE_FUNCTION
+void print_gauge_elements(int r, int s) const {
+  // For demonstration, we print the gauge[0] elements at (ptcb_params.LX-1, 0, 0, 0)
+  for (int i = 0; i < Nc * Nc; ++i) {
+    auto val_r = hmcSims[r]->hamiltonian_field.gauge_field.gauge[0][i](ptcb_params.LX - 1, 0, 0, 0);
+    auto val_s = hmcSims[s]->hamiltonian_field.gauge_field.gauge[0][i](ptcb_params.LX - 1, 0, 0, 0);
+    Kokkos::printf("sim r, gauge[0][%d](%d,0,0,0) = (%f, %f)\n", i, ptcb_params.LX - 1,
+                    static_cast<double>(val_r.real()), static_cast<double>(val_r.imag()));
+    Kokkos::printf("sim s, gauge[0][%d](%d,0,0,0) = (%f, %f)\n", i, ptcb_params.LX - 1,
+                    static_cast<double>(val_s.real()), static_cast<double>(val_s.imag()));
+  }
+}
 
-      using complex_t = Kokkos::complex<T>;
-      using DeviceView = Kokkos::View<complex_t****>;
+void swap_areas(int r, int s){
+  using complex_t = Kokkos::complex<T>;
+  using DeviceView = Kokkos::View<complex_t****>;
 
-      auto& gauge_r = hmcSims[r]->hamiltonian_field.gauge_field.gauge;
-      auto& gauge_s = hmcSims[s]->hamiltonian_field.gauge_field.gauge;
+  auto& gauge_r = hmcSims[r]->hamiltonian_field.gauge_field.gauge;
+  auto& gauge_s = hmcSims[s]->hamiltonian_field.gauge_field.gauge;
 
-      int y_end = std::min(ptcb_params.LY, ptcb_params.defect_size); // this might need a -1
-      int z_end = std::min(ptcb_params.LZ, ptcb_params.defect_size);
-      int t_end = std::min(ptcb_params.LT, ptcb_params.defect_size);
+  // Compute region sizes. Note: using a fixed x index.
+  int y_end = std::min(ptcb_params.LY, ptcb_params.defect_size) - 1;
+  int z_end = std::min(ptcb_params.LZ, ptcb_params.defect_size) - 1;
+  int t_end = std::min(ptcb_params.LT, ptcb_params.defect_size) - 1;
+  // For each matrix element in the link (for a given mu, here we use mu=0 as an example)
+  for (int i = 0; i < Nc * Nc; ++i) {
+    // Create subviews for a slice at x = LX-1 and y in [0, y_end), etc.
+    auto subview1 = Kokkos::subview(gauge_r[0][i], ptcb_params.LX - 1,
+                                    std::make_pair(0, y_end),
+                                    std::make_pair(0, z_end),
+                                    std::make_pair(0, t_end));
+    auto subview2 = Kokkos::subview(gauge_s[0][i], ptcb_params.LX - 1,
+                                    std::make_pair(0, y_end),
+                                    std::make_pair(0, z_end),
+                                    std::make_pair(0, t_end));
+    
+    // Create a temporary view with the same layout.
+    using SubViewType = decltype(subview1);
+    auto layout = subview1.layout();
+    SubViewType temp("temp", layout);
+    
+    // Swap the data.
+    Kokkos::deep_copy(temp, subview1);
+    Kokkos::deep_copy(subview1, subview2);
+    Kokkos::deep_copy(subview2, temp);
+    
+    Kokkos::fence();
+  }
+}
 
-      for (int i = 0; i< Nc*Nc; ++i){ //TODO: parallelize the copying in index i
-        auto subview1 = Kokkos::subview(gauge_r[1][i], 
-                                        ptcb_params.LX-1,
-                                        std::make_pair(0, y_end),
-                                        std::make_pair(0, z_end),
-                                        std::make_pair(0, t_end));
-        auto subview2 = Kokkos::subview(gauge_s[1][i],
-                                        ptcb_params.LX-1,
-                                        std::make_pair(0, y_end),
-                                        std::make_pair(0, z_end),
-                                        std::make_pair(0, t_end));
-      
-        // Create a temporary view of the same shape (on the same memory space)
-        using SubViewType = decltype(subview1);
-        auto layout = subview1.layout();
-        SubViewType temp("temp", layout);
-        // Swap the data using deep_copy
-        Kokkos::deep_copy(temp, subview1);   // Save first region in temp
-        Kokkos::deep_copy(subview1, subview2); // Copy second region into first
-        Kokkos::deep_copy(subview2, temp);     // Copy temp into second region
-      }
-    }
 
     T get_delta_S_swap(int r){
       // returns the change in the action caused by swapping defect areas
       // hmcSims[r] swaps with hmcSims[s = r+1] and the difference in action is calculated
       int s = (r + 1) % hmcSims.size();
       std::cout << "s: " << s << "\n";
-      T S_r_r {hmcSims[r]->hamiltonian_field.gauge_field.get_plaquette_around_defect(*defects[r], false)};
-      T S_s_s {hmcSims[s]->hamiltonian_field.gauge_field.get_plaquette_around_defect(*defects[s], false)};
+      T S_r_r {hmcSims[r]->hamiltonian_field.gauge_field.get_plaquette_around_defect(*defects[r],false)};
+      T S_s_s {hmcSims[s]->hamiltonian_field.gauge_field.get_plaquette_around_defect(*defects[s],false)};
       
       std::cout << "S_r_r: " << S_r_r << "\n";
       std::cout << "S_s_s: " << S_s_s << "\n";
 
-      this->swap_areas(r, s);
+      this->swap_areas(r, s); //WHY does this not cause the delta S to do something?
       
       T S_r_s {hmcSims[r]->hamiltonian_field.gauge_field.get_plaquette_around_defect(*defects[r], false)};
       T S_s_r {hmcSims[s]->hamiltonian_field.gauge_field.get_plaquette_around_defect(*defects[s], false)};

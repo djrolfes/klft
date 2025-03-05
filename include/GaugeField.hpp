@@ -1,7 +1,6 @@
 #pragma once
 #include "GaugeGroup.hpp"
 #include "PTBCDefect.hpp"
-#include <iostream>
 
 namespace klft {
 
@@ -224,62 +223,32 @@ T get_single_plaquette(const int &x, const int &y, const int &z, const int &t,
   const Kokkos::Array<int,4> site = {x, y, z, t};
   Kokkos::Array<int,4> site_plus_mu = {x, y, z, t};
   T plaq {0.0};
-
-  // Print original site coordinates
-  Kokkos::printf("site: (%d, %d, %d, %d)\n", x, y, z, t);
-
   // Update site_plus_mu for the mu direction
   site_plus_mu[this->array_dims[mu]] = (site_plus_mu[this->array_dims[mu]] + 1) % this->dims[mu];
-  Kokkos::printf("site_plus_mu (mu=%d): (%d, %d, %d, %d)\n", mu,
-                  site_plus_mu[0], site_plus_mu[1],
-                  site_plus_mu[2], site_plus_mu[3]);
 
   #pragma unroll
   for (int nu = 0; nu < mu; ++nu) {
     Kokkos::Array<int,4> site_plus_nu = {x, y, z, t};
     site_plus_nu[this->array_dims[nu]] = (site_plus_nu[this->array_dims[nu]] + 1) % this->dims[nu];
-    Kokkos::printf("nu: %d, site_plus_nu: (%d, %d, %d, %d)\n", nu,
-                    site_plus_nu[0], site_plus_nu[1],
-                    site_plus_nu[2], site_plus_nu[3]);
 
     // Get the link elements (without the defect factors)
     Group link_site_mu = this->get_link(site, mu);
     Group link_site_plus_mu_nu = this->get_link(site_plus_mu, nu);
     Group link_site_plus_nu_mu = this->get_link(site_plus_nu, mu);
     Group link_site_nu = this->get_link(site, nu);
-
-    // Debug prints for the links
-    Kokkos::printf("U1 (get_link(site,mu)) retrace: %f\n", static_cast<double>(link_site_mu.retrace()));
-    Kokkos::printf("U2 (get_link(site_plus_mu,nu)) retrace: %f\n", static_cast<double>(link_site_plus_mu_nu.retrace()));
-    Kokkos::printf("U3 (get_link(site_plus_nu,mu)) retrace: %f\n", static_cast<double>(link_site_plus_nu_mu.retrace()));
-    Kokkos::printf("U4 (get_link(site,nu)) retrace: %f\n", static_cast<double>(link_site_nu.retrace()));
-
     // Now multiply by the defect factors:
     U1 = link_site_mu * defect(site, mu);
     U2 = link_site_plus_mu_nu * defect(site_plus_mu, nu);
     U3 = link_site_plus_nu_mu * defect(site_plus_nu, mu);
     U4 = link_site_nu * defect(site, nu);
 
-    // Debug prints for the defect-modified links
-    Kokkos::printf("U1 retrace: %f\n", static_cast<double>(U1.retrace()));
-    Kokkos::printf("U2 retrace: %f\n", static_cast<double>(U2.retrace()));
-    Kokkos::printf("U3 retrace: %f\n", static_cast<double>(U3.retrace()));
-    Kokkos::printf("U4 retrace: %f\n", static_cast<double>(U4.retrace()));
-
     // Compute the plaquette contribution for this nu
     auto product = U1 * U2 * dagger(U3) * dagger(U4);
     T prod_retrace = product.retrace();
-    Kokkos::printf("nu: %d, product retrace: %f\n", nu, static_cast<double>(prod_retrace));
-
     plaq += prod_retrace;
-    Kokkos::printf("After nu=%d, cumulative plaq: %f\n", nu, static_cast<double>(plaq));
   }
-  Kokkos::printf("Final plaquette: %f\n", static_cast<double>(plaq));
   return plaq;
 }
-
-
-
 
     KOKKOS_INLINE_FUNCTION void operator()(plaq_s, const int &x, const int &y, const int &z, const int &t, const int &mu, T &plaq) const {
       plaq += this->get_single_plaquette(x,y,z,t,mu);
@@ -302,11 +271,7 @@ T get_single_plaquette(const int &x, const int &y, const int &z, const int &t,
       if (z_max - z_min > this->get_max_dim(2)){z_min = 0; z_max = this->get_max_dim(2);}
       if (t_max - t_min > this->get_max_dim(3)){t_min = 0; t_max = this->get_max_dim(3);}
 
-      std::cout << "x_min: " << x_min << " x_max: " << x_max << " max dim: " << this->get_max_dim(0) << "\n";
-      std::cout << "y_min: " << y_min << " y_max: " << y_max << " max dim: " << this->get_max_dim(1) << "\n";
-      std::cout << "z_min: " << z_min << " z_max: " << z_max << " max dim: " << this->get_max_dim(2) << "\n";
-      std::cout << "t_min: " << t_min << " t_max: " << t_max << " max dim: " << this->get_max_dim(3) << "\n";
-      std::cout << "gauge_depression: " << defect.gauge_depression << "\n";
+      //Kokkos::printf("gauge_depression: %f\n", static_cast<double>(defect.gauge_depression));
 
       //auto BulkPolicy = Kokkos::MDRangePolicy<plaq_s,Kokkos::Rank<5>>({0,0,0,0,0},{1,this->get_max_dim(1),this->get_max_dim(2),this->get_max_dim(3),Ndim});
       using PolicyType = Kokkos::MDRangePolicy<plaq_s, Kokkos::Rank<5>, int>;
@@ -320,7 +285,7 @@ T get_single_plaquette(const int &x, const int &y, const int &z, const int &t,
         int y_index = mod(y, this->get_max_dim(1));
         int z_index = mod(z, this->get_max_dim(2));
         int t_index = mod(t, this->get_max_dim(3));
-        plaq_i += this->get_single_plaquette(x_index, y_index, z_index, t_index, mu);
+        plaq_i += this->get_single_plaquette(x_index, y_index, z_index, t_index, mu, defect);
       }
       , plaq);
       if(Normalize) plaq /= this->get_volume()*((Ndim-1)*Ndim/2)*Nc;// TODO: fix the get_volumne() to the volume that was used. Is this even required?

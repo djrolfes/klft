@@ -138,7 +138,7 @@ namespace klft {
     }
 
     KOKKOS_INLINE_FUNCTION T operator()(const int &x, const int &y, const int &z, const int &t, const int &mu) const {
-      if ((mu==1 
+      if ((mu==0 
           && x == this->LX-1
           && y < defect_length
           && z < defect_length
@@ -149,7 +149,7 @@ namespace klft {
     }
 
     KOKKOS_INLINE_FUNCTION T operator()(const Kokkos::Array<int,4> &site, const int &mu) const {
-      if ((mu==1 
+      if ((mu==0 
           && site[0] == this->LX-1
           && site[1] < defect_length
           && site[2] < defect_length

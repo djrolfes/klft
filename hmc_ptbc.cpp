@@ -16,7 +16,7 @@ int main(int argc, char **argv) {
   real_t beta = 2.0;
   size_t seed = 1234;
   std::string outfilename = "";
-  size_t defect_length = 1;
+  size_t defect_length = 2;
   real_t gauge_depression = 0.5;
   for(int i = 1; i < argc; i++) {
     if(std::string(argv[i]) == "--defect-length") {

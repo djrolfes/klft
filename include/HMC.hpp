@@ -37,7 +37,7 @@ namespace klft {
       monomials.emplace_back(std::make_unique<KineticMonomial<T,Group,Adjoint,Ndim,Nc>>(_time_scale));
     }
 
-    void add_hamiltonian_field(const HamiltonianField<T,Group,Adjoint,Ndim,Nc> _hamiltonian_field) {
+    void add_hamiltonian_field(const HamiltonianField<T,Group,Adjoint,Ndim,Nc> &_hamiltonian_field) {
       hamiltonian_field = _hamiltonian_field;
     }
 
@@ -70,6 +70,7 @@ namespace klft {
           accept = false;
         }
       }
+      Kokkos::printf("plaquette (HMC): %f\n", static_cast<double>(hamiltonian_field.gauge_field.get_plaquette(false)));
       if(!accept) {
         hamiltonian_field.gauge_field.copy(gauge_old);
       }
