@@ -30,7 +30,7 @@ namespace klft {
     if(outfilename != "") {
       outfile.open(outfilename);
       outfile << "traj, accept, plaquette, time, acceptance rate, [hmc acceptances], swap start, [swap acceptances], [delta S swap]" << std::endl;
-    }
+    } // TODO: add settings to second line of the outfile.
     Kokkos::initialize();
     {
       using Group = SU2<T>;
