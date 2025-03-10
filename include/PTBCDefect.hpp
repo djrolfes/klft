@@ -123,7 +123,7 @@ namespace klft {
 
     KOKKOS_INLINE_FUNCTION T get_plaquette_depression(Kokkos::Array<int, 4> &site, const int &mu, const int &nu){
       // returns the product of the gauge depressions of a given plaquette
-      if (mu!=1 && nu!=1){return T(1);}
+      if (mu!=0 && nu!=0){return T(1);}
       Kokkos::Array<int,4> site_plus_mu = site;
       Kokkos::Array<int,4> site_plus_nu = site;
       site_plus_mu[this->array_dims[mu]] = (site_plus_mu[this->array_dims[mu]] + 1) % this->dims[mu];

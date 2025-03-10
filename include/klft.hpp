@@ -89,5 +89,5 @@ namespace klft {
   template <typename T>               
   void HMC_SU2_4D_PTBC(const size_t &LX, const size_t &LY, const size_t &LZ, const size_t &LT,
                                   const size_t &n_traj, const size_t &n_steps, const T &tau, const T &beta,
-                                  const size_t &seed, const std::string &outfilename, const size_t &defect_length, const T &gauge_depression);
+                                  const size_t &seed, const std::string &outfilename, const size_t &defect_length, const size_t &n_sims);
 }

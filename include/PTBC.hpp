@@ -8,6 +8,17 @@
 
 namespace klft {
 
+  struct PTBCStepLog {
+      // Stores the acceptance of each HMC trajectory
+      std::vector<bool> hmc_acceptances;
+      // Stores the starting index used for swapping
+      int swap_start_index;
+      // For each swap, store whether the swap was accepted (true) or rejected (false)
+      std::vector<bool> swap_acceptances;
+      // Optionally, store the delta S for each swap for further analysis
+      std::vector<double> delta_S_values;
+    };
+
   template<typename T, class Group, class Adjoint, class RNG, int Ndim = 4, int Nc = 2> // Nr = number of running hmcs
   class PTBC {
   public:
@@ -19,11 +30,16 @@ namespace klft {
     HMC_Params hmc_params;
     Integrator<T,Group,Adjoint,Ndim,Nc> *integrator;
     RNG rng;
+    T beta;
     std::mt19937 mt;
     std::uniform_real_distribution<T> dist;
     std::vector<std::unique_ptr<HMC<T, Group, Adjoint, RNG, Ndim, Nc>>> hmcSims;
     std::vector<std::unique_ptr<HamiltonianFieldType>> hamiltonian_fields;
     std::vector<std::unique_ptr<PTBCDefect<T, Ndim>>> defects;
+    std::vector<PTBCStepLog> ptbc_logs;
+
+
+    
 
 
     PTBC() = default;
@@ -33,7 +49,7 @@ namespace klft {
         this->ptcb_params = _ptcb_params;
         this->hmc_params = _hmc_params; 
         this->rng = _rng; 
-        this->dist = _dist; 
+        this->dist = _dist;
         this->mt = _mt;
         this->init_HMCs();
         this->init_defects();
@@ -56,14 +72,15 @@ namespace klft {
 
     T get_gauge_depression(int i){
       // returns the linearly interpolated gauge depression at lattice site i
-      //if (i == (ptcb_params.N_simulations-1)){return T(0.0);}; //I don't think this is required.
+      //if (i == (ptcb_params.N_simulations-1)){return T(0.0);}; //I don't think this is required.ptcb.
+      if (ptcb_params.N_simulations==1){return T(1.0);}
       return T(1.0) - T(i)/T(ptcb_params.N_simulations-1);
     }
 
     void init_defects(){
       for (int i = 0; i< ptcb_params.N_simulations; i++){
         defects.emplace_back(std::make_unique<PTBCDefect<T, Ndim>>(get_gauge_depression(i), ptcb_params.defect_size, ptcb_params.LX));
-        Kokkos::printf("defect[%d]: %f; defect(7,0,0,0,0): %f\n", i, defects[i]->gauge_depression, (*defects[i])(ptcb_params.LX-1,0,0,0,0));
+        //Kokkos::printf("defect[%d]: %f; defect(7,0,0,0,0): %f\n", i, defects[i]->gauge_depression, (*defects[i])(ptcb_params.LX-1,0,0,0,0));
       }
     }
 
@@ -78,6 +95,7 @@ namespace klft {
     }
 
     void add_gauge_monomials(const T _beta, const unsigned int _time_scale) {
+      this->beta = _beta;
       for (int i=0; i<ptcb_params.N_simulations; i++){
       hmcSims[i]->add_gauge_monomial(_beta, _time_scale, *defects[i]);
       }
@@ -88,19 +106,6 @@ namespace klft {
       hmcSims[i]->add_kinetic_monomial(_time_scale);
       }
     }
-
- KOKKOS_INLINE_FUNCTION
-void print_gauge_elements(int r, int s) const {
-  // For demonstration, we print the gauge[0] elements at (ptcb_params.LX-1, 0, 0, 0)
-  for (int i = 0; i < Nc * Nc; ++i) {
-    auto val_r = hmcSims[r]->hamiltonian_field.gauge_field.gauge[0][i](ptcb_params.LX - 1, 0, 0, 0);
-    auto val_s = hmcSims[s]->hamiltonian_field.gauge_field.gauge[0][i](ptcb_params.LX - 1, 0, 0, 0);
-    Kokkos::printf("sim r, gauge[0][%d](%d,0,0,0) = (%f, %f)\n", i, ptcb_params.LX - 1,
-                    static_cast<double>(val_r.real()), static_cast<double>(val_r.imag()));
-    Kokkos::printf("sim s, gauge[0][%d](%d,0,0,0) = (%f, %f)\n", i, ptcb_params.LX - 1,
-                    static_cast<double>(val_s.real()), static_cast<double>(val_s.imag()));
-  }
-}
 
 void swap_areas(int r, int s){
   using complex_t = Kokkos::complex<T>;
@@ -144,55 +149,59 @@ void swap_areas(int r, int s){
       // returns the change in the action caused by swapping defect areas
       // hmcSims[r] swaps with hmcSims[s = r+1] and the difference in action is calculated
       int s = (r + 1) % hmcSims.size();
-      std::cout << "s: " << s << "\n";
-      T S_r_r {hmcSims[r]->hamiltonian_field.gauge_field.get_plaquette_around_defect(*defects[r],false)};
-      T S_s_s {hmcSims[s]->hamiltonian_field.gauge_field.get_plaquette_around_defect(*defects[s],false)};
+      T S_r_r {this->beta/3 * hmcSims[r]->hamiltonian_field.gauge_field.get_plaquette_around_defect(*defects[r],false)};
+      T S_s_s {this->beta/3 * hmcSims[s]->hamiltonian_field.gauge_field.get_plaquette_around_defect(*defects[s],false)};
       
-      std::cout << "S_r_r: " << S_r_r << "\n";
-      std::cout << "S_s_s: " << S_s_s << "\n";
+      //std::cout << "S_r_r: " << S_r_r << "\n";
+      //std::cout << "S_s_s: " << S_s_s << "\n";
 
-      this->swap_areas(r, s); //WHY does this not cause the delta S to do something?
+      this->swap_areas(r, s);
       
-      T S_r_s {hmcSims[r]->hamiltonian_field.gauge_field.get_plaquette_around_defect(*defects[r], false)};
-      T S_s_r {hmcSims[s]->hamiltonian_field.gauge_field.get_plaquette_around_defect(*defects[s], false)};
+      T S_r_s {this->beta/3 * hmcSims[r]->hamiltonian_field.gauge_field.get_plaquette_around_defect(*defects[r], false)};
+      T S_s_r {this->beta/3 * hmcSims[s]->hamiltonian_field.gauge_field.get_plaquette_around_defect(*defects[s], false)};
       
-      std::cout << "S_r_s: " << S_r_s << "\n";
-      std::cout << "S_s_r: " << S_s_r << "\n";
+      //std::cout << "S_r_s: " << S_r_s << "\n";
+      //std::cout << "S_s_r: " << S_s_r << "\n";
       
       return S_r_s - S_r_r + S_s_r - S_s_s;
 
     }
 
     bool ptbc_hmc_step(){
-      //step each hmc, this should later be parallelized
-      std::uniform_int_distribution<int> int_dist(0, hmcSims.size());
-      bool accept {true};
-      bool tmp {true};
-      for (int i=0; i<hmcSims.size(); ++i){
-        tmp = hmcSims[i]->hmc_step();
-        std::cout << "Accept[" << i << "]: " << tmp << "\n";
-        if (i==0) {accept = tmp;} //since operators are measured on periodic boundary conditions, save that acceptance.
-      }
-
-      int swap_start = int(dist(mt)*(hmcSims.size()+1));
-      std::cout << "swap_start: " << swap_start << "\n";
-      int index {0};
-      for (int i = 0; i<hmcSims.size(); ++i){
-        index = (i + swap_start) % hmcSims.size();
-        std::cout << "swap_index: " << index << "\n";
-        T dS = this->get_delta_S_swap(index);
-        std::cout << "Delta S: " << dS << "\n";
-        bool swap_accept {true};
-        if(dS > 0.0) {
-          if(dist(mt) > Kokkos::exp(-dS)) {
-            this->swap_areas(index, (index + 1) % hmcSims.size()); //swap back if not accepted 
-            swap_accept = false;
-          }
-        }
-        // TODO: add logging of swap acceptances
-      }
-      return accept;
+    PTBCStepLog log;
+    // Step through each HMC and record the acceptance flag
+    for (int i = 0; i < hmcSims.size(); ++i) {
+      bool accept = hmcSims[i]->hmc_step();
+      log.hmc_acceptances.push_back(accept);
     }
+
+    // Choose a random starting index for swaps
+    int swap_start = int(dist(mt) * (hmcSims.size() + 1));
+    log.swap_start_index = swap_start;
+
+    // Execute swaps and record their acceptance
+    for (int i = 0; i < hmcSims.size(); ++i) {
+      int index = (i + swap_start) % hmcSims.size();
+      double dS = this->get_delta_S_swap(index);
+      log.delta_S_values.push_back(dS);
+
+      bool swap_accept = true;
+      if(dS > 0.0) {
+        if(dist(mt) > Kokkos::exp(-dS)) {
+          this->swap_areas(index, (index + 1) % hmcSims.size()); // swap back if not accepted 
+          swap_accept = false;
+        }
+      }
+      log.swap_acceptances.push_back(swap_accept);
+    }
+    
+    // Save the log for this step
+    ptbc_logs.push_back(log);
+    
+    // Return the HMC acceptance from the first simulation as the overall acceptance (as before)
+    return log.hmc_acceptances.empty() ? true : log.hmc_acceptances[0];
+  }
+
 
   }; // class PTBC
 } //namespace klft

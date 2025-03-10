@@ -70,7 +70,7 @@ namespace klft {
           accept = false;
         }
       }
-      Kokkos::printf("plaquette (HMC): %f\n", static_cast<double>(hamiltonian_field.gauge_field.get_plaquette(false)));
+      //Kokkos::printf("plaquette (HMC): %f\n", static_cast<double>(hamiltonian_field.gauge_field.get_plaquette(true)));
       if(!accept) {
         hamiltonian_field.gauge_field.copy(gauge_old);
       }

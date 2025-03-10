@@ -262,7 +262,7 @@ T get_single_plaquette(const int &x, const int &y, const int &z, const int &t,
 
     T get_plaquette_around_defect(PTBCDefect<T, Ndim> defect, bool Normalize = true) {
       //determine the plaquette of links of the defect as well as two lattice spacings away
-      int x_min {-2}, x_max {2};
+      int x_min {-3}, x_max {1};
       int y_min {-2}, y_max {static_cast<int>(defect.defect_length) + 2}; //is this too much area covered?
       int z_min {-2}, z_max {static_cast<int>(defect.defect_length) + 2};
       int t_min {-2}, t_max {static_cast<int>(defect.defect_length) + 2};
@@ -275,8 +275,8 @@ T get_single_plaquette(const int &x, const int &y, const int &z, const int &t,
 
       //auto BulkPolicy = Kokkos::MDRangePolicy<plaq_s,Kokkos::Rank<5>>({0,0,0,0,0},{1,this->get_max_dim(1),this->get_max_dim(2),this->get_max_dim(3),Ndim});
       using PolicyType = Kokkos::MDRangePolicy<plaq_s, Kokkos::Rank<5>, int>;
-      PolicyType BulkPolicy({0, y_min, z_min, t_min, 0},
-                  {1, y_max, z_max, t_max, Ndim});
+      PolicyType BulkPolicy({x_min, y_min, z_min, t_min, 0},
+                  {x_max, y_max, z_max, t_max, Ndim});
 
       T plaq = 0.0;
       Kokkos::parallel_reduce("plaquette", BulkPolicy, KOKKOS_LAMBDA(const typename GaugeField<T,Group,Ndim,Nc>::plaq_s,
@@ -288,7 +288,7 @@ T get_single_plaquette(const int &x, const int &y, const int &z, const int &t,
         plaq_i += this->get_single_plaquette(x_index, y_index, z_index, t_index, mu, defect);
       }
       , plaq);
-      if(Normalize) plaq /= this->get_volume()*((Ndim-1)*Ndim/2)*Nc;// TODO: fix the get_volumne() to the volume that was used. Is this even required?
+      if(Normalize) plaq /= ((x_max-x_min)*(y_max-y_min)*(z_max-z_min)*(t_max-t_min))*((Ndim-1)*Ndim/2)*Nc;
       return plaq;
     }
 
@@ -300,7 +300,21 @@ T get_single_plaquette(const int &x, const int &y, const int &z, const int &t,
       return plaq;
     }
 
-    
+    T get_plaquette(PTBCDefect<T, Ndim> defect, bool Normalize = true) {
+      auto BulkPolicy = Kokkos::MDRangePolicy<plaq_s,Kokkos::Rank<5>>({0,0,0,0,0},{this->get_max_dim(0),this->get_max_dim(1),this->get_max_dim(2),this->get_max_dim(3),Ndim});
+      T plaq = 0.0;
+      Kokkos::parallel_reduce("plaquette", BulkPolicy, KOKKOS_LAMBDA(const typename GaugeField<T,Group,Ndim,Nc>::plaq_s,
+              const int &x, const int &y, const int &z, const int &t, const int &mu, T &plaq_i) {
+        int x_index = mod(x, this->get_max_dim(0));
+        int y_index = mod(y, this->get_max_dim(1));
+        int z_index = mod(z, this->get_max_dim(2));
+        int t_index = mod(t, this->get_max_dim(3));
+        plaq_i += this->get_single_plaquette(x_index, y_index, z_index, t_index, mu, defect);
+      }, plaq);
+      if(Normalize) plaq /= this->get_volume()*((Ndim-1)*Ndim/2)*Nc;
+      return plaq;
+    }
+
 
     KOKKOS_INLINE_FUNCTION Group get_staple(const int &x, const int &y, const int &z, const int &t, const int &mu) const {
       Group staple(0.0);
