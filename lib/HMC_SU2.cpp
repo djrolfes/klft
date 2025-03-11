@@ -7,8 +7,8 @@ namespace klft {
 
   template <typename T>
   void HMC_SU2_4D(const size_t &LX, const size_t &LY, const size_t &LZ, const size_t &LT,
-                 const size_t &n_traj, const size_t &n_steps, const T &tau, const T &beta,
-                 const size_t &seed, const std::string &outfilename) {
+                  const size_t &n_traj, const size_t &n_steps, const T &tau, const T &beta,
+                  const size_t &seed, const std::string &outfilename) {
     std::cout << "Running HMC_SU2_4D" << std::endl;
     std::cout << "Gauge Field Dimensions:" << std::endl;
     std::cout << "LX = " << LX << std::endl;
@@ -22,11 +22,26 @@ namespace klft {
     std::cout << "n_steps = " << n_steps << std::endl;
     std::cout << "seed = " << seed << std::endl;
     std::cout << "output file = " << outfilename << std::endl;
+
     std::ofstream outfile;
     if(outfilename != "") {
       outfile.open(outfilename);
+      // Write header line
       outfile << "traj, accept, plaquette, time, acceptance rate" << std::endl;
+      // Write settings as a JSON dictionary on the second line
+      outfile << "{"
+              << "\"LX\": " << LX << ", "
+              << "\"LY\": " << LY << ", "
+              << "\"LZ\": " << LZ << ", "
+              << "\"LT\": " << LT << ", "
+              << "\"beta\": " << beta << ", "
+              << "\"n_traj\": " << n_traj << ", "
+              << "\"tau\": " << tau << ", "
+              << "\"n_steps\": " << n_steps << ", "
+              << "\"seed\": " << seed
+              << "}" << std::endl;
     }
+
     Kokkos::initialize();
     {
       using Group = SU2<T>;
@@ -94,6 +109,17 @@ namespace klft {
     if(outfilename != "") {
       outfile.open(outfilename);
       outfile << "traj, accept, plaquette, time, acceptance rate" << std::endl;
+      outfile << "{"
+              << "\"LX\": " << LX << ", "
+              << "\"LY\": " << LY << ", "
+              << "\"LZ\": " << LZ << ", "
+              << "\"LT\": " << LT << ", "
+              << "\"beta\": " << beta << ", "
+              << "\"n_traj\": " << n_traj << ", "
+              << "\"tau\": " << tau << ", "
+              << "\"n_steps\": " << n_steps << ", "
+              << "\"seed\": " << seed
+              << "}" << std::endl;
     }
     Kokkos::initialize();
     {
@@ -161,6 +187,17 @@ namespace klft {
     if(outfilename != "") {
       outfile.open(outfilename);
       outfile << "traj, accept, plaquette, time, acceptance rate" << std::endl;
+      outfile << "{"
+              << "\"LX\": " << LX << ", "
+              << "\"LY\": " << LY << ", "
+              << "\"LZ\": " << LZ << ", "
+              << "\"LT\": " << LT << ", "
+              << "\"beta\": " << beta << ", "
+              << "\"n_traj\": " << n_traj << ", "
+              << "\"tau\": " << tau << ", "
+              << "\"n_steps\": " << n_steps << ", "
+              << "\"seed\": " << seed
+              << "}" << std::endl;
     }
     Kokkos::initialize();
     {

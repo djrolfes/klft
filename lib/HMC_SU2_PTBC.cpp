@@ -28,9 +28,25 @@ namespace klft {
     std::cout << "output file = " << outfilename << std::endl;
     std::ofstream outfile;
     if(outfilename != "") {
-      outfile.open(outfilename);
-      outfile << "traj, accept, plaquette, time, acceptance rate, [hmc acceptances], swap start, [swap acceptances], [delta S swap]" << std::endl;
-    } // TODO: add settings to second line of the outfile.
+    outfile.open(outfilename);
+    // Write header line
+    outfile << "traj, accept, plaquette, time, acceptance rate, [hmc acceptances], swap start, [swap acceptances], [delta S swap]" << std::endl;
+    // Write settings as a JSON dictionary (one line)
+    outfile << "{"
+            << "\"LX\": " << LX << ", "
+            << "\"LY\": " << LY << ", "
+            << "\"LZ\": " << LZ << ", "
+            << "\"LT\": " << LT << ", "
+            << "\"beta\": " << beta << ", "
+            << "\"n_traj\": " << n_traj << ", "
+            << "\"tau\": " << tau << ", "
+            << "\"n_steps\": " << n_steps << ", "
+            << "\"seed\": " << seed << ", "
+            << "\"defect_length\": " << defect_length << ", "
+            << "\"n_sims\": " << n_sims
+            << "}" << std::endl;
+  }
+
     Kokkos::initialize();
     {
       using Group = SU2<T>;
@@ -45,7 +61,7 @@ namespace klft {
       std::mt19937 mt(seed);
       std::uniform_real_distribution<T> dist(0.0,1.0);
       HMC_Params hmc_params(n_steps,tau);
-      PTBC_PARAMS ptbc_params(n_sims, defect_length, LX, LY, LZ, LT); //TODO: make N_simulations an input parameterb
+      PTBC_PARAMS ptbc_params(n_sims, defect_length, seed, LX, LY, LZ, LT);
 
       PTBC<T, Group, Adjoint, RNG, 4, 2> ptbc(ptbc_params, hmc_params, rng, dist, mt);
       ptbc.add_kinetic_monomials(0);
@@ -66,12 +82,12 @@ namespace klft {
         std::chrono::duration<double> traj_time = end_time - start_time;
         if(accept) n_accept++;
         plaq = ptbc.hamiltonian_fields[0]->gauge_field.get_plaquette();
-        //std::cout << "Traj: " << i << " Accept: " << accept << " Plaquette: " << plaq << " Time: " << traj_time.count() << " Acceptance Rate: " << T(n_accept)/T(i+1) << std::endl;
+        std::cout << "Traj: " << i << " Accept: " << accept << " Plaquette: " << plaq << " Time: " << traj_time.count() << " Acceptance Rate: " << T(n_accept)/T(i+1) << std::endl;
         if(outfilename != "") {
           std::string logLine = generateLogString(ptbc.ptbc_logs[0], i, plaq, static_cast<double>(n_accept)/static_cast<double>(i+1), traj_time.count()); // TODO: save plaqs, traj_times to flush the log
           outfile << logLine << std::endl;
-          //std::cout << "traj, accept, plaquette, time, acceptance rate, [hmc acceptances], swap start, [swap acceptances], [delta S swap]" << std::endl;
-          //std::cout << logLine << std::endl;
+          std::cout << "traj, accept, plaquette, time, acceptance rate, [hmc acceptances], swap start, [swap acceptances], [delta S swap]" << std::endl;
+          std::cout << logLine << std::endl;
           ptbc.ptbc_logs.clear();
         }
       }

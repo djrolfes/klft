@@ -29,6 +29,16 @@ namespace klft {
       monomials.emplace_back(std::make_unique<PTBCGaugeMonomial<T,Group,Adjoint,Ndim,Nc>>(_beta,_time_scale, _defect));
     }
 
+    void set_defect(PTBCDefect<T, Ndim> _defect){
+    for (size_t i = 0; i < this->monomials.size(); i++){
+        // monomials[i] is assumed to be a std::unique_ptr<MonomialBase>.
+        if(auto defectPtr = dynamic_cast<IDefectSettable<T, Ndim>*>(monomials[i].get())){
+            defectPtr->set_defect(_defect);
+        }
+    }
+}
+
+
     void add_gauge_monomial(const T _beta, const unsigned int _time_scale) {
       monomials.emplace_back(std::make_unique<GaugeMonomial<T,Group,Adjoint,Ndim,Nc>>(_beta,_time_scale));
     }

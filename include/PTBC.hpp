@@ -72,7 +72,6 @@ namespace klft {
 
     T get_gauge_depression(int i){
       // returns the linearly interpolated gauge depression at lattice site i
-      //if (i == (ptcb_params.N_simulations-1)){return T(0.0);}; //I don't think this is required.ptcb.
       if (ptcb_params.N_simulations==1){return T(1.0);}
       return T(1.0) - T(i)/T(ptcb_params.N_simulations-1);
     }
@@ -87,7 +86,7 @@ namespace klft {
     void add_hamiltonian_fields(){
       for (int i = 0; i<ptcb_params.N_simulations; i++){
         GaugeFieldType gauge_field = GaugeFieldType(ptcb_params.get_lattice_dims());
-        gauge_field.set_random(0.5,RNG(1234*2));//TODO: why was the seed used here and what should I use?
+        gauge_field.set_random(0.5,RNG(ptcb_params.seed*(2+i)));//TODO: why was the seed used here and what should I use?
         AdjointFieldType adjoint_field = AdjointFieldType(ptcb_params.get_lattice_dims());
         hamiltonian_fields.emplace_back(std::make_unique<HamiltonianFieldType>(gauge_field,adjoint_field));
         hmcSims[i]->add_hamiltonian_field(*hamiltonian_fields[i]);
@@ -113,6 +112,10 @@ void swap_areas(int r, int s){
 
   auto& gauge_r = hmcSims[r]->hamiltonian_field.gauge_field.gauge;
   auto& gauge_s = hmcSims[s]->hamiltonian_field.gauge_field.gauge;
+
+  hmcSims[r]->set_defect(*defects[s]);
+  hmcSims[s]->set_defect(*defects[r]);
+  std::swap(this->defects[r], this->defects[s]);
 
   // Compute region sizes. Note: using a fixed x index.
   int y_end = std::min(ptcb_params.LY, ptcb_params.defect_size) - 1;

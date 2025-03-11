@@ -8,8 +8,17 @@
 namespace klft {
     //TODO: implement c(r)
 
+  // Define an interface for defect‐settable objects.
+  template <typename T, int Ndim>
+  class IDefectSettable {
+  public:
+      virtual void set_defect(const PTBCDefect<T, Ndim> defect) = 0;
+      virtual ~IDefectSettable() = default;
+  };
+
+
   template <typename T, class Group, class Adjoint, int Ndim = 4, int Nc = 3>
-  class PTBCGaugeMonomial : public Monomial<T,Group,Adjoint,Ndim,Nc> {
+  class PTBCGaugeMonomial : public Monomial<T,Group,Adjoint,Ndim,Nc>, public IDefectSettable<T, Ndim>  {
     public:
       T beta;
       PTBCDefect<T, Ndim> defect;
@@ -17,6 +26,10 @@ namespace klft {
     PTBCGaugeMonomial(T _beta, unsigned int _time_scale, const PTBCDefect<T, Ndim> _defect) : Monomial<T,Group,Adjoint,Ndim,Nc>::Monomial(_time_scale) {
       beta = _beta;
       Monomial<T,Group,Adjoint,Ndim,Nc>::monomial_type = KLFT_MONOMIAL_GAUGE;
+      this->defect = _defect;
+    }
+
+    virtual void set_defect(PTBCDefect<T, Ndim> _defect) override {
       this->defect = _defect;
     }
 
