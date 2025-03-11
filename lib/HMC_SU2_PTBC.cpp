@@ -54,7 +54,7 @@ namespace klft {
 
 
       T plaq = ptbc.hamiltonian_fields[0]->gauge_field.get_plaquette();
-      std::cout << "Starting Plaquette: " << plaq << std::endl;
+      //std::cout << "Starting Plaquette: " << plaq << std::endl;
       //std::cout << "Starting HMC: " << std::endl;
       bool accept;
       size_t n_accept = 0;
@@ -70,8 +70,8 @@ namespace klft {
         if(outfilename != "") {
           std::string logLine = generateLogString(ptbc.ptbc_logs[0], i, plaq, static_cast<double>(n_accept)/static_cast<double>(i+1), traj_time.count()); // TODO: save plaqs, traj_times to flush the log
           outfile << logLine << std::endl;
-          std::cout << "traj, accept, plaquette, time, acceptance rate, [hmc acceptances], swap start, [swap acceptances], [delta S swap]" << std::endl;
-          std::cout << logLine << std::endl;
+          //std::cout << "traj, accept, plaquette, time, acceptance rate, [hmc acceptances], swap start, [swap acceptances], [delta S swap]" << std::endl;
+          //std::cout << logLine << std::endl;
           ptbc.ptbc_logs.clear();
         }
       }

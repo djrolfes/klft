@@ -1,4 +1,3 @@
-#pragma once
 #include "../include/PTBC.hpp"
 #include <sstream>
 #include <string>

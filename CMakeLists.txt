@@ -35,49 +35,40 @@ set(COMMON_SOURCES ${ALL_LIB_SOURCES})
 list(REMOVE_ITEM COMMON_SOURCES ${PTBC_SOURCES} ${HMC_ALL_SOURCES} ${METROPOLIS_SOURCES})
 
 
-# ----------------------------------------
 # Build the common library target "klft"
-# ----------------------------------------
 add_library(klft ${COMMON_SOURCES})
 target_compile_features(klft PRIVATE cxx_std_17)
-target_link_libraries(klft Kokkos::kokkos)
+target_link_libraries(klft Kokkos::kokkos m)
 
-# ----------------------------------------
 # Optionally build the Metropolis target
-# ----------------------------------------
 if(BUILD_METROPOLIS)
-  # The metropolis executable may use its own main (metropolis.cpp)
   add_library(metropolis_lib ${METROPOLIS_SOURCES})
   target_compile_features(metropolis_lib PRIVATE cxx_std_17)
-  target_link_libraries(metropolis_lib klft Kokkos::kokkos)
+  target_link_libraries(metropolis_lib klft Kokkos::kokkos m)
   
   add_executable(metropolis ${CMAKE_SOURCE_DIR}/metropolis.cpp)
   target_compile_features(metropolis PRIVATE cxx_std_17)
-  target_link_libraries(metropolis metropolis_lib Kokkos::kokkos)
+  target_link_libraries(metropolis metropolis_lib Kokkos::kokkos m)
 endif()
 
-# ----------------------------------------
 # Optionally build the HMC target (non-PTBC)
-# ----------------------------------------
 if(BUILD_HMC)
   add_library(hmc_lib ${HMC_ALL_SOURCES})
   target_compile_features(hmc_lib PRIVATE cxx_std_17)
-  target_link_libraries(hmc_lib klft Kokkos::kokkos)
+  target_link_libraries(hmc_lib klft Kokkos::kokkos m)
   
   add_executable(hmc ${CMAKE_SOURCE_DIR}/hmc.cpp)
   target_compile_features(hmc PRIVATE cxx_std_17)
-  target_link_libraries(hmc hmc_lib Kokkos::kokkos)
+  target_link_libraries(hmc hmc_lib Kokkos::kokkos m)
 endif()
 
-# ----------------------------------------
 # Optionally build the PTBC_HMC target
-# ----------------------------------------
 if(BUILD_PTBC_HMC)
   add_library(ptbc_hmc_lib ${PTBC_SOURCES})
   target_compile_features(ptbc_hmc_lib PRIVATE cxx_std_17)
-  target_link_libraries(ptbc_hmc_lib klft Kokkos::kokkos)
+  target_link_libraries(ptbc_hmc_lib klft Kokkos::kokkos m)
   
   add_executable(ptbc_hmc ${CMAKE_SOURCE_DIR}/hmc_ptbc.cpp)
   target_compile_features(ptbc_hmc PRIVATE cxx_std_17)
-  target_link_libraries(ptbc_hmc ptbc_hmc_lib Kokkos::kokkos)
+  target_link_libraries(ptbc_hmc ptbc_hmc_lib Kokkos::kokkos m)
 endif()
