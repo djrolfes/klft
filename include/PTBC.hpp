@@ -17,6 +17,8 @@ namespace klft {
       std::vector<bool> swap_acceptances;
       // Optionally, store the delta S for each swap for further analysis
       std::vector<double> delta_S_values;
+      // Store c(r) values in order
+      std::vector<double> cr;
     };
 
   template<typename T, class Group, class Adjoint, class RNG, int Ndim = 4, int Nc = 2> // Nr = number of running hmcs
@@ -152,16 +154,19 @@ void swap_areas(int r, int s){
       // returns the change in the action caused by swapping defect areas
       // hmcSims[r] swaps with hmcSims[s = r+1] and the difference in action is calculated
       int s = (r + 1) % hmcSims.size();
-      T S_r_r {this->beta/3 * hmcSims[r]->hamiltonian_field.gauge_field.get_plaquette_around_defect(*defects[r],false)};
-      T S_s_s {this->beta/3 * hmcSims[s]->hamiltonian_field.gauge_field.get_plaquette_around_defect(*defects[s],false)};
+      T S_r_r {-this->beta/3 * hmcSims[r]->hamiltonian_field.gauge_field.get_plaquette_around_defect(*defects[r],false)};
+      T S_s_s {-this->beta/3 * hmcSims[s]->hamiltonian_field.gauge_field.get_plaquette_around_defect(*defects[s],false)};
       
+      hmcSims[r]->set_defect(*defects[s]);
+      hmcSims[s]->set_defect(*defects[r]);
+      std::swap(this->defects[r], this->defects[s]);
       //std::cout << "S_r_r: " << S_r_r << "\n";
       //std::cout << "S_s_s: " << S_s_s << "\n";
 
-      this->swap_areas(r, s);
+      //this->swap_areas(r, s);
       
-      T S_r_s {this->beta/3 * hmcSims[r]->hamiltonian_field.gauge_field.get_plaquette_around_defect(*defects[r], false)};
-      T S_s_r {this->beta/3 * hmcSims[s]->hamiltonian_field.gauge_field.get_plaquette_around_defect(*defects[s], false)};
+      T S_r_s {-this->beta/3 * hmcSims[r]->hamiltonian_field.gauge_field.get_plaquette_around_defect(*defects[r], false)};
+      T S_s_r {-this->beta/3 * hmcSims[s]->hamiltonian_field.gauge_field.get_plaquette_around_defect(*defects[s], false)};
       
       //std::cout << "S_r_s: " << S_r_s << "\n";
       //std::cout << "S_s_r: " << S_s_r << "\n";
@@ -191,11 +196,17 @@ void swap_areas(int r, int s){
       bool swap_accept = true;
       if(dS > 0.0) {
         if(dist(mt) > Kokkos::exp(-dS)) {
-          this->swap_areas(index, (index + 1) % hmcSims.size()); // swap back if not accepted 
+          int r = index;
+          int s = (index + 1) % hmcSims.size();
+          hmcSims[r]->set_defect(*defects[s]);
+          hmcSims[s]->set_defect(*defects[r]);
+          std::swap(this->defects[r], this->defects[s]);
+          //this->swap_areas(index, (index + 1) % hmcSims.size()); // swap back if not accepted 
           swap_accept = false;
         }
       }
       log.swap_acceptances.push_back(swap_accept);
+      log.cr.push_back(defects[index]->gauge_depression);
     }
     
     // Save the log for this step

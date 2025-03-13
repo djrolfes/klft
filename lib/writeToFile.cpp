@@ -10,6 +10,7 @@ std::string generateLogString(const klft::PTBCStepLog &log,
                               int traj,          // trajectory number
                               double plaq,       // plaquette value
                               double acceptance, // acceptance for full run
+                              double swap_acceptance, // swap acceptance for full run (r = 1)
                               double traj_time)  // trajectory time
 {
     std::ostringstream oss;
@@ -28,7 +29,7 @@ std::string generateLogString(const klft::PTBCStepLog &log,
     }
 
     // Build the output string.
-    // Format: traj, general_accept, plaq, traj_time, acceptance_rate, [hmc_acceptances], swap_start_index, [swap_acceptances], [delta_S_values]
+    // Format: traj, general_accept, plaq, traj_time, acceptance_rate, [hmc_acceptances], swap_start_index, swap_acceptance, [swap_acceptances], [c(r) values], [delta_S_values]
     oss << traj << ", " << general_accept << ", " << plaq << ", " << traj_time << ", " << acceptance << ", ";
 
     // Format hmc_acceptances list as "[val1; val2; ...]"
@@ -41,7 +42,7 @@ std::string generateLogString(const klft::PTBCStepLog &log,
     oss << "], ";
 
     // Swap start index.
-    oss << log.swap_start_index << ", ";
+    oss << log.swap_start_index << ", " << swap_acceptance << ", ";
 
     // Format swap_acceptances list.
     oss << "[";
@@ -51,6 +52,15 @@ std::string generateLogString(const klft::PTBCStepLog &log,
             oss << "; ";
     }
     oss << "], ";
+
+    // Format cr_values list.
+    oss << "[";
+    for (size_t i = 0; i < log.cr.size(); ++i) {
+        oss << log.cr[i];
+        if (i != log.cr.size() - 1)
+            oss << "; ";
+    }
+    oss << "],";
 
     // Format delta_S_values list.
     oss << "[";

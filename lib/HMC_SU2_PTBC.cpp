@@ -74,6 +74,7 @@ namespace klft {
       //std::cout << "Starting HMC: " << std::endl;
       bool accept;
       size_t n_accept = 0;
+      size_t swap_accept = 0;
       auto hmc_start_time = std::chrono::high_resolution_clock::now();
       for(size_t i = 0; i < n_traj; i++) {
         auto start_time = std::chrono::high_resolution_clock::now();
@@ -81,12 +82,13 @@ namespace klft {
         auto end_time = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double> traj_time = end_time - start_time;
         if(accept) n_accept++;
+        if(ptbc.ptbc_logs[0].swap_acceptances[0]) swap_accept++;
         plaq = ptbc.hamiltonian_fields[0]->gauge_field.get_plaquette();
         std::cout << "Traj: " << i << " Accept: " << accept << " Plaquette: " << plaq << " Time: " << traj_time.count() << " Acceptance Rate: " << T(n_accept)/T(i+1) << std::endl;
         if(outfilename != "") {
-          std::string logLine = generateLogString(ptbc.ptbc_logs[0], i, plaq, static_cast<double>(n_accept)/static_cast<double>(i+1), traj_time.count()); // TODO: save plaqs, traj_times to flush the log
+          std::string logLine = generateLogString(ptbc.ptbc_logs[0], i, plaq, static_cast<double>(n_accept)/static_cast<double>(i+1), static_cast<double>(swap_accept)/static_cast<double>(i+1), traj_time.count()); // TODO: save plaqs, traj_times to flush the log
           outfile << logLine << std::endl;
-          std::cout << "traj, accept, plaquette, time, acceptance rate, [hmc acceptances], swap start, [swap acceptances], [delta S swap]" << std::endl;
+          std::cout << "traj, accept, plaquette, time, acceptance rate, [hmc acceptances], swap start, swap_acceptance, [swap acceptances], [c(r) values], [delta S swap]" << std::endl;
           std::cout << logLine << std::endl;
           ptbc.ptbc_logs.clear();
         }
