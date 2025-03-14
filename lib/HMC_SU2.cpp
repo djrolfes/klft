@@ -112,7 +112,6 @@ namespace klft {
       outfile << "{"
               << "\"LX\": " << LX << ", "
               << "\"LY\": " << LY << ", "
-              << "\"LZ\": " << LZ << ", "
               << "\"LT\": " << LT << ", "
               << "\"beta\": " << beta << ", "
               << "\"n_traj\": " << n_traj << ", "
@@ -189,8 +188,6 @@ namespace klft {
       outfile << "traj, accept, plaquette, time, acceptance rate" << std::endl;
       outfile << "{"
               << "\"LX\": " << LX << ", "
-              << "\"LY\": " << LY << ", "
-              << "\"LZ\": " << LZ << ", "
               << "\"LT\": " << LT << ", "
               << "\"beta\": " << beta << ", "
               << "\"n_traj\": " << n_traj << ", "
@@ -221,8 +218,8 @@ namespace klft {
       hmc.add_hamiltonian_field(hamiltonian_field);
       hmc.set_integrator(LEAPFROG);
       T plaq = hamiltonian_field.gauge_field.get_plaquette();
-      std::cout << "Starting Plaquette: " << plaq << std::endl;
-      std::cout << "Starting HMC: " << std::endl;
+      //std::cout << "Starting Plaquette: " << plaq << std::endl;
+      //std::cout << "Starting HMC: " << std::endl;
       bool accept;
       size_t n_accept = 0;
       auto hmc_start_time = std::chrono::high_resolution_clock::now();
@@ -233,7 +230,7 @@ namespace klft {
         std::chrono::duration<double> traj_time = end_time - start_time;
         if(accept) n_accept++;
         plaq = hamiltonian_field.gauge_field.get_plaquette();
-        std::cout << "Traj: " << i << " Accept: " << accept << " Plaquette: " << plaq << " Time: " << traj_time.count() << " Acceptance Rate: " << T(n_accept)/T(i+1) << std::endl;
+        //std::cout << "Traj: " << i << " Accept: " << accept << " Plaquette: " << plaq << " Time: " << traj_time.count() << " Acceptance Rate: " << T(n_accept)/T(i+1) << std::endl;
         if(outfilename != "") {
           outfile << i << ", " << accept << ", " << plaq << ", " << traj_time.count() << ", " << T(n_accept)/T(i+1) << std::endl;
         }

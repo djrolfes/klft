@@ -84,7 +84,7 @@ namespace klft {
         if(accept) n_accept++;
         if(ptbc.ptbc_logs[0].swap_acceptances[0]) swap_accept++;
         plaq = ptbc.hamiltonian_fields[0]->gauge_field.get_plaquette();
-        std::cout << "Traj: " << i << " Accept: " << accept << " Plaquette: " << plaq << " Time: " << traj_time.count() << " Acceptance Rate: " << T(n_accept)/T(i+1) << std::endl;
+        //std::cout << "Traj: " << i << " Accept: " << accept << " Plaquette: " << plaq << " Time: " << traj_time.count() << " Acceptance Rate: " << T(n_accept)/T(i+1) << std::endl;
         if(outfilename != "") {
           std::string logLine = generateLogString(ptbc.ptbc_logs[0], i, plaq, static_cast<double>(n_accept)/static_cast<double>(i+1), static_cast<double>(swap_accept)/static_cast<double>(i+1), traj_time.count()); // TODO: save plaqs, traj_times to flush the log
           outfile << logLine << std::endl;
