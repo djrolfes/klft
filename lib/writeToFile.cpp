@@ -53,6 +53,15 @@ std::string generateLogString(const klft::PTBCStepLog &log,
     }
     oss << "], ";
 
+    // Format swap_track_values list.
+    oss << "[";
+    for (size_t i = 0; i < log.swap_track.size(); ++i) {
+        oss << log.swap_track[i];
+        if (i != log.swap_track.size() - 1)
+            oss << "; ";
+    }
+    oss << "],";
+
     // Format cr_values list.
     oss << "[";
     for (size_t i = 0; i < log.cr.size(); ++i) {

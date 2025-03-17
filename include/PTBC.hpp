@@ -17,6 +17,8 @@ namespace klft {
       std::vector<bool> swap_acceptances;
       // Optionally, store the delta S for each swap for further analysis
       std::vector<double> delta_S_values;
+      // swap values to track specific configurations
+      std::vector<int> swap_track;
       // Store c(r) values in order
       std::vector<double> cr;
     };
@@ -39,6 +41,7 @@ namespace klft {
     std::vector<std::unique_ptr<HamiltonianFieldType>> hamiltonian_fields;
     std::vector<std::unique_ptr<PTBCDefect<T, Ndim>>> defects;
     std::vector<PTBCStepLog> ptbc_logs;
+    std::vector<int> swap_track; // keep track of a given configuration
 
 
     
@@ -63,6 +66,7 @@ namespace klft {
     void init_HMCs(){
       for (int i=0; i<ptcb_params.N_simulations;i++){
         hmcSims.emplace_back(std::make_unique<HMC<T,Group,Adjoint,RNG,Ndim,Nc>>(hmc_params,rng,dist,mt));
+        swap_track.emplace_back(i);
       }
     }
 
@@ -159,15 +163,17 @@ void swap_areas(int r, int s){
       
       hmcSims[r]->set_defect(*defects[s]);
       hmcSims[s]->set_defect(*defects[r]);
-      std::swap(this->defects[r], this->defects[s]);
+      //std::swap(this->defects[r], this->defects[s]);
       //std::cout << "S_r_r: " << S_r_r << "\n";
       //std::cout << "S_s_s: " << S_s_s << "\n";
 
       //this->swap_areas(r, s);
       
-      T S_r_s {-this->beta/3 * hmcSims[r]->hamiltonian_field.gauge_field.get_plaquette_around_defect(*defects[r], false)};
-      T S_s_r {-this->beta/3 * hmcSims[s]->hamiltonian_field.gauge_field.get_plaquette_around_defect(*defects[s], false)};
-      
+      T S_r_s {-this->beta/3 * hmcSims[r]->hamiltonian_field.gauge_field.get_plaquette_around_defect(*defects[s], false)};
+      T S_s_r {-this->beta/3 * hmcSims[s]->hamiltonian_field.gauge_field.get_plaquette_around_defect(*defects[r], false)};
+      std::swap(this->hmcSims[r], this->hmcSims[s]);
+      std::swap(this->swap_track[r], this->swap_track[s]);
+
       //std::cout << "S_r_s: " << S_r_s << "\n";
       //std::cout << "S_s_r: " << S_s_r << "\n";
       
@@ -200,15 +206,16 @@ void swap_areas(int r, int s){
           int s = (index + 1) % hmcSims.size();
           hmcSims[r]->set_defect(*defects[s]);
           hmcSims[s]->set_defect(*defects[r]);
-          std::swap(this->defects[r], this->defects[s]);
+          std::swap(this->hmcSims[r], this->hmcSims[s]);
+          std::swap(this->swap_track[s], this->swap_track[r]);
           //this->swap_areas(index, (index + 1) % hmcSims.size()); // swap back if not accepted 
           swap_accept = false;
         }
       }
       log.swap_acceptances.push_back(swap_accept);
-      log.cr.push_back(defects[index]->gauge_depression);
+      log.cr.push_back(this->defects[i]->gauge_depression);
     }
-    
+    log.swap_track = this->swap_track;
     // Save the log for this step
     ptbc_logs.push_back(log);
     
