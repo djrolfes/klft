@@ -112,46 +112,6 @@ namespace klft {
       }
     }
 
-void swap_areas(int r, int s){
-  using complex_t = Kokkos::complex<T>;
-  using DeviceView = Kokkos::View<complex_t****>;
-
-  auto& gauge_r = hmcSims[r]->hamiltonian_field.gauge_field.gauge;
-  auto& gauge_s = hmcSims[s]->hamiltonian_field.gauge_field.gauge;
-
-  hmcSims[r]->set_defect(*defects[s]);
-  hmcSims[s]->set_defect(*defects[r]);
-  std::swap(this->defects[r], this->defects[s]);
-
-  // Compute region sizes. Note: using a fixed x index.
-  int y_end = std::min(ptcb_params.LY, ptcb_params.defect_size) - 1;
-  int z_end = std::min(ptcb_params.LZ, ptcb_params.defect_size) - 1;
-  int t_end = std::min(ptcb_params.LT, ptcb_params.defect_size) - 1;
-  // For each matrix element in the link (for a given mu, here we use mu=0 as an example)
-  for (int i = 0; i < Nc * Nc; ++i) {
-    // Create subviews for a slice at x = LX-1 and y in [0, y_end), etc.
-    auto subview1 = Kokkos::subview(gauge_r[0][i], ptcb_params.LX - 1,
-                                    std::make_pair(0, y_end),
-                                    std::make_pair(0, z_end),
-                                    std::make_pair(0, t_end));
-    auto subview2 = Kokkos::subview(gauge_s[0][i], ptcb_params.LX - 1,
-                                    std::make_pair(0, y_end),
-                                    std::make_pair(0, z_end),
-                                    std::make_pair(0, t_end));
-    
-    // Create a temporary view with the same layout.
-    using SubViewType = decltype(subview1);
-    auto layout = subview1.layout();
-    SubViewType temp("temp", layout);
-    
-    // Swap the data.
-    Kokkos::deep_copy(temp, subview1);
-    Kokkos::deep_copy(subview1, subview2);
-    Kokkos::deep_copy(subview2, temp);
-    
-    Kokkos::fence();
-  }
-}
 
 
     T get_delta_S_swap(int r){
@@ -163,11 +123,6 @@ void swap_areas(int r, int s){
       
       hmcSims[r]->set_defect(*defects[s]);
       hmcSims[s]->set_defect(*defects[r]);
-      //std::swap(this->defects[r], this->defects[s]);
-      //std::cout << "S_r_r: " << S_r_r << "\n";
-      //std::cout << "S_s_s: " << S_s_s << "\n";
-
-      //this->swap_areas(r, s);
       
       T S_r_s {-this->beta/3 * hmcSims[r]->hamiltonian_field.gauge_field.get_plaquette_around_defect(*defects[s], false)};
       T S_s_r {-this->beta/3 * hmcSims[s]->hamiltonian_field.gauge_field.get_plaquette_around_defect(*defects[r], false)};
@@ -201,14 +156,13 @@ void swap_areas(int r, int s){
 
       bool swap_accept = true;
       if(dS > 0.0) {
-        if(dist(mt) > Kokkos::exp(-dS)) {
+        if(dist(mt) > Kokkos::exp(-dS)) {// swap back if not accepted 
           int r = index;
           int s = (index + 1) % hmcSims.size();
           hmcSims[r]->set_defect(*defects[s]);
           hmcSims[s]->set_defect(*defects[r]);
           std::swap(this->hmcSims[r], this->hmcSims[s]);
           std::swap(this->swap_track[s], this->swap_track[r]);
-          //this->swap_areas(index, (index + 1) % hmcSims.size()); // swap back if not accepted 
           swap_accept = false;
         }
       }
