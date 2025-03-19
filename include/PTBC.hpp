@@ -84,7 +84,7 @@ namespace klft {
 
     void init_defects(){
       for (int i = 0; i< ptcb_params.N_simulations; i++){
-        defects.emplace_back(std::make_unique<PTBCDefect<T, Ndim>>(get_gauge_depression(i), ptcb_params.defect_size, ptcb_params.LX));
+        defects.emplace_back(std::make_unique<PTBCDefect<T, Ndim>>(get_gauge_depression(i), ptcb_params.defect_size, ptcb_params.get_lattice_dims()));
         //Kokkos::printf("defect[%d]: %f; defect(7,0,0,0,0): %f\n", i, defects[i]->gauge_depression, (*defects[i])(ptcb_params.LX-1,0,0,0,0));
       }
     }
