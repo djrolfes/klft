@@ -1,5 +1,6 @@
 #pragma once
 #include "GaugeMonomial.hpp"
+#include "SymanzikGaugeMonomial.hpp"
 #include "HamiltonianField.hpp"
 #include "GaugeField.hpp"
 #include "AdjointField.hpp"

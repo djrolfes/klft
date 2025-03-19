@@ -198,15 +198,23 @@ namespace klft {
       return out;
     }
 
-  template <typename Scalar,
-    typename = std::enable_if_t<std::is_arithmetic<Scalar>::value>>
-  KOKKOS_INLINE_FUNCTION SU3 operator*(Scalar s) const {
-    SU3 result;
+    // Scalar multiplication (scalar * SU2)
+template <typename Scalar,
+          typename = std::enable_if_t<std::is_arithmetic<Scalar>::value>>
+KOKKOS_INLINE_FUNCTION SU3<T> operator*(Scalar s) const {
+    SU3<T> result;
     for (int i = 0; i < 9; i++) {
-      result.v[i] = v[i] * s;
+        result.v[i] = v[i] * s;  // Scale each element
     }
     return result;
-  }
+}
+
+// Scalar multiplication (SU2 * scalar)
+template <typename Scalar,
+          typename = std::enable_if_t<std::is_arithmetic<Scalar>::value>>
+KOKKOS_INLINE_FUNCTION friend SU3<T> operator*(Scalar s, const SU3<T>& su3) {
+    return su3 * s;  // Call the already defined operator
+}
 
   template <typename Tin>
   KOKKOS_INLINE_FUNCTION SU3 operator*(Kokkos::complex<Tin> s) const {
@@ -395,6 +403,25 @@ namespace klft {
       v[3] += in.v[3];
     }
 
+    // Scalar multiplication (scalar * SU2)
+template <typename Scalar,
+          typename = std::enable_if_t<std::is_arithmetic<Scalar>::value>>
+KOKKOS_INLINE_FUNCTION SU2<T> operator*(Scalar s) const {
+    SU2<T> result;
+    for (int i = 0; i < 4; i++) {
+        result.v[i] = v[i] * s;  // Scale each element
+    }
+    return result;
+}
+
+// Scalar multiplication (SU2 * scalar)
+template <typename Scalar,
+          typename = std::enable_if_t<std::is_arithmetic<Scalar>::value>>
+KOKKOS_INLINE_FUNCTION friend SU2<T> operator*(Scalar s, const SU2<T>& su2) {
+    return su2 * s;  // Call the already defined operator
+}
+
+
     template <typename Tin>
     KOKKOS_INLINE_FUNCTION void operator-=(const SU2<Tin> &in) {
       v[0] -= in.v[0];
@@ -556,6 +583,24 @@ namespace klft {
       T b = v.real()*in.v.imag() + v.imag()*in.v.real();
       v = Kokkos::complex<T>(a,b);
     }
+
+        // Scalar multiplication (scalar * U1)
+template <typename Scalar,
+          typename = std::enable_if_t<std::is_arithmetic<Scalar>::value>>
+KOKKOS_INLINE_FUNCTION U1<T> operator*(Scalar s) const {
+    U1<T> result;
+    
+        result.v = v * s;  // Scale each element
+    
+    return result;
+}
+
+// Scalar multiplication (U1 * scalar)
+template <typename Scalar,
+          typename = std::enable_if_t<std::is_arithmetic<Scalar>::value>>
+KOKKOS_INLINE_FUNCTION friend U1<T> operator*(Scalar s, const U1<T>& u1) {
+    return u1*s;  // Call the already defined operator
+}
 
     template <typename Tin>
     KOKKOS_INLINE_FUNCTION U1<T> operator*(const U1<Tin> &in) const {
