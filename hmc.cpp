@@ -4,16 +4,16 @@
 using real_t = double;
 
 int main(int argc, char **argv) {
-  std::string gauge_group = "SU3";
+  std::string gauge_group = "SU2";
   int ndim = 4;
   size_t LX = 4;
   size_t LY = 4;
   size_t LZ = 4;
   size_t LT = 4;
-  size_t n_traj = 1;
-  size_t n_steps = 2;
+  size_t n_traj = 100;
+  size_t n_steps = 50;
   real_t tau = 1.0;
-  real_t beta = 3.5;
+  real_t beta = 5.5;
   size_t seed = 12345;
   std::string outfilename = "";
   for(int i = 1; i < argc; i++) {
