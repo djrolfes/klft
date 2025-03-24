@@ -9,7 +9,7 @@ int main(int argc, char **argv) {
   size_t LX = 8;
   size_t LY = 8;
   size_t LZ = 8;
-  size_t LT = 16;
+  size_t LT = 8;
   size_t n_traj = 1000;
   size_t n_steps = 50;
   real_t tau = 1.0;
