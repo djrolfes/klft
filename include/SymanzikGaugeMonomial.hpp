@@ -17,17 +17,19 @@ namespace klft {
     }
 
     void heatbath(HamiltonianField<T,Group,Adjoint,Ndim,Nc> h) override {
-      Monomial<T,Group,Adjoint,Ndim,Nc>::H_old = -(beta/T(h.gauge_field.get_Nc()))*h.gauge_field.get_plaquette(false);
+      Monomial<T,Group,Adjoint,Ndim,Nc>::H_old = -(beta/T(h.gauge_field.get_Nc()))*(T(5.0/6.0)*h.gauge_field.get_plaquette(false)-T(1.0/12.0)*h.gauge_field.get_plaquette_1x2(false));
+      Kokkos::printf("H_old (HMC): %f\n", static_cast<double>(Monomial<T,Group,Adjoint,Ndim,Nc>::H_old));
     }
 
     void accept(HamiltonianField<T,Group,Adjoint,Ndim,Nc> h) override {
-      Monomial<T,Group,Adjoint,Ndim,Nc>::H_new = -(beta/T(h.gauge_field.get_Nc()))*h.gauge_field.get_plaquette(false);
+      Monomial<T,Group,Adjoint,Ndim,Nc>::H_new = -(beta/T(h.gauge_field.get_Nc()))*(T(5.0/6.0)*h.gauge_field.get_plaquette(false)-T(1.0/12.0)*h.gauge_field.get_plaquette_1x2(false));
+      Kokkos::printf("H_new (HMC): %f\n", static_cast<double>(Monomial<T,Group,Adjoint,Ndim,Nc>::H_new));
     }
 
     void derivative(AdjointField<T,Adjoint,Ndim,Nc> deriv, HamiltonianField<T,Group,Adjoint,Ndim,Nc> h) override {
       auto BulkPolicy = Kokkos::MDRangePolicy<Kokkos::Rank<5>>({0,0,0,0,0},{h.gauge_field.get_max_dim(0),h.gauge_field.get_max_dim(1),h.gauge_field.get_max_dim(2),h.gauge_field.get_max_dim(3),h.gauge_field.get_Ndim()});
       Kokkos::parallel_for("derivative", BulkPolicy, KOKKOS_CLASS_LAMBDA(const int &x, const int &y, const int &z, const int &t, const int &mu) {
-        Group S = T(5.0/6.0) * h.gauge_field.get_staple(x,y,z,t,mu)- T(1.0/12.0)* h.gauge_field.get_symanzik_staple(x,y,z,t,mu);
+        Group S = T(5.0/6.0) * h.gauge_field.get_staple(x,y,z,t,mu) - T(1.0/(12.0))* h.gauge_field.get_symanzik_staple(x,y,z,t,mu);// TODO: I think the symanzik Staple is correct, but why is this trash? Check it again I guess...
         S = h.gauge_field.get_link(x,y,z,t,mu)*S;
         Adjoint dS(S);
         dS = (beta/h.gauge_field.get_Nc())*dS;

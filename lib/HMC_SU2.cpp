@@ -60,7 +60,8 @@ namespace klft {
       HMC_Params params(n_steps,tau);
       HMC<T,Group,Adjoint,RNG,4,2> hmc(params,rng,dist,mt);
       hmc.add_kinetic_monomial(0);
-      hmc.add_symanzik_gauge_monomial(beta,0);
+      //hmc.add_symanzik_gauge_monomial(beta,0);
+      hmc.add_gauge_monomial(beta,0);
       hmc.add_hamiltonian_field(hamiltonian_field);
       hmc.set_integrator(LEAPFROG);
       T plaq = hamiltonian_field.gauge_field.get_plaquette();

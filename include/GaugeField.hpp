@@ -10,6 +10,7 @@ namespace klft {
     struct set_one_s {};
     struct plaq_s {};
     struct restoreGauge_s {};
+    struct topoCharge_s {};
     using complex_t = Kokkos::complex<T>;
     using DeviceView = Kokkos::View<complex_t****>;
     // using HostView = typename DeviceView::HostMirror;
@@ -183,6 +184,26 @@ namespace klft {
       return Group(link);
     }
 
+    KOKKOS_INLINE_FUNCTION Group get_link_base_one(const Kokkos::Array<int,4> &site, const int &mu) const { 
+      Kokkos::Array<int, 4> tmp = {site[0],site[1],site[2],site[3]};
+      if (mu<0){
+        tmp[-(mu)-1] = (tmp[-(mu)-1] - 1 + this->dims[-(mu)-1]) % this->dims[-(mu)-1];
+        return dagger(this->get_link(tmp, -mu-1));
+      }else{
+        return this->get_link(tmp, mu-1);
+      }
+    }
+
+    KOKKOS_INLINE_FUNCTION Group get_link_base_one(const int &x, const int &y, const int &z, const int &t, const int &mu) const { 
+      Kokkos::Array<int, 4> tmp = {x,y,z,t};
+      if (mu<0){
+        tmp[-(mu)-1] = (tmp[-(mu)-1] - 1 + this->dims[-(mu)-1]) % this->dims[-(mu)-1];
+        return dagger(this->get_link(tmp, -mu-1));
+      }else{
+        return this->get_link(tmp, mu-1);
+      }
+    }
+
     KOKKOS_INLINE_FUNCTION void set_link(const int &x, const int &y, const int &z, const int &t, const int &mu, const Group &U) const {
       #pragma unroll
       for(int i = 0; i < Nc*Nc; i++) {
@@ -213,6 +234,49 @@ namespace klft {
         U4 = this->get_link(site,nu);
         plaq += (U1*U2*dagger(U3)*dagger(U4)).retrace();
       }
+      return plaq;
+    }
+
+    KOKKOS_INLINE_FUNCTION T get_single_plaquette_1x2(const int &x, const int &y, const int &z, const int &t, const int &mu) const {
+      Group U1, U2, U3, U4, U5, U6;
+      Kokkos::Array<int,4> site = {x,y,z,t};
+      Kokkos::Array<int,4> site_plus_mu = {x,y,z,t};
+      Kokkos::Array<int,4> site_plus_mu_plus_mu = {x,y,z,t};
+      
+      T plaq {0.0};
+      site_plus_mu[this->array_dims[mu]] = (site_plus_mu[this->array_dims[mu]] + 1) % this->dims[mu];
+      site_plus_mu_plus_mu[this->array_dims[mu]] = (site_plus_mu_plus_mu[this->array_dims[mu]] + 2) % this->dims[mu];
+      #pragma unroll
+      for(int nu = 0; nu < mu; ++nu){
+        Kokkos::Array<int,4> site_plus_nu = {x,y,z,t};
+        site_plus_nu[this->array_dims[nu]] = (site_plus_nu[this->array_dims[nu]] + 1) % this->dims[nu];
+        Kokkos::Array<int,4> site_plus_nu_plus_mu = site_plus_nu;
+        site_plus_nu_plus_mu[this->array_dims[nu]] = (site_plus_nu_plus_mu[this->array_dims[mu]] + 1) % this->dims[nu];
+
+        
+        U1 = this->get_link(site,mu);
+        U2 = this->get_link(site_plus_mu,mu);
+        U3 = this->get_link(site_plus_mu_plus_mu,nu);
+        U4 = this->get_link(site_plus_nu_plus_mu, mu);
+        U5 = this->get_link(site_plus_nu, mu);        
+        U6 = this->get_link(site,nu);
+        plaq += (U1*U2*U3*dagger(U4)*dagger(U5)*dagger(U6)).retrace();
+      }
+      return plaq;
+    }
+
+T get_plaquette_1x2(bool Normalize = true) {
+      auto BulkPolicy = Kokkos::MDRangePolicy<plaq_s,Kokkos::Rank<5>>({0,0,0,0,0},{this->get_max_dim(0),this->get_max_dim(1),this->get_max_dim(2),this->get_max_dim(3),Ndim});
+      T plaq = 0.0;
+      Kokkos::parallel_reduce("plaquette", BulkPolicy, KOKKOS_LAMBDA(const typename GaugeField<T,Group,Ndim,Nc>::plaq_s,
+              const int &x, const int &y, const int &z, const int &t, const int &mu, T &plaq_i) {
+        int x_index = mod(x, this->get_max_dim(0));
+        int y_index = mod(y, this->get_max_dim(1));
+        int z_index = mod(z, this->get_max_dim(2));
+        int t_index = mod(t, this->get_max_dim(3));
+        plaq_i += this->get_single_plaquette_1x2(x_index, y_index, z_index, t_index, mu);
+      }, plaq);
+      if(Normalize) plaq /= this->get_volume()*((Ndim-1)*Ndim/2)*Nc;
       return plaq;
     }
 
@@ -315,6 +379,80 @@ T get_single_plaquette(const int &x, const int &y, const int &z, const int &t,
       return plaq;
     }
 
+    KOKKOS_INLINE_FUNCTION int epsilon(const int &mu, const int &nu, const int &rho, const int &sigma) const {
+      if (abs(mu)==abs(nu) || abs(mu)==abs(rho) || abs(mu)==abs(sigma) || abs(nu) == abs(rho) || abs(nu) == abs(sigma) || abs(rho) == abs(sigma)){return 0;} // this should never be entered I guess
+      int rtn = 1;
+      rtn *= mu/abs(mu) * nu/abs(nu) * rho/abs(rho) * sigma/abs(sigma);
+
+      // get the number of inversions, this could and probably should be hardcoded (there are 12 odd permutations)
+      int num_invs {0};
+      int tmp[4]{abs(mu), abs(nu), abs(rho), abs(sigma)};
+      #pragma unroll
+      for (int i = 0; i<Ndim-1; ++i){
+        #pragma unroll
+        for (int j = i + 1; j < Ndim; ++j ){
+          if (tmp[i]>tmp[j]){
+            num_invs++;
+            std::swap(tmp[i], tmp[j]);
+          }
+        }
+      }
+
+      if (num_invs%2 == 1){
+        rtn *= -1;
+      }
+      return rtn;
+    }
+
+    KOKKOS_INLINE_FUNCTION T get_single_topological_charge_clover(const int &x, const int &y, const int &z, const int &t, const int &mu, const int &rho) const {
+      // calculate the sum of clover traces at a site x, y, z, t
+      if (mu == 0 || rho == 0 || abs(mu) == abs(rho)){return T(0.0);}
+      
+      T clov = T(0.0);
+      Group U1, U2, U3, U4, tmpPlaq;
+      const Kokkos::Array<int,4> site = {x, y, z, t};
+      Kokkos::Array<int, 4> site_plus_mu = {x, y, z, t};
+      site_plus_mu[this->array_dims[abs(mu)-1]] = (site_plus_mu[this->array_dims[abs(mu)-1]] + 1) % this->dims[abs(mu)-1];
+      Kokkos::Array<int, 4> site_plus_tmp = {x, y, z, t};
+      Kokkos::Array<int, 4> site_plus_rho = {x, y, z, t};
+      site_plus_rho[this->array_dims[abs(rho)-1]] = (site_plus_rho[this->array_dims[abs(rho)-1]] + 1) % this->dims[abs(rho)-1];
+
+      #pragma unroll
+      for(int nu = -Ndim; nu < (Ndim+1); ++nu){
+        if (abs(mu) == abs(nu) || abs(rho) == abs(nu) || nu == 0){continue;}
+        site_plus_tmp[this->array_dims[abs(nu)-1]] = (site_plus_tmp[this->array_dims[abs(nu)-1]] + 1) % this->dims[abs(nu)-1];
+        U1 = this->get_link_base_one(site,mu);
+        U2 = this->get_link_base_one(site_plus_mu,nu);
+        U3 = this->get_link_base_one(site_plus_tmp,mu);
+        U4 = this->get_link_base_one(site,nu);
+        tmpPlaq = (U1*U2*dagger(U3)*dagger(U4));
+        site_plus_tmp[this->array_dims[abs(nu)-1]] = (site_plus_tmp[this->array_dims[abs(nu)-1]] - 1 + this->array_dims[abs(nu)-1]) % this->dims[abs(nu)-1];
+        #pragma unroll
+        for(int sigma = -Ndim; sigma <(Ndim+1); ++sigma){
+          if (abs(mu) == abs(sigma) || abs(nu)==abs(sigma) || abs(rho) == abs(sigma) || sigma == 0){continue;}
+          site_plus_tmp[this->array_dims[abs(sigma)-1]] = (site_plus_tmp[this->array_dims[abs(sigma)-1]] + 1) % this->dims[abs(sigma)-1];
+          U1 = this->get_link_base_one(site,rho);
+          U2 = this->get_link_base_one(site_plus_mu,sigma);
+          U3 = this->get_link_base_one(site_plus_tmp,rho);
+          U4 = this->get_link_base_one(site,sigma);
+          clov += this->epsilon(mu, nu, rho, sigma)*(tmpPlaq*(U1*U2*dagger(U3)*dagger(U4))).retrace(); //is retrace correct here?
+          site_plus_tmp[this->array_dims[abs(sigma)-1]] = (site_plus_tmp[this->array_dims[abs(sigma)-1]] - 1 + this->array_dims[abs(sigma)-1]) % this->dims[abs(sigma)-1];
+        }       
+      }
+      return clov;
+    }
+
+    T get_topological_charge(bool Normalize = false){
+      auto BulkPolicy = Kokkos::MDRangePolicy<topoCharge_s, Kokkos::Rank<6>, int>({0,0,0,0,-Ndim,-Ndim},{this->get_max_dim(0),this->get_max_dim(1),this->get_max_dim(2),this->get_max_dim(3),Ndim+1, Ndim+1});
+      T topoCharge = 0.0;
+      Kokkos::parallel_reduce("topological charge", BulkPolicy, KOKKOS_LAMBDA(const typename GaugeField<T,Group,Ndim,Nc>::topoCharge_s,
+        const int &x, const int &y, const int &z, const int &t, const int &mu, const int &rho, T &topoCharge_i){
+          topoCharge_i += get_single_topological_charge_clover(x, y, z, t, mu, rho);
+        }, topoCharge);
+        topoCharge *= -1/(512*Kokkos::numbers::pi_v<T>*Kokkos::numbers::pi_v<T>);
+        if(Normalize) topoCharge /= this->get_volume()*((Ndim-1)*Ndim/2)*Nc;
+        return topoCharge;
+    }
 
     KOKKOS_INLINE_FUNCTION Group get_staple(const int &x, const int &y, const int &z, const int &t, const int &mu) const {
       Group staple(0.0);
@@ -333,7 +471,7 @@ T get_single_plaquette(const int &x, const int &y, const int &z, const int &t,
         staple += U1*dagger(U2)*dagger(U3);
         site_pm_nu[this->array_dims[nu]] = (site_pm_nu[this->array_dims[nu]] - 1 + this->dims[nu]) % this->dims[nu];
       }
-      #pragma unroll
+      #pragma unroll9
       for(int nu = 0; nu < Ndim; ++nu) {
         if(nu == mu) continue;
         site_plus_mu[this->array_dims[nu]] = (site_plus_mu[this->array_dims[nu]] - 1 + this->dims[nu]) % this->dims[nu];
@@ -383,65 +521,84 @@ T get_single_plaquette(const int &x, const int &y, const int &z, const int &t,
     KOKKOS_INLINE_FUNCTION Group get_symanzik_staple(const int &x, const int &y, const int &z, const int &t, const int &mu) const {
       Group staple(0.0);
       Group U1, U2, U3, U4, U5;
-      Kokkos::Array<int,4> site = {x,y,z,t};
-      Kokkos::Array<int,4> site_pm_mu = {x,y,z,t};
-      Kokkos::Array<int,4> site_pm_two_mu = {x,y,z,t};
-      site_pm_mu[this->array_dims[mu]] = (site_pm_mu[this->array_dims[mu]] + 1) % this->dims[mu];
-      site_pm_two_mu[this->array_dims[mu]] = (site_pm_two_mu[this->array_dims[mu]] + 2) % this->dims[mu];
-      Kokkos::Array<int,4> site_pm_nu_mu = {x,y,z,t};
-      site_pm_nu_mu[this->array_dims[mu]] = (site_pm_nu_mu[this->array_dims[mu]] + 1) % this->dims[mu];
-      Kokkos::Array<int,4> site_pm_nu = {x,y,z,t};
+      Kokkos::Array<int,4> site1 = {x,y,z,t};
+      Kokkos::Array<int,4> site2 = {x,y,z,t};
+      Kokkos::Array<int,4> site3 = {x,y,z,t};
+      Kokkos::Array<int,4> site4 = {x,y,z,t};
+      Kokkos::Array<int,4> site5 = {x,y,z,t};
+      site1[this->array_dims[mu]] = (site1[this->array_dims[mu]] + 1) % this->dims[mu];
+      site2[this->array_dims[mu]] = (site2[this->array_dims[mu]] + 2) % this->dims[mu];
+      site3[this->array_dims[mu]] = (site3[this->array_dims[mu]] + 1) % this->dims[mu];
       #pragma unroll
       for(int nu = 0; nu < Ndim; ++nu) {
         if(nu == mu) continue;
-        site_pm_nu[this->array_dims[nu]] = (site_pm_nu[this->array_dims[nu]] + 1) % this->dims[nu];
-        site_pm_nu_mu[this->array_dims[nu]] = (site_pm_nu_mu[this->array_dims[nu]] + 1) % this->dims[nu];
-        U1 = get_link(site_pm_mu,mu);
-        U2 = get_link(site_pm_two_mu,nu);
-        U3 = get_link(site_pm_nu_mu,mu);
-        U4 = get_link(site_pm_nu, mu);
-        U5 = get_link(site, nu);
+        site4[this->array_dims[nu]] = (site4[this->array_dims[nu]] + 1) % this->dims[nu];
+        site3[this->array_dims[nu]] = (site3[this->array_dims[nu]] + 1) % this->dims[nu];
+        U1 = get_link(site1,mu);
+        U2 = get_link(site2,nu);
+        U3 = get_link(site3,mu);
+        U4 = get_link(site4, mu);
+        U5 = get_link(site5, nu);
         staple += U1*U2*dagger(U3)*dagger(U4)*dagger(U5);
-        site_pm_nu[this->array_dims[nu]] = (site_pm_nu[this->array_dims[nu]] - 1 + this->dims[nu]) % this->dims[nu];
-        site_pm_nu_mu[this->array_dims[nu]] = (site_pm_nu_mu[this->array_dims[nu]] - 1+this->dims[nu]) % this->dims[nu];
+        site4[this->array_dims[nu]] = (site4[this->array_dims[nu]] - 1 + this->dims[nu]) % this->dims[nu];
+        site3[this->array_dims[nu]] = (site3[this->array_dims[nu]] - 1 + this->dims[nu]) % this->dims[nu];
       }
+      //site1[this->array_dims[mu]] = (site1[this->array_dims[mu]] - 1) % this->dims[mu];
+      site2[this->array_dims[mu]] = (site2[this->array_dims[mu]] - 2 + this->dims[mu]) % this->dims[mu];
+      site3[this->array_dims[mu]] = (site3[this->array_dims[mu]] - 1 + this->dims[mu]) % this->dims[mu];
 
-      //site_pm_mu[this->array_dims[mu]] = (site_pm_mu[this->array_dims[mu]] + 1) % this->dims[mu];
-      site_pm_two_mu[this->array_dims[mu]] = (site_pm_two_mu[this->array_dims[mu]] - 3 + this->dims[mu]) % this->dims[mu]; //mu=-1 maybe use another name here
-      site_pm_nu_mu[this->array_dims[mu]] = (site_pm_nu_mu[this->array_dims[mu]] - 2 + this->dims[mu]) % this->dims[mu]; //mu = -1
+
+      //site1[this->array_dims[mu]] = (site1[this->array_dims[mu]] + 1 + this->dims[mu]) % this->dims[mu];
+      site3[this->array_dims[mu]] = (site3[this->array_dims[mu]] - 1 + this->dims[mu]) % this->dims[mu];
+      site4[this->array_dims[mu]] = (site4[this->array_dims[mu]] - 1 + this->dims[mu]) % this->dims[mu];
 
       #pragma unroll
       for(int nu = 0; nu < Ndim; ++nu) {
         if(nu == mu) continue;
-        site_pm_nu[this->array_dims[nu]] = (site_pm_nu[this->array_dims[nu]] + 1) % this->dims[nu];
-        site_pm_nu_mu[this->array_dims[nu]] = (site_pm_nu_mu[this->array_dims[nu]] + 1 ) % this->dims[nu];
-        U1 = get_link(site_pm_mu,nu);
-        U2 = get_link(site_pm_nu,mu);
-        U3 = get_link(site_pm_nu_mu,mu);
-        U4 = get_link(site_pm_two_mu, nu);
-        U5 = get_link(site_pm_two_mu, mu);
+        site2[this->array_dims[nu]] = (site2[this->array_dims[nu]] + 1 + this->dims[nu]) % this->dims[nu];
+        site3[this->array_dims[nu]] = (site3[this->array_dims[nu]] + 1 + this->dims[nu]) % this->dims[nu];
+        U1 = get_link(site1, nu);
+        U2 = get_link(site2, mu);
+        U3 = get_link(site3, mu);
+        U4 = get_link(site4, nu);
+        U5 = get_link(site4, mu);
         staple += U1*dagger(U2)*dagger(U3)*dagger(U4)*U5;
-        site_pm_nu[this->array_dims[nu]] = (site_pm_nu[this->array_dims[nu]] - 1 + this->dims[nu]) % this->dims[nu];
-        site_pm_nu_mu[this->array_dims[nu]] = (site_pm_nu_mu[this->array_dims[nu]] - 1 + this->dims[nu]) % this->dims[nu];
+        site2[this->array_dims[nu]] = (site2[this->array_dims[nu]] - 1 + this->dims[nu]) % this->dims[nu];
+        site3[this->array_dims[nu]] = (site3[this->array_dims[nu]] - 1 + this->dims[nu]) % this->dims[nu];
+
       }
 
-      site_pm_mu[this->array_dims[mu]] = (site_pm_mu[this->array_dims[mu]] -2 + this->dims[mu]) % this->dims[mu];//mu=-1
-      site_pm_two_mu[this->array_dims[mu]] = (site_pm_two_mu[this->array_dims[mu]] - 1 + this->dims[mu]) % this->dims[mu]; //mu=-2
+      //site1[this->array_dims[mu]] = (site1[this->array_dims[mu]] - 1 + this->dims[mu]) % this->dims[mu];
+      site3[this->array_dims[mu]] = (site3[this->array_dims[mu]] + 1 + this->dims[mu]) % this->dims[mu];
+      site4[this->array_dims[mu]] = (site4[this->array_dims[mu]] + 1 + this->dims[mu]) % this->dims[mu];
+
+//---
+
+      //site1[this->array_dims[mu]] = (site1[this->array_dims[mu]] + 1 + this->dims[mu]) % this->dims[mu];
+      site2[this->array_dims[mu]] = (site2[this->array_dims[mu]] + 1 + this->dims[mu]) % this->dims[mu];
+
 
       #pragma unroll
       for(int nu = 0; nu < Ndim; ++nu) {
         if(nu == mu) continue;
-        //site_pm_nu[this->array_dims[nu]] = (site_pm_nu[this->array_dims[nu]] + 1) % this->dims[nu];
-        site_pm_nu_mu[this->array_dims[nu]] = (site_pm_nu_mu[this->array_dims[nu]] + 1 ) % this->dims[nu];
-        U1 = get_link(site_pm_nu_mu,nu);
-        U2 = get_link(site_pm_mu,nu);
-        U3 = get_link(site_pm_two_mu,mu);
-        U4 = get_link(site_pm_two_mu, nu);
-        U5 = get_link(site_pm_mu, nu);
+        site1[this->array_dims[nu]] = (site1[this->array_dims[nu]] - 1 + this->dims[nu]) % this->dims[nu];
+        site2[this->array_dims[nu]] = (site2[this->array_dims[nu]] - 2 + this->dims[nu]) % this->dims[nu];
+        site3[this->array_dims[nu]] = (site3[this->array_dims[nu]] - 2 + this->dims[nu]) % this->dims[nu];
+        site4[this->array_dims[nu]] = (site4[this->array_dims[nu]] - 1 + this->dims[nu]) % this->dims[nu];
+        U1 = get_link(site1, nu);
+        U2 = get_link(site2, nu);
+        U3 = get_link(site3, mu);
+        U4 = get_link(site3, nu);
+        U5 = get_link(site4, nu);
         staple += dagger(U1)*dagger(U2)*dagger(U3)*U4*U5;
-        //site_pm_nu[this->array_dims[nu]] = (site_pm_nu[this->array_dims[nu]] - 1 + this->dims[nu]) % this->dims[nu];
-        site_pm_nu_mu[this->array_dims[nu]] = (site_pm_nu_mu[this->array_dims[nu]] - 1 + this->dims[nu]) % this->dims[nu];
+        site1[this->array_dims[nu]] = (site1[this->array_dims[nu]] + 1 + this->dims[nu]) % this->dims[nu];
+        site2[this->array_dims[nu]] = (site2[this->array_dims[nu]] + 2 + this->dims[nu]) % this->dims[nu];
+        site3[this->array_dims[nu]] = (site3[this->array_dims[nu]] + 2 + this->dims[nu]) % this->dims[nu];
+        site4[this->array_dims[nu]] = (site4[this->array_dims[nu]] + 1 + this->dims[nu]) % this->dims[nu];
       }
+
+      //site1[this->array_dims[mu]] = (site1[this->array_dims[mu]] - 1 + this->dims[mu]) % this->dims[mu];
+      //site2[this->array_dims[mu]] = (site2[this->array_dims[mu]] - 1 + this->dims[mu]) % this->dims[mu];
 
       return staple;
     }
