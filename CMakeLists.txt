@@ -1,21 +1,24 @@
-cmake_minimum_required(VERSION 3.15...3.29)
-project(klft LANGUAGES CXX)
-find_package(Kokkos REQUIRED)
+cmake_minimum_required(VERSION 3.21.0)
+project(klft VERSION 0.0.1 LANGUAGES CXX)
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+# Honor already set CMAKE_CXX_STANDARD.
+# Otherwise default to C++17
+if(NOT DEFINED CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 17)
+endif()
+set(CMAKE_CXX_STANDARD_REQUIRED On)
+set(CMAKE_CXX_EXTENSIONS Off)
+
+#
+# Kokkos
+#
+# General Kokkos settings
+set(Kokkos_ENABLE_COMPILER_WARNINGS "ON" CACHE BOOL "CMakeLists: Kokkos_ENABLE_COMPILER_WARNINGS" FORCE)
+set(Kokkos_ENABLE_AGGRESSIVE_VECTORIZATION "ON" CACHE BOOL "CMakeLists: Kokkos_ENABLE_AGGRESSIVE_VECTORIZATION" FORCE)
+
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/kokkos/kokkos ${CMAKE_CURRENT_BINARY_DIR}/kokkos)
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
-file(GLOB LIB_SOURCES ${CMAKE_SOURCE_DIR}/lib/*.cpp)
-add_library(klft ${LIB_SOURCES})
-target_compile_features(klft PRIVATE cxx_std_17)
-target_link_libraries(klft Kokkos::kokkos)
-
-add_executable(metropolis metropolis.cpp)
-target_compile_features(metropolis PRIVATE cxx_std_17)
-target_link_libraries(metropolis klft Kokkos::kokkos)
-
-add_executable(hmc hmc.cpp)
-target_compile_features(hmc PRIVATE cxx_std_17)
-target_link_libraries(hmc klft Kokkos::kokkos)
+add_executable(test_plaq_SU3 ${CMAKE_SOURCE_DIR}/tests/GaugeSU3/test_plaq_SU3.cpp)
+target_link_libraries(test_plaq_SU3 Kokkos::kokkos)
