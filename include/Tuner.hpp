@@ -111,14 +111,15 @@ namespace klft
     }
     // timer for tuning
     Kokkos::Timer timer;
+    double best_time = std::numeric_limits<double>::max();
     // first for hostspace
     // there is no tuning
-    // if constexpr (std::is_same_v<typename policy::execution_space, Kokkos::DefaultHostExecutionSpace>) {
-    //   // for OpenMP we parallelise over the two outermost (leftmost) dimensions and so the chunk size
-    //   // for the innermost dimensions corresponds to the view extents
-    //   best_tiling[rank-1] = end[rank-1] - start[rank-1];
-    //   best_tiling[rank-2] = end[rank-2] - start[rank-2];
-    // }else {
+    if constexpr (std::is_same_v<typename Kokkos::DefaultExecutionSpace, Kokkos::DefaultHostExecutionSpace>) {
+      // for OpenMP we parallelise over the two outermost (leftmost) dimensions and so the chunk size
+      // for the innermost dimensions corresponds to the view extents
+      best_tiling[rank-1] = end[rank-1] - start[rank-1];
+      best_tiling[rank-2] = end[rank-2] - start[rank-2];
+    }else {
       // for Cuda we need to tune the tiling
       const auto max_tile = policy.max_total_tile_size()/2;
       IndexArray<rank> current_tiling;
@@ -128,7 +129,6 @@ namespace klft
         best_tiling[i] = 1;
         tile_one[i] = 1;
       }
-      double best_time = std::numeric_limits<double>::max();
       std::vector<index_t> fast_ind_tiles;
       index_t fast_ind = max_tile;
       while(fast_ind > 2) {
@@ -209,24 +209,18 @@ namespace klft
           second_tile = second_tile / 2;
         }
       }
-    // }
+    }
     if constexpr (KLFT_VERBOSITY > 2) {
       printf("Best Tile size: %d %d %d %d\n", best_tiling[0], best_tiling[1], best_tiling[2], best_tiling[3]);
       printf("Best Time: %11.4e s\n", best_time);
     }
     // store the best tiling in the hash table
-    switch(rank) {
-      case 4:
-        tuning_hash_table_4D.insert(functor_hash, best_tiling);
-        break;
-      // case 3:
-      //   tuning_hash_table_3D.insert(functor_hash, best_tiling);
-      //   break;
-      // case 2:
-      //   tuning_hash_table_2D.insert(functor_hash, best_tiling);
-        break;
-      default:
-        break;
+    if constexpr (rank == 4) {
+      tuning_hash_table_4D.insert(functor_hash, best_tiling);
+    } else if constexpr (rank == 3) {
+      tuning_hash_table_3D.insert(functor_hash, best_tiling);
+    } else if constexpr (rank == 2) {
+      tuning_hash_table_2D.insert(functor_hash, best_tiling);
     }
     if constexpr (KLFT_VERBOSITY > 3) {
       double time_rec = std::numeric_limits<double>::max();
