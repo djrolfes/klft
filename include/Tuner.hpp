@@ -79,6 +79,9 @@ namespace klft
       case 4:
         if(tuning_hash_table_4D.contains(functor_hash)) {
           auto tiling = tuning_hash_table_4D.get(functor_hash);
+          if constexpr (KLFT_VERBOSITY > 2) {
+            printf("Tuning found for functor %zu, tiling: %d %d %d %d\n", functor_hash, tiling[0], tiling[1], tiling[2], tiling[3]);
+          }
           auto policy = Policy<rank>(start, end, tiling);
           Kokkos::parallel_for(policy, functor);
           return;
@@ -87,6 +90,9 @@ namespace klft
       case 3:
         if(tuning_hash_table_3D.contains(functor_hash)) {
           auto tiling = tuning_hash_table_3D.get(functor_hash);
+          if constexpr (KLFT_VERBOSITY > 2) {
+            printf("Tuning found for functor %zu, tiling: %d %d %d %d\n", functor_hash, tiling[0], tiling[1], tiling[2], tiling[3]);
+          }
           auto policy = Policy<rank>(start, end, tiling);
           Kokkos::parallel_for(policy, functor);
           return;
@@ -95,6 +101,9 @@ namespace klft
       case 2:
         if(tuning_hash_table_2D.contains(functor_hash)) {
           auto tiling = tuning_hash_table_2D.get(functor_hash);
+          if constexpr (KLFT_VERBOSITY > 2) {
+            printf("Tuning found for functor %zu, tiling: %d %d %d %d\n", functor_hash, tiling[0], tiling[1], tiling[2], tiling[3]);
+          }
           auto policy = Policy<rank>(start, end, tiling);
           Kokkos::parallel_for(policy, functor);
           return;
