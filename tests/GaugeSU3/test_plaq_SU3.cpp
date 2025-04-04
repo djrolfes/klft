@@ -35,20 +35,22 @@
 
 #define HLINE "=========================================================\n"
 
+using namespace klft;
+
 // init value
-constexpr klft::complex_t g_init(1.0, 1.0);
+constexpr complex_t g_init(1.0, 1.0);
 
 int run_benchmark(const size_t stream_array_size) {
   printf("Reports fastest timing per kernel\n");
   
-  const klft::real_t nelem = (klft::real_t)stream_array_size*
-                       (klft::real_t)stream_array_size*
-                       (klft::real_t)stream_array_size*
-                       (klft::real_t)stream_array_size;
+  const real_t nelem = (real_t)stream_array_size*
+                       (real_t)stream_array_size*
+                       (real_t)stream_array_size*
+                       (real_t)stream_array_size;
 
-  const klft::real_t suN_nelem = nelem*Nc*Nc;
+  const real_t suN_nelem = nelem*Nc*Nc;
 
-  const klft::real_t gauge_nelem = Nd*suN_nelem;
+  const real_t gauge_nelem = Nd*suN_nelem;
 
   printf(HLINE);
 
@@ -57,31 +59,38 @@ int run_benchmark(const size_t stream_array_size) {
          Nd, Nc,
          static_cast<uint64_t>(stream_array_size));
   printf("- Size of GaugeField:                          %12.2f MB\n",
-         1.0e-6 * gauge_nelem * (klft::real_t)sizeof(klft::complex_t));
+         1.0e-6 * gauge_nelem * (real_t)sizeof(complex_t));
   printf("- Total Memory Use (1 GaugeField + 1 Field):   %12.2f MB\n",
-         1.0e-6 * (nelem + gauge_nelem) * (klft::real_t)sizeof(klft::complex_t));
+         1.0e-6 * (nelem + gauge_nelem) * (real_t)sizeof(complex_t));
 
   printf("Benchmark kernels will be performed for %d iterations.\n",
          STREAM_NTIMES);
 
   printf(HLINE);
 
-  klft::real_t plaquetteTime  = std::numeric_limits<klft::real_t>::max();
+  real_t plaquetteTime  = std::numeric_limits<real_t>::max();
 
   printf("Initializing Gauge...\n");
 
-  klft::deviceGaugeField<Nd,Nc> dev_g(stream_array_size,stream_array_size,stream_array_size,stream_array_size,g_init);
+  deviceGaugeField<Nd,Nc> dev_g(stream_array_size,stream_array_size,stream_array_size,stream_array_size,g_init);
 
   printf("Starting benchmark...\n");
 
   Kokkos::Timer timer;
 
-  for (klft::index_t k = 0; k < STREAM_NTIMES; ++k) {
+  real_t plaq_value = 0.0;
+
+  for (index_t k = 0; k < STREAM_NTIMES; ++k) {
     timer.reset();
-    klft::GaugePlaquette<Nd,Nc>(dev_g);
+    plaq_value = GaugePlaquette<Nd,Nc>(dev_g);
     Kokkos::fence();
     plaquetteTime = std::min(plaquetteTime, timer.seconds());
   }
+
+  printf(HLINE);
+
+  printf("Plaquette value: %11.4e\n", plaq_value / (nelem * (Nd * (Nd - 1) / 2) * Nc));
+  printf("Expected value:  %11.4e\n", 108.0);
 
   int rc = 0;
 
@@ -90,7 +99,7 @@ int run_benchmark(const size_t stream_array_size) {
   printf("Plaquette Kernel Time:     %11.4e s\n", plaquetteTime);
 
   printf("Plaquette BW:              %11.4f GB/s\n",
-         1.0e-09 * 1.0 * (klft::real_t)sizeof(klft::complex_t) * (nelem + gauge_nelem) / plaquetteTime);
+         1.0e-09 * 1.0 * (real_t)sizeof(complex_t) * (nelem + gauge_nelem) / plaquetteTime);
 
   printf("Plaquette FLOPS:           %11.4f Gflop/s\n",
          1.0e-09 * nelem *
