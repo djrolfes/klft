@@ -90,7 +90,7 @@ int run_benchmark(const size_t stream_array_size) {
   printf(HLINE);
 
   printf("Plaquette value: %11.4e\n", plaq_value / (nelem * (Nd * (Nd - 1) / 2) * Nc));
-  printf("Expected value:  %11.4e\n", 48.0);
+  printf("Expected value:  %11.4e\n", 32.0);
 
   int rc = 0;
 
