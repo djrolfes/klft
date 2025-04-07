@@ -28,3 +28,6 @@ target_link_libraries(test_plaq_SU2 Kokkos::kokkos)
 
 add_executable(test_plaq_U1 ${CMAKE_SOURCE_DIR}/tests/GaugeU1/test_plaq_U1.cpp)
 target_link_libraries(test_plaq_U1 Kokkos::kokkos)
+
+add_executable(test_metropolis_SU3 ${CMAKE_SOURCE_DIR}/tests/GaugeSU3/test_metropolis_SU3.cpp)
+target_link_libraries(test_metropolis_SU3 Kokkos::kokkos)
