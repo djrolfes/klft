@@ -29,8 +29,8 @@ std::string generateLogString(const klft::PTBCStepLog &log,
     }
 
     // Build the output string.
-    // Format: traj, general_accept, plaq, traj_time, acceptance_rate, [hmc_acceptances], swap_start_index, swap_acceptance, [swap_acceptances], [c(r) values], [delta_S_values]
-    oss << traj << ", " << general_accept << ", " << plaq << ", " << traj_time << ", " << acceptance << ", ";
+    // Format: traj, general_accept, plaq, traj_time, acceptance_rate, topoCharge, [hmc_acceptances], swap_start_index, swap_acceptance, [swap_acceptances], [c(r) values], [delta_S_values]
+    oss << traj << ", " << general_accept << ", " << plaq << ", " << traj_time << ", " << acceptance << ", " << log.topo << ", ";
 
     // Format hmc_acceptances list as "[val1; val2; ...]"
     oss << "[";

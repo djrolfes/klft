@@ -27,7 +27,7 @@ namespace klft {
     if(outfilename != "") {
       outfile.open(outfilename);
       // Write header line
-      outfile << "traj, accept, plaquette, time, acceptance rate" << std::endl;
+      outfile << "traj, accept, plaquette, time, acceptance rate, topological charge" << std::endl;
       // Write settings as a JSON dictionary on the second line
       outfile << "{"
               << "\"LX\": " << LX << ", "
@@ -77,9 +77,10 @@ namespace klft {
         std::chrono::duration<double> traj_time = end_time - start_time;
         if(accept) n_accept++;
         plaq = hamiltonian_field.gauge_field.get_plaquette();
-        std::cout << "Traj: " << i << " Accept: " << accept << " Plaquette: " << plaq << " Time: " << traj_time.count() << " Acceptance Rate: " << T(n_accept)/T(i+1) << std::endl;
+        double topoCharge = static_cast<double>(hamiltonian_field.gauge_field.get_topological_charge());
+        std::cout << "Traj: " << i << " Accept: " << accept << " Plaquette: " << plaq << " Time: " << traj_time.count() << " Acceptance Rate: " << T(n_accept)/T(i+1) << " Topological Charge " << topoCharge << std::endl;
         if(outfilename != "") {
-          outfile << i << ", " << accept << ", " << plaq << ", " << traj_time.count() << ", " << T(n_accept)/T(i+1) << std::endl;
+          outfile << i << ", " << accept << ", " << plaq << ", " << traj_time.count() << ", " << T(n_accept)/T(i+1) << ", " << topoCharge << std::endl;
         }
       }
       auto hmc_end_time = std::chrono::high_resolution_clock::now();
@@ -186,7 +187,7 @@ namespace klft {
     std::ofstream outfile;
     if(outfilename != "") {
       outfile.open(outfilename);
-      outfile << "traj, accept, plaquette, time, acceptance rate" << std::endl;
+      outfile << "traj, accept, plaquette, time, acceptance rate, topological charge" << std::endl;
       outfile << "{"
               << "\"LX\": " << LX << ", "
               << "\"LT\": " << LT << ", "
@@ -233,7 +234,7 @@ namespace klft {
         plaq = hamiltonian_field.gauge_field.get_plaquette();
         //std::cout << "Traj: " << i << " Accept: " << accept << " Plaquette: " << plaq << " Time: " << traj_time.count() << " Acceptance Rate: " << T(n_accept)/T(i+1) << std::endl;
         if(outfilename != "") {
-          outfile << i << ", " << accept << ", " << plaq << ", " << traj_time.count() << ", " << T(n_accept)/T(i+1) << std::endl;
+          outfile << i << ", " << accept << ", " << plaq << ", " << traj_time.count() << ", " << T(n_accept)/T(i+1) << ", " << hamiltonian_field.gauge_field.get_topological_charge() << std::endl;
         }
       }
       auto hmc_end_time = std::chrono::high_resolution_clock::now();

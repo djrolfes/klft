@@ -21,6 +21,8 @@ namespace klft {
       std::vector<int> swap_track;
       // Store c(r) values in order
       std::vector<double> cr;
+      // Store topological charge
+      double topo;
     };
 
   template<typename T, class Group, class Adjoint, class RNG, int Ndim = 4, int Nc = 2> // Nr = number of running hmcs
@@ -168,6 +170,9 @@ namespace klft {
       }
       log.swap_acceptances.push_back(swap_accept);
       log.cr.push_back(this->defects[i]->gauge_depression);
+      if (index == 0){
+        log.topo = static_cast<double>(this->hmcSims[index]->hamiltonian_field.gauge_field.get_topological_charge());
+      }
     }
     log.swap_track = this->swap_track;
     // Save the log for this step

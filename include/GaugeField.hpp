@@ -355,7 +355,7 @@ T get_single_plaquette(const int &x, const int &y, const int &z, const int &t,
       if(Normalize) plaq /= ((x_max-x_min)*(y_max-y_min)*(z_max-z_min)*(t_max-t_min))*((Ndim-1)*Ndim/2)*Nc;
       return plaq;
     }
-
+    
     T get_plaquette(bool Normalize = true) {
       auto BulkPolicy = Kokkos::MDRangePolicy<plaq_s,Kokkos::Rank<5>>({0,0,0,0,0},{this->get_max_dim(0),this->get_max_dim(1),this->get_max_dim(2),this->get_max_dim(3),Ndim});
       T plaq = 0.0;
