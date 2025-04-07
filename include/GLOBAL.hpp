@@ -108,4 +108,20 @@ namespace klft
   // special case for 1D
   using Policy1D = Kokkos::RangePolicy<>;
 
+  // define a global zero field generator 
+  // for the color x color matrix
+  template <size_t Nc>
+  KOKKOS_FORCEINLINE_FUNCTION
+  SUN<Nc> zeroSUN() {
+    SUN<Nc> zero;
+    #pragma unroll
+    for(index_t c1 = 0; c1 < Nc; ++c1) {
+      #pragma unroll
+      for(index_t c2 = 0; c2 < Nc; ++c2) {
+        zero[c1][c2] = complex_t(0.0, 0.0);
+      }
+    }
+    return zero;
+  }
+
 }
