@@ -41,15 +41,15 @@ namespace klft
     template <class RNG>
     deviceGaugeField(const index_t L0, const index_t L1, 
                      const index_t L2, const index_t L3, 
-                     RNG &generator, const real_t delta) {
-      do_init(L0, L1, L2, L3, field, generator, delta);
+                     RNG &rng, const real_t delta) {
+      do_init(L0, L1, L2, L3, field, rng, delta);
     }
 
     template <class RNG>
     deviceGaugeField(const index_t L0, const index_t L1, 
                      const index_t L2, const index_t L3, 
-                     RNG &generator) {
-      do_init(L0, L1, L2, L3, field, generator);
+                     RNG &rng) {
+      do_init(L0, L1, L2, L3, field, rng);
     }
 
     void do_init(const index_t L0, const index_t L1, 
@@ -75,14 +75,16 @@ namespace klft
     template <class RNG>
     void do_init(const index_t L0, const index_t L1, 
                  const index_t L2, const index_t L3, 
-                 GaugeField<Nd,Nc> &V, RNG &generator, const real_t delta) {
+                 GaugeField<Nd,Nc> &V, RNG &rng, const real_t delta) {
       Kokkos::realloc(Kokkos::WithoutInitializing, V, L0, L1, L2, L3);
       tune_and_launch_for<Nd>(IndexArray<Nd>{0, 0, 0, 0}, IndexArray<Nd>{L0, L1, L2, L3},
         KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2, const index_t i3) {
+          auto generator = rng.get_state();
           #pragma unroll
           for (index_t mu = 0; mu < Nd; ++mu) {
-            V(i0,i1,i2,i3,mu) = randSUN<Nc>(generator, delta);
+            randSUN(V(i0,i1,i2,i3,mu), generator, delta);
           }
+          rng.free_state(generator);
         });
       Kokkos::fence();
     }
@@ -90,17 +92,19 @@ namespace klft
     template <class RNG>
     void do_init(const index_t L0, const index_t L1, 
                  const index_t L2, const index_t L3, 
-                 GaugeField<Nd,Nc> &V, RNG &generator) {
+                 GaugeField<Nd,Nc> &V, RNG &rng) {
       Kokkos::realloc(Kokkos::WithoutInitializing, V, L0, L1, L2, L3);
       tune_and_launch_for<Nd>(IndexArray<Nd>{0, 0, 0, 0}, IndexArray<Nd>{L0, L1, L2, L3},
         KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2, const index_t i3) {
+          auto generator = rng.get_state();
           #pragma unroll
           for (index_t mu = 0; mu < Nd; ++mu) {
             #pragma unroll
             for (index_t c1 = 0; c1 < Nc; ++c1) {
               #pragma unroll
               for (index_t c2 = 0; c2 < Nc; ++c2) {
-                V(i0,i1,i2,i3,mu)[c1][c2] = randSUN<Nc>(generator);
+                V(i0,i1,i2,i3,mu)[c1][c2] = complex_t(generator.drand(-1.0, 1.0),
+                                                   generator.drand(-1.0, 1.0));
               }
             }
           }
