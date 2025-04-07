@@ -109,6 +109,16 @@ namespace klft
     }
 
     GaugeField<Nd,Nc> field;
+
+    // define accessors for the field
+    KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> & operator()(const index_t i, const index_t j, const index_t k, const index_t l, const int mu) const {
+      return field(i,j,k,l,mu);
+    }
+  
+    KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> & operator()(const index_t i, const index_t j, const index_t k, const index_t l, const int mu) {
+      return field(i,j,k,l,mu);
+    }
+    
   };
 
 }
