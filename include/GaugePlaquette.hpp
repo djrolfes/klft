@@ -35,11 +35,12 @@ namespace klft
   real_t GaugePlaquette(const deviceGaugeField<Nd,Nc> g_in) {
     complex_t plaq = 0.0;
     // get the start and end indices
+    const auto & dimensions = g_in.field.layout().dimension;
     IndexArray<Nd> start;
     IndexArray<Nd> end;
     for (index_t i = 0; i < Nd; ++i) {
       start[i] = 0;
-      end[i] = g_in.field.extent(i);
+      end[i] = dimensions[i];
     }
 
     // store the field in a const gauge field
@@ -63,14 +64,14 @@ namespace klft
           #pragma unroll
           for(index_t nu = 0; nu < Nd; ++nu) {
             if(nu > mu) {
-              const index_t i0pmu = mu == 0 ? (i0 + 1) % end[0] : i0;
-              const index_t i1pmu = mu == 1 ? (i1 + 1) % end[1] : i1;
-              const index_t i2pmu = mu == 2 ? (i2 + 1) % end[2] : i2;
-              const index_t i3pmu = mu == 3 ? (i3 + 1) % end[3] : i3;
-              const index_t i0pnu = nu == 0 ? (i0 + 1) % end[0] : i0;
-              const index_t i1pnu = nu == 1 ? (i1 + 1) % end[1] : i1;
-              const index_t i2pnu = nu == 2 ? (i2 + 1) % end[2] : i2;
-              const index_t i3pnu = nu == 3 ? (i3 + 1) % end[3] : i3;
+              const index_t i0pmu = mu == 0 ? (i0 + 1) % dimensions[0] : i0;
+              const index_t i1pmu = mu == 1 ? (i1 + 1) % dimensions[1] : i1;
+              const index_t i2pmu = mu == 2 ? (i2 + 1) % dimensions[2] : i2;
+              const index_t i3pmu = mu == 3 ? (i3 + 1) % dimensions[3] : i3;
+              const index_t i0pnu = nu == 0 ? (i0 + 1) % dimensions[0] : i0;
+              const index_t i1pnu = nu == 1 ? (i1 + 1) % dimensions[1] : i1;
+              const index_t i2pnu = nu == 2 ? (i2 + 1) % dimensions[2] : i2;
+              const index_t i3pnu = nu == 3 ? (i3 + 1) % dimensions[3] : i3;
               
               // form the 2 half plaquettes
               lmu = g(i0,i1,i2,i3,mu) * g(i0pmu,i1pnu,i2pnu,i3pnu,nu);
