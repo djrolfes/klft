@@ -1,104 +1,128 @@
+//******************************************************************************/
+//
+// This file is part of the Kokkos Lattice Field Theory (KLFT) library.
+//
+// KLFT is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// KLFT is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with KLFT.  If not, see <http://www.gnu.org/licenses/>.
+//
+//******************************************************************************/
+
+// this file defines metropolis sweeps for different fields and actions
+
 #pragma once
+#include "GLOBAL.hpp"
 #include "GaugeField.hpp"
+#include "SUN.hpp"
+#include "Tuner.hpp"
+#include "Metropolis_Params.hpp"
+#include "Gauge_Util.hpp"
 
-namespace klft {
+namespace klft
+{
+  // here we define functions for the metropolis update
+  // the function sweep metropolis must be overloaded
+  // for different fields and actions
+  // by default, the function must return the number of 
+  // accepted updates
 
-  template <typename T, class Group, class GaugeFieldType, class RNG>
-  class Metropolis {
-    public:
-      struct initGauge_cold_s {};
-      struct initGauge_hot_s {};
-      template <int odd_even> struct sweep_s {};
-      GaugeFieldType gauge_field;
-      RNG rng;
-      int n_hit;
-      T beta;
-      T delta;
+  // metropolis sweep for the 4D gauge field with SUN gauge
+  // the parameter oddeven is used to indicate whether
+  // the sweep is for odd or even sites
+  template <size_t Nd, size_t Nc, class RNG>
+  size_t sweep_Metropolis(deviceGaugeField<Nd,Nc> g_in,
+                          const MetropolisParams &params, RNG &rng,
+                          const bool oddeven) {
+    // get the necessary metropolis parameters
+    constexpr size_t rank = 4;
+    const index_t nHits = params.nHits;
+    const real_t beta = params.beta;
+    const real_t delta = params.delta;
+    const IndexArray<rank> start = {0, 0, 0, 0};
 
-      Metropolis() = default;
+    // to sweep over odd/even sites,
+    // we divide the lattice into two sublattices
+    // by dividing the t (last) dimension into odd and even
+    const IndexArray<rank> end = {params.L0, params.L1, params.L2, (index_t)(params.L3 / 2)};
 
-      Metropolis(GaugeFieldType gauge_field, RNG &rng, const int &n_hit, const T &beta, const T &delta) {
-        this->gauge_field = gauge_field;
-        this->rng = rng;
-        this->n_hit = n_hit;
-        this->beta = beta;
-        this->delta = delta;
-      }
+    // define number of accepted updates
+    // store it in a 4D field for each site
+    // and reduce it at the end
+    ScalarField nAccepted(Kokkos::view_alloc(Kokkos::WithoutInitializing, "nAccepted"), params.L0, params.L1, params.L2, params.L3);
+    // initialize the number of accepted updates
+    Kokkos::deep_copy(nAccepted, 0.0);
 
-      KOKKOS_FUNCTION T get_beta() const { return beta; }
+    // generate the staple field
+    const constGaugeField<Nd,Nc> staple = stapleField(g_in);
 
-      KOKKOS_FUNCTION T get_delta() const { return delta; }
-
-      KOKKOS_FUNCTION T get_plaq() const { return gauge_field.get_plaquette(); }
-
-      KOKKOS_INLINE_FUNCTION void operator()(initGauge_cold_s, const int &x, const int &y, const int &z, const int &t, const int &mu) const {
-        Group U;
-        U.set_identity();
-        this->gauge_field.set_link(x,y,z,t,mu,U);
-      }
-
-      KOKKOS_INLINE_FUNCTION void operator()(initGauge_hot_s, const int &x, const int &y, const int &z, const int &t, const int &mu) const {
+    // tune and launch the kernel
+    // since the first call to the kernel will tune it,
+    // the first nAccepted will be garbage
+    // so the user should do a warmup run before
+    // calling this function
+    tune_and_launch_for<rank>(start, end,
+      KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2, const index_t i3) {
+        index_t nAcc_per_site = 0;
+        // get the rng state
         auto generator = rng.get_state();
-        Group U;
-        U.get_random(generator,delta);
-        this->gauge_field.set_link(x,y,z,t,mu,U);
-        rng.free_state(generator);
-      }
-      
-      template <int odd_even>
-      KOKKOS_INLINE_FUNCTION void operator()(sweep_s<odd_even>, const int &x, const int &y, const int &z, const int &t, const int &mu, T &update) const {
-        auto generator = rng.get_state();
-        T num_accepted = 0.0;
-        T delS = 0.0;
-        const int tt = 2*t + 1*odd_even;
-        Group U = gauge_field.get_link(x,y,z,tt,mu);
-        Group staple = gauge_field.get_staple(x,y,z,tt,mu);
-        Group tmp1 = U*staple;
-        Group R;
-        for(int i = 0; i < n_hit; ++i) {
-          R.get_random(generator, delta);
-          Group U_new = U*R;
-          Group tmp2 = U_new*staple;
-          delS = (beta/static_cast<T>(gauge_field.get_Nc()))*(tmp1.retrace() - tmp2.retrace());
-          bool accept = delS < 0.0;
-          if(!accept) {
-            T r = generator.drand(0.0,1.0);
-            accept = r < Kokkos::exp(-delS);
-          }
-          if(accept) {
-            U_new.restoreGauge();
-            gauge_field.set_link(x,y,z,tt,mu,U_new);
-            num_accepted += 1.0;
+        SUN<Nc> r;
+        // get the last index based on odd/even
+        const index_t i3_oe = oddeven ? 2*i3 + 1 : 2*i3;
+        // iterate over mu
+        #pragma unroll
+        for(index_t mu = 0; mu < Nd; ++mu) {
+          // do number of hits
+          for(index_t hit = 0; hit < nHits; ++hit) {
+            // get the old link
+            const SUN<Nc> U_old = g_in(i0,i1,i2,i3_oe,mu);
+            // get the old S
+            const real_t S_old = trace(U_old * staple(i0,i1,i2,i3_oe,mu)).real();
+            // generate a random SUN matrix
+            randSUN(r, generator, delta);
+            // calculate the new link
+            const SUN<Nc> U_new = U_old * r;
+            // get the new S
+            const real_t S_new = trace(U_new * staple(i0,i1,i2,i3_oe,mu)).real();
+            // calculate delta S
+            const real_t dS = -(beta/static_cast<real_t>(Nc)) * (S_new - S_old);
+            // accept or reject the update
+            bool accept = dS < 0.0;
+            if (!accept) {
+              accept = (generator.drand(0.0, 1.0) < Kokkos::exp(-dS));
+            }
+            if (accept) {
+              // update the link
+              g_in(i0,i1,i2,i3_oe,mu) = restoreSUN(U_new);
+              // increment the number of accepted updates
+              nAcc_per_site++;
+            }
           }
         }
+        // free the rng state
         rng.free_state(generator);
-        update += num_accepted;
-      }
+        // store the number of accepted updates
+        nAccepted(i0,i1,i2,i3_oe) = static_cast<real_t>(nAcc_per_site);
+      });
+    Kokkos::fence();
+    real_t nAcc_total = 0;
+    // reduce the number of accepted updates
+    Kokkos::parallel_reduce("reduce_nAccepted", Policy<rank>(start, end), 
+      KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2, const index_t i3, real_t &nAcc) {
+        const index_t i3_oe = oddeven ? 2*i3 + 1 : 2*i3;
+        // sum over all sites
+        nAcc += static_cast<size_t>(nAccepted(i0,i1,i2,i3_oe));
+      }, Kokkos::Sum<real_t>(nAcc_total));
+    return static_cast<size_t>(nAcc_total);
+  }
 
-      void initGauge(const bool cold_start) {
-        if(cold_start) {
-          auto BulkPolicy = Kokkos::MDRangePolicy<initGauge_cold_s,Kokkos::Rank<5>>({0,0,0,0,0},{gauge_field.get_max_dim(0),gauge_field.get_max_dim(1),gauge_field.get_max_dim(2),gauge_field.get_max_dim(3),gauge_field.get_Ndim()});
-          Kokkos::parallel_for("initGauge_cold", BulkPolicy, *this);
-        } else {
-          auto BulkPolicy = Kokkos::MDRangePolicy<initGauge_hot_s,Kokkos::Rank<5>>({0,0,0,0,0},{gauge_field.get_max_dim(0),gauge_field.get_max_dim(1),gauge_field.get_max_dim(2),gauge_field.get_max_dim(3),gauge_field.get_Ndim()});
-          Kokkos::parallel_for("initGauge_hot", BulkPolicy, *this);
-        }
-      }
 
-      T sweep() {
-        auto BulkPolicy_odd = Kokkos::MDRangePolicy<sweep_s<1>,Kokkos::Rank<5>>({0,0,0,0,0},{gauge_field.get_max_dim(0),gauge_field.get_max_dim(1),gauge_field.get_max_dim(2),(int)(gauge_field.get_max_dim(3)/2),gauge_field.get_Ndim()});
-        auto BulkPolicy_even = Kokkos::MDRangePolicy<sweep_s<0>,Kokkos::Rank<5>>({0,0,0,0,0},{gauge_field.get_max_dim(0),gauge_field.get_max_dim(1),gauge_field.get_max_dim(2),(int)(gauge_field.get_max_dim(3)/2),gauge_field.get_Ndim()});
-        T accept = 0.0;
-        T accept_rate = 0.0;
-        Kokkos::parallel_reduce("sweep_even", BulkPolicy_even, *this, accept);
-        Kokkos::fence();
-        accept_rate += accept;
-        accept = 0.0;
-        Kokkos::parallel_reduce("sweep_odd", BulkPolicy_odd, *this, accept);
-        Kokkos::fence();
-        accept_rate += accept;
-        return accept_rate/(gauge_field.get_volume()*gauge_field.get_Ndim()*n_hit);
-      }
-
-  };
 }
