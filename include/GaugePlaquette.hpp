@@ -74,8 +74,8 @@ namespace klft
               const index_t i3pnu = nu == 3 ? (i3 + 1) % dimensions[3] : i3;
               
               // form the 2 half plaquettes
-              lmu = g(i0,i1,i2,i3,mu) * g(i0pmu,i1pnu,i2pnu,i3pnu,nu);
-              lnu = g(i0,i1,i2,i3,nu) * g(i0pnu,i1pmu,i2pmu,i3pmu,mu);
+              lmu = g(i0,i1,i2,i3,mu) * g(i0pmu,i1pmu,i2pmu,i3pmu,nu);
+              lnu = g(i0,i1,i2,i3,nu) * g(i0pnu,i1pnu,i2pnu,i3pnu,mu);
 
               // multiply the 2 half plaquettes
               // take the trace
