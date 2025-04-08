@@ -30,8 +30,8 @@
 
 #include <sys/time.h>
 
-#define Nd 4
-#define Nc 3
+#define ND 4
+#define NC 3
 
 #define HLINE "=========================================================\n"
 
@@ -42,6 +42,11 @@ using namespace klft;
 using RNG = Kokkos::Random_XorShift64_Pool<Kokkos::DefaultExecutionSpace>;
 
 int run_benchmark(const size_t stream_array_size) {
+  // set verbosity to debug
+  setVerbosity(5);
+  // enable tuning
+  setTuning(true);
+
   printf("Reports fastest timing per kernel\n");
   
   const real_t nelem = (real_t)stream_array_size*
@@ -49,15 +54,15 @@ int run_benchmark(const size_t stream_array_size) {
                        (real_t)stream_array_size*
                        (real_t)stream_array_size;
 
-  const real_t suN_nelem = nelem*Nc*Nc;
+  const real_t suN_nelem = nelem*NC*NC;
 
-  const real_t gauge_nelem = Nd*suN_nelem;
+  const real_t gauge_nelem = ND*suN_nelem;
 
   printf(HLINE);
 
   printf("Memory Sizes:\n");
   printf("- Gauge Array Size:                            %d*%d*%" PRIu64 "^4\n",
-         Nd, Nc,
+         ND, NC,
          static_cast<uint64_t>(stream_array_size));
   printf("- Size of GaugeField:                          %12.2f MB\n",
          1.0e-6 * gauge_nelem * (real_t)sizeof(complex_t));
@@ -71,17 +76,14 @@ int run_benchmark(const size_t stream_array_size) {
 
   real_t metropolisTime  = std::numeric_limits<real_t>::max();
 
-  printf("Initializing Gauge...\n");
+  printf("Initializing Metropolis...\n");
 
   RNG rng(12432);
 
-  deviceGaugeField<Nd,Nc> dev_g(stream_array_size,stream_array_size,stream_array_size,stream_array_size,rng,0.1);
-
-  printf("Initializing Metropolis...\n");
-
   // create a metropolis params object
   MetropolisParams params;
-  params.Ndims = Nd;
+  params.Ndims = ND;
+  params.Nc = NC;
   params.L0 = stream_array_size;
   params.L1 = stream_array_size;
   params.L2 = stream_array_size;
@@ -89,6 +91,29 @@ int run_benchmark(const size_t stream_array_size) {
   params.nHits = 10;
   params.beta = 1.0;
   params.delta = 0.1;
+
+  // print the parameters
+  params.print();
+
+  printf(HLINE);
+
+  printf("Tuning run...\n");
+
+  // tuning run
+  {
+  deviceGaugeField<ND,NC> dev_g_tune(stream_array_size,stream_array_size,stream_array_size,stream_array_size,rng,0.1);
+  size_t temp = sweep_Metropolis<ND,NC>(dev_g_tune, params, rng, false);
+  temp += sweep_Metropolis<ND,NC>(dev_g_tune, params, rng, true);
+  Kokkos::fence();
+  }
+
+  printf(HLINE);
+
+  printf("Initializing Gauge...\n");
+
+  deviceGaugeField<ND,NC> dev_g(stream_array_size,stream_array_size,stream_array_size,stream_array_size,rng,0.1);
+
+  printf(HLINE);
 
   printf("Starting benchmark...\n");
 
@@ -98,8 +123,8 @@ int run_benchmark(const size_t stream_array_size) {
 
   for (index_t k = 0; k < STREAM_NTIMES; ++k) {
     timer.reset();
-    nAcc = sweep_Metropolis<Nd,Nc>(dev_g, params, rng, false);
-    nAcc += sweep_Metropolis<Nd,Nc>(dev_g, params, rng, true);
+    nAcc = sweep_Metropolis<ND,NC>(dev_g, params, rng, false);
+    nAcc += sweep_Metropolis<ND,NC>(dev_g, params, rng, true);
     Kokkos::fence();
     metropolisTime = std::min(metropolisTime, timer.seconds());
   }
