@@ -34,21 +34,21 @@ namespace klft
 
     deviceGaugeField(const index_t L0, const index_t L1, 
                      const index_t L2, const index_t L3, 
-                     const complex_t init) {
+                     const complex_t init) : dimensions({L0, L1, L2, L3}) {
       do_init(L0, L1, L2, L3, field, init);
     }
 
     template <class RNG>
     deviceGaugeField(const index_t L0, const index_t L1, 
                      const index_t L2, const index_t L3, 
-                     RNG &rng, const real_t delta) {
+                     RNG &rng, const real_t delta) : dimensions({L0, L1, L2, L3}) {
       do_init(L0, L1, L2, L3, field, rng, delta);
     }
 
     template <class RNG>
     deviceGaugeField(const index_t L0, const index_t L1, 
                      const index_t L2, const index_t L3, 
-                     RNG &rng) {
+                     RNG &rng) : dimensions({L0, L1, L2, L3}) {
       do_init(L0, L1, L2, L3, field, rng);
     }
 
@@ -113,14 +113,58 @@ namespace klft
     }
 
     GaugeField<Nd,Nc> field;
+    const IndexArray<4> dimensions;
 
     // define accessors for the field
-    KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> & operator()(const index_t i, const index_t j, const index_t k, const index_t l, const int mu) const {
-      return field(i,j,k,l,mu);
+    KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> & operator()(const index_t i0, const index_t i1, const index_t i2, const index_t i3, const index_t mu) const {
+      return field(i0,i1,i2,i3,mu);
     }
   
-    KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> & operator()(const index_t i, const index_t j, const index_t k, const index_t l, const int mu) {
-      return field(i,j,k,l,mu);
+    KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> & operator()(const index_t i0, const index_t i1, const index_t i2, const index_t i3, const index_t mu) {
+      return field(i0,i1,i2,i3,mu);
+    }
+
+    KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> staple(const index_t i0, const index_t i1, const index_t i2, const index_t i3, const index_t mu) const {
+      SUN<Nc> temp = zeroSUN<Nc>();
+      // get the x + mu indices
+      const index_t i0pmu = mu == 0 ? (i0 + 1) % dimensions[0] : i0;
+      const index_t i1pmu = mu == 1 ? (i1 + 1) % dimensions[1] : i1;
+      const index_t i2pmu = mu == 2 ? (i2 + 1) % dimensions[2] : i2;
+      const index_t i3pmu = mu == 3 ? (i3 + 1) % dimensions[3] : i3;
+      // positive directions
+      #pragma unroll
+      for(index_t nu = 0; nu < Nd; ++nu) { // loop over nu
+        // do nothing for mu = nu
+        if (nu == mu) continue;
+        // get the x + nu indices
+        const index_t i0pnu = nu == 0 ? (i0 + 1) % dimensions[0] : i0;
+        const index_t i1pnu = nu == 1 ? (i1 + 1) % dimensions[1] : i1;
+        const index_t i2pnu = nu == 2 ? (i2 + 1) % dimensions[2] : i2;
+        const index_t i3pnu = nu == 3 ? (i3 + 1) % dimensions[3] : i3;
+        // get the staple
+        temp += field(i0pmu,i1pmu,i2pmu,i3pmu,nu) * conj(field(i0pnu,i1pnu,i2pnu,i3pnu,mu))
+              * conj(field(i0,i1,i2,i3,nu));
+      } // loop over nu
+      // negative directions
+      #pragma unroll
+      for(index_t nu = 0; nu < Nd; ++nu) { // loop over nu
+        // do nothing for mu = nu
+        if (nu == mu) continue;
+        // get the x + mu - nu indices
+        const index_t i0pmu_mnu = nu == 0 ? (i0pmu - 1 + dimensions[0]) % dimensions[0] : i0pmu;
+        const index_t i1pmu_mnu = nu == 1 ? (i1pmu - 1 + dimensions[1]) % dimensions[1] : i1pmu;
+        const index_t i2pmu_mnu = nu == 2 ? (i2pmu - 1 + dimensions[2]) % dimensions[2] : i2pmu;
+        const index_t i3pmu_mnu = nu == 3 ? (i3pmu - 1 + dimensions[3]) % dimensions[3] : i3pmu;
+        // get the x - nu indices
+        const index_t i0mnu = nu == 0 ? (i0 - 1 + dimensions[0]) % dimensions[0] : i0;
+        const index_t i1mnu = nu == 1 ? (i1 - 1 + dimensions[1]) % dimensions[1] : i1;
+        const index_t i2mnu = nu == 2 ? (i2 - 1 + dimensions[2]) % dimensions[2] : i2;
+        const index_t i3mnu = nu == 3 ? (i3 - 1 + dimensions[3]) % dimensions[3] : i3;
+        // get the staple
+        temp += conj(field(i0pmu_mnu,i1pmu_mnu,i2pmu_mnu,i3pmu_mnu,nu)) 
+              * conj(field(i0mnu,i1mnu,i2mnu,i3mnu,mu)) * field(i0mnu,i1mnu,i2mnu,i3mnu,nu);
+      } // loop over nu
+      return temp;
     }
     
   };
