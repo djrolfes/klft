@@ -73,13 +73,19 @@ namespace klft
   void tune_and_launch_for(const IndexArray<rank> &start,
                   const IndexArray<rank> &end,
                   const FunctorType &functor) {
+    // launch kernel if tuning is disabled
+    if (!KLFT_TUNING) {
+      const auto policy = Policy<rank>(start, end);
+      Kokkos::parallel_for(policy, functor);
+      return;
+    }
     // check if the functor is already tuned
     const size_t functor_hash = get_Functor_hash(functor);
     switch(rank) {
       case 4:
         if(tuning_hash_table_4D.contains(functor_hash)) {
           auto tiling = tuning_hash_table_4D.get(functor_hash);
-          if constexpr (KLFT_VERBOSITY > 2) {
+          if (KLFT_VERBOSITY > 2) {
             printf("Tuning found for functor %zu, tiling: %d %d %d %d\n", functor_hash, tiling[0], tiling[1], tiling[2], tiling[3]);
           }
           auto policy = Policy<rank>(start, end, tiling);
@@ -90,7 +96,7 @@ namespace klft
       case 3:
         if(tuning_hash_table_3D.contains(functor_hash)) {
           auto tiling = tuning_hash_table_3D.get(functor_hash);
-          if constexpr (KLFT_VERBOSITY > 2) {
+          if (KLFT_VERBOSITY > 2) {
             printf("Tuning found for functor %zu, tiling: %d %d %d %d\n", functor_hash, tiling[0], tiling[1], tiling[2], tiling[3]);
           }
           auto policy = Policy<rank>(start, end, tiling);
@@ -101,7 +107,7 @@ namespace klft
       case 2:
         if(tuning_hash_table_2D.contains(functor_hash)) {
           auto tiling = tuning_hash_table_2D.get(functor_hash);
-          if constexpr (KLFT_VERBOSITY > 2) {
+          if (KLFT_VERBOSITY > 2) {
             printf("Tuning found for functor %zu, tiling: %d %d %d %d\n", functor_hash, tiling[0], tiling[1], tiling[2], tiling[3]);
           }
           auto policy = Policy<rank>(start, end, tiling);
@@ -166,7 +172,7 @@ namespace klft
                 best_time = min_time;
                 best_tiling = current_tiling;
               }
-              if constexpr (KLFT_VERBOSITY > 2) {
+              if (KLFT_VERBOSITY > 2) {
                 printf("Current Tile size: %d %d %d %d, time: %11.4e\n", 
                         current_tiling[0], current_tiling[1], 
                         current_tiling[2], current_tiling[3], min_time);
@@ -188,7 +194,7 @@ namespace klft
                 best_time = min_time;
                 best_tiling = current_tiling;
               }
-              if constexpr (KLFT_VERBOSITY > 2) {
+              if (KLFT_VERBOSITY > 2) {
                 printf("Current Tile size: %d %d %d %d, time: %11.4e\n", 
                         current_tiling[0], current_tiling[1], 
                         current_tiling[2], current_tiling[3], min_time);
@@ -209,7 +215,7 @@ namespace klft
               best_time = min_time;
               best_tiling = current_tiling;
             }
-            if constexpr (KLFT_VERBOSITY > 2) {
+            if (KLFT_VERBOSITY > 2) {
               printf("Current Tile size: %d %d %d %d, time: %11.4e\n", 
                       current_tiling[0], current_tiling[1], 
                       current_tiling[2], current_tiling[3], min_time);
@@ -219,7 +225,7 @@ namespace klft
         }
       }
     }
-    if constexpr (KLFT_VERBOSITY > 2) {
+    if (KLFT_VERBOSITY > 2) {
       printf("Best Tile size: %d %d %d %d\n", best_tiling[0], best_tiling[1], best_tiling[2], best_tiling[3]);
       printf("Best Time: %11.4e s\n", best_time);
     }
@@ -231,7 +237,7 @@ namespace klft
     } else if constexpr (rank == 2) {
       tuning_hash_table_2D.insert(functor_hash, best_tiling);
     }
-    if constexpr (KLFT_VERBOSITY > 3) {
+    if (KLFT_VERBOSITY > 3) {
       double time_rec = std::numeric_limits<double>::max();
       auto tune_policy = Policy<rank>(start, end);
       for(int ii = 0; ii < STREAM_NTIMES; ii++) {
