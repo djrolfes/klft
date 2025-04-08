@@ -52,7 +52,7 @@ namespace klft
     Field plaq_per_site(Kokkos::view_alloc(Kokkos::WithoutInitializing, "plaq_per_site"), end[0], end[1], end[2], end[3]);
 
     // tune and launch the kernel
-    tune_and_launch_for<Nd>(start, end,
+    tune_and_launch_for<Nd>("GaugePlaquette_GaugeField", start, end,
       KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2, const index_t i3) {
         // temp SUN matrices to store products
         SUN<Nc> lmu, lnu;

@@ -61,12 +61,20 @@ namespace klft
     // initialize the number of accepted updates
     Kokkos::deep_copy(nAccepted, 0.0);
 
+    // define the functor id based on odd or even sweep
+    std::string functor_id = "sweep_Metropolis_GaugeField";
+    if (oddeven) {
+      functor_id += "_odd";
+    } else {
+      functor_id += "_even";
+    }
+
     // tune and launch the kernel
     // since the first call to the kernel will tune it,
     // the first nAccepted will be garbage
     // so the user should do a warmup run before
     // calling this function
-    tune_and_launch_for<rank>(start, end,
+    tune_and_launch_for<rank>(functor_id, start, end,
       KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2, const index_t i3) {
         index_t nAcc_per_site = 0;
         // get the rng state

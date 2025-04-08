@@ -56,7 +56,8 @@ namespace klft
                  const index_t L2, const index_t L3, 
                  GaugeField<Nd,Nc> &V, complex_t init) {
       Kokkos::realloc(Kokkos::WithoutInitializing, V, L0, L1, L2, L3);
-      tune_and_launch_for<Nd>(IndexArray<Nd>{0, 0, 0, 0}, IndexArray<Nd>{L0, L1, L2, L3},
+      tune_and_launch_for<Nd>("init_deviceGaugeField", 
+        IndexArray<Nd>{0, 0, 0, 0}, IndexArray<Nd>{L0, L1, L2, L3},
         KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2, const index_t i3) {
           #pragma unroll
           for (index_t mu = 0; mu < Nd; ++mu) {
@@ -77,7 +78,8 @@ namespace klft
                  const index_t L2, const index_t L3, 
                  GaugeField<Nd,Nc> &V, RNG &rng, const real_t delta) {
       Kokkos::realloc(Kokkos::WithoutInitializing, V, L0, L1, L2, L3);
-      tune_and_launch_for<Nd>(IndexArray<Nd>{0, 0, 0, 0}, IndexArray<Nd>{L0, L1, L2, L3},
+      tune_and_launch_for<Nd>("init_deviceGaugeField",
+        IndexArray<Nd>{0, 0, 0, 0}, IndexArray<Nd>{L0, L1, L2, L3},
         KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2, const index_t i3) {
           auto generator = rng.get_state();
           #pragma unroll
@@ -94,7 +96,8 @@ namespace klft
                  const index_t L2, const index_t L3, 
                  GaugeField<Nd,Nc> &V, RNG &rng) {
       Kokkos::realloc(Kokkos::WithoutInitializing, V, L0, L1, L2, L3);
-      tune_and_launch_for<Nd>(IndexArray<Nd>{0, 0, 0, 0}, IndexArray<Nd>{L0, L1, L2, L3},
+      tune_and_launch_for<Nd>("init_deviceGaugeField",
+        IndexArray<Nd>{0, 0, 0, 0}, IndexArray<Nd>{L0, L1, L2, L3},
         KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2, const index_t i3) {
           auto generator = rng.get_state();
           #pragma unroll

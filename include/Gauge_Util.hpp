@@ -42,7 +42,7 @@ namespace klft
     const constGaugeField<Nd,Nc> g(g_in.field);
 
     // tune and launch the kernel
-    tune_and_launch_for<Nd>(start, end,
+    tune_and_launch_for<Nd>("stapleField_GaugeField", start, end,
       KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2, const index_t i3) {
         // iterate over mu, store staple for each mu
         #pragma unroll
