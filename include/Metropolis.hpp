@@ -61,9 +61,6 @@ namespace klft
     // initialize the number of accepted updates
     Kokkos::deep_copy(nAccepted, 0.0);
 
-    // generate the staple field
-    const constGaugeField<Nd,Nc> staple = stapleField(g_in);
-
     // tune and launch the kernel
     // since the first call to the kernel will tune it,
     // the first nAccepted will be garbage
@@ -80,20 +77,16 @@ namespace klft
         // iterate over mu
         #pragma unroll
         for(index_t mu = 0; mu < Nd; ++mu) {
+          // get the staple
+          const SUN<Nc> staple = g_in.staple(i0,i1,i2,i3_oe,mu);
           // do number of hits
           for(index_t hit = 0; hit < nHits; ++hit) {
-            // get the old link
-            const SUN<Nc> U_old = g_in(i0,i1,i2,i3_oe,mu);
-            // get the old S
-            const real_t S_old = trace(U_old * staple(i0,i1,i2,i3_oe,mu)).real();
             // generate a random SUN matrix
             randSUN(r, generator, delta);
-            // calculate the new link
-            const SUN<Nc> U_new = U_old * r;
-            // get the new S
-            const real_t S_new = trace(U_new * staple(i0,i1,i2,i3_oe,mu)).real();
             // calculate delta S
-            const real_t dS = -(beta/static_cast<real_t>(Nc)) * (S_new - S_old);
+            const real_t dS = -(beta/static_cast<real_t>(Nc))
+                             * (trace(g_in(i0,i1,i2,i3_oe,mu) * r * staple).real()
+                              - trace(g_in(i0,i1,i2,i3_oe,mu) * staple).real());
             // accept or reject the update
             bool accept = dS < 0.0;
             if (!accept) {
@@ -101,7 +94,7 @@ namespace klft
             }
             if (accept) {
               // update the link
-              g_in(i0,i1,i2,i3_oe,mu) = restoreSUN(U_new);
+              g_in(i0,i1,i2,i3_oe,mu) = restoreSUN(g_in(i0,i1,i2,i3_oe,mu) * r);
               // increment the number of accepted updates
               nAcc_per_site++;
             }
