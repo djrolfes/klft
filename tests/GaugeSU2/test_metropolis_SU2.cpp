@@ -31,7 +31,7 @@
 #include <sys/time.h>
 
 #define ND 4
-#define NC 3
+#define NC 2
 
 #define HLINE "=========================================================\n"
 
@@ -146,7 +146,7 @@ int parse_args(int argc, char **argv, size_t &stream_array_size) {
 
   const std::string help_string =
       "  -n <N>, --nelements <N>\n"
-      "     Create 4D GaugeField containing [4][3][3]<N>^4 elements.\n"
+      "     Create 4D GaugeField containing [4][2][2]<N>^4 elements.\n"
       "     Default: 32\n"
       "  -h, --help\n"
       "     Prints this message.\n"
@@ -179,7 +179,7 @@ int parse_args(int argc, char **argv, size_t &stream_array_size) {
 
 int main(int argc, char *argv[]) {
   printf(HLINE);
-  printf("SU(3) GaugeField 4D metropolis kernel test and benchmark\n");
+  printf("SU(2) GaugeField 4D metropolis kernel test and benchmark\n");
   printf(HLINE);
 
   Kokkos::initialize(argc, argv);

@@ -31,12 +31,6 @@
 namespace klft
 {
 
-  // defining a compile time verbosity here
-  // should later be changed to a runtime option
-  #ifndef KLFT_VERBOSITY
-  #define KLFT_VERBOSITY 5
-  #endif
-
   // define the global types
   // is this a good idea?
   // if we want different fields with different precision (e.g. coarse grid)
@@ -131,6 +125,28 @@ namespace klft
       }
     }
     return zero;
+  }
+
+  // global verbosity level
+  // 0 = silent
+  // 1 = normal
+  // 2 = verbose
+  // 3 = very verbose
+  // 4 = debug
+  // 5 = trace
+  int KLFT_VERBOSITY = 0;
+
+  void setVerbosity(int v) {
+    KLFT_VERBOSITY = v;
+  }
+
+  // variable that enables tuning
+  // 0 = no tuning
+  // 1 = tuning enabled
+  int KLFT_TUNING = 0;
+
+  void setTuning(int t) {
+    KLFT_TUNING = t;
   }
 
 }
