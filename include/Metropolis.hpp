@@ -91,10 +91,14 @@ namespace klft
           for(index_t hit = 0; hit < nHits; ++hit) {
             // generate a random SUN matrix
             randSUN(r, generator, delta);
+            // get old link
+            const SUN<Nc> U_old = g_in(i0,i1,i2,i3_oe,mu);
+            // calculate the new link
+            const SUN<Nc> U_new = U_old * r;
             // calculate delta S
             const real_t dS = -(beta/static_cast<real_t>(Nc))
-                             * (trace(g_in(i0,i1,i2,i3_oe,mu) * r * staple).real()
-                              - trace(g_in(i0,i1,i2,i3_oe,mu) * staple).real());
+                             * (trace(U_new * staple).real()
+                              - trace(U_old * staple).real());
             // accept or reject the update
             bool accept = dS < 0.0;
             if (!accept) {
@@ -102,7 +106,7 @@ namespace klft
             }
             if (accept) {
               // update the link
-              g_in(i0,i1,i2,i3_oe,mu) = restoreSUN(g_in(i0,i1,i2,i3_oe,mu) * r);
+              g_in(i0,i1,i2,i3_oe,mu) = restoreSUN(U_new);
               // increment the number of accepted updates
               nAcc_per_site++;
             }
