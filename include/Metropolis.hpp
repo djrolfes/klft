@@ -51,11 +51,11 @@ namespace klft {
         T num_accepted = 0.0;
         T delS = 0.0;
         const int tt = 2*t + 1*odd_even;
-        Group U = gauge_field.get_link(x,y,z,tt,mu);
         Group staple = gauge_field.get_staple(x,y,z,tt,mu);
-        Group tmp1 = U*staple;
         Group R;
         for(int i = 0; i < n_hit; ++i) {
+          Group U = gauge_field.get_link(x,y,z,tt,mu);
+          Group tmp1 = U*staple;
           R.get_random(generator, delta);
           Group U_new = U*R;
           Group tmp2 = U_new*staple;
