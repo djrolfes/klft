@@ -32,12 +32,21 @@ namespace klft
 
     deviceGaugeField() = delete;
 
+    // initialize all sites to a given value
     deviceGaugeField(const index_t L0, const index_t L1, 
                      const index_t L2, const index_t L3, 
                      const complex_t init) : dimensions({L0, L1, L2, L3}) {
       do_init(L0, L1, L2, L3, field, init);
     }
 
+    // initialize all links to a given SUN matrix
+    deviceGaugeField(const index_t L0, const index_t L1, 
+                     const index_t L2, const index_t L3, 
+                     const SUN<Nc> &init) : dimensions({L0, L1, L2, L3}) {
+      do_init(L0, L1, L2, L3, field, init);
+    }
+
+    // initialize all links to a random SUN matrix
     template <class RNG>
     deviceGaugeField(const index_t L0, const index_t L1, 
                      const index_t L2, const index_t L3, 
@@ -45,6 +54,7 @@ namespace klft
       do_init(L0, L1, L2, L3, field, rng, delta);
     }
 
+    // initialize all sites to a random value
     template <class RNG>
     deviceGaugeField(const index_t L0, const index_t L1, 
                      const index_t L2, const index_t L3, 
@@ -68,6 +78,21 @@ namespace klft
                 V(i0,i1,i2,i3,mu)[c1][c2] = init;
               }
             }
+          }
+        });
+      Kokkos::fence();
+    }
+
+    void do_init(const index_t L0, const index_t L1, 
+                 const index_t L2, const index_t L3, 
+                 GaugeField<Nd,Nc> &V, const SUN<Nc> &init) {
+      Kokkos::realloc(Kokkos::WithoutInitializing, V, L0, L1, L2, L3);
+      tune_and_launch_for<Nd>("init_deviceGaugeField",
+        IndexArray<Nd>{0, 0, 0, 0}, IndexArray<Nd>{L0, L1, L2, L3},
+        KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2, const index_t i3) {
+          #pragma unroll
+          for (index_t mu = 0; mu < Nd; ++mu) {
+            V(i0,i1,i2,i3,mu) = init;
           }
         });
       Kokkos::fence();
