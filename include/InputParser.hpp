@@ -100,6 +100,11 @@ namespace klft {
             gaugeObservableParams.W_Lmu_Lnu_pairs.push_back({pair[0].as<size_t>(), pair[1].as<size_t>()});
           }
         }
+
+        // filenames for the measurements
+        gaugeObservableParams.plaquette_filename = gp["plaquette_filename"].as<std::string>("");
+        gaugeObservableParams.W_temp_filename = gp["W_temp_filename"].as<std::string>("");
+        gaugeObservableParams.W_mu_nu_filename = gp["W_mu_nu_filename"].as<std::string>("");
         // ...
         // add more parameters above this line as needed
       } else {
