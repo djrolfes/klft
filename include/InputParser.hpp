@@ -111,4 +111,5 @@ namespace klft {
       printf("Error parsing input file: %s\n", e.what());
       return false;
     }
+  }
 }

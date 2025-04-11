@@ -43,6 +43,11 @@ namespace klft
     std::vector<std::vector<Kokkos::Array<real_t,3>>> W_temp_measurements; // L, T and corresponding W_temp
     std::vector<std::vector<Kokkos::Array<real_t,5>>> W_mu_nu_measurements; // mu, nu, Lmu, Lnu and corresponding W_mu_nu
 
+    // finally, some filenames where the measurements will be flushed
+    std::string plaquette_filename; // filename for the plaquette measurements
+    std::string W_temp_filename; // filename for the temporal Wilson loop measurements
+    std::string W_mu_nu_filename; // filename for the mu-nu Wilson loop measurements
+
     // constructor to initialize the parameters
     // by default nothing is measured
     GaugeObservableParams()
@@ -189,6 +194,30 @@ namespace klft
              << measurement[4] << "\n";
       }
     }
+  }
+
+  // define a global function to flush all measurements
+  void flushAllGaugeObservables(const GaugeObservableParams &params) {
+    // flush plaquette measurements
+    if (params.plaquette_filename != "") {
+      std::ofstream file(params.plaquette_filename, std::ios::app);
+      flushPlaquette(file, params);
+      file.close();
+    }
+    // flush temporal Wilson loop measurements
+    if (params.W_temp_filename != "") {
+      std::ofstream file(params.W_temp_filename, std::ios::app);
+      flushWilsonLoopTemporal(file, params);
+      file.close();
+    }
+    // flush mu-nu Wilson loop measurements
+    if (params.W_mu_nu_filename != "") {
+      std::ofstream file(params.W_mu_nu_filename, std::ios::app);
+      flushWilsonLoopMuNu(file, params);
+      file.close();
+    }
+    // ...
+    // add more flush functions for other observables here
   }
 
 }
