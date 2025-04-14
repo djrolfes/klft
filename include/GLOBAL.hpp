@@ -61,12 +61,36 @@ namespace klft
   template <size_t Nd, size_t Nc>
   using GaugeField = Kokkos::View<SUN<Nc>****[Nd], Kokkos::MemoryTraits<Kokkos::Restrict>>;
 
+  template <size_t Nd, size_t Nc>
+  using GaugeField3D = Kokkos::View<SUN<Nc>***[Nd], Kokkos::MemoryTraits<Kokkos::Restrict>>;
+
+  template <size_t Nd, size_t Nc>
+  using GaugeField2D = Kokkos::View<SUN<Nc>**[Nd], Kokkos::MemoryTraits<Kokkos::Restrict>>;
+
   template <size_t Nc>
   using SUNField = Kokkos::View<SUN<Nc>****, Kokkos::MemoryTraits<Kokkos::Restrict>>;
 
+  template <size_t Nc>
+  using SUNField3D = Kokkos::View<SUN<Nc>***, Kokkos::MemoryTraits<Kokkos::Restrict>>;
+
+  template <size_t Nc>
+  using SUNField2D = Kokkos::View<SUN<Nc>**, Kokkos::MemoryTraits<Kokkos::Restrict>>;
+
   using Field = Kokkos::View<complex_t****, Kokkos::MemoryTraits<Kokkos::Restrict>>;
 
+  using Field3D = Kokkos::View<complex_t***, Kokkos::MemoryTraits<Kokkos::Restrict>>;
+
+  using Field2D = Kokkos::View<complex_t**, Kokkos::MemoryTraits<Kokkos::Restrict>>;
+
+  using Field1D = Kokkos::View<complex_t*, Kokkos::MemoryTraits<Kokkos::Restrict>>;
+
   using ScalarField = Kokkos::View<real_t****, Kokkos::MemoryTraits<Kokkos::Restrict>>;
+
+  using ScalarField3D = Kokkos::View<real_t***, Kokkos::MemoryTraits<Kokkos::Restrict>>;
+
+  using ScalarField2D = Kokkos::View<real_t**, Kokkos::MemoryTraits<Kokkos::Restrict>>;
+
+  using ScalarField1D = Kokkos::View<real_t*, Kokkos::MemoryTraits<Kokkos::Restrict>>;
 
   // define corresponding constant fields
   #if defined ( KOKKOS_ENABLE_CUDA )
@@ -74,24 +98,72 @@ namespace klft
   template <size_t Nd, size_t Nc>
   using constGaugeField = Kokkos::View<const SUN<Nc>****[Nd], Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
 
+  template <size_t Nd, size_t Nc>
+  using constGaugeField3D = Kokkos::View<const SUN<Nc>***[Nd], Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
+
+  template <size_t Nd, size_t Nc>
+  using constGaugeField2D = Kokkos::View<const SUN<Nc>**[Nd], Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
+
   template <size_t Nc>
   using constSUNField = Kokkos::View<const SUN<Nc>****, Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
 
+  template <size_t Nc>
+  using constSUNField3D = Kokkos::View<const SUN<Nc>***, Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
+
+  template <size_t Nc>
+  using constSUNField2D = Kokkos::View<const SUN<Nc>**, Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
+
   using constField = Kokkos::View<const complex_t****, Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
 
+  using constField3D = Kokkos::View<const complex_t***, Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
+
+  using constField2D = Kokkos::View<const complex_t**, Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
+
+  using constField1D = Kokkos::View<const complex_t*, Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
+
   using constScalarField = Kokkos::View<const real_t****, Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
+
+  using constScalarField3D = Kokkos::View<const real_t***, Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
+
+  using constScalarField2D = Kokkos::View<const real_t**, Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
+
+  using constScalarField1D = Kokkos::View<const real_t*, Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
 
   #else
 
   template <size_t Nd, size_t Nc>
   using constGaugeField = Kokkos::View<const SUN<Nc>****[Nd], Kokkos::MemoryTraits<Kokkos::Restrict>>;
 
+  template <size_t Nd, size_t Nc>
+  using constGaugeField3D = Kokkos::View<const SUN<Nc>***[Nd], Kokkos::MemoryTraits<Kokkos::Restrict>>;
+
+  template <size_t Nd, size_t Nc>
+  using constGaugeField2D = Kokkos::View<const SUN<Nc>**[Nd], Kokkos::MemoryTraits<Kokkos::Restrict>>;
+
   template <size_t Nc>
   using constSUNField = Kokkos::View<const SUN<Nc>****, Kokkos::MemoryTraits<Kokkos::Restrict>>;
 
+  template <size_t Nc>
+  using constSUNField3D = Kokkos::View<const SUN<Nc>***, Kokkos::MemoryTraits<Kokkos::Restrict>>;
+
+  template <size_t Nc>
+  using constSUNField2D = Kokkos::View<const SUN<Nc>**, Kokkos::MemoryTraits<Kokkos::Restrict>>;
+
   using constField = Kokkos::View<const complex_t****, Kokkos::MemoryTraits<Kokkos::Restrict>>;
 
+  using constField3D = Kokkos::View<const complex_t***, Kokkos::MemoryTraits<Kokkos::Restrict>>;
+
+  using constField2D = Kokkos::View<const complex_t**, Kokkos::MemoryTraits<Kokkos::Restrict>>;
+
+  using constField1D = Kokkos::View<const complex_t*, Kokkos::MemoryTraits<Kokkos::Restrict>>;
+
   using constScalarField = Kokkos::View<const real_t****, Kokkos::MemoryTraits<Kokkos::Restrict>>;
+
+  using constScalarField3D = Kokkos::View<const real_t***, Kokkos::MemoryTraits<Kokkos::Restrict>>;
+
+  using constScalarField2D = Kokkos::View<const real_t**, Kokkos::MemoryTraits<Kokkos::Restrict>>;
+
+  using constScalarField1D = Kokkos::View<const real_t*, Kokkos::MemoryTraits<Kokkos::Restrict>>;
 
   #endif
 
@@ -116,6 +188,19 @@ namespace klft
       }
     }
     return zero;
+  }
+
+  // define a global identity field generator
+  // for the color x color matrix
+  template <size_t Nc>
+  KOKKOS_FORCEINLINE_FUNCTION
+  SUN<Nc> identitySUN() {
+    SUN<Nc> id = zeroSUN<Nc>();
+    #pragma unroll
+    for(index_t c1 = 0; c1 < Nc; ++c1) {
+      id[c1][c1] = complex_t(1.0, 0.0);
+    }
+    return id;
   }
 
   // global verbosity level
