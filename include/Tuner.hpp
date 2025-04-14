@@ -88,42 +88,40 @@ namespace klft
       end_uid += std::to_string(end[i]) + "_";
     }
     const std::string functor_uid = functor_id + "_rank_" + std::to_string(rank) + "_start_" + start_uid + "end_" + end_uid;
-    switch(rank) {
-      case 4:
-        if(tuning_hash_table_4D.contains(functor_uid)) {
-          auto tiling = tuning_hash_table_4D.get(functor_uid);
-          if (KLFT_VERBOSITY > 2) {
-            printf("Tuning found for kernel %s, tiling: %d %d %d %d\n", functor_uid.c_str(), tiling[0], tiling[1], tiling[2], tiling[3]);
-          }
-          auto policy = Policy<rank>(start, end, tiling);
-          Kokkos::parallel_for(policy, functor);
-          return;
+    if constexpr (rank == 4) {
+      if(tuning_hash_table_4D.contains(functor_uid)) {
+        auto tiling = tuning_hash_table_4D.get(functor_uid);
+        if (KLFT_VERBOSITY > 2) {
+          printf("Tuning found for kernel %s, tiling: %d %d %d %d\n", functor_uid.c_str(), tiling[0], tiling[1], tiling[2], tiling[3]);
         }
-        break;
-      case 3:
-        if(tuning_hash_table_3D.contains(functor_uid)) {
-          auto tiling = tuning_hash_table_3D.get(functor_uid);
-          if (KLFT_VERBOSITY > 2) {
-            printf("Tuning found for kernel %zu, tiling: %d %d %d %d\n", functor_uid.c_str(), tiling[0], tiling[1], tiling[2], tiling[3]);
-          }
-          auto policy = Policy<rank>(start, end, tiling);
-          Kokkos::parallel_for(policy, functor);
-          return;
+        auto policy = Policy<rank>(start, end, tiling);
+        Kokkos::parallel_for(policy, functor);
+        return;
+      }
+    } else if constexpr (rank == 3) {
+      if(tuning_hash_table_3D.contains(functor_uid)) {
+        auto tiling = tuning_hash_table_3D.get(functor_uid);
+        if (KLFT_VERBOSITY > 2) {
+          printf("Tuning found for kernel %zu, tiling: %d %d %d %d\n", functor_uid.c_str(), tiling[0], tiling[1], tiling[2], tiling[3]);
         }
-        break;
-      case 2:
-        if(tuning_hash_table_2D.contains(functor_uid)) {
-          auto tiling = tuning_hash_table_2D.get(functor_uid);
-          if (KLFT_VERBOSITY > 2) {
-            printf("Tuning found for kernel %zu, tiling: %d %d %d %d\n", functor_uid.c_str(), tiling[0], tiling[1], tiling[2], tiling[3]);
-          }
-          auto policy = Policy<rank>(start, end, tiling);
-          Kokkos::parallel_for(policy, functor);
-          return;
+        auto policy = Policy<rank>(start, end, tiling);
+        Kokkos::parallel_for(policy, functor);
+        return;
+      }
+    } else if constexpr (rank == 2) {
+      if(tuning_hash_table_2D.contains(functor_uid)) {
+        auto tiling = tuning_hash_table_2D.get(functor_uid);
+        if (KLFT_VERBOSITY > 2) {
+          printf("Tuning found for kernel %zu, tiling: %d %d %d %d\n", functor_uid.c_str(), tiling[0], tiling[1], tiling[2], tiling[3]);
         }
-        break;
-      default:
-        break;
+        auto policy = Policy<rank>(start, end, tiling);
+        Kokkos::parallel_for(policy, functor);
+        return;
+      }
+    } else {
+      // unsupported rank
+      printf("Error: unsupported rank %zu\n", rank);
+      return;
     }
     if (KLFT_VERBOSITY > 2) {
       printf("Start tuning for kernel %s\n", functor_uid.c_str());
