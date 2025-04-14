@@ -39,7 +39,7 @@ namespace klft
   // the parameter oddeven is used to indicate whether
   // the sweep is for odd or even sites
   template <size_t Nd, size_t Nc, class RNG>
-  size_t sweep_Metropolis(deviceGaugeField<Nd,Nc> g_in,
+  size_t sweep_Metropolis_eo(deviceGaugeField<Nd,Nc> g_in,
                           const MetropolisParams &params, RNG &rng,
                           const bool oddeven) {
     // get the necessary metropolis parameters
@@ -91,10 +91,14 @@ namespace klft
           for(index_t hit = 0; hit < nHits; ++hit) {
             // generate a random SUN matrix
             randSUN(r, generator, delta);
+            // get old link
+            const SUN<Nc> U_old = g_in(i0,i1,i2,i3_oe,mu);
+            // calculate the new link
+            const SUN<Nc> U_new = U_old * r;
             // calculate delta S
             const real_t dS = -(beta/static_cast<real_t>(Nc))
-                             * (trace(g_in(i0,i1,i2,i3_oe,mu) * r * staple).real()
-                              - trace(g_in(i0,i1,i2,i3_oe,mu) * staple).real());
+                             * (trace(U_new * staple).real()
+                              - trace(U_old * staple).real());
             // accept or reject the update
             bool accept = dS < 0.0;
             if (!accept) {
@@ -102,7 +106,7 @@ namespace klft
             }
             if (accept) {
               // update the link
-              g_in(i0,i1,i2,i3_oe,mu) = restoreSUN(g_in(i0,i1,i2,i3_oe,mu) * r);
+              g_in(i0,i1,i2,i3_oe,mu) = restoreSUN(U_new);
               // increment the number of accepted updates
               nAcc_per_site++;
             }
@@ -123,6 +127,17 @@ namespace klft
         nAcc += static_cast<size_t>(nAccepted(i0,i1,i2,i3_oe));
       }, Kokkos::Sum<real_t>(nAcc_total));
     return static_cast<size_t>(nAcc_total);
+  }
+
+  // create a wrapper to perform the sweep for the gauge field
+  // for both odd and even sites
+  template <size_t Nd, size_t Nc, class RNG>
+  size_t sweep_Metropolis(deviceGaugeField<Nd,Nc> g_in,
+                          const MetropolisParams &params, RNG &rng) {
+    // perform the sweep for odd and even sites
+    const size_t nAcc_odd = sweep_Metropolis_eo<Nd,Nc,RNG>(g_in, params, rng, false);
+    const size_t nAcc_even = sweep_Metropolis_eo<Nd,Nc,RNG>(g_in, params, rng, true);
+    return nAcc_odd + nAcc_even;
   }
 
 

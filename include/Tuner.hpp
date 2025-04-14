@@ -262,7 +262,6 @@ namespace klft
     // run the kernel with the best tiling
     auto tune_policy = Policy<rank>(start, end, best_tiling);
     Kokkos::parallel_for(tune_policy, functor);
-    Kokkos::fence();
     return;
   };
 
