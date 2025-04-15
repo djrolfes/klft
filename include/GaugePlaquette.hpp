@@ -58,15 +58,17 @@ namespace klft
 
       #pragma unroll
       for(index_t mu = 0; mu < Nd; ++mu) {
+        const auto x_plus_mu = shift_index_plus<rank,size_t>(Kokkos::Array<size_t,rank>{Idcs...}, mu, 1, dimensions);
         #pragma unroll
         for(index_t nu = 0; nu < Nd; ++nu) {
           if(nu > mu) {
+            const auto x_plus_nu = shift_index_plus<rank,size_t>(Kokkos::Array<size_t,rank>{Idcs...}, nu, 1, dimensions);
             // build plaquette in two halves
             // U_{mu nu} (x) = Tr[ lmu * lnu^dagger ]
             // lmu = U_mu(x) * U_nu(x+mu)
-            lmu = g_in(Idcs..., mu) * g_in(shift_index_plus<rank,size_t>(Kokkos::Array<size_t,rank>{Idcs...}, mu, 1, dimensions), nu);
+            lmu = g_in(Idcs..., mu) * g_in(x_plus_mu, nu);
             // lnu = U_nu(x) * U_mu(x+nu)
-            lnu = g_in(Idcs..., nu) * g_in(shift_index_plus<rank,size_t>(Kokkos::Array<size_t,rank>{Idcs...}, nu, 1, dimensions), mu);
+            lnu = g_in(Idcs..., nu) * g_in(x_plus_nu, mu);
             // multiply the 2 half plaquettes
             // lmu * lnu^dagger
             // take the trace
