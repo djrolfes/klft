@@ -20,35 +20,28 @@
 // define plaquette functions for different gauge fields
 
 #pragma once
-#include "GaugeField.hpp"
-#include "Field.hpp"
+#include "FieldTypeHelper.hpp"
 #include "SUN.hpp"
 #include "Tuner.hpp"
+#include "IndexHelper.hpp"
 
 namespace klft
 {
-
-  template <size_t rank, int shift>
-  constexpr
-  KOKKOS_FORCEINLINE_FUNCTION
-  Kokkos::Array<size_t,rank> shift_index(const Kokkos::Array<size_t,rank> &idx,
-                                          const index_t mu,
-                                          const IndexArray<rank> &dimensions) {
-    // make sure mu makes sense
-    assert(mu < rank && mu >= 0);
-    Kokkos::Array<size_t,rank> new_idx = idx;
-    new_idx[mu] = (idx[mu] + shift) % dimensions[mu];
-    return new_idx;
-  }
   
   // define a function to calculate the gauge plaquette
   // U_{mu nu} (x) = Tr[ U_mu(x) U_nu(x+mu) U_mu^dagger(x+nu) U_nu^dagger(x) ]
   // for SU(N) gauge group
 
   // first define the necessary functor
-  template <size_t rank, size_t Nd, size_t Nc, class GaugeFieldType, class FieldType>
+  template <size_t rank, size_t Nc>
   struct GaugePlaq {
+    // this kernel is defined for rank = Nd
+    constexpr static const size_t Nd = rank;
+    // define the gauge field type
+    using GaugeFieldType = typename DeviceGaugeFieldType<rank, Nc>::type;
     GaugeFieldType g_in;
+    // define the field type
+    using FieldType = typename DeviceFieldType<rank>::type;
     FieldType plaq_per_site;
     const IndexArray<rank> dimensions;
     GaugePlaq(const GaugeFieldType &g_in, FieldType &plaq_per_site,
@@ -68,8 +61,8 @@ namespace klft
         #pragma unroll
         for(index_t nu = 0; nu < Nd; ++nu) {
           if(nu > mu) {
-            lmu = g_in(Idcs..., mu) * g_in(shift_index<rank,1>(Kokkos::Array<size_t,rank>{Idcs...}, mu, dimensions), nu);
-            lnu = g_in(Idcs..., nu) * g_in(shift_index<rank,1>(Kokkos::Array<size_t,rank>{Idcs...}, nu, dimensions), mu);
+            lmu = g_in(Idcs..., mu) * g_in(shift_index_plus<rank,1,size_t>(Kokkos::Array<size_t,rank>{Idcs...}, mu, dimensions), nu);
+            lnu = g_in(Idcs..., nu) * g_in(shift_index_plus<rank,1,size_t>(Kokkos::Array<size_t,rank>{Idcs...}, nu, dimensions), mu);
             // multiply the 2 half plaquettes
             // take the trace
             #pragma unroll
@@ -88,8 +81,12 @@ namespace klft
 
   };
 
-  template <size_t rank, size_t Nd, size_t Nc, class GaugeFieldType, class FieldType>
-  real_t GaugePlaquette(const GaugeFieldType &g_in, const bool normalize = true) {
+  template <size_t rank, size_t Nc>
+  real_t GaugePlaquette(const typename DeviceGaugeFieldType<rank, Nc>::type &g_in,
+                        const bool normalize = true) {
+    // this kernel is defined for rank = Nd
+    constexpr static const size_t Nd = rank;
+    // final return variable
     complex_t plaq = 0.0;
     // get the start and end indices
     // this is temporary solution
@@ -105,10 +102,11 @@ namespace klft
     // temporary field for storing results per site
     // direct reduction is slow
     // this field will be summed over in the end
+    using FieldType = typename DeviceFieldType<rank>::type;
     FieldType plaq_per_site(end, complex_t(0.0, 0.0));
 
     // define the functor
-    GaugePlaq<rank, Nd, Nc, GaugeFieldType, FieldType> gaugePlaquette(g_in, plaq_per_site, end);
+    GaugePlaq<rank, Nc> gaugePlaquette(g_in, plaq_per_site, end);
 
     // tune and launch the kernel
     tune_and_launch_for<rank>("GaugePlaquette_GaugeField", start, end, gaugePlaquette);
