@@ -78,8 +78,7 @@ int run_benchmark(const size_t stream_size_array) {
   // run the benchmark
   for (index_t k = 0; k < STREAM_NTIMES; ++k) {
     timer.reset();
-    plaq = GaugePlaquette<4, 4, 1, deviceGaugeField<4, 1>,
-                          deviceField>(dev_g_U1_4D);
+    plaq = GaugePlaquette<4, 1>(dev_g_U1_4D);
     Kokkos::fence();
     plaquetteTime = std::min(plaquetteTime, timer.seconds());
   }
@@ -114,8 +113,7 @@ int run_benchmark(const size_t stream_size_array) {
   // run the benchmark
   for (index_t k = 0; k < STREAM_NTIMES; ++k) {
     timer.reset();
-    plaq = GaugePlaquette<4, 4, 2, deviceGaugeField<4, 2>,
-                          deviceField>(dev_g_SU2_4D);
+    plaq = GaugePlaquette<4, 2>(dev_g_SU2_4D);
     Kokkos::fence();
     plaquetteTime = std::min(plaquetteTime, timer.seconds());
   }
@@ -150,8 +148,7 @@ int run_benchmark(const size_t stream_size_array) {
   // run the benchmark
   for (index_t k = 0; k < STREAM_NTIMES; ++k) {
     timer.reset();
-    plaq = GaugePlaquette<4, 4, 3, deviceGaugeField<4, 3>,
-                          deviceField>(dev_g_SU3_4D);
+    plaq = GaugePlaquette<4, 3>(dev_g_SU3_4D);
     Kokkos::fence();
     plaquetteTime = std::min(plaquetteTime, timer.seconds());
   }
@@ -185,8 +182,7 @@ int run_benchmark(const size_t stream_size_array) {
   // run the benchmark
   for (index_t k = 0; k < STREAM_NTIMES; ++k) {
     timer.reset();
-    plaq = GaugePlaquette<3, 3, 1, deviceGaugeField3D<3, 1>,
-                          deviceField3D>(dev_g_U1_3D);
+    plaq = GaugePlaquette<3, 1>(dev_g_U1_3D);
     Kokkos::fence();
     plaquetteTime = std::min(plaquetteTime, timer.seconds());
   }
@@ -220,8 +216,7 @@ int run_benchmark(const size_t stream_size_array) {
   // run the benchmark
   for (index_t k = 0; k < STREAM_NTIMES; ++k) {
     timer.reset();
-    plaq = GaugePlaquette<3, 3, 2, deviceGaugeField3D<3, 2>,
-                          deviceField3D>(dev_g_SU2_3D);
+    plaq = GaugePlaquette<3, 2>(dev_g_SU2_3D);
     Kokkos::fence();
     plaquetteTime = std::min(plaquetteTime, timer.seconds());
   }
@@ -255,8 +250,7 @@ int run_benchmark(const size_t stream_size_array) {
   // run the benchmark
   for (index_t k = 0; k < STREAM_NTIMES; ++k) {
     timer.reset();
-    plaq = GaugePlaquette<3, 3, 3, deviceGaugeField3D<3, 3>,
-                          deviceField3D>(dev_g_SU3_3D);
+    plaq = GaugePlaquette<3, 3>(dev_g_SU3_3D);
     Kokkos::fence();
     plaquetteTime = std::min(plaquetteTime, timer.seconds());
   }
@@ -290,8 +284,7 @@ int run_benchmark(const size_t stream_size_array) {
   // run the benchmark
   for (index_t k = 0; k < STREAM_NTIMES; ++k) {
     timer.reset();
-    plaq = GaugePlaquette<2, 2, 1, deviceGaugeField2D<2, 1>,
-                          deviceField2D>(dev_g_U1_2D);
+    plaq = GaugePlaquette<2, 1>(dev_g_U1_2D);
     Kokkos::fence();
     plaquetteTime = std::min(plaquetteTime, timer.seconds());
   }
@@ -325,8 +318,7 @@ int run_benchmark(const size_t stream_size_array) {
   // run the benchmark
   for (index_t k = 0; k < STREAM_NTIMES; ++k) {
     timer.reset();
-    plaq = GaugePlaquette<2, 2, 2, deviceGaugeField2D<2, 2>,
-                          deviceField2D>(dev_g_SU2_2D);
+    plaq = GaugePlaquette<2, 2>(dev_g_SU2_2D);
     Kokkos::fence();
     plaquetteTime = std::min(plaquetteTime, timer.seconds());
   }
@@ -359,8 +351,7 @@ int run_benchmark(const size_t stream_size_array) {
   // run the benchmark
   for (index_t k = 0; k < STREAM_NTIMES; ++k) {
     timer.reset();
-    plaq = GaugePlaquette<2, 2, 3, deviceGaugeField2D<2, 3>,
-                          deviceField2D>(dev_g_SU3_2D);
+    plaq = GaugePlaquette<2, 3>(dev_g_SU3_2D);
     Kokkos::fence();
     plaquetteTime = std::min(plaquetteTime, timer.seconds());
   }
