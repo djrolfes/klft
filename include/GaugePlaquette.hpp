@@ -21,85 +21,112 @@
 
 #pragma once
 #include "GaugeField.hpp"
+#include "Field.hpp"
 #include "SUN.hpp"
 #include "Tuner.hpp"
 
 namespace klft
 {
+
+  template <size_t rank, int shift>
+  constexpr
+  KOKKOS_FORCEINLINE_FUNCTION
+  Kokkos::Array<size_t,rank> shift_index(const Kokkos::Array<size_t,rank> &idx,
+                                          const index_t mu,
+                                          const IndexArray<rank> &dimensions) {
+    // make sure mu makes sense
+    assert(mu < rank && mu >= 0);
+    Kokkos::Array<size_t,rank> new_idx = idx;
+    new_idx[mu] = (idx[mu] + shift) % dimensions[mu];
+    return new_idx;
+  }
   
   // define a function to calculate the gauge plaquette
   // U_{mu nu} (x) = Tr[ U_mu(x) U_nu(x+mu) U_mu^dagger(x+nu) U_nu^dagger(x) ]
   // for SU(N) gauge group
-  // the return value is not normalized
-  template <size_t Nd, size_t Nc>
-  real_t GaugePlaquette(const deviceGaugeField<Nd,Nc> g_in) {
-    complex_t plaq = 0.0;
-    // get the start and end indices
-    const auto & dimensions = g_in.field.layout().dimension;
-    IndexArray<Nd> start;
-    IndexArray<Nd> end;
-    for (index_t i = 0; i < Nd; ++i) {
-      start[i] = 0;
-      end[i] = dimensions[i];
-    }
 
-    // store the field in a const gauge field
-    const constGaugeField<Nd,Nc> g(g_in.field);
+  // first define the necessary functor
+  template <size_t rank, size_t Nd, size_t Nc, class GaugeFieldType, class FieldType>
+  struct GaugePlaq {
+    GaugeFieldType g_in;
+    FieldType plaq_per_site;
+    const IndexArray<rank> dimensions;
+    GaugePlaq(const GaugeFieldType &g_in, FieldType &plaq_per_site,
+              const IndexArray<rank> &dimensions)
+      : g_in(g_in), plaq_per_site(plaq_per_site),
+        dimensions(dimensions) {}
 
-    // temporary field for storing results per site
-    // direct reduction is slow
-    // this field will be summed over in the end
-    Field plaq_per_site(Kokkos::view_alloc(Kokkos::WithoutInitializing, "plaq_per_site"), end[0], end[1], end[2], end[3]);
+    template <typename... Indices>
+    KOKKOS_FORCEINLINE_FUNCTION void operator()(const Indices... Idcs) const {
+      // temp SUN matrices to store products
+      SUN<Nc> lmu, lnu;
+      // reduction variable for all mu and nu
+      complex_t tmunu(0.0, 0.0);
 
-    // tune and launch the kernel
-    tune_and_launch_for<Nd>("GaugePlaquette_GaugeField", start, end,
-      KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2, const index_t i3) {
-        // temp SUN matrices to store products
-        SUN<Nc> lmu, lnu;
-        // reduction variable for all mu and nu
-        complex_t tmunu(0.0, 0.0);
-
+      #pragma unroll
+      for(index_t mu = 0; mu < Nd; ++mu) {
         #pragma unroll
-        for(index_t mu = 0; mu < Nd; ++mu) {
-          #pragma unroll
-          for(index_t nu = 0; nu < Nd; ++nu) {
-            if(nu > mu) {
-              const index_t i0pmu = mu == 0 ? (i0 + 1) % dimensions[0] : i0;
-              const index_t i1pmu = mu == 1 ? (i1 + 1) % dimensions[1] : i1;
-              const index_t i2pmu = mu == 2 ? (i2 + 1) % dimensions[2] : i2;
-              const index_t i3pmu = mu == 3 ? (i3 + 1) % dimensions[3] : i3;
-              const index_t i0pnu = nu == 0 ? (i0 + 1) % dimensions[0] : i0;
-              const index_t i1pnu = nu == 1 ? (i1 + 1) % dimensions[1] : i1;
-              const index_t i2pnu = nu == 2 ? (i2 + 1) % dimensions[2] : i2;
-              const index_t i3pnu = nu == 3 ? (i3 + 1) % dimensions[3] : i3;
-              
-              // form the 2 half plaquettes
-              lmu = g(i0,i1,i2,i3,mu) * g(i0pmu,i1pmu,i2pmu,i3pmu,nu);
-              lnu = g(i0,i1,i2,i3,nu) * g(i0pnu,i1pnu,i2pnu,i3pnu,mu);
-
-              // multiply the 2 half plaquettes
-              // take the trace
+        for(index_t nu = 0; nu < Nd; ++nu) {
+          if(nu > mu) {
+            lmu = g_in(Idcs..., mu) * g_in(shift_index<rank,1>(Kokkos::Array<size_t,rank>{Idcs...}, mu, dimensions), nu);
+            lnu = g_in(Idcs..., nu) * g_in(shift_index<rank,1>(Kokkos::Array<size_t,rank>{Idcs...}, nu, dimensions), mu);
+            // multiply the 2 half plaquettes
+            // take the trace
+            #pragma unroll
+            for(index_t c1 = 0; c1 < Nc; ++c1) {
               #pragma unroll
-              for(index_t c1 = 0; c1 < Nc; ++c1) {
-                #pragma unroll
-                for(index_t c2 = 0; c2 < Nc; ++c2) {
-                  tmunu += lmu[c1][c2] * Kokkos::conj(lnu[c1][c2]);
-                }
+              for(index_t c2 = 0; c2 < Nc; ++c2) {
+                tmunu += lmu[c1][c2] * Kokkos::conj(lnu[c1][c2]);
               }
             }
           }
         }
+      }
+      // store the result in the temporary field
+      plaq_per_site(Idcs...) = tmunu;
+    }
 
-        // store the result in the temporary field
-        plaq_per_site(i0,i1,i2,i3) = tmunu;
-      });
+  };
+
+  template <size_t rank, size_t Nd, size_t Nc, class GaugeFieldType, class FieldType>
+  real_t GaugePlaquette(const GaugeFieldType &g_in, const bool normalize = true) {
+    complex_t plaq = 0.0;
+    // get the start and end indices
+    // this is temporary solution
+    // ideally, we want to have a policy factory
+    const auto & dimensions = g_in.field.layout().dimension;
+    IndexArray<rank> start;
+    IndexArray<rank> end;
+    for (index_t i = 0; i < rank; ++i) {
+      start[i] = 0;
+      end[i] = dimensions[i];
+    }
+
+    // temporary field for storing results per site
+    // direct reduction is slow
+    // this field will be summed over in the end
+    FieldType plaq_per_site(end, complex_t(0.0, 0.0));
+
+    // define the functor
+    GaugePlaq<rank, Nd, Nc, GaugeFieldType, FieldType> gaugePlaquette(g_in, plaq_per_site, end);
+
+    // tune and launch the kernel
+    tune_and_launch_for<rank>("GaugePlaquette_GaugeField", start, end, gaugePlaquette);
+    Kokkos::fence();
 
     // sum over all sites
-    Kokkos::parallel_reduce("sum_plaq", Policy<Nd>(start, end),
-      KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2, const index_t i3, complex_t &lsum) {
-        lsum += plaq_per_site(i0,i1,i2,i3);
-      }, Kokkos::Sum<complex_t>(plaq));
+    plaq = plaq_per_site.sum();
     Kokkos::fence();
+
+    // normalization
+    if (normalize) {
+      real_t norm = 1.0;
+      for (index_t i = 0; i < rank; ++i) {
+        norm *= static_cast<real_t>(end[i]);
+      }
+      norm *= static_cast<real_t>((Nd*(Nd - 1)/2)*Nc);
+      plaq /= norm;
+    }
 
     return Kokkos::real(plaq);
   }

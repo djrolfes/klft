@@ -20,20 +20,15 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/kokkos/kokkos ${CMAKE_CU
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
-add_executable(test_plaq_SU3 ${CMAKE_SOURCE_DIR}/tests/GaugeSU3/test_plaq_SU3.cpp)
-target_link_libraries(test_plaq_SU3 Kokkos::kokkos)
+# option to build the tests
+# option(BUILD_TESTS "Build tests" ON)
 
-add_executable(test_plaq_SU2 ${CMAKE_SOURCE_DIR}/tests/GaugeSU2/test_plaq_SU2.cpp)
-target_link_libraries(test_plaq_SU2 Kokkos::kokkos)
+# if(BUILD_TESTS)
+#   add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/tests ${CMAKE_CURRENT_BINARY_DIR}/tests)
+# endif()
 
-add_executable(test_plaq_U1 ${CMAKE_SOURCE_DIR}/tests/GaugeU1/test_plaq_U1.cpp)
-target_link_libraries(test_plaq_U1 Kokkos::kokkos)
+# build the binaries
+# add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/binaries ${CMAKE_CURRENT_BINARY_DIR}/binaries)
 
-add_executable(test_metropolis_SU3 ${CMAKE_SOURCE_DIR}/tests/GaugeSU3/test_metropolis_SU3.cpp)
-target_link_libraries(test_metropolis_SU3 Kokkos::kokkos)
-
-add_executable(test_metropolis_SU2 ${CMAKE_SOURCE_DIR}/tests/GaugeSU2/test_metropolis_SU2.cpp)
-target_link_libraries(test_metropolis_SU2 Kokkos::kokkos)
-
-add_executable(test_metropolis_U1 ${CMAKE_SOURCE_DIR}/tests/GaugeU1/test_metropolis_U1.cpp)
-target_link_libraries(test_metropolis_U1 Kokkos::kokkos)
+# build the benchmarks
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/benchmarks ${CMAKE_CURRENT_BINARY_DIR}/benchmarks)
