@@ -64,9 +64,9 @@ namespace klft
             // build plaquette in two halves
             // U_{mu nu} (x) = Tr[ lmu * lnu^dagger ]
             // lmu = U_mu(x) * U_nu(x+mu)
-            lmu = g_in(Idcs..., mu) * g_in(shift_index_plus<rank,1,size_t>(Kokkos::Array<size_t,rank>{Idcs...}, mu, dimensions), nu);
+            lmu = g_in(Idcs..., mu) * g_in(shift_index_plus<rank,size_t>(Kokkos::Array<size_t,rank>{Idcs...}, mu, 1, dimensions), nu);
             // lnu = U_nu(x) * U_mu(x+nu)
-            lnu = g_in(Idcs..., nu) * g_in(shift_index_plus<rank,1,size_t>(Kokkos::Array<size_t,rank>{Idcs...}, nu, dimensions), mu);
+            lnu = g_in(Idcs..., nu) * g_in(shift_index_plus<rank,size_t>(Kokkos::Array<size_t,rank>{Idcs...}, nu, 1, dimensions), mu);
             // multiply the 2 half plaquettes
             // lmu * lnu^dagger
             // take the trace
