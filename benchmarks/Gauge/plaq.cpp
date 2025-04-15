@@ -57,7 +57,8 @@ int run_benchmark(const size_t stream_size_array) {
   printf("Starting benchmark...\n");
   printf("Benchmark kernels will be performed for %d iterations.\n",
          STREAM_NTIMES);
-  printf("Reports fastest timing per kernel\n");
+  printf("Reports fastest timing per kernel\n");  
+  printf("Lattice extent: %ld\n", stream_size_array);
   printf(HLINE);
 
   printf("U(1) Gauge 4D: \n");
@@ -88,7 +89,7 @@ int run_benchmark(const size_t stream_size_array) {
          plaq, 1.0);
   printf("Plaquette Kernel Time:     %11.4e s\n", plaquetteTime);
   printf("Plaquette BW:              %11.4f GB/s\n",
-         1.0e-9 * (real_t)sizeof(complex_t) * (U1_field_4D + U1_gauge_4D) /
+         1.0e-9 * (real_t)sizeof(complex_t) * (volume4D + U1_gauge_4D) /
          plaquetteTime);
   printf(HLINE);
 
@@ -123,7 +124,7 @@ int run_benchmark(const size_t stream_size_array) {
          plaq, 1.0);
   printf("Plaquette Kernel Time:     %11.4e s\n", plaquetteTime);
   printf("Plaquette BW:              %11.4f GB/s\n",
-         1.0e-9 * (real_t)sizeof(complex_t) * (SU2_field_4D + SU2_gauge_4D) /
+         1.0e-9 * (real_t)sizeof(complex_t) * (volume4D + SU2_gauge_4D) /
          plaquetteTime);
   printf(HLINE);
 
@@ -158,7 +159,7 @@ int run_benchmark(const size_t stream_size_array) {
          plaq, 1.0);
   printf("Plaquette Kernel Time:     %11.4e s\n", plaquetteTime);
   printf("Plaquette BW:              %11.4f GB/s\n",
-         1.0e-9 * (real_t)sizeof(complex_t) * (SU3_field_4D + SU3_gauge_4D) /
+         1.0e-9 * (real_t)sizeof(complex_t) * (volume4D + SU3_gauge_4D) /
          plaquetteTime);
   printf(HLINE);
 
@@ -192,7 +193,7 @@ int run_benchmark(const size_t stream_size_array) {
          plaq, 1.0);
   printf("Plaquette Kernel Time:     %11.4e s\n", plaquetteTime);
   printf("Plaquette BW:              %11.4f GB/s\n",
-         1.0e-9 * (real_t)sizeof(complex_t) * (U1_field_3D + U1_gauge_3D) /
+         1.0e-9 * (real_t)sizeof(complex_t) * (volume3D + U1_gauge_3D) /
          plaquetteTime);
   printf(HLINE);
 
@@ -226,7 +227,7 @@ int run_benchmark(const size_t stream_size_array) {
          plaq, 1.0);
   printf("Plaquette Kernel Time:     %11.4e s\n", plaquetteTime);
   printf("Plaquette BW:              %11.4f GB/s\n",
-         1.0e-9 * (real_t)sizeof(complex_t) * (SU2_field_3D + SU2_gauge_3D) /
+         1.0e-9 * (real_t)sizeof(complex_t) * (volume3D + SU2_gauge_3D) /
          plaquetteTime);
   printf(HLINE);
 
@@ -260,7 +261,7 @@ int run_benchmark(const size_t stream_size_array) {
          plaq, 1.0);
   printf("Plaquette Kernel Time:     %11.4e s\n", plaquetteTime);
   printf("Plaquette BW:              %11.4f GB/s\n",
-         1.0e-9 * (real_t)sizeof(complex_t) * (SU3_field_3D + SU3_gauge_3D) /
+         1.0e-9 * (real_t)sizeof(complex_t) * (volume3D + SU3_gauge_3D) /
          plaquetteTime);
   printf(HLINE);
 
@@ -294,7 +295,7 @@ int run_benchmark(const size_t stream_size_array) {
          plaq, 1.0);
   printf("Plaquette Kernel Time:     %11.4e s\n", plaquetteTime);
   printf("Plaquette BW:              %11.4f GB/s\n",
-         1.0e-9 * (real_t)sizeof(complex_t) * (U1_field_2D + U1_gauge_2D) /
+         1.0e-9 * (real_t)sizeof(complex_t) * (volume2D + U1_gauge_2D) /
          plaquetteTime);
   printf(HLINE);
 
@@ -328,7 +329,7 @@ int run_benchmark(const size_t stream_size_array) {
          plaq, 1.0);
   printf("Plaquette Kernel Time:     %11.4e s\n", plaquetteTime);
   printf("Plaquette BW:              %11.4f GB/s\n",
-         1.0e-9 * (real_t)sizeof(complex_t) * (SU2_field_2D + SU2_gauge_2D) /
+         1.0e-9 * (real_t)sizeof(complex_t) * (volume2D + SU2_gauge_2D) /
          plaquetteTime);
   printf(HLINE);
 
@@ -361,7 +362,7 @@ int run_benchmark(const size_t stream_size_array) {
          plaq, 1.0);
   printf("Plaquette Kernel Time:     %11.4e s\n", plaquetteTime);
   printf("Plaquette BW:              %11.4f GB/s\n",
-         1.0e-9 * (real_t)sizeof(complex_t) * (SU3_field_2D + SU3_gauge_2D) /
+         1.0e-9 * (real_t)sizeof(complex_t) * (volume2D + SU3_gauge_2D) /
          plaquetteTime);
   printf(HLINE);
 
