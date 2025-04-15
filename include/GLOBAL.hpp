@@ -177,6 +177,7 @@ namespace klft
   // define a global zero field generator 
   // for the color x color matrix
   template <size_t Nc>
+  constexpr
   KOKKOS_FORCEINLINE_FUNCTION
   SUN<Nc> zeroSUN() {
     SUN<Nc> zero;
@@ -193,6 +194,7 @@ namespace klft
   // define a global identity field generator
   // for the color x color matrix
   template <size_t Nc>
+  constexpr
   KOKKOS_FORCEINLINE_FUNCTION
   SUN<Nc> identitySUN() {
     SUN<Nc> id = zeroSUN<Nc>();
