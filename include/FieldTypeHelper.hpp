@@ -24,6 +24,7 @@
 
 #pragma once
 #include "GaugeField.hpp"
+#include "PTBCGaugeField.hpp"
 #include "SUNField.hpp"
 #include "Field.hpp"
 
@@ -49,6 +50,26 @@ namespace klft
   struct DeviceGaugeFieldType<4, Nc> {
     using type = deviceGaugeField<4, Nc>;
   };
+
+  // now do the same for the PTBC gauge field types
+  template <size_t rank, size_t Nc>
+  struct DevicePTBCGaugeFieldType;
+  
+  template <size_t Nc>
+  struct DevicePTBCGaugeFieldType<4, Nc> {
+    using type = devicePTBCGaugeField<4, Nc>;
+  };
+
+  template <size_t Nc>
+  struct DevicePTBCGaugeFieldType<3, Nc> {
+    using type = devicePTBCGaugeField3D<3, Nc>;
+  };
+
+  template <size_t Nc>
+  struct DevicePTBCGaugeFieldType<2, Nc> {
+    using type = devicePTBCGaugeField2D<2, Nc>;
+  };
+
 
   // define the same thing for SUN fields
   template <size_t rank, size_t Nc>
