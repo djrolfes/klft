@@ -26,11 +26,11 @@ namespace klft
 {
 
   // return x + shift  mu
-  template <size_t rank, int shift, typename indexType>
+  template <size_t rank, typename indexType>
   constexpr
   KOKKOS_FORCEINLINE_FUNCTION
   Kokkos::Array<index_t,rank> shift_index_plus(const Kokkos::Array<indexType,rank> &idx,
-                                          const index_t mu,
+                                          const index_t mu, const index_t shift,
                                           const IndexArray<rank> &dimensions) {
     // make sure mu makes sense
     assert(mu < rank && mu >= 0);
@@ -44,11 +44,11 @@ namespace klft
   }
 
   // return x - shift mu
-  template <size_t rank, int shift, typename indexType>
+  template <size_t rank, typename indexType>
   constexpr
   KOKKOS_FORCEINLINE_FUNCTION
   Kokkos::Array<index_t,rank> shift_index_minus(const Kokkos::Array<indexType,rank> &idx,
-                                          const index_t mu,
+                                          const index_t mu, const index_t shift,
                                           const IndexArray<rank> &dimensions) {
     // make sure mu makes sense
     assert(mu < rank && mu >= 0);

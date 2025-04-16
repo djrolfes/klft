@@ -17,10 +17,10 @@
 //
 //******************************************************************************/
 
-// this file tests and benchmarks the gauge plaquette kernel for different
+// this file tests and benchmarks the gauge Wilson loop kernel for different
 // 2D, 3D and 4D gauge fields for U(1), SU(2) and SU(3) gauge groups
 
-#include "GaugePlaquette.hpp"
+#include "WilsonLoop.hpp"
 #include <getopt.h>
 
 #define HLINE "====================================================================\n"
@@ -45,21 +45,28 @@ int run_benchmark(const size_t stream_size_array) {
   // 2D volume of the gauge fields
   const real_t volume2D = (real_t)stream_size_array * (real_t)stream_size_array;
 
-  // plaq output variable
-  real_t plaq = 0.0;
-
   // timer
   Kokkos::Timer timer;
 
-  // plaquette time
-  real_t plaquetteTime = std::numeric_limits<real_t>::max();
+  // wilson loop time
+  real_t wlTime = std::numeric_limits<real_t>::max();
 
   printf("Starting benchmark...\n");
   printf("Benchmark kernels will be performed for %d iterations.\n",
          STREAM_NTIMES);
-  printf("Reports fastest timing per kernel\n");  
+  printf("Reports fastest timing per kernel\n");
+  std::vector<Kokkos::Array<index_t, 2>> LT_pairs;
+  LT_pairs.push_back({index_t(stream_size_array/4), index_t(stream_size_array/4)});
+  LT_pairs.push_back({index_t(stream_size_array/2), index_t(stream_size_array/4)});
+  LT_pairs.push_back({index_t(stream_size_array/2), index_t(stream_size_array/2)});  
   printf("Lattice extent: %ld\n", stream_size_array);
+  printf("Wilson Loop pairs: \n");
+  for (const auto &pair : LT_pairs) {
+    printf("L = %ld, T = %ld\n", pair[0], pair[1]);
+  }
   printf(HLINE);
+  // output vector
+  std::vector<Kokkos::Array<real_t, 3>> Wtemporal_vals;
 
   printf("U(1) Gauge 4D: \n");
   const real_t U1_field_4D = volume4D * 1.0 * 1.0;
@@ -78,23 +85,27 @@ int run_benchmark(const size_t stream_size_array) {
 
   // run the benchmark
   for (index_t k = 0; k < STREAM_NTIMES; ++k) {
+    Wtemporal_vals.clear();
     timer.reset();
-    plaq = GaugePlaquette<4, 1>(dev_g_U1_4D);
+    WilsonLoop_temporal<4, 1>(dev_g_U1_4D, LT_pairs, Wtemporal_vals);
     Kokkos::fence();
-    plaquetteTime = std::min(plaquetteTime, timer.seconds());
+    wlTime = std::min(wlTime, timer.seconds());
   }
   }
   printf(HLINE);
-  printf("Calculated Plaquette value: %11.4e      Expected value: %11.4e\n",
-         plaq, 1.0);
-  printf("Plaquette Kernel Time:     %11.4e s\n", plaquetteTime);
-  printf("Plaquette BW:              %11.4f GB/s\n",
-         1.0e-9 * (real_t)sizeof(complex_t) * (volume4D + U1_gauge_4D) /
-         plaquetteTime);
+  printf("Wilson Loop values: \n");
+  for (const auto &Wtemporal : Wtemporal_vals) {
+    printf("L = %d, T = %d, W(L,T) = %11.4e            Expected: %11.4e\n",
+           static_cast<index_t>(Wtemporal[0]), static_cast<index_t>(Wtemporal[1]), Wtemporal[2], 1.0);
+  }
+  printf("Wilson Loop Kernel Time:     %11.4e s\n", wlTime);
+  printf("Wilson Loop BW:              %11.4f GB/s\n",
+         1.0e-9 * (real_t)sizeof(complex_t) * (volume4D + 2.0 * U1_field_4D + U1_gauge_4D) /
+         wlTime);
   printf(HLINE);
 
   // reset plaquette time
-  plaquetteTime = std::numeric_limits<real_t>::max();
+  wlTime = std::numeric_limits<real_t>::max();
 
   printf("SU(2) Gauge 4D: \n");
   const real_t SU2_field_4D = volume4D * 2.0 * 2.0;
@@ -113,23 +124,27 @@ int run_benchmark(const size_t stream_size_array) {
 
   // run the benchmark
   for (index_t k = 0; k < STREAM_NTIMES; ++k) {
+    Wtemporal_vals.clear();
     timer.reset();
-    plaq = GaugePlaquette<4, 2>(dev_g_SU2_4D);
+    WilsonLoop_temporal<4, 2>(dev_g_SU2_4D, LT_pairs, Wtemporal_vals);
     Kokkos::fence();
-    plaquetteTime = std::min(plaquetteTime, timer.seconds());
+    wlTime = std::min(wlTime, timer.seconds());
   }
   }
   printf(HLINE);
-  printf("Calculated Plaquette value: %11.4e      Expected value: %11.4e\n",
-         plaq, 1.0);
-  printf("Plaquette Kernel Time:     %11.4e s\n", plaquetteTime);
-  printf("Plaquette BW:              %11.4f GB/s\n",
-         1.0e-9 * (real_t)sizeof(complex_t) * (volume4D + SU2_gauge_4D) /
-         plaquetteTime);
+  printf("Wilson Loop values: \n");
+  for (const auto &Wtemporal : Wtemporal_vals) {
+    printf("L = %d, T = %d, W(L,T) = %11.4e            Expected: %11.4e\n",
+           static_cast<index_t>(Wtemporal[0]), static_cast<index_t>(Wtemporal[1]), Wtemporal[2], 1.0);
+  }
+  printf("Wilson Loop Kernel Time:     %11.4e s\n", wlTime);
+  printf("Wilson Loop BW:              %11.4f GB/s\n",
+         1.0e-9 * (real_t)sizeof(complex_t) * (volume4D + 2.0 * SU2_field_4D + SU2_gauge_4D) /
+         wlTime);
   printf(HLINE);
 
   // reset plaquette time
-  plaquetteTime = std::numeric_limits<real_t>::max();
+  wlTime = std::numeric_limits<real_t>::max();
 
   printf("SU(3) Gauge 4D: \n");
   const real_t SU3_field_4D = volume4D * 3.0 * 3.0;
@@ -148,23 +163,27 @@ int run_benchmark(const size_t stream_size_array) {
 
   // run the benchmark
   for (index_t k = 0; k < STREAM_NTIMES; ++k) {
+    Wtemporal_vals.clear();
     timer.reset();
-    plaq = GaugePlaquette<4, 3>(dev_g_SU3_4D);
+    WilsonLoop_temporal<4, 3>(dev_g_SU3_4D, LT_pairs, Wtemporal_vals);
     Kokkos::fence();
-    plaquetteTime = std::min(plaquetteTime, timer.seconds());
+    wlTime = std::min(wlTime, timer.seconds());
   }
   }
   printf(HLINE);
-  printf("Calculated Plaquette value: %11.4e      Expected value: %11.4e\n",
-         plaq, 1.0);
-  printf("Plaquette Kernel Time:     %11.4e s\n", plaquetteTime);
-  printf("Plaquette BW:              %11.4f GB/s\n",
-         1.0e-9 * (real_t)sizeof(complex_t) * (volume4D + SU3_gauge_4D) /
-         plaquetteTime);
+  printf("Wilson Loop values: \n");
+  for (const auto &Wtemporal : Wtemporal_vals) {
+    printf("L = %d, T = %d, W(L,T) = %11.4e            Expected: %11.4e\n",
+           static_cast<index_t>(Wtemporal[0]), static_cast<index_t>(Wtemporal[1]), Wtemporal[2], 1.0);
+  }
+  printf("Wilson Loop Kernel Time:     %11.4e s\n", wlTime);
+  printf("Wilson Loop BW:              %11.4f GB/s\n",
+         1.0e-9 * (real_t)sizeof(complex_t) * (volume4D + 2.0 * SU3_field_4D + SU3_gauge_4D) /
+         wlTime);
   printf(HLINE);
 
   // reset plaquette time
-  plaquetteTime = std::numeric_limits<real_t>::max();
+  wlTime = std::numeric_limits<real_t>::max();
 
   printf("U(1) Gauge 3D: \n");
   const real_t U1_field_3D = volume3D * 1.0 * 1.0;
@@ -182,23 +201,27 @@ int run_benchmark(const size_t stream_size_array) {
 
   // run the benchmark
   for (index_t k = 0; k < STREAM_NTIMES; ++k) {
+    Wtemporal_vals.clear();
     timer.reset();
-    plaq = GaugePlaquette<3, 1>(dev_g_U1_3D);
+    WilsonLoop_temporal<3, 1>(dev_g_U1_3D, LT_pairs, Wtemporal_vals);
     Kokkos::fence();
-    plaquetteTime = std::min(plaquetteTime, timer.seconds());
+    wlTime = std::min(wlTime, timer.seconds());
   }
   }
   printf(HLINE);
-  printf("Calculated Plaquette value: %11.4e      Expected value: %11.4e\n",
-         plaq, 1.0);
-  printf("Plaquette Kernel Time:     %11.4e s\n", plaquetteTime);
-  printf("Plaquette BW:              %11.4f GB/s\n",
-         1.0e-9 * (real_t)sizeof(complex_t) * (volume3D + U1_gauge_3D) /
-         plaquetteTime);
+  printf("Wilson Loop values: \n");
+  for (const auto &Wtemporal : Wtemporal_vals) {
+    printf("L = %d, T = %d, W(L,T) = %11.4e            Expected: %11.4e\n",
+           static_cast<index_t>(Wtemporal[0]), static_cast<index_t>(Wtemporal[1]), Wtemporal[2], 1.0);
+  }
+  printf("Wilson Loop Kernel Time:     %11.4e s\n", wlTime);
+  printf("Wilson Loop BW:              %11.4f GB/s\n",
+         1.0e-9 * (real_t)sizeof(complex_t) * (volume3D + 2.0 * U1_field_3D + U1_gauge_3D) /
+         wlTime);
   printf(HLINE);
 
   // reset plaquette time
-  plaquetteTime = std::numeric_limits<real_t>::max();
+  wlTime = std::numeric_limits<real_t>::max();
 
   printf("SU(2) Gauge 3D: \n");
   const real_t SU2_field_3D = volume3D * 2.0 * 2.0;
@@ -216,23 +239,27 @@ int run_benchmark(const size_t stream_size_array) {
 
   // run the benchmark
   for (index_t k = 0; k < STREAM_NTIMES; ++k) {
+    Wtemporal_vals.clear();
     timer.reset();
-    plaq = GaugePlaquette<3, 2>(dev_g_SU2_3D);
+    WilsonLoop_temporal<3, 2>(dev_g_SU2_3D, LT_pairs, Wtemporal_vals);
     Kokkos::fence();
-    plaquetteTime = std::min(plaquetteTime, timer.seconds());
+    wlTime = std::min(wlTime, timer.seconds());
   }
   }
   printf(HLINE);
-  printf("Calculated Plaquette value: %11.4e      Expected value: %11.4e\n",
-         plaq, 1.0);
-  printf("Plaquette Kernel Time:     %11.4e s\n", plaquetteTime);
-  printf("Plaquette BW:              %11.4f GB/s\n",
-         1.0e-9 * (real_t)sizeof(complex_t) * (volume3D + SU2_gauge_3D) /
-         plaquetteTime);
+  printf("Wilson Loop values: \n");
+  for (const auto &Wtemporal : Wtemporal_vals) {
+    printf("L = %d, T = %d, W(L,T) = %11.4e            Expected: %11.4e\n",
+           static_cast<index_t>(Wtemporal[0]), static_cast<index_t>(Wtemporal[1]), Wtemporal[2], 1.0);
+  }
+  printf("Wilson Loop Kernel Time:     %11.4e s\n", wlTime);
+  printf("Wilson Loop BW:              %11.4f GB/s\n",
+         1.0e-9 * (real_t)sizeof(complex_t) * (volume3D + 2.0 * SU2_field_3D + SU2_gauge_3D) /
+         wlTime);
   printf(HLINE);
 
   // reset plaquette time
-  plaquetteTime = std::numeric_limits<real_t>::max();
+  wlTime = std::numeric_limits<real_t>::max();
 
   printf("SU(3) Gauge 3D: \n");
   const real_t SU3_field_3D = volume3D * 3.0 * 3.0;
@@ -250,23 +277,27 @@ int run_benchmark(const size_t stream_size_array) {
 
   // run the benchmark
   for (index_t k = 0; k < STREAM_NTIMES; ++k) {
+    Wtemporal_vals.clear();
     timer.reset();
-    plaq = GaugePlaquette<3, 3>(dev_g_SU3_3D);
+    WilsonLoop_temporal<3, 3>(dev_g_SU3_3D, LT_pairs, Wtemporal_vals);
     Kokkos::fence();
-    plaquetteTime = std::min(plaquetteTime, timer.seconds());
+    wlTime = std::min(wlTime, timer.seconds());
   }
   }
   printf(HLINE);
-  printf("Calculated Plaquette value: %11.4e      Expected value: %11.4e\n",
-         plaq, 1.0);
-  printf("Plaquette Kernel Time:     %11.4e s\n", plaquetteTime);
-  printf("Plaquette BW:              %11.4f GB/s\n",
-         1.0e-9 * (real_t)sizeof(complex_t) * (volume3D + SU3_gauge_3D) /
-         plaquetteTime);
+  printf("Wilson Loop values: \n");
+  for (const auto &Wtemporal : Wtemporal_vals) {
+    printf("L = %d, T = %d, W(L,T) = %11.4e            Expected: %11.4e\n",
+           static_cast<index_t>(Wtemporal[0]), static_cast<index_t>(Wtemporal[1]), Wtemporal[2], 1.0);
+  }
+  printf("Wilson Loop Kernel Time:     %11.4e s\n", wlTime);
+  printf("Wilson Loop BW:              %11.4f GB/s\n",
+         1.0e-9 * (real_t)sizeof(complex_t) * (volume3D + 2.0 * SU3_field_3D + SU3_gauge_3D) /
+         wlTime);
   printf(HLINE);
 
   // reset plaquette time
-  plaquetteTime = std::numeric_limits<real_t>::max();
+  wlTime = std::numeric_limits<real_t>::max();
 
   printf("U(1) Gauge 2D: \n");
   const real_t U1_field_2D = volume2D * 1.0 * 1.0;
@@ -284,23 +315,27 @@ int run_benchmark(const size_t stream_size_array) {
 
   // run the benchmark
   for (index_t k = 0; k < STREAM_NTIMES; ++k) {
+    Wtemporal_vals.clear();
     timer.reset();
-    plaq = GaugePlaquette<2, 1>(dev_g_U1_2D);
+    WilsonLoop_temporal<2, 1>(dev_g_U1_2D, LT_pairs, Wtemporal_vals);
     Kokkos::fence();
-    plaquetteTime = std::min(plaquetteTime, timer.seconds());
+    wlTime = std::min(wlTime, timer.seconds());
   }
   }
   printf(HLINE);
-  printf("Calculated Plaquette value: %11.4e      Expected value: %11.4e\n",
-         plaq, 1.0);
-  printf("Plaquette Kernel Time:     %11.4e s\n", plaquetteTime);
-  printf("Plaquette BW:              %11.4f GB/s\n",
-         1.0e-9 * (real_t)sizeof(complex_t) * (volume2D + U1_gauge_2D) /
-         plaquetteTime);
+  printf("Wilson Loop values: \n");
+  for (const auto &Wtemporal : Wtemporal_vals) {
+    printf("L = %d, T = %d, W(L,T) = %11.4e            Expected: %11.4e\n",
+           static_cast<index_t>(Wtemporal[0]), static_cast<index_t>(Wtemporal[1]), Wtemporal[2], 1.0);
+  }
+  printf("Wilson Loop Kernel Time:     %11.4e s\n", wlTime);
+  printf("Wilson Loop BW:              %11.4f GB/s\n",
+         1.0e-9 * (real_t)sizeof(complex_t) * (volume2D + 2.0 * U1_field_2D + U1_gauge_2D) /
+         wlTime);
   printf(HLINE);
 
   // reset plaquette time
-  plaquetteTime = std::numeric_limits<real_t>::max();
+  wlTime = std::numeric_limits<real_t>::max();
 
   printf("SU(2) Gauge 2D: \n");
   const real_t SU2_field_2D = volume2D * 2.0 * 2.0;
@@ -318,23 +353,27 @@ int run_benchmark(const size_t stream_size_array) {
 
   // run the benchmark
   for (index_t k = 0; k < STREAM_NTIMES; ++k) {
+    Wtemporal_vals.clear();
     timer.reset();
-    plaq = GaugePlaquette<2, 2>(dev_g_SU2_2D);
+    WilsonLoop_temporal<2, 2>(dev_g_SU2_2D, LT_pairs, Wtemporal_vals);
     Kokkos::fence();
-    plaquetteTime = std::min(plaquetteTime, timer.seconds());
+    wlTime = std::min(wlTime, timer.seconds());
   }
   }
   printf(HLINE);
-  printf("Calculated Plaquette value: %11.4e      Expected value: %11.4e\n",
-         plaq, 1.0);
-  printf("Plaquette Kernel Time:     %11.4e s\n", plaquetteTime);
-  printf("Plaquette BW:              %11.4f GB/s\n",
-         1.0e-9 * (real_t)sizeof(complex_t) * (volume2D + SU2_gauge_2D) /
-         plaquetteTime);
+  printf("Wilson Loop values: \n");
+  for (const auto &Wtemporal : Wtemporal_vals) {
+    printf("L = %d, T = %d, W(L,T) = %11.4e            Expected: %11.4e\n",
+           static_cast<index_t>(Wtemporal[0]), static_cast<index_t>(Wtemporal[1]), Wtemporal[2], 1.0);
+  }
+  printf("Wilson Loop Kernel Time:     %11.4e s\n", wlTime);
+  printf("Wilson Loop BW:              %11.4f GB/s\n",
+         1.0e-9 * (real_t)sizeof(complex_t) * (volume2D + 2.0 * SU2_field_2D + SU2_gauge_2D) /
+         wlTime);
   printf(HLINE);
 
   // reset plaquette time
-  plaquetteTime = std::numeric_limits<real_t>::max();
+  wlTime = std::numeric_limits<real_t>::max();
   printf("SU(3) Gauge 2D: \n");
   const real_t SU3_field_2D = volume2D * 3.0 * 3.0;
   const real_t SU3_gauge_2D = 2.0 * SU3_field_2D;
@@ -351,19 +390,23 @@ int run_benchmark(const size_t stream_size_array) {
 
   // run the benchmark
   for (index_t k = 0; k < STREAM_NTIMES; ++k) {
+    Wtemporal_vals.clear();
     timer.reset();
-    plaq = GaugePlaquette<2, 3>(dev_g_SU3_2D);
+    WilsonLoop_temporal<2, 3>(dev_g_SU3_2D, LT_pairs, Wtemporal_vals);
     Kokkos::fence();
-    plaquetteTime = std::min(plaquetteTime, timer.seconds());
+    wlTime = std::min(wlTime, timer.seconds());
   }
   }
   printf(HLINE);
-  printf("Calculated Plaquette value: %11.4e      Expected value: %11.4e\n",
-         plaq, 1.0);
-  printf("Plaquette Kernel Time:     %11.4e s\n", plaquetteTime);
-  printf("Plaquette BW:              %11.4f GB/s\n",
-         1.0e-9 * (real_t)sizeof(complex_t) * (volume2D + SU3_gauge_2D) /
-         plaquetteTime);
+  printf("Wilson Loop values: \n");
+  for (const auto &Wtemporal : Wtemporal_vals) {
+    printf("L = %d, T = %d, W(L,T) = %11.4e            Expected: %11.4e\n",
+           static_cast<index_t>(Wtemporal[0]), static_cast<index_t>(Wtemporal[1]), Wtemporal[2], 1.0);
+  }
+  printf("Wilson Loop Kernel Time:     %11.4e s\n", wlTime);
+  printf("Wilson Loop BW:              %11.4f GB/s\n",
+         1.0e-9 * (real_t)sizeof(complex_t) * (volume2D + 2.0 * SU3_field_2D + SU3_gauge_2D) /
+         wlTime);
   printf(HLINE);
 
   return 0;
@@ -408,7 +451,7 @@ int parse_args(int argc, char **argv, size_t &stream_array_size) {
 
 int main(int argc, char *argv[]) {
   printf(HLINE);
-  printf("SU(N) GaugeField 2D, 3D and 4D plaquette kernel test and benchmark\n");
+  printf("SU(N) GaugeField 2D, 3D and 4D Wilson Loop kernel test and benchmark\n");
   printf(HLINE);
 
   Kokkos::initialize(argc, argv);

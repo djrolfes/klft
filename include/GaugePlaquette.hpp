@@ -39,7 +39,7 @@ namespace klft
     constexpr static const size_t Nd = rank;
     // define the gauge field type
     using GaugeFieldType = typename DeviceGaugeFieldType<rank, Nc>::type;
-    GaugeFieldType g_in;
+    const GaugeFieldType g_in;
     // define the field type
     using FieldType = typename DeviceFieldType<rank>::type;
     FieldType plaq_per_site;
@@ -61,9 +61,14 @@ namespace klft
         #pragma unroll
         for(index_t nu = 0; nu < Nd; ++nu) {
           if(nu > mu) {
-            lmu = g_in(Idcs..., mu) * g_in(shift_index_plus<rank,1,size_t>(Kokkos::Array<size_t,rank>{Idcs...}, mu, dimensions), nu);
-            lnu = g_in(Idcs..., nu) * g_in(shift_index_plus<rank,1,size_t>(Kokkos::Array<size_t,rank>{Idcs...}, nu, dimensions), mu);
+            // build plaquette in two halves
+            // U_{mu nu} (x) = Tr[ lmu * lnu^dagger ]
+            // lmu = U_mu(x) * U_nu(x+mu)
+            lmu = g_in(Idcs..., mu) * g_in(shift_index_plus<rank,size_t>(Kokkos::Array<size_t,rank>{Idcs...}, mu, 1, dimensions), nu);
+            // lnu = U_nu(x) * U_mu(x+nu)
+            lnu = g_in(Idcs..., nu) * g_in(shift_index_plus<rank,size_t>(Kokkos::Array<size_t,rank>{Idcs...}, nu, 1, dimensions), mu);
             // multiply the 2 half plaquettes
+            // lmu * lnu^dagger
             // take the trace
             #pragma unroll
             for(index_t c1 = 0; c1 < Nc; ++c1) {
