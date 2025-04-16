@@ -37,6 +37,8 @@ namespace klft
     // implemented any 5D cases yet
     // more dimensions can and will be added when necessary
     index_t nHits; // number of hits per site in each sweep
+    index_t nSweep; // number of sweeps
+    index_t seed; // seed for the random number generator
 
     // parameters specific to the GaugeField
     size_t Nd; // number of mu degrees of freedom
@@ -59,6 +61,8 @@ namespace klft
       L2 = 4;
       L3 = 4;
       nHits = 10;
+      nSweep = 1000;
+      seed = 1234;
 
       Nd = 4;
       Nc = 2;
@@ -81,6 +85,8 @@ namespace klft
         printf("L2: %d\n", L2);
         printf("L3: %d\n", L3);
         printf("nHits: %d\n", nHits);
+        printf("nSweep: %d\n", nSweep);
+        printf("seed: %d\n", seed);
         printf("GaugeField Parameters:\n");
         printf("Nd: %zu\n", Nd);
         printf("Nc: %zu\n", Nc);
