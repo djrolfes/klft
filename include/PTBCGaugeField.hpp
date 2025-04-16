@@ -214,6 +214,54 @@ namespace klft
     }
 
 
+    template <typename indexType = index_t>
+    KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> staple(const indexType i0, const indexType i1, const indexType i2, const indexType i3, const index_t mu) const {
+      // this only works if Nd == 4
+      assert(Nd == 4);
+      // temporary SUN matrix to store the staple
+      SUN<Nc> temp = zeroSUN<Nc>();
+      // get the x + mu indices
+      const indexType i0pmu = mu == 0 ? (i0 + 1) % dimensions[0] : i0;
+      const indexType i1pmu = mu == 1 ? (i1 + 1) % dimensions[1] : i1;
+      const indexType i2pmu = mu == 2 ? (i2 + 1) % dimensions[2] : i2;
+      const indexType i3pmu = mu == 3 ? (i3 + 1) % dimensions[3] : i3;
+      // positive directions
+      #pragma unroll
+      for(index_t nu = 0; nu < Nd; ++nu) { // loop over nu
+        // do nothing for mu = nu
+        if (nu == mu) continue;
+        // get the x + nu indices
+        const indexType i0pnu = nu == 0 ? (i0 + 1) % dimensions[0] : i0;
+        const indexType i1pnu = nu == 1 ? (i1 + 1) % dimensions[1] : i1;
+        const indexType i2pnu = nu == 2 ? (i2 + 1) % dimensions[2] : i2;
+        const indexType i3pnu = nu == 3 ? (i3 + 1) % dimensions[3] : i3;
+        // get the staple
+        temp += this->operator()<indexType>(i0pmu,i1pmu,i2pmu,i3pmu,nu) * conj(this->operator()<indexType>(i0pnu,i1pnu,i2pnu,i3pnu,mu))
+              * conj(this->operator()<indexType>(i0,i1,i2,i3,nu));
+      } // loop over nu
+      // negative directions
+      #pragma unroll
+      for(index_t nu = 0; nu < Nd; ++nu) { // loop over nu
+        // do nothing for mu = nu
+        if (nu == mu) continue;
+        // get the x + mu - nu indices
+        const indexType i0pmu_mnu = nu == 0 ? (i0pmu - 1 + dimensions[0]) % dimensions[0] : i0pmu;
+        const indexType i1pmu_mnu = nu == 1 ? (i1pmu - 1 + dimensions[1]) % dimensions[1] : i1pmu;
+        const indexType i2pmu_mnu = nu == 2 ? (i2pmu - 1 + dimensions[2]) % dimensions[2] : i2pmu;
+        const indexType i3pmu_mnu = nu == 3 ? (i3pmu - 1 + dimensions[3]) % dimensions[3] : i3pmu;
+        // get the x - nu indices
+        const indexType i0mnu = nu == 0 ? (i0 - 1 + dimensions[0]) % dimensions[0] : i0;
+        const indexType i1mnu = nu == 1 ? (i1 - 1 + dimensions[1]) % dimensions[1] : i1;
+        const indexType i2mnu = nu == 2 ? (i2 - 1 + dimensions[2]) % dimensions[2] : i2;
+        const indexType i3mnu = nu == 3 ? (i3 - 1 + dimensions[3]) % dimensions[3] : i3;
+        // get the staple
+        temp += conj(this->operator()<indexType>(i0pmu_mnu,i1pmu_mnu,i2pmu_mnu,i3pmu_mnu,nu)) 
+              * conj(this->operator()<indexType>(i0mnu,i1mnu,i2mnu,i3mnu,mu)) * this->operator()<indexType>(i0mnu,i1mnu,i2mnu,i3mnu,nu);
+      } // loop over nu
+      return temp;
+    }
+
+
 
   };
 
@@ -400,7 +448,52 @@ namespace klft
     template <typename indexType = index_t>
     KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> & operator()(const Kokkos::Array<indexType,3> site, const index_t mu) {
       return field(site[0], site[1], site[2], mu)*defectField(site[0], site[1], site[2],mu);
+    
     }
+
+    template <typename indexType = index_t>
+    KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> staple(const indexType i0, const indexType i1, const indexType i2, const index_t mu) const {
+      // this only works if Nd == 3
+      assert(Nd == 3);
+      // temporary SUN matrix to store the staple
+      SUN<Nc> temp = zeroSUN<Nc>();
+      // get the x + mu indices
+      const indexType i0pmu = mu == 0 ? (i0 + 1) % dimensions[0] : i0;
+      const indexType i1pmu = mu == 1 ? (i1 + 1) % dimensions[1] : i1;
+      const indexType i2pmu = mu == 2 ? (i2 + 1) % dimensions[2] : i2;
+  
+      // positive directions
+      #pragma unroll
+      for (index_t nu = 0; nu < Nd; ++nu) { // loop over nu
+        if (nu == mu) continue; // skip if mu == nu
+        const indexType i0pnu = nu == 0 ? (i0 + 1) % dimensions[0] : i0;
+        const indexType i1pnu = nu == 1 ? (i1 + 1) % dimensions[1] : i1;
+        const indexType i2pnu = nu == 2 ? (i2 + 1) % dimensions[2] : i2;
+
+        temp += this->operator()<indexType>(i0pmu, i1pmu, i2pmu, nu) * conj(this->operator()<indexType>(i0pnu, i1pnu, i2pnu, mu))
+              * conj(this->operator()<indexType>(i0, i1, i2, nu));
+      }
+  
+      // negative directions
+      #pragma unroll
+      for (index_t nu = 0; nu < Nd; ++nu) { // loop over nu
+        if (nu == mu) continue; // skip if mu == nu
+        const indexType i0pmu_mnu = nu == 0 ? (i0pmu - 1 + dimensions[0]) % dimensions[0] : i0pmu;
+        const indexType i1pmu_mnu = nu == 1 ? (i1pmu - 1 + dimensions[1]) % dimensions[1] : i1pmu;
+        const indexType i2pmu_mnu = nu == 2 ? (i2pmu - 1 + dimensions[2]) % dimensions[2] : i2pmu;
+
+        const indexType i0mnu = nu == 0 ? (i0 - 1 + dimensions[0]) % dimensions[0] : i0;
+        const indexType i1mnu = nu == 1 ? (i1 - 1 + dimensions[1]) % dimensions[1] : i1;
+        const indexType i2mnu = nu == 2 ? (i2 - 1 + dimensions[2]) % dimensions[2] : i2;
+
+        temp += conj(this->operator()<indexType>(i0pmu_mnu, i1pmu_mnu, i2pmu_mnu, nu)) 
+              * conj(this->operator()<indexType>(i0mnu, i1mnu, i2mnu, mu)) * this->operator()<indexType>(i0mnu, i1mnu, i2mnu, nu);
+      }
+  
+      return temp;
+    }
+
+
 
   };
 
@@ -574,6 +667,46 @@ namespace klft
     template <typename indexType = index_t>
     KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> & operator()(const Kokkos::Array<indexType,2> site, const index_t mu) {
       return field(site[0], site[1], mu)*defectField(site[0], site[1],mu);
+    }
+
+
+
+    template <typename indexType = index_t>
+    KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> staple(const indexType i0, const indexType i1, const index_t mu) const {
+      // this only works if Nd == 2
+      assert(Nd == 2);
+      // temporary SUN matrix to store the staple
+      SUN<Nc> temp = zeroSUN<Nc>();
+      // get the x + mu indices
+      const indexType i0pmu = mu == 0 ? (i0 + 1) % dimensions[0] : i0;
+      const indexType i1pmu = mu == 1 ? (i1 + 1) % dimensions[1] : i1;
+  
+      // positive directions
+      #pragma unroll
+      for (index_t nu = 0; nu < Nd; ++nu) { // loop over nu
+        if (nu == mu) continue; // skip if mu == nu
+        const indexType i0pnu = nu == 0 ? (i0 + 1) % dimensions[0] : i0;
+        const indexType i1pnu = nu == 1 ? (i1 + 1) % dimensions[1] : i1;
+
+        temp += this->operator()<indexType>(i0pmu, i1pmu, nu) * conj(this->operator()<indexType>(i0pnu, i1pnu, mu))
+              * conj(this->operator()<indexType>(i0, i1, nu));
+      }
+  
+      // negative directions
+      #pragma unroll
+      for (index_t nu = 0; nu < Nd; ++nu) { // loop over nu
+        if (nu == mu) continue; // skip if mu == nu
+        const indexType i0pmu_mnu = nu == 0 ? (i0pmu - 1 + dimensions[0]) % dimensions[0] : i0pmu;
+        const indexType i1pmu_mnu = nu == 1 ? (i1pmu - 1 + dimensions[1]) % dimensions[1] : i1pmu;
+
+        const indexType i0mnu = nu == 0 ? (i0 - 1 + dimensions[0]) % dimensions[0] : i0;
+        const indexType i1mnu = nu == 1 ? (i1 - 1 + dimensions[1]) % dimensions[1] : i1;
+
+        temp += conj(this->operator()<indexType>(i0pmu_mnu, i1pmu_mnu, nu)) 
+              * conj(this->operator()<indexType>(i0mnu, i1mnu, mu)) * this->operator()<indexType>(i0mnu, i1mnu, nu);
+      }
+  
+      return temp;
     }
 
   };
