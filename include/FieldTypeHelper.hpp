@@ -109,5 +109,24 @@ namespace klft
     using type = deviceField;
   };
 
+  // define the same for the scalar fields
+  template <size_t rank>
+  struct DeviceScalarFieldType;
+
+  template <>
+  struct DeviceScalarFieldType<2> {
+    using type = deviceScalarField2D;
+  };
+
+  template <>
+  struct DeviceScalarFieldType<3> {
+    using type = deviceScalarField3D;
+  };
+
+  template <>
+  struct DeviceScalarFieldType<4> {
+    using type = deviceScalarField;
+  };
+
   // add the same for scalar fields here when needed
 }
