@@ -193,12 +193,12 @@ namespace klft
 
     // define accessors for the field
     template <typename indexType = index_t> //why do we template indexType here, when it is defined in GLOBAL.hpp?
-    KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> & operator()(const indexType i, const indexType j, const indexType k, const indexType l, const int mu) const {
+    KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> & operator()(const indexType i, const indexType j, const indexType k, const indexType l, const index_t mu) const {
       return field(i,j,k,l,mu)*defectField(i,j,k,l,mu);
     }
   
     template <typename indexType = index_t>
-    KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> & operator()(const indexType i, const indexType j, const indexType k, const indexType l, const int mu) {
+    KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> & operator()(const indexType i, const indexType j, const indexType k, const indexType l, const index_t mu) {
       return field(i,j,k,l,mu)*defectField(i,j,k,l,mu);
     }
 
@@ -430,12 +430,12 @@ namespace klft
 
     // define accessors for the field
     template <typename indexType = index_t> //why do we template indexType here, when it is defined in GLOBAL.hpp?
-    KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> & operator()(const indexType i, const indexType j, const indexType k, const int mu) const {
+    KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> & operator()(const indexType i, const indexType j, const indexType k, const index_t mu) const {
       return field(i,j,k,mu)*defectField(i,j,k,mu);
     }
   
     template <typename indexType = index_t>
-    KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> & operator()(const indexType i, const indexType j, const indexType k, const int mu) {
+    KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> & operator()(const indexType i, const indexType j, const indexType k, const index_t mu) {
       return field(i,j,k,mu)*defectField(i,j,k,mu);
     }
 
@@ -649,12 +649,12 @@ namespace klft
 
     // define accessors for the field
     template <typename indexType = index_t> //why do we template indexType here, when it is defined in GLOBAL.hpp?
-    KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> & operator()(const indexType i, const indexType j const int mu) const {
+    KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> & operator()(const indexType i, const indexType j, const index_t mu) const {
       return field(i,j,mu)*defectField(i,j,mu);
     }
   
     template <typename indexType = index_t>
-    KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> & operator()(const indexType i, const indexType j, const int mu) {
+    KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> & operator()(const indexType i, const indexType j, const index_t mu) {
       return field(i,j,mu)*defectField(i,j,mu);
     }
 

@@ -21,11 +21,11 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/kokkos/kokkos ${CMAKE_CU
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
 # option to build the tests
-# option(BUILD_TESTS "Build tests" ON)
+option(BUILD_TESTS "Build tests" ON)
 
-# if(BUILD_TESTS)
-#   add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/tests ${CMAKE_CURRENT_BINARY_DIR}/tests)
-# endif()
+if(BUILD_TESTS)
+  add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/tests ${CMAKE_CURRENT_BINARY_DIR}/tests)
+endif()
 
 # build the binaries
 # add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/binaries ${CMAKE_CURRENT_BINARY_DIR}/binaries)
