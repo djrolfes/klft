@@ -58,8 +58,8 @@ namespace klft
   }
 
   // define a function to measure the gauge observables
-  template <size_t Nd, size_t Nc>
-  void measureGaugeObservables(const deviceGaugeField<Nd,Nc> g_in,
+  template <size_t rank, size_t Nc>
+  void measureGaugeObservables(const deviceGaugeFieldType<rank, Nc>::type &g_in,
                               const GaugeObservableParams &params,
                               const size_t step) {
     // check if the step is a measurement step
@@ -74,7 +74,7 @@ namespace klft
     }
     // measure the plaquette if requested
     if (params.measure_plaquette) {
-      real_t P = gaugePlaquette(g_in);
+      real_t P = gaugePlaquette<rank, Nc>(g_in);
       params.plaquette_measurements.push_back(P);
       if (KLFT_VERBOSITY > 0) {
         printf("plaquette: %11.6f\n", P);
@@ -87,13 +87,11 @@ namespace klft
         printf("L, T, W_temp\n");
       }
       std::vector<Kokkos::Array<real_t,3>> temp_measurements;
-      for (const auto &pair_L_T : params.W_temp_L_T_pairs) {
-        const index_t L = pair_L_T[0];
-        const index_t T = pair_L_T[1];
-        real_t W_temp = WilsonLoop_temporal(g_in, L, T);
-        temp_measurements.push_back({L, T, W_temp});
-        if (KLFT_VERBOSITY > 0) {
-          printf("%d, %d, %11.6f\n", L, T, W_temp);
+      WilsoonLoop_temporal<rank, Nc>(g_in, params.W_temp_L_T_pairs,
+                                    temp_measurements);
+      if (KLFT_VERBOSITY > 0) {
+        for (const auto &measure : temp_measurements) {
+          printf("%d, %d, %11.6f\n", static_cast<index_t>(measure[0]), static_cast<index_t>(measure[1]), measure[2]);
         }
       }
       params.W_temp_measurements.push_back(temp_measurements);
@@ -106,16 +104,14 @@ namespace klft
       }
       std::vector<Kokkos::Array<real_t,5>> temp_measurements;
       for (const auto &pair_mu_nu : params.W_mu_nu_pairs) {
-        for (const auto &pair_Lmu_Lnu : params.W_Lmu_Lnu_pairs) {
-          const index_t mu = pair_mu_nu[0];
-          const index_t nu = pair_mu_nu[1];
-          const index_t Lmu = pair_Lmu_Lnu[0];
-          const index_t Lnu = pair_Lmu_Lnu[1];
-          real_t W_mu_nu = WilsonLoop_mu_nu(g_in, mu, nu, Lmu, Lnu);
-          Kokkos::fence();
-          temp_measurements.push_back({mu, nu, Lmu, Lnu, W_mu_nu});
-          if (KLFT_VERBOSITY > 0) {
-            printf("%d, %d, %d, %d, %11.6f\n", mu, nu, Lmu, Lnu, W_mu_nu);
+        const index_t mu = pair_mu_nu[0];
+        const index_t nu = pair_mu_nu[1];
+        WilsonLoop_mu_nu<rank, Nc, mu, nu>(g_in,
+                          params.W_Lmu_Lnu_pairs, temp_measurements);
+        if (KLFT_VERBOSITY > 0) {
+          for (const auto &measure : temp_measurements) {
+            printf("%d, %d, %d, %d, %11.6f\n", static_cast<index_t>(measure[0]), static_cast<index_t>(measure[1]),
+                    static_cast<index_t>(measure[2]), static_cast<index_t>(measure[3]), measure[4]);
           }
         }
       }
@@ -128,7 +124,8 @@ namespace klft
 
   // flush the plaquette measurements to disk
   void flushPlaquette(std::ofstream &file,
-                      const GaugeObservableParams &params) {
+                      const GaugeObservableParams &params,
+                      const bool HEADER = true) {
     // check if the file is open
     if (!file.is_open()) {
       printf("Error: file is not open\n");
@@ -139,7 +136,7 @@ namespace klft
       printf("Error: no plaquette measurements available\n");
       return;
     }
-    file << "# step, plaquette\n";
+    if (HEADER) file << "# step, plaquette\n";
     for (size_t i = 0; i < params.measurement_steps.size(); ++i) {
       file << params.measurement_steps[i] << ", "
            << params.plaquette_measurements[i] << "\n";
@@ -148,7 +145,8 @@ namespace klft
   
   // flush the temporal Wilson loop measurements to disk
   void flushWilsonLoopTemporal(std::ofstream &file,
-                          const GaugeObservableParams &params) {
+                          const GaugeObservableParams &params,
+                          const bool HEADER = true) {
     // check if the file is open
     if (!file.is_open()) {
       printf("Error: file is not open\n");
@@ -159,7 +157,7 @@ namespace klft
       printf("Error: no temporal Wilson loop measurements available\n");
       return;
     }
-    file << "# step, L, T, W_temp\n";
+    if (HEADER) file << "# step, L, T, W_temp\n";
     for (size_t i = 0; i < params.measurement_steps.size(); ++i) {
       for (const auto &measurement : params.W_temp_measurements[i]) {
         file << params.measurement_steps[i] << ", "
@@ -172,7 +170,8 @@ namespace klft
 
   // flush the mu-nu Wilson loop measurements to disk
   void flushWilsonLoopMuNu(std::ofstream &file,
-                           const GaugeObservableParams &params) {
+                           const GaugeObservableParams &params,
+                           const bool HEADER = true) {
     // check if the file is open
     if (!file.is_open()) {
       printf("Error: file is not open\n");
@@ -183,7 +182,7 @@ namespace klft
       printf("Error: no mu-nu Wilson loop measurements available\n");
       return;
     }
-    file << "# step, mu, nu, Lmu, Lnu, W_mu_nu\n";
+    if (HEADER) file << "# step, mu, nu, Lmu, Lnu, W_mu_nu\n";
     for (size_t i = 0; i < params.measurement_steps.size(); ++i) {
       for (const auto &measurement : params.W_mu_nu_measurements[i]) {
         file << params.measurement_steps[i] << ", "
@@ -197,23 +196,24 @@ namespace klft
   }
 
   // define a global function to flush all measurements
-  void flushAllGaugeObservables(const GaugeObservableParams &params) {
+  void flushAllGaugeObservables(const GaugeObservableParams &params,
+                                const bool HEADER = true) {
     // flush plaquette measurements
     if (params.plaquette_filename != "") {
       std::ofstream file(params.plaquette_filename, std::ios::app);
-      flushPlaquette(file, params);
+      flushPlaquette(file, params, HEADER);
       file.close();
     }
     // flush temporal Wilson loop measurements
     if (params.W_temp_filename != "") {
       std::ofstream file(params.W_temp_filename, std::ios::app);
-      flushWilsonLoopTemporal(file, params);
+      flushWilsonLoopTemporal(file, params, HEADER);
       file.close();
     }
     // flush mu-nu Wilson loop measurements
     if (params.W_mu_nu_filename != "") {
       std::ofstream file(params.W_mu_nu_filename, std::ios::app);
-      flushWilsonLoopMuNu(file, params);
+      flushWilsonLoopMuNu(file, params, HEADER);
       file.close();
     }
     // ...
