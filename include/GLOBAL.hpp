@@ -92,6 +92,16 @@ namespace klft
 
   using ScalarField1D = Kokkos::View<real_t*, Kokkos::MemoryTraits<Kokkos::Restrict>>;
 
+  template <size_t Nd>
+  using LinkScalarField = Kokkos::View<real_t****[Nd], Kokkos::MemoryTraits<Kokkos::Restrict>>;
+
+  template <size_t Nd>
+  using LinkScalarField3D = Kokkos::View<real_t***[Nd], Kokkos::MemoryTraits<Kokkos::Restrict>>;
+
+  template <size_t Nd>
+  using LinkScalarField2D = Kokkos::View<real_t**[Nd], Kokkos::MemoryTraits<Kokkos::Restrict>>;
+
+
   // define corresponding constant fields
   #if defined ( KOKKOS_ENABLE_CUDA )
 
@@ -129,6 +139,15 @@ namespace klft
 
   using constScalarField1D = Kokkos::View<const real_t*, Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
 
+  template <size_t Nd>
+  using constLinkScalarField = Kokkos::View<const real_t****[Nd], Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
+
+  template <size_t Nd>
+  using constLinkScalarField3D = Kokkos::View<const real_t***[Nd], Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
+
+  template <size_t Nd>
+  using constLinkScalarField2D = Kokkos::View<const real_t**[Nd], Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
+
   #else
 
   template <size_t Nd, size_t Nc>
@@ -164,6 +183,15 @@ namespace klft
   using constScalarField2D = Kokkos::View<const real_t**, Kokkos::MemoryTraits<Kokkos::Restrict>>;
 
   using constScalarField1D = Kokkos::View<const real_t*, Kokkos::MemoryTraits<Kokkos::Restrict>>;
+
+  template <size_t Nd>
+  using constLinkScalarField = Kokkos::View<const real_t****[Nd], Kokkos::MemoryTraits<Kokkos::Restrict>>;
+
+  template <size_t Nd>
+  using constLinkScalarField3D = Kokkos::View<const real_t***[Nd], Kokkos::MemoryTraits<Kokkos::Restrict>>;
+
+  template <size_t Nd>
+  using constLinkScalarField2D = Kokkos::View<const real_t**[Nd], Kokkos::MemoryTraits<Kokkos::Restrict>>;
 
   #endif
 

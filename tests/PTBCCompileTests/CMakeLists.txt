@@ -1,0 +1,2 @@
+add_executable(test_PTBCGaugeFields test_PTBCGaugeFields.cpp)
+target_link_libraries(test_PTBCGaugeFields PUBLIC Kokkos::kokkos)
