@@ -23,7 +23,7 @@
 #pragma once
 #include "GaugePlaquette.hpp"
 #include "WilsonLoop.hpp"
-#include 
+#include <fstream>
 
 namespace klft
 {
@@ -48,6 +48,9 @@ namespace klft
     std::string W_temp_filename; // filename for the temporal Wilson loop measurements
     std::string W_mu_nu_filename; // filename for the mu-nu Wilson loop measurements
 
+    // boolean flag to indicate if the measurements are to be flushed
+    bool write_to_file;
+
     // constructor to initialize the parameters
     // by default nothing is measured
     GaugeObservableParams()
@@ -55,12 +58,12 @@ namespace klft
         measure_plaquette(false),
         measure_wilson_loop_temporal(false),
         measure_wilson_loop_mu_nu(false) {}
-  }
+  };
 
   // define a function to measure the gauge observables
   template <size_t rank, size_t Nc>
-  void measureGaugeObservables(const deviceGaugeFieldType<rank, Nc>::type &g_in,
-                              const GaugeObservableParams &params,
+  void measureGaugeObservables(const typename DeviceGaugeFieldType<rank, Nc>::type &g_in,
+                              GaugeObservableParams &params,
                               const size_t step) {
     // check if the step is a measurement step
     if ((params.measurement_interval == 0) ||
@@ -74,7 +77,7 @@ namespace klft
     }
     // measure the plaquette if requested
     if (params.measure_plaquette) {
-      real_t P = gaugePlaquette<rank, Nc>(g_in);
+      real_t P = GaugePlaquette<rank, Nc>(g_in);
       params.plaquette_measurements.push_back(P);
       if (KLFT_VERBOSITY > 0) {
         printf("plaquette: %11.6f\n", P);
@@ -87,7 +90,7 @@ namespace klft
         printf("L, T, W_temp\n");
       }
       std::vector<Kokkos::Array<real_t,3>> temp_measurements;
-      WilsoonLoop_temporal<rank, Nc>(g_in, params.W_temp_L_T_pairs,
+      WilsonLoop_temporal<rank, Nc>(g_in, params.W_temp_L_T_pairs,
                                     temp_measurements);
       if (KLFT_VERBOSITY > 0) {
         for (const auto &measure : temp_measurements) {
@@ -106,7 +109,7 @@ namespace klft
       for (const auto &pair_mu_nu : params.W_mu_nu_pairs) {
         const index_t mu = pair_mu_nu[0];
         const index_t nu = pair_mu_nu[1];
-        WilsonLoop_mu_nu<rank, Nc, mu, nu>(g_in,
+        WilsonLoop_mu_nu<rank, Nc>(g_in, mu, nu,
                           params.W_Lmu_Lnu_pairs, temp_measurements);
         if (KLFT_VERBOSITY > 0) {
           for (const auto &measure : temp_measurements) {
@@ -123,7 +126,7 @@ namespace klft
   }
 
   // flush the plaquette measurements to disk
-  void flushPlaquette(std::ofstream &file,
+  inline void flushPlaquette(std::ofstream &file,
                       const GaugeObservableParams &params,
                       const bool HEADER = true) {
     // check if the file is open
@@ -144,7 +147,7 @@ namespace klft
   }
   
   // flush the temporal Wilson loop measurements to disk
-  void flushWilsonLoopTemporal(std::ofstream &file,
+  inline void flushWilsonLoopTemporal(std::ofstream &file,
                           const GaugeObservableParams &params,
                           const bool HEADER = true) {
     // check if the file is open
@@ -169,7 +172,7 @@ namespace klft
   }
 
   // flush the mu-nu Wilson loop measurements to disk
-  void flushWilsonLoopMuNu(std::ofstream &file,
+  inline void flushWilsonLoopMuNu(std::ofstream &file,
                            const GaugeObservableParams &params,
                            const bool HEADER = true) {
     // check if the file is open
@@ -196,8 +199,13 @@ namespace klft
   }
 
   // define a global function to flush all measurements
-  void flushAllGaugeObservables(const GaugeObservableParams &params,
+  inline void flushAllGaugeObservables(const GaugeObservableParams &params,
                                 const bool HEADER = true) {
+    // check if write_to_file is enabled
+    if (!params.write_to_file) {
+      printf("write_to_file is not enabled\n");
+      return;
+    }
     // flush plaquette measurements
     if (params.plaquette_filename != "") {
       std::ofstream file(params.plaquette_filename, std::ios::app);
@@ -218,6 +226,16 @@ namespace klft
     }
     // ...
     // add more flush functions for other observables here
+  }
+
+  // function to clear all measurements
+  inline void clearAllGaugeObservables(GaugeObservableParams &params) {
+    params.measurement_steps.clear();
+    params.plaquette_measurements.clear();
+    params.W_temp_measurements.clear();
+    params.W_mu_nu_measurements.clear();
+    // ...
+    // add more clear functions for other observables here
   }
 
 }

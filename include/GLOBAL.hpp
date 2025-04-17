@@ -240,18 +240,18 @@ namespace klft
   // 3 = very verbose
   // 4 = debug
   // 5 = trace
-  int KLFT_VERBOSITY = 0;
+  inline int KLFT_VERBOSITY = 0;
 
-  void setVerbosity(int v) {
+  inline void setVerbosity(int v) {
     KLFT_VERBOSITY = v;
   }
 
   // variable that enables tuning
   // 0 = no tuning
   // 1 = tuning enabled
-  int KLFT_TUNING = 0;
+  inline int KLFT_TUNING = 0;
 
-  void setTuning(int t) {
+  inline void setTuning(int t) {
     KLFT_TUNING = t;
   }
 

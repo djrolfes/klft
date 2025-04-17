@@ -18,17 +18,25 @@ set(Kokkos_ENABLE_AGGRESSIVE_VECTORIZATION "ON" CACHE BOOL "CMakeLists: Kokkos_E
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/kokkos/kokkos ${CMAKE_CURRENT_BINARY_DIR}/kokkos)
 
+#
+# yaml-cpp
+#
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/yaml-cpp ${CMAKE_CURRENT_BINARY_DIR}/yaml-cpp)
+
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
-# option to build the tests
-option(BUILD_TESTS "Build tests" ON)
+# build the library
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/lib ${CMAKE_CURRENT_BINARY_DIR}/lib)
 
-if(BUILD_TESTS)
-  add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/tests ${CMAKE_CURRENT_BINARY_DIR}/tests)
-endif()
+# option to build the tests
+# option(BUILD_TESTS "Build tests" ON)
+
+# if(BUILD_TESTS)
+#   add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/tests ${CMAKE_CURRENT_BINARY_DIR}/tests)
+# endif()
 
 # build the binaries
-# add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/binaries ${CMAKE_CURRENT_BINARY_DIR}/binaries)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/binaries ${CMAKE_CURRENT_BINARY_DIR}/binaries)
 
 # build the benchmarks
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/benchmarks ${CMAKE_CURRENT_BINARY_DIR}/benchmarks)

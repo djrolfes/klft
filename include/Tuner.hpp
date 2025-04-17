@@ -65,9 +65,9 @@ namespace klft
   };
 
   // create global 4D, 3D and 2D hash tables
-  TuningHashTable<4> tuning_hash_table_4D;
-  TuningHashTable<3> tuning_hash_table_3D;
-  TuningHashTable<2> tuning_hash_table_2D;
+  inline TuningHashTable<4> tuning_hash_table_4D;
+  inline TuningHashTable<3> tuning_hash_table_3D;
+  inline TuningHashTable<2> tuning_hash_table_2D;
 
   template<size_t rank, class FunctorType>
   void tune_and_launch_for(std::string functor_id,

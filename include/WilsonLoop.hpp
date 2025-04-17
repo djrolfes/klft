@@ -156,8 +156,9 @@ namespace klft
   // in the mu - nu plane
   // return is normalized based on bool normalize
   // the Lmu and Lnu pairs must be strictly non-decreasing
-  template <size_t rank, size_t Nc, int mu, int nu>
+  template <size_t rank, size_t Nc>
   void WilsonLoop_mu_nu(const typename DeviceGaugeFieldType<rank, Nc>::type &g_in,
+                          const index_t mu, const index_t nu,
                           const std::vector<Kokkos::Array<index_t, 2>> &Lmu_nu_pairs,
                           std::vector<Kokkos::Array<real_t, 5>> &Wmunu_vals,
                           const bool normalize = true) {
@@ -238,7 +239,7 @@ namespace klft
     // temp variable to store the Wilson loop
     std::vector<Kokkos::Array<real_t, 5>> Wmunu_vals;
     // run the kernel for mu = 0
-    WilsonLoop_mu_nu<rank, Nc, 0, Nd - 1>(g_in, L_T_pairs, Wmunu_vals, normalize);
+    WilsonLoop_mu_nu<rank, Nc>(g_in, 0, Nd - 1, L_T_pairs, Wmunu_vals, normalize);
     // push the results to the output vector
     for (const auto &Wmunu : Wmunu_vals) {
       Wtemporal_vals.push_back(Kokkos::Array<real_t, 3>{Wmunu[2], Wmunu[3], Wmunu[4]});
@@ -247,7 +248,7 @@ namespace klft
     if constexpr (Nd > 2) {
       // clear the Wmunu_vals vector
       Wmunu_vals.clear();
-      WilsonLoop_mu_nu<rank, Nc, 1, Nd - 1>(g_in, L_T_pairs, Wmunu_vals, normalize);
+      WilsonLoop_mu_nu<rank, Nc>(g_in, 1, Nd - 1, L_T_pairs, Wmunu_vals, normalize);
       // need to average over the spatial dimensions
       // push the results to the output vector
       for (index_t i = 0; i < Wmunu_vals.size(); ++i) {
@@ -263,7 +264,7 @@ namespace klft
     if constexpr (Nd > 3) {
       // clear the Wmunu_vals vector
       Wmunu_vals.clear();
-      WilsonLoop_mu_nu<rank, Nc, 2, Nd - 1>(g_in, L_T_pairs, Wmunu_vals, normalize);
+      WilsonLoop_mu_nu<rank, Nc>(g_in, 2, Nd - 1, L_T_pairs, Wmunu_vals, normalize);
       // need to average over the spatial dimensions
       // push the results to the output vector
       for (index_t i = 0; i < Wmunu_vals.size(); ++i) {

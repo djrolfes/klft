@@ -1,8 +1,8 @@
-add_executable(plaq plaq.cpp)
-target_link_libraries(plaq PUBLIC Kokkos::kokkos)
+add_executable(plaq_bench plaq_bench.cpp)
+target_link_libraries(plaq_bench PUBLIC Kokkos::kokkos)
 
-add_executable(wloop_temporal wloop_temporal.cpp)
-target_link_libraries(wloop_temporal PUBLIC Kokkos::kokkos)
+add_executable(wloop_temporal_bench wloop_temporal_bench.cpp)
+target_link_libraries(wloop_temporal_bench PUBLIC Kokkos::kokkos)
 
-add_executable(metropolis metropolis.cpp)
-target_link_libraries(metropolis PUBLIC Kokkos::kokkos)
+add_executable(metropolis_bench metropolis_bench.cpp)
+target_link_libraries(metropolis_bench PUBLIC Kokkos::kokkos)

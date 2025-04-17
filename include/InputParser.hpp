@@ -44,6 +44,8 @@ namespace klft {
         metropolisParams.L2 = mp["L2"].as<index_t>(32);
         metropolisParams.L3 = mp["L3"].as<index_t>(32);
         metropolisParams.nHits = mp["nHits"].as<index_t>(10);
+        metropolisParams.nSweep = mp["nSweep"].as<index_t>(1000);
+        metropolisParams.seed = mp["seed"].as<index_t>(1234);
         // parameters specific to the GaugeField
         metropolisParams.Nd = mp["Nd"].as<size_t>(4);
         metropolisParams.Nc = mp["Nc"].as<size_t>(2);
@@ -64,7 +66,7 @@ namespace klft {
   }
 
   // get GaugeObservableParams from input file
-  bool parseInputFile(const std::string &filename, GaugeObservableParams &gaugeParams) {
+  bool parseInputFile(const std::string &filename, GaugeObservableParams &gaugeObservableParams) {
     try {
       YAML::Node config = YAML::LoadFile(filename);
 
@@ -83,21 +85,21 @@ namespace klft {
         // pairs of (L,T) for the temporal Wilson loop
         if (gp["W_temp_L_T_pairs"]) {
           for (const auto &pair : gp["W_temp_L_T_pairs"]) {
-            gaugeObservableParams.W_temp_L_T_pairs.push_back({pair[0].as<size_t>(), pair[1].as<size_t>()});
+            gaugeObservableParams.W_temp_L_T_pairs.push_back(IndexArray<2>({pair[0].as<index_t>(), pair[1].as<index_t>()}));
           }
         }
 
         // pairs of (mu,nu) for the mu-nu Wilson loop
         if (gp["W_mu_nu_pairs"]) {
           for (const auto &pair : gp["W_mu_nu_pairs"]) {
-            gaugeObservableParams.W_mu_nu_pairs.push_back({pair[0].as<size_t>(), pair[1].as<size_t>()});
+            gaugeObservableParams.W_mu_nu_pairs.push_back(IndexArray<2>({pair[0].as<index_t>(), pair[1].as<index_t>()}));
           }
         }
 
         // pairs of (Lmu,Lnu) for the Wilson loop
         if (gp["W_Lmu_Lnu_pairs"]) {
           for (const auto &pair : gp["W_Lmu_Lnu_pairs"]) {
-            gaugeObservableParams.W_Lmu_Lnu_pairs.push_back({pair[0].as<size_t>(), pair[1].as<size_t>()});
+            gaugeObservableParams.W_Lmu_Lnu_pairs.push_back(IndexArray<2>({pair[0].as<index_t>(), pair[1].as<index_t>()}));
           }
         }
 
@@ -105,6 +107,10 @@ namespace klft {
         gaugeObservableParams.plaquette_filename = gp["plaquette_filename"].as<std::string>("");
         gaugeObservableParams.W_temp_filename = gp["W_temp_filename"].as<std::string>("");
         gaugeObservableParams.W_mu_nu_filename = gp["W_mu_nu_filename"].as<std::string>("");
+
+        // whether to write to file
+        gaugeObservableParams.write_to_file = gp["write_to_file"].as<bool>(false);
+
         // ...
         // add more parameters above this line as needed
       } else {
