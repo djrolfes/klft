@@ -41,7 +41,7 @@ int parse_args(int argc, char **argv, std::string &input_file) {
   const std::string help_string =
       "  -f <file_name> --filename <file_name>\n"
       "     Name of the input file.\n"
-      "     Default: 32\n"
+      "     Default: input.yaml\n"
       "  -h, --help\n"
       "     Prints this message.\n"
       "     Hint: use --kokkos-help to see command line options provided by "
