@@ -67,7 +67,8 @@ namespace klft
                               const size_t step) {
     // check if the step is a measurement step
     if ((params.measurement_interval == 0) ||
-        (step % params.measurement_interval != 0)) {
+        (step % params.measurement_interval != 0) ||
+        (step == 0)) {
       return;
     }
     // otherwise, carry out the measurements
