@@ -132,9 +132,26 @@ namespace klft
       // define metropolis functor for this sublattice
       MetropolisGaugeField<rank, Nc, RNG> metropolis(g_in, params, end,
                            nAccepted, oddeven_array<rank>(i), rng);
+      if (KLFT_VERBOSITY > 1) {
+        printf("Launching Metropolis for sublattice %d\n", i);
+        printf("Lattice odd/even: ");
+        for (index_t j = 0; j < rank; ++j) {
+          printf("%d ", oddeven_array<rank>(i)[j]);
+        }
+        printf("\n");
+      }
+      if (KLFT_VERBOSITY > 2) {
+        params.print();
+        printf("Lattice dimensions: ");
+        for (index_t j = 0; j < rank; ++j) {
+          printf("%d ", dimensions[j]);
+        }
+        printf("\n");
+        printf("Current number of accepted steps: %11.6f\n", nAccepted.sum());
+      }
       // launch the kernel
-      tune_and_launch_for<rank>("sweep_Metropolis_GaugeField", start, end,
-        metropolis);
+      tune_and_launch_for<rank>("sweep_Metropolis_GaugeField_sublat_"+std::to_string(i),
+                                start, end, metropolis);
       Kokkos::fence();
     }
     // reduce the number of accepted updates
