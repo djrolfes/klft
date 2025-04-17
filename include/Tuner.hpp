@@ -25,6 +25,7 @@
 
 #pragma once
 #include "GLOBAL.hpp"
+#include <fstream>
 
 // define how many times the kernel is run to tune
 #ifndef STREAM_NTIMES
@@ -262,5 +263,98 @@ namespace klft
     Kokkos::parallel_for(tune_policy, functor);
     return;
   };
+
+  // write tune hash table to file
+  inline void writeTuneCache(std::string cache_file_name) {
+    // open file in write mode
+    std::ofstream cache_file(cache_file_name, std::ios::out);
+    if (!cache_file.is_open()) {
+      printf("Error: could not open cache file %s\n", cache_file_name.c_str());
+      return;
+    }
+    // write the hash tables to the file
+    for (const auto &entry : tuning_hash_table_4D.table) {
+      cache_file << 4 << " " << entry.first << " ";
+      for (const auto &value : entry.second) {
+        cache_file << value << " ";
+      }
+      cache_file << "\n";
+    }
+    for (const auto &entry : tuning_hash_table_3D.table) {
+      cache_file << 3 << " " << entry.first << " ";
+      for (const auto &value : entry.second) {
+        cache_file << value << " ";
+      }
+      cache_file << "\n";
+    }
+    for (const auto &entry : tuning_hash_table_2D.table) {
+      cache_file << 2 << " " << entry.first << " ";
+      for (const auto &value : entry.second) {
+        cache_file << value << " ";
+      }
+      cache_file << "\n";
+    }
+    // close the file
+    cache_file.close();
+    if (KLFT_VERBOSITY > 0) {
+      printf("Tuning hash table written to %s\n", cache_file_name.c_str());
+    }
+  }
+
+  // read tune hash table from file
+  inline void readTuneCache(std::string cache_file_name) {
+    // open file in read mode
+    std::ifstream cache_file(cache_file_name);
+    if (!cache_file.is_open()) {
+      printf("Could not open cache file %s\n", cache_file_name.c_str());
+      return;
+    }
+    // read the hash tables from the file
+    std::string line;
+    while (std::getline(cache_file, line)) {
+      std::istringstream iss(line);
+      size_t rank;
+      std::string functor_id;
+      iss >> rank;
+      if (rank == 4) {
+        iss >> functor_id;
+        IndexArray<4> tiling;
+        for (index_t i = 0; i < 4; i++) {
+          iss >> tiling[i];
+        }
+        if (KLFT_VERBOSITY > 2) {
+          printf("Tuning found for kernel %s, tiling: %d %d %d %d\n", functor_id.c_str(), tiling[0], tiling[1], tiling[2], tiling[3]);
+        }
+        tuning_hash_table_4D.insert(functor_id, tiling);
+      } else if (rank == 3) {
+        iss >> functor_id;
+        IndexArray<3> tiling;
+        for (index_t i = 0; i < 3; i++) {
+          iss >> tiling[i];
+        }
+        if (KLFT_VERBOSITY > 2) {
+          printf("Tuning found for kernel %s, tiling: %d %d %d\n", functor_id.c_str(), tiling[0], tiling[1], tiling[2]);
+        }
+        tuning_hash_table_3D.insert(functor_id, tiling);
+      } else if (rank == 2) {
+        iss >> functor_id;
+        IndexArray<2> tiling;
+        for (index_t i = 0; i < 2; i++) {
+          iss >> tiling[i];
+        }
+        if (KLFT_VERBOSITY > 2) {
+          printf("Tuning found for kernel %s, tiling: %d %d\n", functor_id.c_str(), tiling[0], tiling[1]);
+        }
+        tuning_hash_table_2D.insert(functor_id, tiling);
+      } else {
+        printf("Error: unsupported rank %zu\n", rank);
+      }
+    }
+    // close the file
+    cache_file.close();
+    if (KLFT_VERBOSITY > 0) {
+      printf("Tuning hash table read from %s\n", cache_file_name.c_str());
+    }
+  }
 
 }
