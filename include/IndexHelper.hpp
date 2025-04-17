@@ -73,7 +73,7 @@ namespace klft
     Kokkos::Array<index_t,rank> new_idx;
     #pragma unroll
     for (index_t i = 0; i < rank; ++i) {
-      constexpr new_idx[i] = oddeven[i] ?
+      new_idx[i] = oddeven[i] ?
         static_cast<index_t>(2*idx[i] + 1) : 
         static_cast<index_t>(2*idx[i]);
     }

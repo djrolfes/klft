@@ -27,6 +27,7 @@
 #include "PTBCGaugeField.hpp"
 #include "SUNField.hpp"
 #include "Field.hpp"
+#include "ScalarField.hpp"
 
 namespace klft
 {

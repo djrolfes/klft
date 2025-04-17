@@ -54,12 +54,12 @@ namespace klft
     // constructor
     MetropolisGaugeField(const GaugeFieldType &g_in,
                          const MetropolisParams &params,
+                         const IndexArray<rank> &dimensions,
                          const ScalarFieldType &nAccepted,
                          const Kokkos::Array<bool, rank> &oddeven,
                          const RNG &rng)
       : g_in(g_in), params(params), oddeven(oddeven), rng(rng),
-        dimensions({params.L0, params.L1, params.L2, params.L3}),
-        nAccepted(nAccepted) {}
+        dimensions(dimensions), nAccepted(nAccepted) {}
     
     template <typename... Indices>
     KOKKOS_FORCEINLINE_FUNCTION void operator()(const Indices... Idcs) const {
@@ -103,12 +103,12 @@ namespace klft
       // free the rng state
       rng.free_state(generator);
     }
-  }
+  };
 
   // metropolis sweep for SUN gauge fields
   // returns acceptance rate
   template <size_t rank, size_t Nc, class RNG>
-  real_t sweep_Metropolis(deviceGaugeFieldType<rank, Nc>::type &g_in,
+  real_t sweep_Metropolis(typename DeviceGaugeFieldType<rank, Nc>::type &g_in,
                           const MetropolisParams &params, const RNG &rng) {
     // this works strictly for Nd = rank
     constexpr static const size_t Nd = rank;
@@ -130,8 +130,8 @@ namespace klft
     // this results in 2^N sublattices
     for (index_t i = 0; i < std::pow(2, rank); ++i) {
       // define metropolis functor for this sublattice
-      MetropolisGaugeField<rank, Nc, RNG> metropolis(g_in, params, nAccepted,
-                           oddeven_array<rank>(i), rng);
+      MetropolisGaugeField<rank, Nc, RNG> metropolis(g_in, params, end,
+                           nAccepted, oddeven_array<rank>(i), rng);
       // launch the kernel
       tune_and_launch_for<rank>("sweep_Metropolis_GaugeField", start, end,
         metropolis);
