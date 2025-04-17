@@ -166,9 +166,14 @@ namespace klft
     }
 
     template <typename indexType>
-    KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> staple(const indexType i0, const indexType i1, const indexType i2, const indexType i3, const index_t mu) const {
+    KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> staple(const Kokkos::Array<indexType,4> site, const index_t mu) const {
       // this only works if Nd == 4
       assert(Nd == 4);
+      // get the indices
+      const index_t i0 = site[0];
+      const index_t i1 = site[1];
+      const index_t i2 = site[2];
+      const index_t i3 = site[3];
       // temporary SUN matrix to store the staple
       SUN<Nc> temp = zeroSUN<Nc>();
       // get the x + mu indices
@@ -344,9 +349,14 @@ namespace klft
       return field(site[0], site[1], site[2], mu);
     }
 
-    KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> staple(const index_t i0, const index_t i1, const index_t i2, const index_t mu) const {
+    template <typename indexType>
+    KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> staple(const Kokkos::Array<indexType,3> site, const index_t mu) const {
       // this only works if Nd == 3
       assert(Nd == 3);
+      // get the indices
+      const index_t i0 = site[0];
+      const index_t i1 = site[1];
+      const index_t i2 = site[2];
       // temporary SUN matrix to store the staple
       SUN<Nc> temp = zeroSUN<Nc>();
       // get the x + mu indices
@@ -517,9 +527,13 @@ namespace klft
       return field(site[0], site[1], mu);
     }
 
-    KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> staple(const index_t i0, const index_t i1, const index_t mu) const {
+    template <typename indexType>
+    KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> staple(const Kokkos::Array<indexType,2> site, const index_t mu) const {
       // this only works if Nd == 2
       assert(Nd == 2);
+      // get the indices
+      const index_t i0 = site[0];
+      const index_t i1 = site[1];
       // temporary SUN matrix to store the staple
       SUN<Nc> temp = zeroSUN<Nc>();
       // get the x + mu indices
