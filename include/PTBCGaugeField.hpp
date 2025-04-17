@@ -174,16 +174,16 @@ namespace klft
     // Sets the defect value, this will need to be changed if the defect_length/position should become dynamic
     // with lengths on the order of 2 to 5, will this need parallelization? 
     void set_defect(real_t cr){
-      #pragma unroll //does pragma unroll even make sense here?
-      for (index_t i1; i1<defect_length; ++i1){
-        #pragma unroll
-        for (index_t i2; i2<defect_length;++i2){
-          #pragma unroll
-          for (index_t i3; i3<defect_length; ++i3){
-            defectField(0,i1,i2,i3,0) = cr;
-          }
-        }
-      }
+      // #pragma unroll //does pragma unroll even make sense here?
+      // for (index_t i1; i1<defect_length; ++i1){
+      //   #pragma unroll
+      //   for (index_t i2; i2<defect_length;++i2){
+      //     #pragma unroll
+      //     for (index_t i3; i3<defect_length; ++i3){
+      //       defectField(0,i1,i2,i3,0) = cr;
+      //     }
+      //   }
+      // }
     }
 
     GaugeField<Nd,Nc> field;
@@ -192,29 +192,29 @@ namespace klft
     const IndexArray<4> dimensions;
 
     // define accessors for the field
-    template <typename indexType = index_t> //why do we template indexType here, when it is defined in GLOBAL.hpp?
+    template <typename indexType> //why do we template indexType here, when it is defined in GLOBAL.hpp?
     KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> & operator()(const indexType i, const indexType j, const indexType k, const indexType l, const index_t mu) const {
       return field(i,j,k,l,mu)*defectField(i,j,k,l,mu);
     }
   
-    template <typename indexType = index_t>
+    template <typename indexType>
     KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> & operator()(const indexType i, const indexType j, const indexType k, const indexType l, const index_t mu) {
       return field(i,j,k,l,mu)*defectField(i,j,k,l,mu);
     }
 
     // define accessors with 4D Kokkos array
-    template <typename indexType = index_t>
+    template <typename indexType>
     KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> & operator()(const Kokkos::Array<indexType,4> site, const index_t mu) const {
       return field(site[0], site[1], site[2], site[3], mu)*defectField(site[0], site[1], site[2], site[3],mu);
     }
   
-    template <typename indexType = index_t>
+    template <typename indexType>
     KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> & operator()(const Kokkos::Array<indexType,4> site, const index_t mu) {
       return field(site[0], site[1], site[2], site[3], mu)*defectField(site[0], site[1], site[2], site[3],mu);
     }
 
 
-    template <typename indexType = index_t>
+    template <typename indexType>
     KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> staple(const indexType i0, const indexType i1, const indexType i2, const indexType i3, const index_t mu) const {
       // this only works if Nd == 4
       assert(Nd == 4);
@@ -414,13 +414,13 @@ namespace klft
     // Sets the defect value, this will need to be changed if the defect_length/position should become dynamic
     // with lengths on the order of 2 to 5, will this need parallelization? 
     void set_defect(real_t cr){
-      #pragma unroll //does pragma unroll even make sense here?
-      for (index_t i1; i1<defect_length; ++i1){
-        #pragma unroll
-        for (index_t i2; i2<defect_length;++i2){
-            defectField(0,i1,i2,0) = cr;
-        }
-      }
+      // #pragma unroll //does pragma unroll even make sense here?
+      // for (index_t i1; i1<defect_length; ++i1){
+      //   #pragma unroll
+      //   for (index_t i2; i2<defect_length;++i2){
+      //       defectField(0,i1,i2,0) = cr;
+      //   }
+      // }
     }
 
     GaugeField3D<Nd,Nc> field;
@@ -429,23 +429,23 @@ namespace klft
     const IndexArray<3> dimensions;
 
     // define accessors for the field
-    template <typename indexType = index_t> //why do we template indexType here, when it is defined in GLOBAL.hpp?
+    template <typename indexType> //why do we template indexType here, when it is defined in GLOBAL.hpp?
     KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> & operator()(const indexType i, const indexType j, const indexType k, const index_t mu) const {
       return field(i,j,k,mu)*defectField(i,j,k,mu);
     }
   
-    template <typename indexType = index_t>
+    template <typename indexType>
     KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> & operator()(const indexType i, const indexType j, const indexType k, const index_t mu) {
       return field(i,j,k,mu)*defectField(i,j,k,mu);
     }
 
     // define accessors with 4D Kokkos array
-    template <typename indexType = index_t>
+    template <typename indexType>
     KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> & operator()(const Kokkos::Array<indexType,3> site, const index_t mu) const {
       return field(site[0], site[1], site[2], mu)*defectField(site[0], site[1], site[2],mu);
     }
   
-    template <typename indexType = index_t>
+    template <typename indexType>
     KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> & operator()(const Kokkos::Array<indexType,3> site, const index_t mu) {
       return field(site[0], site[1], site[2], mu)*defectField(site[0], site[1], site[2],mu);
     
@@ -636,10 +636,10 @@ namespace klft
     // Sets the defect value, this will need to be changed if the defect_length/position should become dynamic
     // with lengths on the order of 2 to 5, will this need parallelization? 
     void set_defect(real_t cr){
-      #pragma unroll //does pragma unroll even make sense here?
-      for (index_t i1; i1<defect_length; ++i1){
-            defectField(0,i1,0) = cr;
-      }
+      // #pragma unroll //does pragma unroll even make sense here?
+      // for (index_t i1; i1<defect_length; ++i1){
+      //       defectField(0,i1,0) = cr;
+      // }
     }
 
     GaugeField2D<Nd,Nc> field;
@@ -648,23 +648,23 @@ namespace klft
     const IndexArray<2> dimensions;
 
     // define accessors for the field
-    template <typename indexType = index_t> //why do we template indexType here, when it is defined in GLOBAL.hpp?
+    template <typename indexType> //why do we template indexType here, when it is defined in GLOBAL.hpp?
     KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> & operator()(const indexType i, const indexType j, const index_t mu) const {
       return field(i,j,mu)*defectField(i,j,mu);
     }
   
-    template <typename indexType = index_t>
+    template <typename indexType>
     KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> & operator()(const indexType i, const indexType j, const index_t mu) {
       return field(i,j,mu)*defectField(i,j,mu);
     }
 
     // define accessors with 4D Kokkos array
-    template <typename indexType = index_t>
+    template <typename indexType>
     KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> & operator()(const Kokkos::Array<indexType,2> site, const index_t mu) const {
       return field(site[0], site[1], mu)*defectField(site[0], site[1], mu);
     }
   
-    template <typename indexType = index_t>
+    template <typename indexType>
     KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> & operator()(const Kokkos::Array<indexType,2> site, const index_t mu) {
       return field(site[0], site[1], mu)*defectField(site[0], site[1],mu);
     }
