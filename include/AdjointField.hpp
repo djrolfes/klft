@@ -9,7 +9,11 @@ namespace klft {
     struct set_zero_s {};
     using DeviceView = Kokkos::View<T****>;
 
-    DeviceView adjoint[Ndim][2*Nc-1];
+    static constexpr int adj_dim = Adjoint::nElements;
+
+
+    DeviceView adjoint[Ndim][adj_dim];
+
 
     int LT,LX,LY,LZ;
     Kokkos::Array<int,4> dims;
@@ -26,7 +30,7 @@ namespace klft {
       this->LY = _LY;
       this->LZ = _LZ;
       this->LT = _LT;
-      for(int i = 0; i < 2*Nc-1; ++i) {
+      for(int i = 0; i < adj_dim; ++i) {
         for(int mu = 0; mu < Ndim; ++mu) {
           this->adjoint[mu][i] = DeviceView(Kokkos::view_alloc(Kokkos::WithoutInitializing, "adjoint"), LX, LY, LZ, LT);
         }
@@ -42,7 +46,7 @@ namespace klft {
       this->LY = _dims[1];
       this->LZ = _dims[2];
       this->LT = _dims[3];
-      for(int i = 0; i < 2*Nc-1; ++i) {
+      for(int i = 0; i < adj_dim; ++i) {
         for(int mu = 0; mu < Ndim; ++mu) {
           this->adjoint[mu][i] = DeviceView(Kokkos::view_alloc(Kokkos::WithoutInitializing, "adjoint"), LX, LY, LZ, LT);
         }
@@ -58,7 +62,7 @@ namespace klft {
       this->LY = _LY;
       this->LT = _LT;
       this->LZ = 1;
-      for(int i = 0; i < 2*Nc-1; ++i) {
+      for(int i = 0; i < adj_dim; ++i) {
         for(int mu = 0; mu < Ndim; ++mu) {
           this->adjoint[mu][i] = DeviceView(Kokkos::view_alloc(Kokkos::WithoutInitializing, "adjoint"), LX, LY, LZ, LT);
         }
@@ -74,7 +78,7 @@ namespace klft {
       this->LY = _dims[1];
       this->LT = _dims[2];
       this->LZ = 1;
-      for(int i = 0; i < 2*Nc-1; ++i) {
+      for(int i = 0; i < adj_dim; ++i) {
         for(int mu = 0; mu < Ndim; ++mu) {
           this->adjoint[mu][i] = DeviceView(Kokkos::view_alloc(Kokkos::WithoutInitializing, "adjoint"), LX, LY, LZ, LT);
         }
@@ -90,7 +94,7 @@ namespace klft {
       this->LT = _LT;
       this->LY = 1;
       this->LZ = 1;
-      for(int i = 0; i < 2*Nc-1; ++i) {
+      for(int i = 0; i < adj_dim; ++i) {
         for(int mu = 0; mu < Ndim; ++mu) {
           this->adjoint[mu][i] = DeviceView(Kokkos::view_alloc(Kokkos::WithoutInitializing, "adjoint"), LX, LY, LZ, LT);
         }
@@ -106,7 +110,7 @@ namespace klft {
       this->LT = _dims[1];
       this->LY = 1;
       this->LZ = 1;
-      for(int i = 0; i < 2*Nc-1; ++i) {
+      for(int i = 0; i < adj_dim; ++i) {
         for(int mu = 0; mu < Ndim; ++mu) {
           this->adjoint[mu][i] = DeviceView(Kokkos::view_alloc(Kokkos::WithoutInitializing, "adjoint"), LX, LY, LZ, LT);
         }
@@ -122,7 +126,7 @@ namespace klft {
 
     KOKKOS_INLINE_FUNCTION int get_volume() const { return this->LX*this->LY*this->LZ*this->LT; }
 
-    KOKKOS_INLINE_FUNCTION int get_size() const { return this->LX*this->LY*this->LZ*this->LT*Ndim*(2*Nc-1); }
+    KOKKOS_INLINE_FUNCTION int get_size() const { return this->LX*this->LY*this->LZ*this->LT*Ndim*(adj_dim); }
 
     KOKKOS_INLINE_FUNCTION int get_dim(const int &mu) const {
       return this->dims[mu];
@@ -137,18 +141,18 @@ namespace klft {
     }
 
     KOKKOS_INLINE_FUNCTION Adjoint get_adjoint(const int &x, const int &y, const int &z, const int &t, const int &mu) const {
-      Kokkos::Array<T,2*Nc-1> adj;
+      Kokkos::Array<T,adj_dim> adj{};
       #pragma unroll
-      for(int i = 0; i < 2*Nc-1; i++) {
+      for(int i = 0; i < adj_dim; i++) {
         adj[i] = this->adjoint[mu][i](x,y,z,t);
       }
       return Adjoint(adj);
     }
 
     KOKKOS_INLINE_FUNCTION Adjoint get_adjoint(const Kokkos::Array<int,4> &site, const int &mu) const {
-      Kokkos::Array<T,2*Nc-1> adj;
+      Kokkos::Array<T,adj_dim> adj{};
       #pragma unroll
-      for(int i = 0; i < 2*Nc-1; i++) {
+      for(int i = 0; i < adj_dim; i++) {
         adj[i] = this->adjoint[mu][i](site[0],site[1],site[2],site[3]);
       }
       return Adjoint(adj);
@@ -156,21 +160,21 @@ namespace klft {
 
     KOKKOS_INLINE_FUNCTION void set_adjoint(const int &x, const int &y, const int &z, const int &t, const int &mu, const Adjoint &U) const {
       #pragma unroll
-      for(int i = 0; i < 2*Nc-1; i++) {
+      for(int i = 0; i < adj_dim; i++) {
         this->adjoint[mu][i](x,y,z,t) = U(i);
       }
     }
 
     KOKKOS_INLINE_FUNCTION void set_adjoint(const Kokkos::Array<int,4> &site, const int &mu, const Adjoint &U) {
       #pragma unroll
-      for(int i = 0; i < 2*Nc-1; i++) {
+      for(int i = 0; i < adj_dim; i++) {
         this->adjoint[mu][i](site[0],site[1],site[2],site[3]) = U(i);
       }
     }
 
     KOKKOS_INLINE_FUNCTION void operator()(set_zero_s, const int &x, const int &y, const int &z, const int &t, const int &mu) const {
       #pragma unroll
-      for(int i = 0; i < 2*Nc-1; i++) {
+      for(int i = 0; i < adj_dim; i++) {
         this->adjoint[mu][i](x,y,z,t) = 0.0;
       }
     }

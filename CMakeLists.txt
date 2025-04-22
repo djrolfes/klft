@@ -31,5 +31,15 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/lib ${CMAKE_CURRENT_BINARY_DIR}/lib
 # build the binaries
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/binaries ${CMAKE_CURRENT_BINARY_DIR}/binaries)
 
+<<<<<<< HEAD
 # build the benchmarks
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/benchmarks ${CMAKE_CURRENT_BINARY_DIR}/benchmarks)
+=======
+add_executable(hmc hmc.cpp)
+target_compile_features(hmc PRIVATE cxx_std_17)
+target_link_libraries(hmc klft Kokkos::kokkos)
+
+add_executable(tests tests.cpp)
+target_compile_features(tests PRIVATE cxx_std_17)
+target_link_libraries(tests klft Kokkos::kokkos)
+>>>>>>> 00ef82da6dfbc1fa2c29da97c6c151d7f27eeefd
