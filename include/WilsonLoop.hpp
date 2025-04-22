@@ -84,6 +84,17 @@ namespace klft
       Lnu = Lnu_new;
     }
 
+    void reset_Lmu_Lnu() {
+      // reset the Wilson lines
+      Lmu_old = 0;
+      Lnu_old = 0;
+      Lmu = 0;
+      Lnu = 0;
+      // reset the SUN fields
+      Kokkos::deep_copy(WLmu.field, SUNFieldType(dimensions, identitySUN<Nc>()).field);
+      Kokkos::deep_copy(WLnu.field, SUNFieldType(dimensions, identitySUN<Nc>()).field);
+    }
+
   };
 
   // define a second functor to build the Wilson loop out of WLmu and WLnu
@@ -195,6 +206,14 @@ namespace klft
       // get the lengths
       const index_t Lmu = Lmu_nu[0];
       const index_t Lnu = Lmu_nu[1];
+      // chck if the new lengths are greater than
+      // the old lengths, if not, reset the
+      // Wilson lines
+      if (Lmu < wlmunu.Lmu || Lnu < wlmunu.Lnu) {
+        wlmunu.reset_Lmu_Lnu();
+      }
+      // the following is an extra bit of check
+      // most likely unnecessary, but keep it for now
       // check if the lengths are valid
       assert(Lmu >= wlmunu.Lmu);
       assert(Lnu >= wlmunu.Lnu);

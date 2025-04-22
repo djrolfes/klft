@@ -79,7 +79,8 @@ GaugeObservableParams:
   measure_wilson_loop_mu_nu: true       # measure the spatial Wilson loop
   W_temp_L_T_pairs:      # pairs of (L, T) values for the temporal Wilson loop
     - [2, 2]
-    - [3, 3]             # must be strictly non-decreasing
+    - [3, 4]             # keep a non-decreasing order (as much as possible)
+    - [4, 3]             # for maximum efficiency
     - [4, 4]
   W_mu_nu_pairs:      # pairs of (mu, nu) values for the planar Wilson loop
     - [0, 1]
@@ -87,8 +88,8 @@ GaugeObservableParams:
     - [3, 2]
   W_Lmu_Lnu_pairs:      # pairs of (Lmu, Lnu) values for the lengths of the 
     - [2, 2]            # planar Wilson loop in the mu and nu directions
-    - [3, 3]            # must be strictly non-decreasing
-    - [3, 4]
+    - [3, 3]            # again, keep a non-decreasing order (as much as possible)
+    - [4, 3]
   plaquette_filename: "plaquette.out"  # filename to output the plaquette
   W_temp_filename: "W_temp.out"        # filename to output the temporal Wilson loop
   W_mu_nu_filename: "W_mu_nu.out"      # filename to output the planar Wilson loop
