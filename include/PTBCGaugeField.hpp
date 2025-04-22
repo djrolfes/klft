@@ -171,25 +171,36 @@ namespace klft
       Kokkos::fence();
     }
 
-    // Sets the defect value, this will need to be changed if the defect_length/position should become dynamic
-    // with lengths on the order of 2 to 5, will this need parallelization? 
-    void set_defect(real_t cr){
-      // #pragma unroll //does pragma unroll even make sense here?
-      // for (index_t i1; i1<defect_length; ++i1){
-      //   #pragma unroll
-      //   for (index_t i2; i2<defect_length;++i2){
-      //     #pragma unroll
-      //     for (index_t i3; i3<defect_length; ++i3){
-      //       defectField(0,i1,i2,i3,0) = cr;
-      //     }
-      //   }
-      // }
+    // Sets the defect value
+    template <typename indexType = index_t>
+    KOKKOS_FORCEINLINE_FUNCTION void set_defect(real_t cr){
+      tune_and_launch_for<3>("set_defect", IndexArray<3>(0,0,0), IndexArray<3>(defect_length, defect_length, defect_length),
+      KOKKOS_LAMBDA(const indexType i1, const indexType i2, const indexType i3){
+        const indexType i1_shift = (i1 + defect_position[0]) % dimensions[1];
+        const indexType i2_shift = (i2 + defect_position[1]) % dimensions[2];
+        const indexType i3_shift = (i3 + defect_position[2]) % dimensions[3];
+        defectField(0,i1_shift, i2_shift, i3_shift, 0) = cr;
+      });
+      Kokkos::fence();
+    }
+
+    void shift_defect(IndexArray<3> new_position){
+      // get the current cr value from the defectField, set the current defect regions defect to 1.0
+      auto cr_view = Kokkos::subview(defectField, 0, defect_position[0], defect_position[1], defect_position[2], 0);
+      real_t cr;
+      Kokkos::deep_copy(cr, cr_view);
+      set_defect(real_t(1.0));
+      // update the position of the defect and set the defect value.
+      defect_position = new_position;
+      set_defect(cr);
     }
 
     GaugeField<Nd,Nc> field;
     LinkScalarField<Nd> defectField;
     index_t defect_length;
+    IndexArray<3> defect_position{0,0,0}; // origin of the defect in mu = 1,2,3 directions
     const IndexArray<4> dimensions;
+    
 
     // define accessors for the field
     template <typename indexType> //why do we template indexType here, when it is defined in GLOBAL.hpp?
@@ -260,8 +271,6 @@ namespace klft
       } // loop over nu
       return temp;
     }
-
-
 
   };
 
@@ -411,21 +420,33 @@ namespace klft
       Kokkos::fence();
     }
 
-    // Sets the defect value, this will need to be changed if the defect_length/position should become dynamic
-    // with lengths on the order of 2 to 5, will this need parallelization? 
-    void set_defect(real_t cr){
-      // #pragma unroll //does pragma unroll even make sense here?
-      // for (index_t i1; i1<defect_length; ++i1){
-      //   #pragma unroll
-      //   for (index_t i2; i2<defect_length;++i2){
-      //       defectField(0,i1,i2,0) = cr;
-      //   }
-      // }
+    // Sets the defect value
+    template <typename indexType = index_t>
+    KOKKOS_FORCEINLINE_FUNCTION void set_defect(real_t cr){
+      tune_and_launch_for<2>("set_defect", IndexArray<2>(0,0), IndexArray<2>(defect_length, defect_length),
+      KOKKOS_LAMBDA(const indexType i1, const indexType i2){
+        const indexType i1_shift = (i1 + defect_position[0]) % dimensions[1];
+        const indexType i2_shift = (i2 + defect_position[1]) % dimensions[2];
+        defectField(0,i1_shift, i2_shift, 0) = cr;
+      });
+      Kokkos::fence();
+    }
+
+    void shift_defect(IndexArray<2> new_position){
+      // get the current cr value from the defectField, set the current defect regions defect to 1.0
+      auto cr_view = Kokkos::subview(defectField, 0, defect_position[0], defect_position[1], 0);
+      real_t cr;
+      Kokkos::deep_copy(cr, cr_view);
+      set_defect(real_t(1.0));
+      // update the position of the defect and set the defect value.
+      defect_position = new_position;
+      set_defect(cr);
     }
 
     GaugeField3D<Nd,Nc> field;
     LinkScalarField3D<Nd> defectField;
     index_t defect_length;
+    IndexArray<2> defect_position{0,0};
     const IndexArray<3> dimensions;
 
     // define accessors for the field
@@ -492,8 +513,6 @@ namespace klft
   
       return temp;
     }
-
-
 
   };
 
@@ -633,18 +652,32 @@ namespace klft
       Kokkos::fence();
     }
 
-    // Sets the defect value, this will need to be changed if the defect_length/position should become dynamic
-    // with lengths on the order of 2 to 5, will this need parallelization? 
-    void set_defect(real_t cr){
-      // #pragma unroll //does pragma unroll even make sense here?
-      // for (index_t i1; i1<defect_length; ++i1){
-      //       defectField(0,i1,0) = cr;
-      // }
+    // Sets the defect value
+    template <typename indexType = index_t>
+    KOKKOS_FORCEINLINE_FUNCTION void set_defect(real_t cr){
+      tune_and_launch_for<1>("set_defect", IndexArray<1>(0), IndexArray<1>(defect_length),
+      KOKKOS_LAMBDA(const indexType i1){
+        const indexType i1_shift = (i1 + defect_position[0]) % dimensions[1];
+        defectField(0,i1_shift, 0) = cr;
+      });
+      Kokkos::fence();
+    }
+
+    void shift_defect(IndexArray<1> new_position){
+      // get the current cr value from the defectField, set the current defect regions defect to 1.0
+      auto cr_view = Kokkos::subview(defectField, 0, defect_position[0], 0);
+      real_t cr;
+      Kokkos::deep_copy(cr, cr_view);
+      set_defect(real_t(1.0));
+      // update the position of the defect and set the defect value.
+      defect_position = new_position;
+      set_defect(cr);
     }
 
     GaugeField2D<Nd,Nc> field;
     LinkScalarField2D<Nd> defectField;
     index_t defect_length;
+    IndexArray<1> defect_position{0};
     const IndexArray<2> dimensions;
 
     // define accessors for the field
