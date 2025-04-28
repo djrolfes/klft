@@ -172,8 +172,9 @@ namespace klft
     }
 
     // Sets the defect value
-    template <typename indexType = index_t>
+    template <typename indexType>
     KOKKOS_FORCEINLINE_FUNCTION void set_defect(real_t cr){
+      this->defect_value = cr;
       tune_and_launch_for<3>("set_defect", IndexArray<3>(0,0,0), IndexArray<3>(defect_length, defect_length, defect_length),
       KOKKOS_LAMBDA(const indexType i1, const indexType i2, const indexType i3){
         const indexType i1_shift = (i1 + defect_position[0]) % dimensions[1];
@@ -185,21 +186,19 @@ namespace klft
     }
 
     void shift_defect(IndexArray<3> new_position){
-      // get the current cr value from the defectField, set the current defect regions defect to 1.0
-      auto cr_view = Kokkos::subview(defectField, 0, defect_position[0], defect_position[1], defect_position[2], 0);
-      real_t cr;
-      Kokkos::deep_copy(cr, cr_view);
+      // set the current defect regions defect to 1.0, update the position of the defect and set the defect value.
+      real_t tmp = this->defect_value;
       set_defect(real_t(1.0));
-      // update the position of the defect and set the defect value.
-      defect_position = new_position;
-      set_defect(cr);
+      this->defect_position = new_position;
+      set_defect(tmp);
     }
 
     GaugeField<Nd,Nc> field;
+    const IndexArray<4> dimensions;
     LinkScalarField<Nd> defectField;
     index_t defect_length;
+    real_t defect_value {1.0}; 
     IndexArray<3> defect_position{0,0,0}; // origin of the defect in mu = 1,2,3 directions
-    const IndexArray<4> dimensions;
     
 
     // define accessors for the field
@@ -421,8 +420,9 @@ namespace klft
     }
 
     // Sets the defect value
-    template <typename indexType = index_t>
+    template <typename indexType>
     KOKKOS_FORCEINLINE_FUNCTION void set_defect(real_t cr){
+      this->defect_value = cr;
       tune_and_launch_for<2>("set_defect", IndexArray<2>(0,0), IndexArray<2>(defect_length, defect_length),
       KOKKOS_LAMBDA(const indexType i1, const indexType i2){
         const indexType i1_shift = (i1 + defect_position[0]) % dimensions[1];
@@ -433,21 +433,20 @@ namespace klft
     }
 
     void shift_defect(IndexArray<2> new_position){
-      // get the current cr value from the defectField, set the current defect regions defect to 1.0
-      auto cr_view = Kokkos::subview(defectField, 0, defect_position[0], defect_position[1], 0);
-      real_t cr;
-      Kokkos::deep_copy(cr, cr_view);
+      // set the current defect regions defect to 1.0, update the position of the defect and set the defect value.
+      real_t tmp = this->defect_value;
       set_defect(real_t(1.0));
-      // update the position of the defect and set the defect value.
-      defect_position = new_position;
-      set_defect(cr);
+      this->defect_position = new_position;
+      set_defect(tmp);
     }
 
+
     GaugeField3D<Nd,Nc> field;
+    const IndexArray<3> dimensions;
     LinkScalarField3D<Nd> defectField;
     index_t defect_length;
+    real_t defect_value {1.0};
     IndexArray<2> defect_position{0,0};
-    const IndexArray<3> dimensions;
 
     // define accessors for the field
     template <typename indexType> //why do we template indexType here, when it is defined in GLOBAL.hpp?
@@ -472,7 +471,7 @@ namespace klft
     
     }
 
-    template <typename indexType = index_t>
+    template <typename indexType>
     KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> staple(const indexType i0, const indexType i1, const indexType i2, const index_t mu) const {
       // this only works if Nd == 3
       assert(Nd == 3);
@@ -653,8 +652,9 @@ namespace klft
     }
 
     // Sets the defect value
-    template <typename indexType = index_t>
+    template <typename indexType>
     KOKKOS_FORCEINLINE_FUNCTION void set_defect(real_t cr){
+      this->defect_value = cr;
       tune_and_launch_for<1>("set_defect", IndexArray<1>(0), IndexArray<1>(defect_length),
       KOKKOS_LAMBDA(const indexType i1){
         const indexType i1_shift = (i1 + defect_position[0]) % dimensions[1];
@@ -664,21 +664,19 @@ namespace klft
     }
 
     void shift_defect(IndexArray<1> new_position){
-      // get the current cr value from the defectField, set the current defect regions defect to 1.0
-      auto cr_view = Kokkos::subview(defectField, 0, defect_position[0], 0);
-      real_t cr;
-      Kokkos::deep_copy(cr, cr_view);
+      // set the current defect regions defect to 1.0, update the position of the defect and set the defect value.
+      real_t tmp = this->defect_value;
       set_defect(real_t(1.0));
-      // update the position of the defect and set the defect value.
-      defect_position = new_position;
-      set_defect(cr);
+      this->defect_position = new_position;
+      set_defect(tmp);
     }
 
     GaugeField2D<Nd,Nc> field;
+    const IndexArray<2> dimensions;
     LinkScalarField2D<Nd> defectField;
     index_t defect_length;
+    real_t defect_value {1.0};
     IndexArray<1> defect_position{0};
-    const IndexArray<2> dimensions;
 
     // define accessors for the field
     template <typename indexType> //why do we template indexType here, when it is defined in GLOBAL.hpp?
@@ -704,7 +702,7 @@ namespace klft
 
 
 
-    template <typename indexType = index_t>
+    template <typename indexType>
     KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> staple(const indexType i0, const indexType i1, const index_t mu) const {
       // this only works if Nd == 2
       assert(Nd == 2);
