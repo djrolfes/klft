@@ -278,8 +278,6 @@ namespace klft
 
   };
 
-
-
   template <size_t Nd, size_t Nc>
   struct devicePTBCGaugeField3D {
 
@@ -746,5 +744,77 @@ namespace klft
     }
 
   };
+
+  template<size_t Nd, size_t Nc>
+  devicePTBCGaugeField<Nd,Nc> operator*=(devicePTBCGaugeField<Nd,Nc> &a, const devicePTBCGaugeField<Nd,Nc> &b){
+    assert(a.dimensions == b.dimensions);
+    tune_and_launch_for<Nd>("operator*=_devicePTBCGaugeField",IndexArray<Nd>{0}, a.dimensions,
+      KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2, const index_t i3) {
+        #pragma unroll
+        for (index_t mu = 0; mu < Nd; ++mu){
+          a(i0,i1,i2,i3,mu) *= b(i0,i1,i2,i3,mu);
+        }
+      });
+  }
+
+  template<size_t Nd, size_t Nc>
+  devicePTBCGaugeField3D<Nd,Nc> operator*=(devicePTBCGaugeField3D<Nd,Nc> &a, const devicePTBCGaugeField3D<Nd,Nc> &b){
+    assert(a.dimensions == b.dimensions);
+    tune_and_launch_for<Nd>("operator*=_devicePTBCGaugeField3D",IndexArray<Nd>{0}, a.dimensions,
+      KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2) {
+        #pragma unroll
+        for (index_t mu = 0; mu < Nd; ++mu){
+          a(i0,i1,i2,mu) *= b(i0,i1,i2,mu);
+        }
+      });
+  }
+
+  template<size_t Nd, size_t Nc>
+  devicePTBCGaugeField2D<Nd,Nc> operator*=(devicePTBCGaugeField2D<Nd,Nc> &a, const devicePTBCGaugeField2D<Nd,Nc> &b){
+    assert(a.dimensions == b.dimensions);
+    tune_and_launch_for<Nd>("operator*=_devicePTBCGaugeField2D",IndexArray<Nd>{0}, a.dimensions,
+      KOKKOS_LAMBDA(const index_t i0, const index_t i1) {
+        #pragma unroll
+        for (index_t mu = 0; mu < Nd; ++mu){
+          a(i0,i1,mu) *= b(i0,i1,mu);
+        }
+      });
+  }
+
+  template<size_t Nd, size_t Nc>
+  devicePTBCGaugeField<Nd,Nc> operator*=(devicePTBCGaugeField<Nd,Nc> &a, const deviceGaugeField<Nd,Nc> &b){
+    assert(a.dimensions == b.dimensions);
+    tune_and_launch_for<Nd>("operator*=_devicePTBCGaugeField*deviceGaugeField",IndexArray<Nd>{0}, a.dimensions,
+      KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2, const index_t i3) {
+        #pragma unroll
+        for (index_t mu = 0; mu < Nd; ++mu){
+          a(i0,i1,i2,i3,mu) *= b(i0,i1,i2,i3,mu);
+        }
+      });
+  }
+
+  template<size_t Nd, size_t Nc>
+  devicePTBCGaugeField3D<Nd,Nc> operator*=(devicePTBCGaugeField3D<Nd,Nc> &a, const deviceGaugeField3D<Nd,Nc> &b){
+    assert(a.dimensions == b.dimensions);
+    tune_and_launch_for<Nd>("operator*=_devicePTBCGaugeField3D*deviceGaugeField3D",IndexArray<Nd>{0}, a.dimensions,
+      KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2) {
+        #pragma unroll
+        for (index_t mu = 0; mu < Nd; ++mu){
+          a(i0,i1,i2,mu) *= b(i0,i1,i2,mu);
+        }
+      });
+  }
+
+  template<size_t Nd, size_t Nc>
+  devicePTBCGaugeField2D<Nd,Nc> operator*=(devicePTBCGaugeField2D<Nd,Nc> &a, const deviceGaugeField2D<Nd,Nc> &b){
+    assert(a.dimensions == b.dimensions);
+    tune_and_launch_for<Nd>("operator*=_devicePTBCGaugeField2D*deviceGaugeField2D",IndexArray<Nd>{0}, a.dimensions,
+      KOKKOS_LAMBDA(const index_t i0, const index_t i1) {
+        #pragma unroll
+        for (index_t mu = 0; mu < Nd; ++mu){
+          a(i0,i1,mu) *= b(i0,i1,mu);
+        }
+      });
+  }
 
 }
