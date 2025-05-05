@@ -31,43 +31,43 @@
 
 namespace klft
 {
-  
-  // define a function to get the gauge field type based on the rank
-  template <size_t rank, size_t Nc>
+  // define GaugeFieldKinds 
+  enum class GaugeFieldKind {Standard, PTBC};
+
+  // define a function to get the gauge field type based on the rank, 
+  // with the default Field being the default GaugeField
+  template <size_t rank, size_t Nc, GaugeFieldKind k = GaugeFieldKind::Standard>
   struct DeviceGaugeFieldType;
 
   // now define the specializations
   template <size_t Nc>
-  struct DeviceGaugeFieldType<2, Nc> {
+  struct DeviceGaugeFieldType<2, Nc, GaugeFieldKind::Standard> {
     using type = deviceGaugeField2D<2, Nc>;
   };
 
   template <size_t Nc>
-  struct DeviceGaugeFieldType<3, Nc> {
+  struct DeviceGaugeFieldType<3, Nc, GaugeFieldKind::Standard> {
     using type = deviceGaugeField3D<3, Nc>;
   };
 
   template <size_t Nc>
-  struct DeviceGaugeFieldType<4, Nc> {
+  struct DeviceGaugeFieldType<4, Nc, GaugeFieldKind::Standard> {
     using type = deviceGaugeField<4, Nc>;
   };
 
   // now do the same for the PTBC gauge field types
-  template <size_t rank, size_t Nc>
-  struct DevicePTBCGaugeFieldType;
-  
   template <size_t Nc>
-  struct DevicePTBCGaugeFieldType<4, Nc> {
+  struct DeviceGaugeFieldType<4, Nc, GaugeFieldKind::PTBC> {
     using type = devicePTBCGaugeField<4, Nc>;
   };
 
   template <size_t Nc>
-  struct DevicePTBCGaugeFieldType<3, Nc> {
+  struct DeviceGaugeFieldType<3, Nc, GaugeFieldKind::PTBC> {
     using type = devicePTBCGaugeField3D<3, Nc>;
   };
 
   template <size_t Nc>
-  struct DevicePTBCGaugeFieldType<2, Nc> {
+  struct DeviceGaugeFieldType<2, Nc, GaugeFieldKind::PTBC> {
     using type = devicePTBCGaugeField2D<2, Nc>;
   };
 

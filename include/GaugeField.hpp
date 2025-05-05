@@ -23,6 +23,7 @@
 #include "GLOBAL.hpp"
 #include "Tuner.hpp"
 #include "SUN.hpp"
+#include "sun.hpp"
 
 namespace klft
 {
@@ -184,22 +185,7 @@ namespace klft
       // positive directions
       #pragma unroll
       for(index_t nu = 0; nu < Nd; ++nu) { // loop over nu
-        // do nothing for mu = nu
-        if (nu == mu) continue;
-        // get the x + nu indices
-        const index_t i0pnu = nu == 0 ? (i0 + 1) % dimensions[0] : i0;
-        const index_t i1pnu = nu == 1 ? (i1 + 1) % dimensions[1] : i1;
-        const index_t i2pnu = nu == 2 ? (i2 + 1) % dimensions[2] : i2;
-        const index_t i3pnu = nu == 3 ? (i3 + 1) % dimensions[3] : i3;
-        // get the staple
-        temp += field(i0pmu,i1pmu,i2pmu,i3pmu,nu) * conj(field(i0pnu,i1pnu,i2pnu,i3pnu,mu))
-              * conj(field(i0,i1,i2,i3,nu));
-      } // loop over nu
-      // negative directions
-      #pragma unroll
-      for(index_t nu = 0; nu < Nd; ++nu) { // loop over nu
-        // do nothing for mu = nu
-        if (nu == mu) continue;
+        // do nothing for mu = nuconstexpr
         // get the x + mu - nu indices
         const index_t i0pmu_mnu = nu == 0 ? (i0pmu - 1 + dimensions[0]) % dimensions[0] : i0pmu;
         const index_t i1pmu_mnu = nu == 1 ? (i1pmu - 1 + dimensions[1]) % dimensions[1] : i1pmu;

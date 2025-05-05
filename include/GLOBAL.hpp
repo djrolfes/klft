@@ -51,6 +51,10 @@ namespace klft
   template <size_t Nc>
   using SUN = Kokkos::Array<Kokkos::Array<complex_t,Nc>,Nc>;
 
+  // define adjoint groups of gauge fields
+  template <size_t Nc>
+  using sun = Kokkos::Array<real_t, std::max<size_t>(Nc*Nc-1, 1)>;
+
   // define field view types
   // by default all views are 4D
   // some dimensions are set to 1 for lower dimensions

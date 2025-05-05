@@ -141,10 +141,10 @@ namespace klft
       MetropolisGaugeField<rank, Nc, RNG> metropolis(g_in, params, end,
                            nAccepted, oddeven_array<rank>(i), rng);
       if (KLFT_VERBOSITY > 1) {
-        printf("Launching Metropolis for sublattice %d\n", i);
+        printf("Launching Metropolis for sublattice %u\n", i);
         printf("Lattice odd/even: ");
         for (index_t j = 0; j < rank; ++j) {
-          printf("%d ", oddeven_array<rank>(i)[j]);
+          printf("%u ", oddeven_array<rank>(i)[j]);
         }
         printf("\n");
       }
@@ -152,7 +152,7 @@ namespace klft
         params.print();
         printf("Lattice dimensions: ");
         for (index_t j = 0; j < rank; ++j) {
-          printf("%d ", dimensions[j]);
+          printf("%zu ", dimensions[j]);
         }
         printf("\n");
         printf("Current number of accepted steps: %11.6f\n", nAccepted.sum());
@@ -210,7 +210,7 @@ namespace klft
       const real_t time = timer.seconds();
       // print the acceptance rate
       if (KLFT_VERBOSITY > 0) {
-        printf("Step: %ld, Acceptance rate: %f, Time: %f\n",
+        printf("Step: %zu, Acceptance rate: %f, Time: %f\n",
                step, acc_rate, time);
       }
       // measure the gauge observables
