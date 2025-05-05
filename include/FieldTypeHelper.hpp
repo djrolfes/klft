@@ -31,7 +31,7 @@
 
 namespace klft
 {
-  // define GaugeFieldKinds 
+  // define GaugeFieldKinds
   enum class GaugeFieldKind {Standard, PTBC};
 
   // define a function to get the gauge field type based on the rank, 

@@ -54,9 +54,21 @@ namespace klft
     }
 
     // 'copy' constructor from a given deviceGaugeField
-    devicePTBCGaugeField(const deviceGaugeField<Nd, Nc>& dGaugeField) : dimensions(dGaugeField.dimensions){
+    devicePTBCGaugeField(const GaugeField<Nd, Nc>& fld) : dimensions({fld.extend(0),fld.extend(1),fld.extend(2),fld.extend(3)}){
       Kokkos::realloc(Kokkos::WithoutInitializing, field, dimensions[0], dimensions[1], dimensions[2], dimensions[3]);
-      Kokkos::deep_copy(dGaugeField.field, field);
+      Kokkos::deep_copy(fld, field);
+      do_init_defect(defectField);
+    }
+
+    // 'copy' constructor from given Fields with a constant init value
+    devicePTBCGaugeField(const devicePTBCGaugeField<Nd, Nc>& dPTBCGaugeField, const SUN<Nc> init) : dimensions(dPTBCGaugeField.dimensions){
+      do_init(field, init);
+      do_init_defect(defectField, dPTBCGaugeField.dParams);
+    }
+
+    devicePTBCGaugeField(const GaugeField<Nd, Nc>& fld, const SUN<Nc> init) : dimensions({fld.extend(0),fld.extend(1),fld.extend(2),fld.extend(3)}){
+      do_init(field, init);
+      do_init_defect(defectField);
     }
 
     // should defect_length and cr be encompassed in a defect struct?
@@ -290,16 +302,28 @@ namespace klft
     deviceDefectParams dParams;
     
     // copy constructor from a given devicePTBCGaugeField
-    devicePTBCGaugeField3D(const devicePTBCGaugeField<Nd, Nc>& dPTBCGaugeField) : dimensions(dPTBCGaugeField.dimensions){
+    devicePTBCGaugeField3D(const devicePTBCGaugeField3D<Nd, Nc>& dPTBCGaugeField) : dimensions(dPTBCGaugeField.dimensions){
       Kokkos::realloc(Kokkos::WithoutInitializing, field, dimensions[0], dimensions[1], dimensions[2]);
       Kokkos::deep_copy(dPTBCGaugeField.field, field);
       do_init_defect(defectField, dPTBCGaugeField.dParams);
     }
 
     // 'copy' constructor from a given deviceGaugeField
-    devicePTBCGaugeField3D(const deviceGaugeField<Nd, Nc>& dGaugeField) : dimensions(dGaugeField.dimensions){
+    devicePTBCGaugeField3D(const GaugeField<Nd, Nc>& fld) : dimensions({fld.extend(0),fld.extend(1),fld.extend(2)}){
       Kokkos::realloc(Kokkos::WithoutInitializing, field, dimensions[0], dimensions[1], dimensions[2]);
-      Kokkos::deep_copy(dGaugeField.field, field);
+      Kokkos::deep_copy(fld, field);
+      do_init_defect(defectField);
+    }
+
+    // 'copy' constructor from given Fields with a constant init value
+    devicePTBCGaugeField3D(const devicePTBCGaugeField3D<Nd, Nc>& dPTBCGaugeField, const SUN<Nc> init) : dimensions(dPTBCGaugeField.dimensions){
+      do_init(field, init);
+      do_init_defect(defectField, dPTBCGaugeField.dParams);
+    }
+
+    devicePTBCGaugeField3D(const GaugeField<Nd, Nc>& fld, const SUN<Nc> init) : dimensions({fld.extend(0),fld.extend(1),fld.extend(2)}){
+      do_init(field, init);
+      do_init_defect(defectField);
     }
 
     // should defect_length and cr be encompassed in a defect struct?
@@ -529,16 +553,28 @@ namespace klft
     deviceDefectParams dParams;
     
     // copy constructor from a given devicePTBCGaugeField
-    devicePTBCGaugeField2D(const devicePTBCGaugeField<Nd, Nc>& dPTBCGaugeField) : dimensions(dPTBCGaugeField.dimensions){
+    devicePTBCGaugeField2D(const devicePTBCGaugeField2D<Nd, Nc>& dPTBCGaugeField) : dimensions(dPTBCGaugeField.dimensions){
       Kokkos::realloc(Kokkos::WithoutInitializing, field, dimensions[0], dimensions[1]);
       Kokkos::deep_copy(dPTBCGaugeField.field, field);
       do_init_defect(defectField, dPTBCGaugeField.dParams);
     }
 
     // 'copy' constructor from a given deviceGaugeField
-    devicePTBCGaugeField2D(const deviceGaugeField<Nd, Nc>& dGaugeField) : dimensions(dGaugeField.dimensions){
+    devicePTBCGaugeField2D(const GaugeField<Nd, Nc>& fld) : dimensions({fld.extend(0),fld.extend(1)}){
       Kokkos::realloc(Kokkos::WithoutInitializing, field, dimensions[0], dimensions[1]);
-      Kokkos::deep_copy(dGaugeField.field, field);
+      Kokkos::deep_copy(fld, field);
+      do_init_defect(defectField);
+    }
+
+    // 'copy' constructor from given Fields with a constant init value
+    devicePTBCGaugeField2D(const devicePTBCGaugeField2D<Nd, Nc>& dPTBCGaugeField, const SUN<Nc> init) : dimensions(dPTBCGaugeField.dimensions){
+      do_init(field, init);
+      do_init_defect(defectField, dPTBCGaugeField.dParams);
+    }
+
+    devicePTBCGaugeField2D(const GaugeField<Nd, Nc>& fld, const SUN<Nc> init) : dimensions({fld.extend(0),fld.extend(1)}){
+      do_init(field, init);
+      do_init_defect(defectField);
     }
 
     // should defect_length and cr be encompassed in a defect struct?
@@ -744,77 +780,5 @@ namespace klft
     }
 
   };
-
-  template<size_t Nd, size_t Nc>
-  devicePTBCGaugeField<Nd,Nc> operator*=(devicePTBCGaugeField<Nd,Nc> &a, const devicePTBCGaugeField<Nd,Nc> &b){
-    assert(a.dimensions == b.dimensions);
-    tune_and_launch_for<Nd>("operator*=_devicePTBCGaugeField",IndexArray<Nd>{0}, a.dimensions,
-      KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2, const index_t i3) {
-        #pragma unroll
-        for (index_t mu = 0; mu < Nd; ++mu){
-          a(i0,i1,i2,i3,mu) *= b(i0,i1,i2,i3,mu);
-        }
-      });
-  }
-
-  template<size_t Nd, size_t Nc>
-  devicePTBCGaugeField3D<Nd,Nc> operator*=(devicePTBCGaugeField3D<Nd,Nc> &a, const devicePTBCGaugeField3D<Nd,Nc> &b){
-    assert(a.dimensions == b.dimensions);
-    tune_and_launch_for<Nd>("operator*=_devicePTBCGaugeField3D",IndexArray<Nd>{0}, a.dimensions,
-      KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2) {
-        #pragma unroll
-        for (index_t mu = 0; mu < Nd; ++mu){
-          a(i0,i1,i2,mu) *= b(i0,i1,i2,mu);
-        }
-      });
-  }
-
-  template<size_t Nd, size_t Nc>
-  devicePTBCGaugeField2D<Nd,Nc> operator*=(devicePTBCGaugeField2D<Nd,Nc> &a, const devicePTBCGaugeField2D<Nd,Nc> &b){
-    assert(a.dimensions == b.dimensions);
-    tune_and_launch_for<Nd>("operator*=_devicePTBCGaugeField2D",IndexArray<Nd>{0}, a.dimensions,
-      KOKKOS_LAMBDA(const index_t i0, const index_t i1) {
-        #pragma unroll
-        for (index_t mu = 0; mu < Nd; ++mu){
-          a(i0,i1,mu) *= b(i0,i1,mu);
-        }
-      });
-  }
-
-  template<size_t Nd, size_t Nc>
-  devicePTBCGaugeField<Nd,Nc> operator*=(devicePTBCGaugeField<Nd,Nc> &a, const deviceGaugeField<Nd,Nc> &b){
-    assert(a.dimensions == b.dimensions);
-    tune_and_launch_for<Nd>("operator*=_devicePTBCGaugeField*deviceGaugeField",IndexArray<Nd>{0}, a.dimensions,
-      KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2, const index_t i3) {
-        #pragma unroll
-        for (index_t mu = 0; mu < Nd; ++mu){
-          a(i0,i1,i2,i3,mu) *= b(i0,i1,i2,i3,mu);
-        }
-      });
-  }
-
-  template<size_t Nd, size_t Nc>
-  devicePTBCGaugeField3D<Nd,Nc> operator*=(devicePTBCGaugeField3D<Nd,Nc> &a, const deviceGaugeField3D<Nd,Nc> &b){
-    assert(a.dimensions == b.dimensions);
-    tune_and_launch_for<Nd>("operator*=_devicePTBCGaugeField3D*deviceGaugeField3D",IndexArray<Nd>{0}, a.dimensions,
-      KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2) {
-        #pragma unroll
-        for (index_t mu = 0; mu < Nd; ++mu){
-          a(i0,i1,i2,mu) *= b(i0,i1,i2,mu);
-        }
-      });
-  }
-
-  template<size_t Nd, size_t Nc>
-  devicePTBCGaugeField2D<Nd,Nc> operator*=(devicePTBCGaugeField2D<Nd,Nc> &a, const deviceGaugeField2D<Nd,Nc> &b){
-    assert(a.dimensions == b.dimensions);
-    tune_and_launch_for<Nd>("operator*=_devicePTBCGaugeField2D*deviceGaugeField2D",IndexArray<Nd>{0}, a.dimensions,
-      KOKKOS_LAMBDA(const index_t i0, const index_t i1) {
-        #pragma unroll
-        for (index_t mu = 0; mu < Nd; ++mu){
-          a(i0,i1,mu) *= b(i0,i1,mu);
-        }
-      });
-  }
 
 }

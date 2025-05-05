@@ -24,6 +24,7 @@
 #include "Tuner.hpp"
 #include "SUN.hpp"
 #include "sun.hpp"
+#include "PTBCGaugeField.hpp"
 
 namespace klft
 {
@@ -555,5 +556,7 @@ namespace klft
     }
 
   };
+
+
 
 }
