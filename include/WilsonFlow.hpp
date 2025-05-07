@@ -1,6 +1,7 @@
 #pragma once
 #include "GLOBAL.hpp"
 #include "FieldTypeHelper.hpp"
+#include "Gauge_Util.hpp"
 
 
 namespace klft {
@@ -29,6 +30,24 @@ namespace klft {
         // get the correct deviceGaugeFieldType 
         using GaugeFieldT = typename DeviceGaugeFieldType<rank, Nc, Kind>::type;
         GaugeFieldT field;
+
+        WilsonFlow() = delete;
+
+        WilsonFlow(WilsonFlowParams &_params, GaugeFieldT &_field){
+            params = _params;
+            field = _field;
+        }
+
+        GaugeFieldT& stepW1(){
+            GaugeField<rank, Nc> Z0 = GaugeField<rank, Nc>(Staple_Field(field));
+            Kokkos::fence();
+            conj_field(field);
+            Kokkos::fence();
+            Z0 *= field; // conj(field)
+            conj_field(field);
+            
+        }
+
 
         
 
