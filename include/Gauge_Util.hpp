@@ -26,276 +26,103 @@
 namespace klft
 {
 
-  template<size_t Nd, size_t Nc>
-  devicePTBCGaugeField<Nd,Nc>& operator*=(devicePTBCGaugeField<Nd,Nc> &a, const devicePTBCGaugeField<Nd,Nc> &b){
+  // define multiplication between GaugeFields for now only define *= operators, 
+  // as I have yet to decide on a heuristic for the output type when mixing different GaugeFieldKinds
+  template<size_t Nd, size_t Nc, GaugeFieldKind K1, GaugeFieldKind K2>
+  typename DeviceGaugeFieldType<Nd, Nc, K1>::type& 
+  operator*=(
+    typename DeviceGaugeFieldType<Nd, Nc, K1>::type &a, 
+    typename DeviceGaugeFieldType<Nd, Nc, K2>::type const & b){
     assert(a.dimensions == b.dimensions);
-    tune_and_launch_for<Nd>("operator*=_devicePTBCGaugeField",IndexArray<Nd>{0}, a.dimensions,
-      KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2, const index_t i3) {
-        #pragma unroll
-        for (index_t mu = 0; mu < Nd; ++mu){
-          a(i0,i1,i2,i3,mu) *= b(i0,i1,i2,i3,mu);
-        }
-      });
-      return a;
+    tune_and_launch_for<Nd>("operator*=DeviceGaugeFieldType<Nd, Nc, k1>::type*DeviceGaugeFieldType<Nd, Nc, k2>::type",IndexArray<Nd>{0}, a.dimensions,
+    KOKKOS_LAMBDA(auto... idxs){
+      #pragma unroll
+      for (index_t mu = 0;mu<Nd;++mu){
+        a.field(idxs..., mu) *= b(idxs...., mu);
+      }
+    });
+    return a;
   }
 
-  template<size_t Nd, size_t Nc>
-  devicePTBCGaugeField3D<Nd,Nc>& operator*=(devicePTBCGaugeField3D<Nd,Nc> &a, const devicePTBCGaugeField3D<Nd,Nc> &b){
-    assert(a.dimensions == b.dimensions);
-    tune_and_launch_for<Nd>("operator*=_devicePTBCGaugeField3D",IndexArray<Nd>{0}, a.dimensions,
-      KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2) {
+  template<size_t Nd, size_t Nc, GaugeFieldKind k>
+  GaugeField<Nd, Nc>& operator*=(GaugeField<Nd, Nc> &a, 
+    typename DeviceGaugeFieldType<Nd, Nc, k>::type const &b){
+    assert(a.layout() == b.field.layout());
+    assert(a.memory_space == b.field.memory_space); //only allow device-device and host-host operations
+    tune_and_launch_for<Nd>("operator*=GaugeField*DeviceGaugeFieldType<Nd, Nc, k>::type",IndexArray<Nd>{0}, a.dimensions,
+      KOKKOS_LAMBDA(auto... idxs){
         #pragma unroll
-        for (index_t mu = 0; mu < Nd; ++mu){
-          a(i0,i1,i2,mu) *= b(i0,i1,i2,mu);
+        for (index_t mu = 0;mu<Nd;++mu){
+          a(idxs..., mu) *= b(idxs...., mu);
         }
       });
-      return a;
+    return a;
   }
 
-  template<size_t Nd, size_t Nc>
-  devicePTBCGaugeField2D<Nd,Nc>& operator*=(devicePTBCGaugeField2D<Nd,Nc> &a, const devicePTBCGaugeField2D<Nd,Nc> &b){
-    assert(a.dimensions == b.dimensions);
-    tune_and_launch_for<Nd>("operator*=_devicePTBCGaugeField2D",IndexArray<Nd>{0}, a.dimensions,
-      KOKKOS_LAMBDA(const index_t i0, const index_t i1) {
-        #pragma unroll
-        for (index_t mu = 0; mu < Nd; ++mu){
-          a(i0,i1,mu) *= b(i0,i1,mu);
-        }
-      });
-      return a;
-  }
-
-  template<size_t Nd, size_t Nc>
-  devicePTBCGaugeField<Nd,Nc>& operator*=(devicePTBCGaugeField<Nd,Nc> &a, const deviceGaugeField<Nd,Nc> &b){
-    assert(a.dimensions == b.dimensions);
-    tune_and_launch_for<Nd>("operator*=_devicePTBCGaugeField*deviceGaugeField",IndexArray<Nd>{0}, a.dimensions,
-      KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2, const index_t i3) {
-        #pragma unroll
-        for (index_t mu = 0; mu < Nd; ++mu){
-          a(i0,i1,i2,i3,mu) *= b(i0,i1,i2,i3,mu);
-        }
-      });
-      return a;
-  }
-
-  template<size_t Nd, size_t Nc>
-  devicePTBCGaugeField3D<Nd,Nc>& operator*=(devicePTBCGaugeField3D<Nd,Nc> &a, const deviceGaugeField3D<Nd,Nc> &b){
-    assert(a.dimensions == b.dimensions);
-    tune_and_launch_for<Nd>("operator*=_devicePTBCGaugeField3D*deviceGaugeField3D",IndexArray<Nd>{0}, a.dimensions,
-      KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2) {
-        #pragma unroll
-        for (index_t mu = 0; mu < Nd; ++mu){
-          a(i0,i1,i2,mu) *= b(i0,i1,i2,mu);
-        }
-      });
-      return a;
-  }
-
-  template<size_t Nd, size_t Nc>
-  devicePTBCGaugeField2D<Nd,Nc>& operator*=(devicePTBCGaugeField2D<Nd,Nc> &a, const deviceGaugeField2D<Nd,Nc> &b){
-    assert(a.dimensions == b.dimensions);
-    tune_and_launch_for<Nd>("operator*=_devicePTBCGaugeField2D*deviceGaugeField2D",IndexArray<Nd>{0}, a.dimensions,
-      KOKKOS_LAMBDA(const index_t i0, const index_t i1) {
-        #pragma unroll
-        for (index_t mu = 0; mu < Nd; ++mu){
-          a(i0,i1,mu) *= b(i0,i1,mu);
-        }
-      });
-      return a;
-  }
-
-  template<size_t Nd, size_t Nc>
-  devicePTBCGaugeField<Nd,Nc>& operator*=(devicePTBCGaugeField<Nd,Nc> &a, const constGaugeField<Nd,Nc> &b){
+  template<size_t Nd, size_t Nc, GaugeFieldKind k>
+  typename DeviceGaugeFieldType<Nd, Nc, k>::type& operator*=(
+    typename DeviceGaugeFieldType<Nd, Nc, k>::type &a, 
+    GaugeField<Nd, Nc> const &b){
     assert(a.field.layout() == b.layout());
     assert(a.field.memory_space == b.memory_space); //only allow device-device and host-host operations
-    tune_and_launch_for<Nd>("operator*=_devicePTBCGaugeField*constGaugeField",IndexArray<Nd>{0}, a.dimensions,
-      KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2, const index_t i3) {
+    tune_and_launch_for<Nd>("operator*=DeviceGaugeFieldType<Nd, Nc, k>::type*GaugeField",IndexArray<Nd>{0}, a.dimensions,
+      KOKKOS_LAMBDA(auto... idxs){
         #pragma unroll
-        for (index_t mu = 0; mu < Nd; ++mu){
-          a(i0,i1,i2,i3,mu) *= b(i0,i1,i2,i3,mu);
+        for (index_t mu = 0;mu<Nd;++mu){
+          a.field(idxs..., mu) *= b(idxs...., mu);
         }
       });
-      return a;
+    return a;
+  }
+
+  template<size_t Nd, size_t Nc, GaugeFieldKind k>
+  typename DeviceGaugeFieldType<Nd, Nc, k>::type& operator*=(
+    typename DeviceGaugeFieldType<Nd, Nc, k>::type &a, 
+    constGaugeField<Nd, Nc> const &b){
+    assert(a.field.layout() == b.layout());
+    assert(a.field.memory_space == b.memory_space); //only allow device-device and host-host operations
+    tune_and_launch_for<Nd>("operator*=DeviceGaugeFieldType<Nd, Nc, k>::type*constGaugeField",IndexArray<Nd>{0}, a.dimensions,
+      KOKKOS_LAMBDA(auto... idxs){
+        #pragma unroll
+        for (index_t mu = 0;mu<Nd;++mu){
+          a.field(idxs..., mu) *= b(idxs...., mu);
+        }
+      });
+    return a;
+  }
+  // should the multiplication between GaugeField<...> types also be defined?
+
+  // now define the multiplication with scalars
+  template<size_t Nd, size_t Nc, GaugeFieldKind K1>
+  typename DeviceGaugeFieldType<Nd, Nc, K1>::type& 
+  operator*=(
+    typename DeviceGaugeFieldType<Nd, Nc, K1>::type &a, 
+    real_t const b){
+    tune_and_launch_for<Nd>("operator*=DeviceGaugeFieldType<Nd, Nc, k1>::type*Scalar",IndexArray<Nd>{0}, a.dimensions,
+    KOKKOS_LAMBDA(auto... idxs){
+      #pragma unroll
+      for (index_t mu = 0;mu<Nd;++mu){
+        a.field(idxs..., mu) *= b;
+      }
+    });
+    return a;
   }
 
   template<size_t Nd, size_t Nc>
-  devicePTBCGaugeField3D<Nd,Nc>& operator*=(devicePTBCGaugeField3D<Nd,Nc> &a, const constGaugeField3D<Nd,Nc> &b){
-    assert(a.field.layout() == b.layout());
-    assert(a.field.memory_space == b.memory_space); //only allow device-device and host-host operations
-    tune_and_launch_for<Nd>("operator*=_devicePTBCGaugeField3D*constGaugeField3D",IndexArray<Nd>{0}, a.dimensions,
-      KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2) {
+  GaugeField<Nd, Nc>& operator*=(GaugeField<Nd, Nc> &a, 
+    real_t const b){
+    tune_and_launch_for<Nd>("operator*=GaugeField*Scalar",IndexArray<Nd>{0}, a.dimensions,
+      KOKKOS_LAMBDA(auto... idxs){
         #pragma unroll
-        for (index_t mu = 0; mu < Nd; ++mu){
-          a(i0,i1,i2,mu) *= b(i0,i1,i2,mu);
+        for (index_t mu = 0;mu<Nd;++mu){
+          a(idxs..., mu) *= b;
         }
       });
-      return a;
+    return a;
   }
 
-  template<size_t Nd, size_t Nc>
-  devicePTBCGaugeField2D<Nd,Nc>& operator*=(devicePTBCGaugeField2D<Nd,Nc> &a, const constGaugeField2D<Nd,Nc> &b){
-    assert(a.field.layout() == b.layout());
-    assert(a.field.memory_space == b.memory_space); //only allow device-device and host-host operations
-    tune_and_launch_for<Nd>("operator*=_devicePTBCGaugeField2D*constGaugeField2D",IndexArray<Nd>{0}, a.dimensions,
-      KOKKOS_LAMBDA(const index_t i0, const index_t i1) {
-        #pragma unroll
-        for (index_t mu = 0; mu < Nd; ++mu){
-          a(i0,i1,mu) *= b(i0,i1,mu);
-        }
-      });
-      return a;
-  }
 
-    // define multiplication operations between deviceGaugeField and other fields.
-    template<size_t Nd, size_t Nc>
-    deviceGaugeField<Nd,Nc>& operator*=(deviceGaugeField<Nd,Nc> &a, const deviceGaugeField<Nd,Nc> &b){
-      assert(a.dimensions == b.dimensions);
-      tune_and_launch_for<Nd>("operator*=_deviceGaugeField",IndexArray<Nd>{0}, a.dimensions,
-        KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2, const index_t i3) {
-          #pragma unroll
-          for (index_t mu = 0; mu < Nd; ++mu){
-            a(i0,i1,i2,i3,mu) *= b(i0,i1,i2,i3,mu);
-          }
-        });
-        return a;
-    }
-  
-    template<size_t Nd, size_t Nc>
-    deviceGaugeField3D<Nd,Nc>& operator*=(deviceGaugeField3D<Nd,Nc> &a, const deviceGaugeField3D<Nd,Nc> &b){
-      assert(a.dimensions == b.dimensions);
-      tune_and_launch_for<Nd>("operator*=_deviceGaugeField3D",IndexArray<Nd>{0}, a.dimensions,
-        KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2) {
-          #pragma unroll
-          for (index_t mu = 0; mu < Nd; ++mu){
-            a(i0,i1,i2,mu) *= b(i0,i1,i2,mu);
-          }
-        });
-        return a;
-    }
-  
-    template<size_t Nd, size_t Nc>
-    deviceGaugeField2D<Nd,Nc>& operator*=(deviceGaugeField2D<Nd,Nc> &a, const deviceGaugeField2D<Nd,Nc> &b){
-      assert(a.dimensions == b.dimensions);
-      tune_and_launch_for<Nd>("operator*=_deviceGaugeField2D",IndexArray<Nd>{0}, a.dimensions,
-        KOKKOS_LAMBDA(const index_t i0, const index_t i1) {
-          #pragma unroll
-          for (index_t mu = 0; mu < Nd; ++mu){
-            a(i0,i1,mu) *= b(i0,i1,mu);
-          }
-        });
-        return a;
-    }
-  
-    template<size_t Nd, size_t Nc>
-    deviceGaugeField<Nd,Nc>& operator*=(deviceGaugeField<Nd,Nc> &a, const devicePTBCGaugeField<Nd,Nc> &b){
-      assert(a.dimensions == b.dimensions);
-      tune_and_launch_for<Nd>("operator*=_deviceGaugeField*devicePTBCGaugeField",IndexArray<Nd>{0}, a.dimensions,
-        KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2, const index_t i3) {
-          #pragma unroll
-          for (index_t mu = 0; mu < Nd; ++mu){
-            a(i0,i1,i2,i3,mu) *= b(i0,i1,i2,i3,mu);
-          }
-        });
-        return a;
-    }
-  
-    template<size_t Nd, size_t Nc>
-    deviceGaugeField3D<Nd,Nc>& operator*=(deviceGaugeField3D<Nd,Nc> &a, const devicePTBCGaugeField3D<Nd,Nc> &b){
-      assert(a.dimensions == b.dimensions);
-      tune_and_launch_for<Nd>("operator*=_deviceGaugeField3D*devicePTBCGaugeField3D",IndexArray<Nd>{0}, a.dimensions,
-        KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2) {
-          #pragma unroll
-          for (index_t mu = 0; mu < Nd; ++mu){
-            a(i0,i1,i2,mu) *= b(i0,i1,i2,mu);
-          }
-        });
-        return a;
-    }
-  
-    template<size_t Nd, size_t Nc>
-    deviceGaugeField2D<Nd,Nc>& operator*=(deviceGaugeField2D<Nd,Nc> &a, const devicePTBCGaugeField2D<Nd,Nc> &b){
-      assert(a.dimensions == b.dimensions);
-      tune_and_launch_for<Nd>("operator*=_deviceGaugeField2D*_devicePTBCGaugeField2D",IndexArray<Nd>{0}, a.dimensions,
-        KOKKOS_LAMBDA(const index_t i0, const index_t i1) {
-          #pragma unroll
-          for (index_t mu = 0; mu < Nd; ++mu){
-            a(i0,i1,mu) *= b(i0,i1,mu);
-          }
-        });
-        return a;
-    }
-  
-    // for constGaugeField, the type directly represents a View, so access/asserts need to be ammended.
-    template<size_t Nd, size_t Nc>
-    deviceGaugeField<Nd,Nc>& operator*=(deviceGaugeField<Nd,Nc> &a, const constGaugeField<Nd,Nc> &b){
-      assert(a.field.layout() == b.layout());
-      assert(a.field.memory_space == b.memory_space); //only allow device-device and host-host operations
-      tune_and_launch_for<Nd>("operator*=_deviceGaugeField3D*constGaugeField",IndexArray<Nd>{0}, a.dimensions,
-        KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2, const index_t i3) {
-          #pragma unroll
-          for (index_t mu = 0; mu < Nd; ++mu){
-            a(i0,i1,i2,i3,mu) *= b(i0,i1,i2,i3,mu);
-          }
-        });
-        return a;
-    }
-  
-    template<size_t Nd, size_t Nc>
-    deviceGaugeField3D<Nd,Nc>& operator*=(deviceGaugeField3D<Nd,Nc> &a, const constGaugeField3D<Nd,Nc> &b){
-      assert(a.field.layout() == b.layout());
-      assert(a.field.memory_space == b.memory_space); //only allow device-device and host-host operations
-      tune_and_launch_for<Nd>("operator*=_deviceGaugeField3D*constGaugeField3D",IndexArray<Nd>{0}, a.dimensions,
-        KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2) {
-          #pragma unroll
-          for (index_t mu = 0; mu < Nd; ++mu){
-            a(i0,i1,i2,mu) *= b(i0,i1,i2,mu);
-          }
-        });
-        return a;
-    }
-  
-    template<size_t Nd, size_t Nc>
-    deviceGaugeField2D<Nd,Nc>& operator*=(deviceGaugeField2D<Nd,Nc> &a, const constGaugeField2D<Nd,Nc> &b){
-      assert(a.field.layout() == b.layout());
-      assert(a.field.memory_space == b.memory_space); //only allow device-device and host-host operations
-      tune_and_launch_for<Nd>("operator*=_deviceGaugeField2D*constGaugeField2D",IndexArray<Nd>{0}, a.dimensions,
-        KOKKOS_LAMBDA(const index_t i0, const index_t i1) {
-          #pragma unroll
-          for (index_t mu = 0; mu < Nd; ++mu){
-            a(i0,i1,mu) *= b(i0,i1,mu);
-          }
-        });
-        return a;
-      }
 
-      template<size_t Nd, size_t Nc, GaugeFieldKind k>
-      GaugeField<Nd, Nc>& operator*=(GaugeField<Nd, Nc> &a, const DeviceGaugeFieldType<Nd, Nc, k>::type &b){
-        assert(a.layout() == b.field.layout());
-        assert(a.memory_space == b.field.memory_space); //only allow device-device and host-host operations
-      tune_and_launch_for<Nd>("operator*=GaugeField*DeviceGaugeFieldType<Nd, Nc, k>::type",IndexArray<Nd>{0}, a.dimensions,
-        KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2, const index_t i3) {
-          #pragma unroll
-          for (index_t mu = 0; mu < Nd; ++mu){
-            a(i0,i1,i2,i3,mu) *= b(i0,i1,i2,i3,mu);
-          }
-        });
-        return a;
-      }
-
-      template<size_t Nd, size_t Nc, GaugeFieldKind k, GaugeFieldKind l>
-      DeviceGaugeFieldType<Nd, Nc, k>::type& operator*=(DeviceGaugeFieldType<Nd, Nc, k>::type &a, const DeviceGaugeFieldType<Nd, Nc, l>::type &b){
-        assert(a.dimensions == b.dimensions);
-        tune_and_launch_for<Nd>("operator*=GaugeField*DeviceGaugeFieldType<Nd, Nc, k>::type",IndexArray<Nd>{0}, a.dimensions,
-        KOKKOS_LAMBDA(auto... idxs){
-          #pragma unroll
-          for (index_t mu = 0;mu<Nd;++mu){
-            a(idxs..., mu) *= b(idxs...., mu);
-          }
-        });
-      }
-      
-      //TODO: write a general dispatcher that takes a functor and a DeviceGaugeFieldType<>:type and executes the functor on each element of the field.
-  
   // function to conjugate a given DeviceGaugeField in place.
   template <size_t Nd, size_t Nc, GaugeFieldKind K = GaugeFieldKind::Standard>
   void conj_field(typename DeviceGaugeFieldType<Nd, Nc, K>::type& field) {
@@ -303,15 +130,16 @@ namespace klft
     KOKKOS_LAMBDA(auto... idxs){
       #pragma unroll
       for (index_t mu = 0; mu <Nd; ++mu){
-        field(idxs..., mu) = conj(field(idxs..., mu));
+        field.field(idxs..., mu) = conj(field(idxs..., mu));
       }
     });
+    Kokkos::fence();
   }
 
 
   // calculate staple per site and store in another gauge fieldDeviceGaugeFieldType
   template <size_t Nd, size_t Nc, GaugeFieldKind k = GaugeFieldKind::Standard>
-  const constGaugeField<Nd,Nc> stapleField(const DeviceGaugeFieldType<Nd ,Nc, k>::type &g_in) {
+  const constGaugeField<Nd,Nc> stapleField(typename DeviceGaugeFieldType<Nd ,Nc, k>::type const & g_in) {
     // initialize the output field
     using FieldT = DeviceGaugeFieldType<Nd ,Nc, k>::type
     switch (Nd)
