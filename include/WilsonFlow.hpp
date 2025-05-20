@@ -27,6 +27,7 @@ namespace klft {
           GaugeFieldKind Kind = GaugeFieldKind::Standard>
     struct WilsonFlow{
         // implement the Wilson flow, for now the field will not be copied, but it will be flown in place -> copying needs to be done before
+        static_assert(rank == 4); // The wilson flow is only defined for 4D Fields
         WilsonFlowParams params;
         
         // get the correct deviceGaugeFieldType 
@@ -38,11 +39,10 @@ namespace klft {
 
         WilsonFlow() = delete;
 
-        WilsonFlow(WilsonFlowParams &_params, GaugeFieldT &_field){
-            params = _params;
-            field = _field;
-            tmp_Z = _field;
-            tmp_stap = _field;
+        WilsonFlow(WilsonFlowParams &_params, GaugeFieldT &_field): params(_params), field(_field), tmp_stap(_field.field), tmp_Z(_field.field) {
+            Kokkos::deep_copy(_field.field, tmp_stap);
+            Kokkos::deep_copy(_field.field, tmp_Z);
+            Kokkos::fence();
         }
 
         // execute the wilson flow 
@@ -51,8 +51,8 @@ namespace klft {
                 #pragma unroll
                 for (index_t fstep = 0; fstep <3; ++fstep){
                     this->current_step = fstep;
-                    tmp_stap = Staple_Field(field);
-                    tune_and_launch<Nd>("Wilsonflow-flow",IndexArray<Nd>{0}, field,dimensions, flow_step)
+                    tmp_stap = stapleField<rank, Nc, Kind>(field);
+                    tune_and_launch_for<rank>("Wilsonflow-flow",IndexArray<rank>{0}, field.dimensions, *this);
                     Kokkos::fence();
                 }
 
@@ -60,48 +60,47 @@ namespace klft {
 
         }
 
-        template <typename... Indices>
-        KOKKOS_FORCEINLINE_FUNCTION void stepW1(const Indices... idxs, index_t mu, SUN<Nc> &Z0){
-            Z0 = tmp_stap(idxs..., mu);
-            Z0 *= conj(field(idxs..., mu));
-            tmp_Z(idxs..., mu) = Z0;
-            Z0*=(this->params.eps*static_cast<real_t>(1.0/4.0));         
+        template <typename indexType>
+        KOKKOS_INLINE_FUNCTION void stepW1(indexType i0, indexType i1, indexType i2, indexType i3, index_t mu, SUN<Nc> &Z0) const {
+            Z0 = tmp_stap(i0, i1, i2, i3, mu);
+            Z0 *= conj(field(i0, i1, i2, i3, mu));
+            tmp_Z(i0, i1, i2, i3, mu) = Z0;
+            Z0 *= (params.eps * static_cast<real_t>(1.0 / 4.0));
         }
 
-        template <typename... Indices>
-        KOKKOS_FORCEINLINE_FUNCTION void stepW2(const Indices... idxs, index_t mu, SUN<Nc> &Z1){
-            Z1 = tmp_stap(idxs..., mu);
-            SUN<Nd> Z0 = tmp_Z(idxs..., mu);
-            Z1 *= conj(field(idxs..., mu));
-            Z1 = static_cast<real_t>(8.0/9.0) * Z1 - static_cast<real_t>(17/36) * Z0;
-            tmp_Z(idxs..., mu) = Z1;
-            Z1*=(this->params.eps);          
+        template <typename indexType>
+        KOKKOS_INLINE_FUNCTION void stepW2(indexType i0, indexType i1, indexType i2, indexType i3, index_t mu, SUN<Nc> &Z1) const {
+            Z1 = tmp_stap(i0, i1, i2, i3, mu);
+            SUN<Nc> Z0 = tmp_Z(i0, i1, i2, i3, mu);
+            Z1 *= conj(field(i0, i1, i2, i3, mu));
+            Z1 = Z1 * static_cast<real_t>(8.0 / 9.0) - Z0 * static_cast<real_t>(17.0 / 36.0);
+            tmp_Z(i0, i1, i2, i3, mu) = Z1;
+            Z1 *= params.eps;
         }
 
-        template <typename... Indices>
-        KOKKOS_FORCEINLINE_FUNCTION void stepV(const Indices... idxs, index_t mu, SUN<Nc> &Z2){
-            Z2 = tmp_stap(idxs..., mu);
-            SUN<Nd> Z_old = tmp_Z(idxs..., mu);
-            Z2 *= conj(field(idxs..., mu));
-            Z2 = this->params.eps(static_cast<real_t>(3.0/2.0) * Z2 - Z_old);     
+        template <typename indexType>
+        KOKKOS_INLINE_FUNCTION void stepV(indexType i0, indexType i1, indexType i2, indexType i3, index_t mu, SUN<Nc> &Z2) const {
+            Z2 = tmp_stap(i0, i1, i2, i3, mu);
+            SUN<Nc> Z_old = tmp_Z(i0, i1, i2, i3, mu);
+            Z2 *= conj(field(i0, i1, i2, i3, mu));
+            Z2 = (Z2 * static_cast<real_t>(3.0 / 2.0) - Z_old) * params.eps;
         }
 
-
-
-        // do steps W1, W2 and V 
-        template <typename... Indices>
-        KOKKOS_FORCEINLINE_FUNCTION void flow_step(const Indices... idxs){
+        template <typename indexType>
+        KOKKOS_INLINE_FUNCTION void operator()(const indexType i0, const indexType i1, const indexType i2, const indexType i3) const {
             SUN<Nc> Z;
             #pragma unroll
-            for (index_t mu=0;mu<Nd;++mu){
-                switch (this->current_step){
-                    case 0: stepW1(idxs..., mu, Z); break;
-                    case 1: stepW2(idxs..., mu, Z); break;
-                    case 2: stepV (idxs..., mu, Z); break;
+            for (index_t mu = 0; mu < 4; ++mu) {
+                switch (current_step) {
+                    case 0: stepW1(i0, i1, i2, i3, mu, Z); break;
+                    case 1: stepW2(i0, i1, i2, i3, mu, Z); break;
+                    case 2: stepV (i0, i1, i2, i3, mu, Z); break;
                 }
-                field(idxs..., mu) = exp(from_Group(Z));
+                field(i0, i1, i2, i3, mu) *= exp(from_Group(Z));
             }
         }
 
+
     };
+
 }

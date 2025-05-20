@@ -38,7 +38,7 @@ namespace klft
     KOKKOS_LAMBDA(auto... idxs){
       #pragma unroll
       for (index_t mu = 0;mu<Nd;++mu){
-        a.field(idxs..., mu) *= b(idxs...., mu);
+        a.field(idxs..., mu) *= b(idxs..., mu);
       }
     });
     return a;
@@ -53,7 +53,7 @@ namespace klft
       KOKKOS_LAMBDA(auto... idxs){
         #pragma unroll
         for (index_t mu = 0;mu<Nd;++mu){
-          a(idxs..., mu) *= b(idxs...., mu);
+          a(idxs..., mu) *= b(idxs..., mu);
         }
       });
     return a;
@@ -69,7 +69,7 @@ namespace klft
       KOKKOS_LAMBDA(auto... idxs){
         #pragma unroll
         for (index_t mu = 0;mu<Nd;++mu){
-          a.field(idxs..., mu) *= b(idxs...., mu);
+          a.field(idxs..., mu) *= b(idxs..., mu);
         }
       });
     return a;
@@ -85,7 +85,7 @@ namespace klft
       KOKKOS_LAMBDA(auto... idxs){
         #pragma unroll
         for (index_t mu = 0;mu<Nd;++mu){
-          a.field(idxs..., mu) *= b(idxs...., mu);
+          a.field(idxs..., mu) *= b(idxs..., mu);
         }
       });
     return a;
@@ -141,24 +141,22 @@ namespace klft
   template <size_t Nd, size_t Nc, GaugeFieldKind k = GaugeFieldKind::Standard>
   const constGaugeField<Nd,Nc> stapleField(typename DeviceGaugeFieldType<Nd ,Nc, k>::type const & g_in) {
     // initialize the output field
-    using FieldT = DeviceGaugeFieldType<Nd ,Nc, k>::type
-    switch (Nd)
-    {
-    case 4:
-    FieldT g_out(g_in.field.extent(0), g_in.field.extent(1), 
-      g_in.field.extent(2), g_in.field.extent(3), complex_t(0.0, 0.0));
-      break;
-    case 3:
-    FieldT g_out(g_in.field.extent(0), g_in.field.extent(1), 
-      g_in.field.extent(2), complex_t(0.0, 0.0));
-      break;
-    case 2:
-    FieldT g_out(g_in.field.extent(0), g_in.field.extent(1), complex_t(0.0, 0.0));
-    break;
-    default:
-      assert(1==2); //TODO: do a decent error
-      break;
-    }
+    using FieldT = typename DeviceGaugeFieldType<Nd ,Nc, k>::type;
+    FieldT g_out = [&]() {
+        if constexpr (Nd == 4) {
+            return FieldT(g_in.field.extent(0), g_in.field.extent(1),
+                          g_in.field.extent(2), g_in.field.extent(3), complex_t(0.0, 0.0));
+        } else if constexpr (Nd == 3) {
+            return FieldT(g_in.field.extent(0), g_in.field.extent(1),
+                          g_in.field.extent(2), complex_t(0.0, 0.0));
+        } else if constexpr (Nd == 2) {
+            return FieldT(g_in.field.extent(0), g_in.field.extent(1),
+                          complex_t(0.0, 0.0));
+        } else {
+            static_assert(Nd == 2 || Nd == 3 || Nd == 4, "Unsupported Nd");
+        }
+    }();
+    
     
     // get the start and end indices
     const auto & dimensions = g_in.field.layout().dimension;
@@ -171,36 +169,34 @@ namespace klft
 
     // It would be trivial to add a stapleField return into each DeviceGaugeFieldType, 
     // though as already done with .staple, shouldn't the definition and calculations be seperated?
-    switch (Nd)
-    {
-    case 4:
-    tune_and_launch_for<Nd>("stapleField_GaugeField", start, end,
-      KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2, const index_t i3) {
-        
-        for (index_t mu = 0; mu<Nd, ++mu){
-          g_out(i0,i1,i2,i3,mu) = g_in.staple(i0,i1,i2,i3,mu);
-        }
-      });
-      break;
-    case 3:
-    tune_and_launch_for<Nd>("stapleField_GaugeField3D", start, end,
-      KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2) {
-        
-        for (index_t mu = 0; mu<Nd, ++mu){
-          g_out(i0,i1,i2,mu) = g_in.staple(i0,i1,i2,mu);
-        }
-      });
-      break;
-    case 2:
-    tune_and_launch_for<Nd>("stapleField_GaugeField3D", start, end,
-      KOKKOS_LAMBDA(const index_t i0, const index_t i1) {
-        
-        for (index_t mu = 0; mu<Nd, ++mu){
-          g_out(i0,i1,mu) = g_in.staple(i0,i1,mu);
-        }
-      });
-    break;
+    if constexpr(Nd ==4){
+      tune_and_launch_for<4>("stapleField_GaugeField", start, end,
+        KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2, const index_t i3) {
+          
+          for (index_t mu = 0; mu<Nd; ++mu){
+            g_out.field(i0,i1,i2,i3,mu) = g_in.staple(IndexArray<4>{i0,i1,i2,i3},mu);
+          }
+        });
+    } else if constexpr(Nd == 3){
+      tune_and_launch_for<3>("stapleField_GaugeField3D", start, end,
+        KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2) {
+          
+          for (index_t mu = 0; mu<Nd; ++mu){
+            g_out.field(i0,i1,i2,mu) = g_in.staple(IndexArray<3>{i0,i1,i2},mu);
+          }
+        });
+    } else if constexpr(Nd == 2){
+      tune_and_launch_for<2>("stapleField_GaugeField3D", start, end,
+        KOKKOS_LAMBDA(const index_t i0, const index_t i1) {
+          
+          for (index_t mu = 0; mu<Nd; ++mu){
+            g_out.field(i0,i1,mu) = g_in.staple(IndexArray<2>{i0,i1},mu);
+          }
+        });
+    } else {
+      static_assert(Nd == 2 || Nd == 3 || Nd == 4, "Unsupported Nd");
     }
+
     Kokkos::fence();
     // return the output field
     return constGaugeField<Nd,Nc>(g_out.field);
