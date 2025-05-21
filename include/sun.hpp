@@ -27,17 +27,25 @@ namespace klft {
 
     // conversion Functionst going from SUN to sun
     // su2 and u1 use the same representation used in the earlier AdjointGroup implementation
-    KOKKOS_FORCEINLINE_FUNCTION sun<2> from_Group(const SUN<2> &g){
+    KOKKOS_FORCEINLINE_FUNCTION sun<2> from_Group(const SUN<2> &g) {
         complex_t a{g[0][0]}, b{g[0][1]};
         sun<2> rtn {2.0*b.imag(), 2.0*b.real(), 2.0*a.imag()};
         return rtn;
     }
 
-    KOKKOS_FORCEINLINE_FUNCTION sun<1> from_Group(const SUN<1> &g){
+    KOKKOS_FORCEINLINE_FUNCTION sun<1> from_Group(const SUN<1> &g) {
         complex_t a{g[0][0]};
         sun<1> rtn {a.imag()};
         return rtn;
     }
+
+    // make antiherm
+    template <size_t Nc>
+    KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> make_antiherm(const SUN<Nc> &g) {
+        SUN<Nc> out = (g - conj(g)) * static_cast<real_t>(0.5) - identitySUN<Nc>() * trace(g - conj(g)) * static_cast<complex_t>(1/6);
+        return out;
+    }
+
 
 
     // TODO: implement for su3 using the linear parameters of the group generators
@@ -129,4 +137,4 @@ namespace klft {
     }
 
 
-}
+} // TODO: use nvim to transfer from sun to SUNAdj
