@@ -154,6 +154,52 @@ class WilsonDiracOperator
   }
 };
 
+template <size_t _rank, size_t _Nc, size_t _RepDim>
+class HWilsonDiracOperator
+    : public DiracOperator<HWilsonDiracOperator<_rank, _Nc, _RepDim>,
+                           _rank,
+                           _Nc,
+                           _RepDim> {
+ public:
+  constexpr static size_t Nc = _Nc;
+  constexpr static size_t RepDim = _RepDim;
+  constexpr static size_t rank = _rank;
+
+  ~HWilsonDiracOperator() = default;
+  using Base =
+      DiracOperator<HWilsonDiracOperator<rank, Nc, RepDim>, rank, Nc, RepDim>;
+  using Base::Base;
+  template <typename... Indices>
+  KOKKOS_FORCEINLINE_FUNCTION void operator()(TagD,
+                                              const Indices... Idcs) const {
+    Spinor<Nc, RepDim> temp;
+#pragma unroll
+    for (size_t mu = 0; mu < _rank; ++mu) {
+      auto xm = shift_index_minus<_rank, size_t>(
+          Kokkos::Array<size_t, _rank>{Idcs...}, mu, 1,
+          this->params.dimensions);
+      auto xp =
+          shift_index_plus<_rank, size_t>(Kokkos::Array<size_t, _rank>{Idcs...},
+                                          mu, 1, this->params.dimensions);
+
+      temp += (this->params.gamma_id - this->params.gammas[mu]) * 0.5 *
+              (this->g_in(Idcs..., mu) * this->s_in(xp));
+      temp += (this->params.gamma_id + this->params.gammas[mu]) * 0.5 *
+              (conj(this->g_in(xm, mu)) * this->s_in(xm));
+    }
+
+    this->s_out(Idcs...) +=
+        this->params.gamma5 * (this->s_in(Idcs...) - this->params.kappa * temp);
+  }
+
+  // only for testing porpose, not the real Ddagger operator
+  template <typename... Indices>
+  KOKKOS_FORCEINLINE_FUNCTION void operator()(TagDdagger,
+                                              const Indices... Idcs) const {
+    operator()(TagD{}, Idcs...);
+  }
+};
+
 // template <size_t rank, size_t Nc, size_t RepDim>
 // class HWilsonDiracOperator : public DiracOperator {
 //  public:
@@ -178,7 +224,8 @@ class WilsonDiracOperator
 //       dimensions(params.dimensions), kappa(params.kappa) {}
 
 //   template <typename... Indices>
-//   KOKKOS_FORCEINLINE_FUNCTION void operator()(const Indices... Idcs) const {
+//   KOKKOS_FORCEINLINE_FUNCTION void operator()(const Indices... Idcs) const
+//   {
 //     Spinor<Nc, RepDim> temp;
 // #pragma unroll
 //     for (size_t mu = 0; mu < rank; ++mu) {
@@ -187,9 +234,9 @@ class WilsonDiracOperator
 //       auto xp = shift_index_plus<rank, size_t>(
 //           Kokkos::Array<size_t, rank>{Idcs...}, mu, 1, dimensions);
 
-//       temp = (gamma_id - gammas[mu]) * 0.5 * (g_in(Idcs..., mu) * s_in(xp));
-//       temp += (gamma_id + gammas[mu]) * 0.5 * (conj(g_in(xm, mu)) *
-//       s_in(xm));
+//       temp = (gamma_id - gammas[mu]) * 0.5 * (g_in(Idcs..., mu) *
+//       s_in(xp)); temp += (gamma_id + gammas[mu]) * 0.5 * (conj(g_in(xm,
+//       mu)) * s_in(xm));
 //     }
 //     // Is the +4 correct? Instead of += only = depending on how s_out is
 //     // initialized or used!
