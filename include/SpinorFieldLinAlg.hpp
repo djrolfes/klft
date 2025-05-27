@@ -89,8 +89,8 @@ struct SpinorNorm {
 };
 
 template <size_t rank, size_t Nc, size_t RepDim>
-KOKKOS_FORCEINLINE_FUNCTION real_t
-spinor_norm(const typename DeviceSpinorFieldType<rank, Nc, RepDim>::type& a) {
+KOKKOS_FORCEINLINE_FUNCTION real_t spinor_norm_sq(
+    const typename DeviceSpinorFieldType<rank, Nc, RepDim>::type& a) {
   real_t result = 0.0;
   IndexArray<rank> start;
   IndexArray<rank> end;
@@ -111,6 +111,70 @@ spinor_norm(const typename DeviceSpinorFieldType<rank, Nc, RepDim>::type& a) {
   result = norm_per_site.sum();
   Kokkos::fence();
   return result;
+}
+template <size_t rank, size_t Nc, size_t RepDim>
+KOKKOS_FORCEINLINE_FUNCTION real_t
+spinor_norm(const typename DeviceSpinorFieldType<rank, Nc, RepDim>::type& a) {
+  return Kokkos::sqrt(spinor_norm_sq<rank, Nc, RepDim>(a));
+}
+
+template <size_t rank, size_t Nc, size_t RepDim>
+struct SpinorAddMul {
+  using SpinorFieldType =
+      typename DeviceSpinorFieldType<rank, Nc, RepDim>::type;
+  const SpinorFieldType a;
+  const SpinorFieldType b;
+  const complex_t alpha;
+  SpinorFieldType c;
+  const IndexArray<rank> dimensions;
+  SpinorAddMul(const SpinorFieldType& a,
+               const SpinorFieldType& b,
+               SpinorFieldType& c,
+               const complex_t& alpha,
+               const IndexArray<rank>& dimensions)
+      : a(a), b(b), c(c), alpha(alpha), dimensions(dimensions) {}
+  template <typename... Indices>
+  KOKKOS_FORCEINLINE_FUNCTION void operator()(const Indices... Idcs) const {
+    c(Idcs...) = (a(Idcs...) + (alpha * b(Idcs...)));
+  }
+};
+template <size_t rank, size_t Nc, size_t RepDim>
+typename DeviceSpinorFieldType<rank, Nc, RepDim>::type
+    KOKKOS_FORCEINLINE_FUNCTION
+    spinor_add_mul(
+        const typename DeviceSpinorFieldType<rank, Nc, RepDim>::type& a,
+        const typename DeviceSpinorFieldType<rank, Nc, RepDim>::type& b,
+        const complex_t& alpha) {
+  assert(a.dimensions == b.dimensions);
+  static_assert(
+      Kokkos::SpaceAccessibility<
+          typename decltype(a.field)::execution_space,
+          typename decltype(b.field)::memory_space>::accessible,
+      "Execution space of A cannot access memory space of B");  // allow only
+                                                                // device-device
+                                                                // or host-host
+                                                                // interaction
+  IndexArray<rank> start;
+  IndexArray<rank> end;
+  for (index_t i = 0; i < rank; ++i) {
+    start[i] = 0;
+    end[i] = a.dimensions[i];
+  }
+  using SpinorFieldType =
+      typename DeviceSpinorFieldType<rank, Nc, RepDim>::type;
+  SpinorFieldType c(end, complex_t(0.0, 0.0));
+  SpinorAddMul<rank, Nc, RepDim> add(a, b, c, alpha, end);
+
+  tune_and_launch_for<rank>("SpinorField_add", start, end, add);
+  Kokkos::fence();
+  return c;
+}
+template <size_t rank, size_t Nc, size_t RepDim>
+typename DeviceSpinorFieldType<rank, Nc, RepDim>::type spinor_sub_mul(
+    const typename DeviceSpinorFieldType<rank, Nc, RepDim>::type& a,
+    const typename DeviceSpinorFieldType<rank, Nc, RepDim>::type& b,
+    const complex_t& alpha) {
+  return spinor_add_mul<rank, Nc, RepDim>(a, b, -alpha);
 }
 
 }  // namespace klft
