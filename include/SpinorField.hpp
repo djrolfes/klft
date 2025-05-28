@@ -25,8 +25,12 @@
 // Nc number of colors
 // RepDim Dimension of Gamma matrices, Nd = RepDim
 namespace klft {
-template <size_t Nc, size_t RepDim>
+template <size_t _Nc, size_t _RepDim>
 struct deviceSpinorField {
+  static const size_t rank = 4;  // SpinorField is always 4D
+  static const size_t Nc = _Nc;
+  static const size_t RepDim =
+      _RepDim;  // RepDim is the dimension of the Gamma matrices
   deviceSpinorField() = default;
 
   // initialize all sites to a given value

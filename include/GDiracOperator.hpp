@@ -28,8 +28,11 @@
 
 namespace klft {
 
-template <size_t rank, size_t Nc, size_t RepDim>
+template <size_t _rank, size_t _Nc, size_t _RepDim>
 struct diracParameters {
+  static constexpr size_t rank = _rank;
+  static constexpr size_t Nc = _Nc;
+  static constexpr size_t RepDim = _RepDim;
   using VecGammaMatrix = Kokkos::Array<GammaMat<RepDim>, 4>;
   const VecGammaMatrix gammas;
   const GammaMat<RepDim> gamma_id = get_identity<RepDim>();
@@ -48,9 +51,10 @@ struct diracParameters {
 struct TagD {};
 struct TagDdagger {};
 
-template <typename Derived, size_t rank, size_t Nc, size_t RepDim>
+template <typename _Derived, size_t rank, size_t Nc, size_t RepDim>
 class DiracOperator : public std::enable_shared_from_this<
-                          DiracOperator<Derived, rank, Nc, RepDim>> {
+                          DiracOperator<_Derived, rank, Nc, RepDim>> {
+  using Derived = _Derived;
   // Define Tags for template dispatch:
   using SpinorFieldType =
       typename DeviceSpinorFieldType<rank, Nc, RepDim>::type;
@@ -67,7 +71,7 @@ class DiracOperator : public std::enable_shared_from_this<
     // Apply the operator
     tune_and_launch_for<rank, TagD>("WilsonDiracOperator", IndexArray<rank>{},
                                     params.dimensions,
-                                    static_cast<Derived&>(*this));
+                                    static_cast<_Derived&>(*this));
     return s_out;
   }
   SpinorFieldType applyDdagger(const SpinorFieldType& s_in) {
@@ -77,7 +81,7 @@ class DiracOperator : public std::enable_shared_from_this<
     // Apply the operator
     tune_and_launch_for<rank, TagDdagger>("WilsonDiracOperator",
                                           IndexArray<rank>{}, params.dimensions,
-                                          static_cast<Derived&>(*this));
+                                          static_cast<_Derived&>(*this));
     return s_out;
   }
   SpinorFieldType s_in;
@@ -153,6 +157,10 @@ class WilsonDiracOperator
     this->s_temp(Idcs...) += this->s_in(Idcs...) - this->params.kappa * temp;
   }
 };
+// Deduction guide
+template <typename GaugeType, typename ParamType>
+WilsonDiracOperator(const GaugeType&, const ParamType&)
+    -> WilsonDiracOperator<ParamType::rank, ParamType::Nc, ParamType::RepDim>;
 
 template <size_t _rank, size_t _Nc, size_t _RepDim>
 class HWilsonDiracOperator
@@ -199,6 +207,10 @@ class HWilsonDiracOperator
     operator()(TagD{}, Idcs...);
   }
 };
+// Deduction guide
+template <typename GaugeType, typename ParamType>
+HWilsonDiracOperator(const GaugeType&, const ParamType&)
+    -> HWilsonDiracOperator<ParamType::rank, ParamType::Nc, ParamType::RepDim>;
 
 // template <size_t rank, size_t Nc, size_t RepDim>
 // class HWilsonDiracOperator : public DiracOperator {

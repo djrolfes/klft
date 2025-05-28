@@ -32,9 +32,7 @@ class Solver
   using GaugeFieldType = typename DeviceGaugeFieldType<rank, Nc>::type;
   const SpinorFieldType b;
   SpinorFieldType x;  // Solution to DiracOP*x=b
-  GaugeFieldType g;
-  diracParameters<rank, Nc, RepDim> params;
-  const DiracOperator<Derived, rank, Nc, RepDim> dirac_op;
+  DiracOperator<Derived, rank, Nc, RepDim> dirac_op;
   Solver(const SpinorFieldType& b,
          SpinorFieldType& x,
          const DiracOperator<Derived, rank, Nc, RepDim>& dirac_op)
@@ -42,9 +40,16 @@ class Solver
 
   virtual void solve(const SpinorFieldType& x0, const real_t& tol) = 0;
 };
+// Deduction guide for Solver
+template <typename Operator, typename SpinorType>
+Solver(const SpinorType&, SpinorType&, const Operator&)
+    -> Solver<typename Operator::Derived,
+              SpinorType::rank,
+              SpinorType::Nc,
+              SpinorType::RepDim>;
 
-template <typename Derived, , size_t rank, size_t Nc, size_t RepDim>
-class CGSolver : public Solver<DiracOp, DiracOp2, rank, Nc, RepDim> {
+template <typename Derived, size_t rank, size_t Nc, size_t RepDim>
+class CGSolver : public Solver<Derived, rank, Nc, RepDim> {
  public:
   using SpinorFieldType =
       typename DeviceSpinorFieldType<rank, Nc, RepDim>::type;
@@ -52,7 +57,7 @@ class CGSolver : public Solver<DiracOp, DiracOp2, rank, Nc, RepDim> {
   CGSolver() = delete;
   CGSolver(const SpinorFieldType& b,
            SpinorFieldType& x,
-           const DiracOperator<Derived, rank, Nc, RepDim>& dirac_op)
+           DiracOperator<Derived, rank, Nc, RepDim>& dirac_op)
       : Solver<Derived, rank, Nc, RepDim>(b, x, dirac_op) {}
 
   void solve(const SpinorFieldType& x0, const real_t& tol) override {
@@ -61,16 +66,16 @@ class CGSolver : public Solver<DiracOp, DiracOp2, rank, Nc, RepDim> {
 
     SpinorFieldType rk = spinor_sub_mul<rank, Nc, RepDim>(
         this->b,
-        dirac_op.applyDdagger(dirac_op.applyD(
+        this->dirac_op.applyDdagger(this->dirac_op.applyD(
             xk)),  // check if this is the right vector to apply dirac_op
         1.0);      // r_0
-    SpinorFieldType pk(this->params.dimensions, complex_t(0.0, 0.0));
+    SpinorFieldType pk(this->dirac_op.params.dimensions, complex_t(0.0, 0.0));
     Kokkos::deep_copy(pk.field, rk.field);  // p_0                        // d_0
     real_t rk_norm = spinor_norm<rank, Nc, RepDim>(rk);  //\delta_0
     int num_iter = 0;
     while (rk_norm > tol) {
       const SpinorFieldType apk =
-          dirac_op.applyDdagger(dirac_op.applyD(pk));  // z = Ad_k
+          this->dirac_op.applyDdagger(this->dirac_op.applyD(pk));  // z = Ad_k
       const complex_t rkrk = spinor_dot_product<rank, Nc, RepDim>(rk, rk);
       const complex_t alpha = (rkrk / spinor_dot_product<rank, Nc, RepDim>(
                                           pk, apk));  // Always real
@@ -86,16 +91,18 @@ class CGSolver : public Solver<DiracOp, DiracOp2, rank, Nc, RepDim> {
       if (KLFT_VERBOSITY > 1) {
         printf("CG Iteration %d: rk_norm = %.15f\n", num_iter, rk_norm);
         if (KLFT_VERBOSITY > 3) {
-          printf(
-              "Norm of (b - A*x) %.15f\n",
-              spinor_norm<rank, Nc, RepDim>(spinor_sub_mul<rank, Nc, RepDim>(
-                  this->b, dirac_op.applyDdagger(dirac_op.applyD(xk)), 1.0)));
+          printf("Norm of (b - A*x) %.15f\n",
+                 spinor_norm<rank, Nc, RepDim>(spinor_sub_mul<rank, Nc, RepDim>(
+                     this->b,
+                     this->dirac_op.applyDdagger(this->dirac_op.applyD(xk)),
+                     1.0)));
         }
       }
     }
     const real_t ex_res =
         spinor_norm<rank, Nc, RepDim>(spinor_sub_mul<rank, Nc, RepDim>(
-            this->b, dirac_op.applyDdagger(dirac_op.applyD(xk)), 1.0));
+            this->b, this->dirac_op.applyDdagger(this->dirac_op.applyD(xk)),
+            1.0));
 
     if (Kokkos::abs(rk_norm - ex_res) < tol) {
       printf("Roundoff Error, relaunching CG solver with new initial guess\n");
