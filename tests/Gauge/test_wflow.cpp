@@ -20,6 +20,7 @@
 // this file tests and benchmarks the metropolis kernel for different
 // 2D, 3D and 4D gauge fields for U(1), SU(2) and SU(3) gauge groups
 
+#include <iomanip>
 #include "Metropolis.hpp"
 #include "WilsonFlow.hpp"
 #include "GaugePlaquette.hpp"
@@ -83,6 +84,8 @@ int run_test(const size_t stream_size_array) {
                                         identitySUN<2>());
 
   printf("Plaq before: %11.4e\n", GaugePlaquette<4, 2>(dev_g_SU2_4D));
+
+  for (int asdf = 0; asdf < 15; ++asdf){
   printf("Sweep Metropolis %d times to get a config\n", STREAM_NTIMES);
 
   // run the benchmark
@@ -99,15 +102,94 @@ int run_test(const size_t stream_size_array) {
   printf(HLINE);
 
   WilsonFlowParams wParams;
+  wParams.n_steps = 5;
+  wParams.eps = 0.0001;
+  printf("Plaq after wflow: ");
+  for (index_t step = 0; step <20; ++step){
   auto wFlow = WilsonFlow<4, 2, GaugeFieldKind::Standard>(wParams, dev_g_SU2_4D);  
   wFlow.flow();
+  Kokkos::fence();
+  printf("%11.4e ", GaugePlaquette<4, 2>(dev_g_SU2_4D));
+  //printf(HLINE);
+  //printf(HLINE); 
+  }
+  printf("\n");
   printf(HLINE);
-  printf("Plaq after wflow: %11.4e\n", GaugePlaquette<4, 2>(dev_g_SU2_4D));
-  printf(HLINE);
-}
-
+  }
+  }
   return 0;
 }
+
+int test_eps_scan(const size_t lattice_size, klft::real_t flow_time = 0.3, int n_configs = 5) {
+  using RNG = Kokkos::Random_XorShift64_Pool<Kokkos::DefaultExecutionSpace>;
+  RNG rng(12345);
+
+  std::vector<klft::real_t> eps_values = {0.0005, 0.001, 0.002, 0.005, 0.01};
+  const index_t Nc = 2;
+
+  printf(HLINE);
+  printf("Starting Wilson Flow eps scan\n");
+  printf("Target flow time: %g\n", flow_time);
+  printf("Lattice size: %zu^4, Nc = %d, Configs per eps = %d\n", lattice_size, Nc, n_configs);
+  printf("Scanning %zu eps values...\n", eps_values.size());
+  printf(HLINE);
+
+  for (auto eps : eps_values) {
+    index_t n_steps = static_cast<index_t>(flow_time / eps);
+    std::ostringstream fname;
+    fname << "wflow_eps_" << std::fixed << std::setprecision(6) << eps << ".dat";
+    std::ofstream fout(fname.str());
+printf("[eps = %.6f] -> n_steps = %d --> Output: %s\n", eps, n_steps, fname.str().c_str()); fout << "# Wilson Flow Plaquette test\n"; fout << "# eps = " << eps << ", n_steps = " << n_steps << ", flow_time ~ " << flow_time << "\n";
+    fout << "# ConfigID\tFlowTime\tPlaquette\n";
+
+    for (int cfg_id = 0; cfg_id < n_configs; ++cfg_id) {
+      printf("  [cfg %d/%d] Metropolis + Flow...", cfg_id + 1, n_configs);
+      fflush(stdout);
+
+      MetropolisParams mparams;
+      mparams.Nc = Nc;
+
+      deviceGaugeField<4, Nc> gauge(lattice_size, lattice_size, lattice_size, lattice_size,
+                                    identitySUN<Nc>());
+
+      for (int sweep = 0; sweep < 15; ++sweep)
+        sweep_Metropolis<4, Nc>(gauge, mparams, rng);
+
+      WilsonFlowParams wfparams;
+      wfparams.eps = eps;
+      wfparams.beta = mparams.beta;
+      wfparams.n_steps = 10;
+
+      auto flow = WilsonFlow<4, Nc, GaugeFieldKind::Standard>(wfparams, gauge);
+      Kokkos::fence();
+
+      size_t intermediate_step {0};
+      klft::real_t plaq = GaugePlaquette<4, Nc>(gauge);
+      Kokkos::fence();
+      fout << cfg_id << "\t" << real_t(eps * intermediate_step*10*eps) << "\t" << plaq << "\n";
+      fout.flush();
+      while (intermediate_step*10 < n_steps){ 
+      flow.flow();
+      Kokkos::fence();
+      klft::real_t plaq = GaugePlaquette<4, Nc>(gauge);
+      Kokkos::fence();
+      ++intermediate_step;
+      fout << cfg_id << "\t" << real_t(eps * intermediate_step*10*eps) << "\t" << plaq << "\n";
+      fout.flush();
+     }
+
+      //printf(" done. Plaquette = %.6f\n", plaq);
+    }
+
+    fout.close();
+    printf("[eps = %.6f] Finished. Results written to %s\n", eps, fname.str().c_str());
+    printf(HLINE);
+  }
+
+  printf("All eps scans complete.\n");
+  return 0;
+}
+
 
 int parse_args(int argc, char **argv, size_t &stream_array_size) {
   // Defaults
@@ -148,7 +230,7 @@ int parse_args(int argc, char **argv, size_t &stream_array_size) {
 
 int main(int argc, char *argv[]) {
   printf(HLINE);
-  printf("SU(N) GaugeField 2D, 3D and 4D metropolis kernel test and benchmark\n");
+  printf("SU(N) Wilson Flow eps scan test\n");
   printf(HLINE);
 
   Kokkos::initialize(argc, argv);
@@ -156,12 +238,10 @@ int main(int argc, char *argv[]) {
   size_t stream_array_size;
   rc = parse_args(argc, argv, stream_array_size);
   if (rc == 0) {
-    rc = run_test(stream_array_size);
+    rc = test_eps_scan(stream_array_size);
   } else if (rc == -2) {
-    // Don't return error code when called with "-h"
     rc = 0;
   }
   Kokkos::finalize();
-
   return rc;
 }

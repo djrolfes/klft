@@ -12,17 +12,18 @@ namespace klft {
         index_t n_steps; 
         // flow time step size
         real_t eps; 
+        // beta
+        real_t beta;
 
         WilsonFlowParams(){
             // default parameters (eps = 0.01)
             n_steps = 10;
             eps = real_t(0.1/n_steps);
+            beta = real_t(1.0);
         }
     };
 
-
-    // TODO: rewrite to make the Wilsonflow act on a per link basis (not as much overhead from starting so many parallel dispatches.).
-    template <size_t rank,
+template <size_t rank,
           size_t Nc,
           GaugeFieldKind Kind = GaugeFieldKind::Standard>
     struct WilsonFlow{
@@ -52,14 +53,6 @@ namespace klft {
         // execute the wilson flow 
         void flow(){ // todo: check this once by saving a staple field and once by locally calculating the staple
             for (int step = 0; step < params.n_steps; ++step){
-                //tmp_stap = stapleField<rank, Nc, Kind>(field);
-                //tune_and_launch_for<rank>("Wilsonflow-flow",IndexArray<rank>{0,0,0,0}, field.dimensions, KOKKOS_LAMBDA(auto i0, auto i1, auto i2, auto i3){
-                //    for (index_t mu = 0; mu < 4; ++mu) {
-                //        SUN<Nc> Z = tmp_stap(i0, i1, i2, i3, mu) * conj(field(i0, i1, i2, i3, mu));
-                //        Z = make_antiherm(Z);
-                //        field(i0, i1, i2, i3, mu) *= exp(from_Group(Z*params.eps));
-                //    }
-                //});
 
                 #pragma unroll
                 for (index_t fstep = 0; fstep <3; ++fstep){
@@ -77,8 +70,10 @@ namespace klft {
         KOKKOS_INLINE_FUNCTION void stepW1(indexType i0, indexType i1, indexType i2, indexType i3, index_t mu) const {
             SUN<Nc> Z0 = tmp_stap(i0, i1, i2, i3, mu) * conj(field(i0, i1, i2, i3, mu));
             tmp_Z(i0, i1, i2, i3, mu) = Z0;
-            //Z0 = make_antiherm(Z0 * params.eps * static_cast<real_t>(1.0 / 4.0));
-            field(i0, i1, i2, i3, mu) *= exp(from_Group(Z0 * params.eps * static_cast<real_t>(1.0 / 4.0)));
+            Z0 = make_antiherm(Z0 *(Nc/params.beta) * static_cast<real_t>(1.0 / 4.0));
+		sun<Nc> tmp = from_Group(Z0);
+            field(i0, i1, i2, i3, mu) = exp(tmp*params.eps) * field(i0, i1, i2, i3, mu);
+            restoreSUN(field(i0, i1, i2, i3, mu));
         }
 
         template <typename indexType>
@@ -87,8 +82,10 @@ namespace klft {
             SUN<Nc> Z0 = tmp_Z(i0, i1, i2, i3, mu);
             Z1 = Z1 * static_cast<real_t>(8.0 / 9.0) - Z0 * static_cast<real_t>(17.0 / 36.0);
             tmp_Z(i0, i1, i2, i3, mu) = Z1;
-            //Z1 = make_antiherm(Z1*params.eps);
-            field(i0, i1, i2, i3, mu) = exp(from_Group(Z1*params.eps)) * field(i0, i1, i2, i3, mu);
+            Z1 = make_antiherm(Z1*(Nc/params.beta));
+		sun<Nc> tmp = from_Group(Z1);
+            field(i0, i1, i2, i3, mu) = exp(tmp*params.eps) * field(i0, i1, i2, i3, mu);
+            restoreSUN(field(i0, i1, i2, i3, mu));
         }
 
         template <typename indexType>
@@ -96,8 +93,10 @@ namespace klft {
             SUN<Nc> Z2 = tmp_stap(i0, i1, i2, i3, mu) * conj(field(i0, i1, i2, i3, mu));
             SUN<Nc> Z_old = tmp_Z(i0, i1, i2, i3, mu);
             Z2 = (Z2 * static_cast<real_t>(3.0 / 2.0) - Z_old);
-            //Z2 = make_antiherm(Z2* params.eps);
-            field(i0, i1, i2, i3, mu) = exp(from_Group(Z2 * params.eps)) * field(i0, i1, i2, i3, mu);
+            Z2 = make_antiherm(Z2* (Nc/params.beta));
+	    sun<Nc> tmp = from_Group(Z2);
+            field(i0, i1, i2, i3, mu) = exp(tmp*params.eps) * field(i0, i1, i2, i3, mu);
+            restoreSUN(field(i0, i1, i2, i3, mu));
         }
 
         template <typename indexType>
