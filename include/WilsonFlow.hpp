@@ -2,7 +2,7 @@
 #include "GLOBAL.hpp"
 #include "FieldTypeHelper.hpp"
 #include "Gauge_Util.hpp"
-
+#include "AdjointSUN.hpp"
 
 namespace klft {
     struct WilsonFlowParams{
@@ -68,34 +68,37 @@ template <size_t rank,
 
         template <typename indexType>
         KOKKOS_INLINE_FUNCTION void stepW1(indexType i0, indexType i1, indexType i2, indexType i3, index_t mu) const {
+		complex_t im(0.0, 1.0);
             SUN<Nc> Z0 = tmp_stap(i0, i1, i2, i3, mu) * conj(field(i0, i1, i2, i3, mu));
             tmp_Z(i0, i1, i2, i3, mu) = Z0;
             Z0 = make_antiherm(Z0 *(Nc/params.beta) * static_cast<real_t>(1.0 / 4.0));
-		sun<Nc> tmp = from_Group(Z0);
-            field(i0, i1, i2, i3, mu) = exp(tmp*params.eps) * field(i0, i1, i2, i3, mu);
+	SUNAdj<Nc> tmp = traceT(Z0*im);
+            field(i0, i1, i2, i3, mu) = exp(params.eps*tmp) * field(i0, i1, i2, i3, mu);
             restoreSUN(field(i0, i1, i2, i3, mu));
         }
 
         template <typename indexType>
         KOKKOS_INLINE_FUNCTION void stepW2(indexType i0, indexType i1, indexType i2, indexType i3, index_t mu) const {
+		complex_t im(0.0, 1.0);
             SUN<Nc> Z1 = tmp_stap(i0, i1, i2, i3, mu) * conj(field(i0, i1, i2, i3, mu));
             SUN<Nc> Z0 = tmp_Z(i0, i1, i2, i3, mu);
             Z1 = Z1 * static_cast<real_t>(8.0 / 9.0) - Z0 * static_cast<real_t>(17.0 / 36.0);
             tmp_Z(i0, i1, i2, i3, mu) = Z1;
             Z1 = make_antiherm(Z1*(Nc/params.beta));
-		sun<Nc> tmp = from_Group(Z1);
-            field(i0, i1, i2, i3, mu) = exp(tmp*params.eps) * field(i0, i1, i2, i3, mu);
+		SUNAdj<Nc> tmp = traceT(Z1*im);
+            field(i0, i1, i2, i3, mu) = exp(params.eps*tmp) * field(i0, i1, i2, i3, mu);
             restoreSUN(field(i0, i1, i2, i3, mu));
         }
 
         template <typename indexType>
         KOKKOS_INLINE_FUNCTION void stepV(indexType i0, indexType i1, indexType i2, indexType i3, index_t mu) const {
+		complex_t im(0.0, 1.0);
             SUN<Nc> Z2 = tmp_stap(i0, i1, i2, i3, mu) * conj(field(i0, i1, i2, i3, mu));
             SUN<Nc> Z_old = tmp_Z(i0, i1, i2, i3, mu);
             Z2 = (Z2 * static_cast<real_t>(3.0 / 2.0) - Z_old);
             Z2 = make_antiherm(Z2* (Nc/params.beta));
-	    sun<Nc> tmp = from_Group(Z2);
-            field(i0, i1, i2, i3, mu) = exp(tmp*params.eps) * field(i0, i1, i2, i3, mu);
+	    SUNAdj<Nc> tmp = traceT(Z2*im);
+            field(i0, i1, i2, i3, mu) = exp(params.eps*tmp) * field(i0, i1, i2, i3, mu);
             restoreSUN(field(i0, i1, i2, i3, mu));
         }
 

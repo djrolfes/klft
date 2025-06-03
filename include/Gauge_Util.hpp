@@ -19,13 +19,60 @@
 
 // utility functions for gauge fields
 #pragma once
+#include "GLOBAL.hpp"
 #include "GaugeField.hpp"
+#include "Kokkos_Macros.hpp"
 #include "PTBCGaugeField.hpp"
 #include "SUN.hpp"
 
 namespace klft
 {
 
+template<size_t Nd, typename FieldA, typename FieldB>
+struct GaugeFieldMultFunctor;
+
+
+template<typename FieldA, typename FieldB>
+struct GaugeFieldMultFunctor<2, FieldA, FieldB>{
+	FieldA a;
+	FieldB b;
+
+	KOKKOS_INLINE_FUNCTION
+	void operator()(index_t i0, index_t i1){
+		for (index_t mu = 0; mu < 2; ++mu) {
+			a(i0,i1,mu) *= b(i0,i1,mu);
+		}
+	}
+};
+
+template<typename FieldA, typename FieldB>
+struct GaugeFieldMultFunctor<3, FieldA, FieldB>{
+	FieldA a;
+	FieldB b;
+
+	KOKKOS_INLINE_FUNCTION
+	void operator()(index_t i0, index_t i1, index_t i2){
+		for (index_t mu = 0; mu < 3; ++mu) {
+			a(i0,i1,i2,mu) *= b(i0,i1,i2,mu);
+		}
+	}
+};
+
+template<typename FieldA, typename FieldB>
+struct GaugeFieldMultFunctor<4, FieldA, FieldB>{
+	FieldA a;
+	FieldB b;
+
+	KOKKOS_INLINE_FUNCTION
+	void operator()(index_t i0, index_t i1, index_t i2, index_t i3){
+		for (index_t mu = 0; mu < 4; ++mu) {
+			a(i0,i1,i2,i3,mu) *= b(i0,i1,i2,i3,mu);
+		}
+	}
+};
+
+// TODO: fix the multiplication operators
+// 
   // define multiplication between GaugeFields for now only define *= operators, 
   // as I have yet to decide on a heuristic for the output type when mixing different GaugeFieldKinds
   template<size_t Nd, size_t Nc, GaugeFieldKind K1, GaugeFieldKind K2>
@@ -35,10 +82,10 @@ namespace klft
     typename DeviceGaugeFieldType<Nd, Nc, K2>::type const & b){
     assert(a.dimensions == b.dimensions);
     tune_and_launch_for<Nd>("operator*=DeviceGaugeFieldType<Nd, Nc, k1>::type*DeviceGaugeFieldType<Nd, Nc, k2>::type",IndexArray<Nd>{0}, a.dimensions,
-    KOKKOS_LAMBDA(auto... idxs){
+    KOKKOS_LAMBDA(index_t i0, index_t i1, index_t i2, index_t i3){
       #pragma unroll
       for (index_t mu = 0;mu<Nd;++mu){
-        a.field(idxs..., mu) *= b(idxs..., mu);
+        a.field(i0, i1, i2, i3, mu) *= b(i0, i1, i2, i3, mu);
       }
     });
     return a;
@@ -50,10 +97,10 @@ namespace klft
     assert(a.layout() == b.field.layout());
     assert(a.memory_space == b.field.memory_space); //only allow device-device and host-host operations
     tune_and_launch_for<Nd>("operator*=GaugeField*DeviceGaugeFieldType<Nd, Nc, k>::type",IndexArray<Nd>{0}, a.dimensions,
-      KOKKOS_LAMBDA(auto... idxs){
+      KOKKOS_LAMBDA(index_t i0, index_t i1, index_t i2, index_t i3){
         #pragma unroll
         for (index_t mu = 0;mu<Nd;++mu){
-          a(idxs..., mu) *= b(idxs..., mu);
+          a(i0, i1, i2, i3, mu) *= b(i0, i1, i2, i3, mu);
         }
       });
     return a;
@@ -66,10 +113,10 @@ namespace klft
     assert(a.field.layout() == b.layout());
     assert(a.field.memory_space == b.memory_space); //only allow device-device and host-host operations
     tune_and_launch_for<Nd>("operator*=DeviceGaugeFieldType<Nd, Nc, k>::type*GaugeField",IndexArray<Nd>{0}, a.dimensions,
-      KOKKOS_LAMBDA(auto... idxs){
+      KOKKOS_LAMBDA(index_t i0, index_t i1, index_t i2, index_t i3){
         #pragma unroll
         for (index_t mu = 0;mu<Nd;++mu){
-          a.field(idxs..., mu) *= b(idxs..., mu);
+          a.field(i0, i1, i2, i3, mu) *= b(i0, i1, i2, i3, mu);
         }
       });
     return a;
@@ -82,10 +129,10 @@ namespace klft
     assert(a.field.layout() == b.layout());
     assert(a.field.memory_space == b.memory_space); //only allow device-device and host-host operations
     tune_and_launch_for<Nd>("operator*=DeviceGaugeFieldType<Nd, Nc, k>::type*constGaugeField",IndexArray<Nd>{0}, a.dimensions,
-      KOKKOS_LAMBDA(auto... idxs){
+      KOKKOS_LAMBDA(index_t i0, index_t i1, index_t i2, index_t i3){
         #pragma unroll
-        for (index_t mu = 0;mu<Nd;++mu){
-          a.field(idxs..., mu) *= b(idxs..., mu);
+      for (index_t mu = 0;mu<Nd;++mu){
+          a.field(i0, i1, i2, i3, mu) *= b(i0, i1, i2, i3, mu);
         }
       });
     return a;
@@ -99,10 +146,10 @@ namespace klft
     typename DeviceGaugeFieldType<Nd, Nc, K1>::type &a, 
     real_t const b){
     tune_and_launch_for<Nd>("operator*=DeviceGaugeFieldType<Nd, Nc, k1>::type*Scalar",IndexArray<Nd>{0}, a.dimensions,
-    KOKKOS_LAMBDA(auto... idxs){
+    KOKKOS_LAMBDA(index_t i0, index_t i1, index_t i2, index_t i3){
       #pragma unroll
       for (index_t mu = 0;mu<Nd;++mu){
-        a.field(idxs..., mu) *= b;
+        a.field(i0, i1, i2, i3, mu) *= b;
       }
     });
     return a;
@@ -112,10 +159,10 @@ namespace klft
   GaugeField<Nd, Nc>& operator*=(GaugeField<Nd, Nc> &a, 
     real_t const b){
     tune_and_launch_for<Nd>("operator*=GaugeField*Scalar",IndexArray<Nd>{0}, a.dimensions,
-      KOKKOS_LAMBDA(auto... idxs){
+      KOKKOS_LAMBDA(index_t i0, index_t i1, index_t i2, index_t i3){
         #pragma unroll
         for (index_t mu = 0;mu<Nd;++mu){
-          a(idxs..., mu) *= b;
+          a(i0, i1, i2, i3, mu) *= b;
         }
       });
     return a;
@@ -127,10 +174,10 @@ namespace klft
   template <size_t Nd, size_t Nc, GaugeFieldKind K = GaugeFieldKind::Standard>
   void conj_field(typename DeviceGaugeFieldType<Nd, Nc, K>::type& field) {
     tune_and_launch_for<Nd>("conj_field",IndexArray<Nd>{0}, field.dimensions,
-    KOKKOS_LAMBDA(auto... idxs){
+    KOKKOS_LAMBDA(index_t i0, index_t i1, index_t i2, index_t i3){
       #pragma unroll
       for (index_t mu = 0; mu <Nd; ++mu){
-        field.field(idxs..., mu) = conj(field(idxs..., mu));
+        field.field(i0, i1, i2, i3, mu) = conj(field(i0, i1, i2, i3, mu));
       }
     });
     Kokkos::fence();
