@@ -88,10 +88,12 @@ namespace klft
   template <size_t Nc, class RNG>
   KOKKOS_FORCEINLINE_FUNCTION
   void randSUNAdj(SUNAdj<Nc> &r, RNG &generator) {
+auto gen = generator.get_state();
     #pragma unroll
     for (size_t i = 0; i < getNcAdj(Nc); ++i) {
-      r[i] = generator.normal(0.0, 1.0);
+r[i] = gen.normal(0.0, 1.0);
     }
+generator.free_state(gen);
   }
 
   // get the adjoint from an SU(N) matrix

@@ -1,21 +1,26 @@
 # MPI
-find_package(MPI REQUIRED)
-include_directories(SYSTEM ${MPI_INCLUDE_PATH})
+
+option(COMPILE_QUDA_TESTS "Compile tests that require QUDA" OFF)
 
 # --------------------------
-# Set and check QUDA_HOME
+# Set and check QUDA_HOME if needed
 # --------------------------
-if("${QUDA_HOME}" STREQUAL "")
-  message(FATAL_ERROR "QUDA_HOME must be defined")
-endif()
+if(COMPILE_QUDA_TESTS)
+  if("${QUDA_HOME}" STREQUAL "")
+    message(FATAL_ERROR "QUDA_HOME must be defined when COMPILE_QUDA_TESTS is ON")
+  endif()
 
-include_directories(SYSTEM ${QUDA_HOME}/include)
-link_directories(${QUDA_HOME}/lib)
+	find_package(MPI REQUIRED)
+	include_directories(SYSTEM ${MPI_INCLUDE_PATH})
 
-# Find QUDA library
-find_library(QUDA_LIB NAMES quda PATHS ${QUDA_HOME}/lib)
-if(NOT QUDA_LIB)
-  message(FATAL_ERROR "Could not find QUDA library in ${QUDA_HOME}/lib")
+  include_directories(SYSTEM ${QUDA_HOME}/include)
+  link_directories(${QUDA_HOME}/lib)
+
+  # Find QUDA library
+  find_library(QUDA_LIB NAMES quda PATHS ${QUDA_HOME}/lib)
+  if(NOT QUDA_LIB)
+    message(FATAL_ERROR "Could not find QUDA library in ${QUDA_HOME}/lib")
+  endif()
 endif()
 
 # --------------------------
@@ -24,10 +29,13 @@ endif()
 add_executable(test_wflow test_wflow.cpp)
 target_link_libraries(test_wflow PUBLIC Kokkos::kokkos)
 
-add_executable(quda_wflow_test quda_wflow_test.cpp)
-target_link_libraries(quda_wflow_test 
-  PUBLIC 
-    Kokkos::kokkos 
-    ${QUDA_LIB} 
-    ${MPI_CXX_LIBRARIES}
-)
+
+if(COMPILE_QUDA_TESTS)
+  add_executable(quda_wflow_test quda_wflow_test.cpp)
+  target_link_libraries(quda_wflow_test 
+    PUBLIC 
+      Kokkos::kokkos 
+      ${QUDA_LIB} 
+      ${MPI_CXX_LIBRARIES}
+  )
+endif()
