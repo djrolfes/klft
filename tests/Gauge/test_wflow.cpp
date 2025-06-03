@@ -174,7 +174,7 @@ printf("[eps = %.6f] -> n_steps = %d --> Output: %s\n", eps, n_steps, fname.str(
       klft::real_t plaq = GaugePlaquette<4, Nc>(gauge);
       Kokkos::fence();
       ++intermediate_step;
-      fout << cfg_id << "\t" << real_t(eps * intermediate_step*10*eps) << "\t" << plaq << "\n";
+      fout << cfg_id << "\t" << real_t(eps * intermediate_step*10) << "\t" << plaq << "\n";
       fout.flush();
      }
 

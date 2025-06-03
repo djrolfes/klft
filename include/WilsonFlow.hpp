@@ -71,10 +71,9 @@ template <size_t rank,
         KOKKOS_INLINE_FUNCTION void stepW1(indexType i0, indexType i1, indexType i2, indexType i3, index_t mu) const {
 		complex_t im(0.0, 1.0);
             SUN<Nc> Z0 = tmp_stap(i0, i1, i2, i3, mu) * conj(field(i0, i1, i2, i3, mu));
-	    Z0 = make_antiherm(Z0);
-            tmp_Z(i0, i1, i2, i3, mu) = Z0*params.eps;
-            Z0 = make_antiherm(Z0 * static_cast<real_t>(1.0 / 4.0));
-	SUNAdj<Nc> tmp = traceT(Z0);
+	    Z0 = make_antiherm(Z0)*params.eps;
+            tmp_Z(i0, i1, i2, i3, mu) = Z0;
+	SUNAdj<Nc> tmp = traceT(Z0 * static_cast<real_t>(1.0 / 4.0));
             field(i0, i1, i2, i3, mu) = expoSUN(tmp) * field(i0, i1, i2, i3, mu);
             restoreSUN(field(i0, i1, i2, i3, mu));
         }
@@ -83,11 +82,10 @@ template <size_t rank,
         KOKKOS_INLINE_FUNCTION void stepW2(indexType i0, indexType i1, indexType i2, indexType i3, index_t mu) const {
 		complex_t im(0.0, 1.0);
             SUN<Nc> Z1 = tmp_stap(i0, i1, i2, i3, mu) * conj(field(i0, i1, i2, i3, mu));
-	    Z1 = make_antiherm(Z1);
+	    Z1 = make_antiherm(Z1)*params.eps;
             SUN<Nc> Z0 = tmp_Z(i0, i1, i2, i3, mu);
-            Z1 = Z1 * params.eps* static_cast<real_t>(8.0 / 9.0) - Z0 * static_cast<real_t>(17.0 / 36.0);
+            Z1 = Z1 * static_cast<real_t>(8.0 / 9.0) - Z0 * static_cast<real_t>(17.0 / 36.0);
             tmp_Z(i0, i1, i2, i3, mu) = Z1;
-            Z1 = make_antiherm(Z1);
 		SUNAdj<Nc> tmp = traceT(Z1);
             field(i0, i1, i2, i3, mu) = expoSUN(tmp) * field(i0, i1, i2, i3, mu);
             restoreSUN(field(i0, i1, i2, i3, mu));
@@ -97,10 +95,9 @@ template <size_t rank,
         KOKKOS_INLINE_FUNCTION void stepV(indexType i0, indexType i1, indexType i2, indexType i3, index_t mu) const {
 		complex_t im(0.0, 1.0);
             SUN<Nc> Z2 = tmp_stap(i0, i1, i2, i3, mu) * conj(field(i0, i1, i2, i3, mu));
-	    Z2 = make_antiherm(Z2);
+	    Z2 = make_antiherm(Z2)*params.eps;
             SUN<Nc> Z_old = tmp_Z(i0, i1, i2, i3, mu);
-            Z2 = (Z2 * params.eps*static_cast<real_t>(3.0 / 2.0) - Z_old);
-            Z2 = make_antiherm(Z2);
+            Z2 = (Z2 *static_cast<real_t>(3.0 / 2.0) - Z_old);
 	    SUNAdj<Nc> tmp = traceT(Z2);
             field(i0, i1, i2, i3, mu) = expoSUN(tmp) * field(i0, i1, i2, i3, mu);
             restoreSUN(field(i0, i1, i2, i3, mu));
