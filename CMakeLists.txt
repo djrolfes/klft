@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.21.0)
 project(klft VERSION 0.0.1 LANGUAGES CXX)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Honor already set CMAKE_CXX_STANDARD.
 # Otherwise default to C++17
@@ -33,3 +34,7 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/binaries ${CMAKE_CURRENT_BINARY_DIR
 
 # build the benchmarks
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/benchmarks ${CMAKE_CURRENT_BINARY_DIR}/benchmarks)
+
+# build tests
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/tests ${CMAKE_CURRENT_BINARY_DIR}/tests)
+
