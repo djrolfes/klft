@@ -23,6 +23,7 @@
 #include "GLOBAL.hpp"
 #include "Tuner.hpp"
 #include "SUN.hpp"
+#include "PTBCGaugeField.hpp"
 
 namespace klft
 {
@@ -164,25 +165,25 @@ namespace klft
     KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> & operator()(const Kokkos::Array<indexType,4> site, const index_t mu) {
       return field(site[0], site[1], site[2], site[3], mu);
     }
-
-    template <index_t mu>
-    void openBC() {
-      const IndexArray<3> start{0,0,0};
-      std::vector<index_t> end_dims_no_mu;
-      for (index_t i = 0; i < 3; ++i) {
-        if (i == mu) continue;
-        end_dims_no_mu.push_back(dimensions[i]);
-      }
-      const IndexArray<3> end_dims(end_dims_no_mu[0], end_dims_no_mu[1], end_dims_no_mu[2]);
-      tune_and_launch_for<3>("openBC", start, end_dims,
-        KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2) {
-          if constexpr (mu == 0) IndexArray<4> site{dimensions[0], i0, i1, i2};
-          if constexpr (mu == 1) IndexArray<4> site{i0, dimensions[1], i1, i2};
-          if constexpr (mu == 2) IndexArray<4> site{i0, i1, dimensions[2], i2};
-          if constexpr (mu == 3) IndexArray<4> site{i0, i1, i2, dimensions[3]};
-          field(site, mu) = complex_t(std::numeric_limits<real_t>::epsilon(), 0.0);
-        });
-    }
+//
+//    template <index_t mu>
+//    void openBC() {
+//      const IndexArray<3> start{0,0,0};
+//      std::vector<index_t> end_dims_no_mu;
+//      for (index_t i = 0; i < 3; ++i) {
+//        if (i == mu) continue;
+//        end_dims_no_mu.push_back(dimensions[i]);
+//      }
+//      const IndexArray<3> end_dims(end_dims_no_mu[0], end_dims_no_mu[1], end_dims_no_mu[2]);
+//      tune_and_launch_for<3>("openBC", start, end_dims,
+//        KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2) {
+//          if constexpr (mu == 0) IndexArray<4> site{dimensions[0], i0, i1, i2};
+//          if constexpr (mu == 1) IndexArray<4> site{i0, dimensions[1], i1, i2};
+//          if constexpr (mu == 2) IndexArray<4> site{i0, i1, dimensions[2], i2};
+//          if constexpr (mu == 3) IndexArray<4> site{i0, i1, i2, dimensions[3]};
+//          field(site, mu) = complex_t(std::numeric_limits<real_t>::epsilon(), 0.0);
+//        });
+//    }
 
     template <typename indexType>
     KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> staple(const Kokkos::Array<indexType,4> site, const index_t mu) const {
@@ -203,22 +204,7 @@ namespace klft
       // positive directions
       #pragma unroll
       for(index_t nu = 0; nu < Nd; ++nu) { // loop over nu
-        // do nothing for mu = nu
-        if (nu == mu) continue;
-        // get the x + nu indices
-        const index_t i0pnu = nu == 0 ? (i0 + 1) % dimensions[0] : i0;
-        const index_t i1pnu = nu == 1 ? (i1 + 1) % dimensions[1] : i1;
-        const index_t i2pnu = nu == 2 ? (i2 + 1) % dimensions[2] : i2;
-        const index_t i3pnu = nu == 3 ? (i3 + 1) % dimensions[3] : i3;
-        // get the staple
-        temp += field(i0pmu,i1pmu,i2pmu,i3pmu,nu) * conj(field(i0pnu,i1pnu,i2pnu,i3pnu,mu))
-              * conj(field(i0,i1,i2,i3,nu));
-      } // loop over nu
-      // negative directions
-      #pragma unroll
-      for(index_t nu = 0; nu < Nd; ++nu) { // loop over nu
-        // do nothing for mu = nu
-        if (nu == mu) continue;
+        // do nothing for mu = nuconstexpr
         // get the x + mu - nu indices
         const index_t i0pmu_mnu = nu == 0 ? (i0pmu - 1 + dimensions[0]) % dimensions[0] : i0pmu;
         const index_t i1pmu_mnu = nu == 1 ? (i1pmu - 1 + dimensions[1]) % dimensions[1] : i1pmu;
@@ -368,23 +354,23 @@ namespace klft
       return field(site[0], site[1], site[2], mu);
     }
 
-    template <index_t mu>
-    void openBC() {
-      const IndexArray<2> start{0,0};
-      std::vector<index_t> end_dims_no_mu;
-      for (index_t i = 0; i < 2; ++i) {
-        if (i == mu) continue;
-        end_dims_no_mu.push_back(dimensions[i]);
-      }
-      const IndexArray<2> end_dims(end_dims_no_mu[0], end_dims_no_mu[1]);
-      tune_and_launch_for<2>("openBC3D", start, end_dims,
-        KOKKOS_LAMBDA(const index_t i0, const index_t i1) {
-          if constexpr (mu == 0) IndexArray<3> site{dimensions[0], i0, i1};
-          if constexpr (mu == 1) IndexArray<3> site{i0, dimensions[1], i1};
-          if constexpr (mu == 2) IndexArray<3> site{i0, i1, dimensions[2]};
-          field(site, mu) = complex_t(std::numeric_limits<real_t>::epsilon(), 0.0);
-        });
-    }
+//    template <index_t mu>
+//    void openBC() {
+//      const IndexArray<2> start{0,0};
+//      std::vector<index_t> end_dims_no_mu;
+//      for (index_t i = 0; i < 2; ++i) {
+//        if (i == mu) continue;
+//        end_dims_no_mu.push_back(dimensions[i]);
+//      }
+//      const IndexArray<2> end_dims(end_dims_no_mu[0], end_dims_no_mu[1]);
+//      tune_and_launch_for<2>("openBC3D", start, end_dims,
+//        KOKKOS_LAMBDA(const index_t i0, const index_t i1) {
+//          if constexpr (mu == 0) IndexArray<3> site{dimensions[0], i0, i1};
+//          if constexpr (mu == 1) IndexArray<3> site{i0, dimensions[1], i1};
+//          if constexpr (mu == 2) IndexArray<3> site{i0, i1, dimensions[2]};
+//          field(site, mu) = complex_t(std::numeric_limits<real_t>::epsilon(), 0.0);
+//        });
+//    }
 
     template <typename indexType>
     KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> staple(const Kokkos::Array<indexType,3> site, const index_t mu) const {
@@ -564,17 +550,17 @@ namespace klft
       return field(site[0], site[1], mu);
     }
 
-    template <index_t mu>
-    void openBC() {
-      const index_t start = 0;
-      const index_t end = mu == 0 ? dimensions[0] : dimensions[1];
-      Kokkos::parallel_for(Policy1D(end),
-        KOKKOS_LAMBDA(const index_t i0) {
-          if constexpr (mu == 0) IndexArray<2> site{dimensions[0], i0};
-          if constexpr (mu == 1) IndexArray<2> site{i0, dimensions[1]};
-          field(site, mu) = complex_t(std::numeric_limits<real_t>::epsilon(), 0.0);
-        });
-    }
+//    template <index_t mu>
+//    void openBC() {
+//      const index_t start = 0;
+//      const index_t end = mu == 0 ? dimensions[0] : dimensions[1];
+//      Kokkos::parallel_for(Policy1D(end),
+//        KOKKOS_LAMBDA(const index_t i0) {
+//          if constexpr (mu == 0) IndexArray<2> site{dimensions[0], i0};
+//          if constexpr (mu == 1) IndexArray<2> site{i0, dimensions[1]};
+//          field(site, mu) = complex_t(std::numeric_limits<real_t>::epsilon(), 0.0);
+//        });
+//    }
 
     template <typename indexType>
     KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> staple(const Kokkos::Array<indexType,2> site, const index_t mu) const {
@@ -618,5 +604,7 @@ namespace klft
     }
 
   };
+
+
 
 }
