@@ -51,6 +51,13 @@ namespace klft
   template <size_t Nc>
   using SUN = Kokkos::Array<Kokkos::Array<complex_t,Nc>,Nc>;
 
+  // define adjoint groups
+  inline constexpr size_t NvAdj[] = {0, 1, 3, 8};
+  template <size_t Nc>
+  inline constexpr size_t NcAdj = NvAdj[Nc];
+  template <size_t Nc>
+  using SUNAdj = Kokkos::Array<real_t, NcAdj<Nc>>;
+
   // define field view types
   // by default all views are 4D
   // some dimensions are set to 1 for lower dimensions

@@ -46,10 +46,9 @@ namespace klft
 
   template <size_t Nc>
   KOKKOS_FORCEINLINE_FUNCTION
-  SUN<Nc> operator*=(SUN<Nc> &a, const SUN<Nc> &b) {
+  void operator*=(SUN<Nc> &a, const SUN<Nc> &b) {
     SUN<Nc> c = a * b;
     a = c;
-    return a;
   }
 
   template <size_t Nc>
@@ -68,10 +67,14 @@ namespace klft
 
   template <size_t Nc>
   KOKKOS_FORCEINLINE_FUNCTION
-  SUN<Nc> operator+=(SUN<Nc> &a, const SUN<Nc> &b) {
-    SUN<Nc> c = a + b;
-    a = c;
-    return a;
+  void operator+=(SUN<Nc> &a, const SUN<Nc> &b) {
+    #pragma unroll
+    for (size_t i = 0; i < Nc; ++i) {
+      #pragma unroll
+      for (size_t j = 0; j < Nc; ++j) {
+        a[i][j] += b[i][j];
+      }
+    }
   }
 
   template <size_t Nc>
@@ -90,16 +93,20 @@ namespace klft
 
   template <size_t Nc>
   KOKKOS_FORCEINLINE_FUNCTION
-  SUN<Nc> operator-=(SUN<Nc> &a, const SUN<Nc> &b) {
-    SUN<Nc> c = a - b;
-    a = c;
-    return a;
+  void operator-=(SUN<Nc> &a, const SUN<Nc> &b) {
+    #pragma unroll
+    for (size_t i = 0; i < Nc; ++i) {
+      #pragma unroll
+      for (size_t j = 0; j < Nc; ++j) {
+        a[i][j] -= b[i][j];
+      }
+    }
   }
 
 
-  template <size_t Nc>
+  template <size_t Nc, typename Tin>
   KOKKOS_FORCEINLINE_FUNCTION
-  SUN<Nc> operator*(const SUN<Nc> &a, const real_t &b) {
+  SUN<Nc> operator*(const SUN<Nc> &a, const Tin &b) {
     SUN<Nc> c;
     #pragma unroll
     for (size_t i = 0; i < Nc; ++i) {
@@ -111,12 +118,16 @@ namespace klft
     return c;
   }
 
-  template <size_t Nc>
+  template <size_t Nc, typename Tin>
   KOKKOS_FORCEINLINE_FUNCTION
-  SUN<Nc> operator*=(SUN<Nc> &a, const real_t &b) {
-    SUN<Nc> c = a * b;
-    a = c;
-    return a;
+  void operator*=(SUN<Nc> &a, const Tin &b) {
+    #pragma unroll
+    for (size_t i = 0; i < Nc; ++i) {
+      #pragma unroll
+      for (size_t j = 0; j < Nc; ++j) {
+        a[i][j] *= b;
+      }
+    }
   }
 
 
