@@ -33,6 +33,7 @@ namespace klft
     bool measure_plaquette; // whether to measure the plaquette
     bool measure_wilson_loop_temporal; // whether to measure the temporal Wilson loop
     bool measure_wilson_loop_mu_nu; // whether to measure the mu-nu Wilson loop
+    bool measure_density_E;
     std::vector<Kokkos::Array<index_t,2>> W_temp_L_T_pairs; // pairs of (L,T) for the temporal Wilson loop
     std::vector<Kokkos::Array<index_t,2>> W_mu_nu_pairs; // pairs of (mu,nu) for the mu-nu Wilson loop
     std::vector<Kokkos::Array<index_t,2>> W_Lmu_Lnu_pairs; // pairs of (Lmu,Lnu) for the Wilson loop
@@ -42,11 +43,13 @@ namespace klft
     std::vector<real_t> plaquette_measurements; // measurements of the plaquette
     std::vector<std::vector<Kokkos::Array<real_t,3>>> W_temp_measurements; // L, T and corresponding W_temp
     std::vector<std::vector<Kokkos::Array<real_t,5>>> W_mu_nu_measurements; // mu, nu, Lmu, Lnu and corresponding W_mu_nu
+    std::vector<real_t> density_E_measurements;
 
     // finally, some filenames where the measurements will be flushed
     std::string plaquette_filename; // filename for the plaquette measurements
     std::string W_temp_filename; // filename for the temporal Wilson loop measurements
     std::string W_mu_nu_filename; // filename for the mu-nu Wilson loop measurements
+    std::string density_E_filename; // filename for the density E measurements
 
     // boolean flag to indicate if the measurements are to be flushed
     bool write_to_file;
@@ -57,7 +60,8 @@ namespace klft
       : measurement_interval(0),
         measure_plaquette(false),
         measure_wilson_loop_temporal(false),
-        measure_wilson_loop_mu_nu(false) {}
+        measure_wilson_loop_mu_nu(false), 
+	measure_density_E(false) {}
   };
 
   // define a function to measure the gauge observables
