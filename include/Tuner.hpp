@@ -98,8 +98,9 @@ void tune_and_launch_for(std::string functor_id,
     start_uid += std::to_string(start[i]) + "_";
     end_uid += std::to_string(end[i]) + "_";
   }
-  const std::string functor_uid = functor_id + "_rank_" + std::to_string(rank) +
-                                  "_start_" + start_uid + "end_" + end_uid;
+  const std::string functor_uid = functor_id + "_" + typeid(WorkTag).name() +
+                                  "_rank_" + std::to_string(rank) + "_start_" +
+                                  start_uid + "end_" + end_uid;
   if constexpr (rank == 4) {
     if (tuning_hash_table_4D.contains(functor_uid)) {
       auto tiling = tuning_hash_table_4D.get(functor_uid);
