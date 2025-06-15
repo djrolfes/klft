@@ -78,6 +78,12 @@ struct DeviceGaugeFieldTypeTraits<DeviceGaugeFieldType<_rank, _Nc, _k>> {
   static constexpr GaugeFieldKind Kind = _k;
 };
 
+template <typename T> struct isDeviceGaugeFieldType : std::false_type {};
+
+template <size_t rank, size_t Nc, GaugeFieldKind k>
+struct isDeviceGaugeFieldType<DeviceGaugeFieldType<rank, Nc, k>>
+    : std::true_type {};
+
 // define the same thing for SUN fields
 template <size_t rank, size_t Nc> struct DeviceSUNFieldType;
 
