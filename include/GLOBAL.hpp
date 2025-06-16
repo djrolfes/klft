@@ -45,13 +45,69 @@ using index_t = int;
 template <size_t rank> using IndexArray = Kokkos::Array<index_t, rank>;
 
 // define groups for gauge fields
+template <typename T> struct Wrapper {
+  T data;
+
+  // Implicit conversion to T&
+  KOKKOS_INLINE_FUNCTION
+  operator T &() { return data; }
+
+  KOKKOS_INLINE_FUNCTION
+  operator const T &() const { return data; }
+
+  // Optional: pointer-style access (if T is a View or Array)
+  KOKKOS_INLINE_FUNCTION
+  auto operator->() { return &data; }
+
+  KOKKOS_INLINE_FUNCTION
+  auto operator->() const { return &data; }
+
+  // Add custom operations
+  // KOKKOS_INLINE_FUNCTION
+  // Wrapper operator+(const Wrapper& other) const {
+  //     Wrapper result;
+  //     result.data = this->data + other.data; // requires T supports +
+  //     return result;
+  // }
+
+  // operator[] forwarding
+  template <typename Index> KOKKOS_INLINE_FUNCTION auto &operator[](Index i) {
+    return data[i];
+  }
+
+  template <typename Index>
+  KOKKOS_INLINE_FUNCTION const auto &operator[](Index i) const {
+    return data[i];
+  }
+
+  // Optional: operator() forwarding (for Views)
+  template <typename... Indices>
+  KOKKOS_INLINE_FUNCTION auto operator()(Indices... indices)
+      -> decltype(data(indices...)) {
+    return data(indices...);
+  }
+
+  template <typename... Indices>
+  KOKKOS_INLINE_FUNCTION auto operator()(Indices... indices) const
+      -> decltype(data(indices...)) {
+    return data(indices...);
+  }
+};
+
 template <size_t Nc>
-using SUN = Kokkos::Array<Kokkos::Array<complex_t, Nc>, Nc>;
+using SUN = Wrapper<Kokkos::Array<Kokkos::Array<complex_t, Nc>, Nc>>;
+
+// define adjoint groups of gauge fields
+template <size_t Nc>
+using sun = Kokkos::Array<real_t, std::max<size_t>(Nc *Nc - 1, 1)>;
 
 // define adjoint groups
-inline constexpr size_t NvAdj[] = {0, 1, 3, 8};
-template <size_t Nc> inline constexpr size_t NcAdj = NvAdj[Nc];
-template <size_t Nc> using SUNAdj = Kokkos::Array<real_t, NcAdj<Nc>>;
+KOKKOS_INLINE_FUNCTION constexpr size_t getNcAdj(size_t Nc) {
+  return (Nc * Nc > 1) ? Nc * Nc - 1 : 1;
+}
+
+template <size_t Nc>
+using SUNAdj = Wrapper<Kokkos::Array<real_t, getNcAdj(Nc)>>;
 
 // define field view types
 // by default all views are 4D
@@ -71,6 +127,18 @@ using GaugeField3D =
 template <size_t Nd, size_t Nc>
 using GaugeField2D =
     Kokkos::View<SUN<Nc> **[Nd], Kokkos::MemoryTraits<Kokkos::Restrict>>;
+
+template <size_t Nd, size_t Nc>
+using SUNAdjField =
+    Kokkos::View<SUNAdj<Nc> ****[Nd], Kokkos::MemoryTraits<Kokkos::Restrict>>;
+
+template <size_t Nd, size_t Nc>
+using SUNAdjField3D =
+    Kokkos::View<SUNAdj<Nc> ****[Nd], Kokkos::MemoryTraits<Kokkos::Restrict>>;
+
+template <size_t Nd, size_t Nc>
+using SUNAdjField2D =
+    Kokkos::View<SUNAdj<Nc> ****[Nd], Kokkos::MemoryTraits<Kokkos::Restrict>>;
 
 template <size_t Nc>
 using SUNField =
@@ -92,6 +160,7 @@ using Field3D =
 
 using Field2D =
     Kokkos::View<complex_t **, Kokkos::MemoryTraits<Kokkos::Restrict>>;
+
 using Field1D =
     Kokkos::View<complex_t *, Kokkos::MemoryTraits<Kokkos::Restrict>>;
 
@@ -135,6 +204,21 @@ using constGaugeField3D =
 template <size_t Nd, size_t Nc>
 using constGaugeField2D =
     Kokkos::View<const SUN<Nc> **[Nd],
+                 Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
+
+template <size_t Nd, size_t Nc>
+using constSUNAdjField =
+    Kokkos::View<const SUNAdj<Nc> ****[Nd],
+                 Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
+
+template <size_t Nd, size_t Nc>
+using constSUNAdjField3D =
+    Kokkos::View<const SUNAdj<Nc> ****[Nd],
+                 Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
+
+template <size_t Nd, size_t Nc>
+using constSUNAdjField2D =
+    Kokkos::View<const SUNAdj<Nc> ****[Nd],
                  Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
 
 template <size_t Nc>
@@ -201,6 +285,18 @@ using constGaugeField3D =
 template <size_t Nd, size_t Nc>
 using constGaugeField2D =
     Kokkos::View<const SUN<Nc> **[Nd], Kokkos::MemoryTraits<Kokkos::Restrict>>;
+
+template <size_t Nd, size_t Nc>
+using constSUNAdjField = Kokkos::View<const SUNAdj<Nc> ****[Nd],
+                                      Kokkos::MemoryTraits<Kokkos::Restrict>>;
+
+template <size_t Nd, size_t Nc>
+using constSUNAdjField3D = Kokkos::View<const SUNAdj<Nc> ****[Nd],
+                                        Kokkos::MemoryTraits<Kokkos::Restrict>>;
+
+template <size_t Nd, size_t Nc>
+using constSUNAdjField2D = Kokkos::View<const SUNAdj<Nc> ****[Nd],
+                                        Kokkos::MemoryTraits<Kokkos::Restrict>>;
 
 template <size_t Nc>
 using constSUNField =

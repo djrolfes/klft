@@ -23,6 +23,7 @@
 // dimensionality from Nd, you can not use the definitions here
 
 #pragma once
+#include "AdjointField.hpp"
 #include "Field.hpp"
 #include "GaugeField.hpp"
 #include "PTBCGaugeField.hpp"
@@ -77,6 +78,44 @@ struct DeviceGaugeFieldTypeTraits<DeviceGaugeFieldType<_rank, _Nc, _k>> {
   static constexpr size_t Nc = _Nc;
   static constexpr GaugeFieldKind Kind = _k;
 };
+
+// compile time check for the appropriate types
+template <typename T> struct isDeviceGaugeFieldType : std::false_type {};
+
+template <size_t rank, size_t Nc, GaugeFieldKind k>
+struct isDeviceGaugeFieldType<DeviceGaugeFieldType<rank, Nc, k>>
+    : std::true_type {};
+
+// define a function to get the gauge field type based on the rank,
+// with the default Field being the default GaugeField
+template <size_t rank, size_t Nc> struct DeviceAdjFieldType;
+
+template <size_t Nc> struct DeviceAdjFieldType<4, Nc> {
+  using type = deviceAdjointField<4, Nc>;
+};
+
+template <size_t Nc> struct DeviceAdjFieldType<3, Nc> {
+  using type = deviceAdjointField3D<3, Nc>;
+};
+
+template <size_t Nc> struct DeviceAdjFieldType<2, Nc> {
+  using type = deviceAdjointField2D<2, Nc>;
+};
+
+// define Traits to extract the rank, Nc and GaugeFieldKind at a later point
+template <typename T> struct DeviceAdjFieldTypeTraits;
+
+template <size_t _rank, size_t _Nc>
+struct DeviceAdjFieldTypeTraits<DeviceAdjFieldType<_rank, _Nc>> {
+  static constexpr size_t Rank = _rank;
+  static constexpr size_t Nc = _Nc;
+};
+
+// compile time check for the appropriate types
+template <typename T> struct isDeviceAdjFieldType : std::false_type {};
+
+template <size_t rank, size_t Nc>
+struct isDeviceAdjFieldType<DeviceAdjFieldType<rank, Nc>> : std::true_type {};
 
 // define the same thing for SUN fields
 template <size_t rank, size_t Nc> struct DeviceSUNFieldType;

@@ -29,6 +29,7 @@ public:
       DeviceGaugeFieldTypeTraits<GaugeFieldType>::Kind;
   GaugeFieldType gauge_field;
   AdjFieldType adjoint_field;
+  const real_t beta;
 
   const IndexArray<rank> dimensions;
   real_t eps;
@@ -37,14 +38,20 @@ public:
   UpdateMomentumGauge() = delete;
   ~UpdateMomentumGauge() = default;
 
-  // TODO: Add Force application
+  UpdateMomentumGauge(const GaugeFieldType gauge_field_,
+                      const AdjFieldType adjoint_field_,
+                      const IndexArray<rank> dimensions_, const real_t beta_)
+      : gauge_field(gauge_field_), adjoint_field(adjoint_field_),
+        dimensions(dimensions_), beta(beta_), eps(0.0) {}
+  // todo: Add Force as a function instead of it being incorporated into the
+  // functor.
 
   template <typename... Indices>
   KOKKOS_FORCEINLINE_FUNCTION void operator()(const Indices... Idcs) const {
     // Update the momentum field
-    adjoint_field(Idcs...) +=
-        eps * gauge_field(Idcs...) *
-        staple_field(Idcs...); // TODO: add beta as an input somewhere
+    adjoint_field(Idcs...) -=
+        this->eps * (this->beta / this->Nc) *
+        traceT(this->gauge_field(Idcs...) * this->staple_field(Idcs...));
   }
 
   void update(const real_t step_size) override {
@@ -53,8 +60,8 @@ public:
     for (size_t i = 0; i < rank; ++i) {
       start[i] = 0;
     }
+    // launch the kernels
     staple_field = stapleField(gauge_field.field);
-    // launch the kernel
     tune_and_launch_for<rank>("UpdateMomentumGauge", start, dimensions, *this);
     Kokkos::fence();
   }
