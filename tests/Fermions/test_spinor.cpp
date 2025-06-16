@@ -4,21 +4,18 @@
 
 #include "../../include/GammaMatrix.hpp"
 #include "GLOBAL.hpp"
+#include "IndexHelper.hpp"
 #include "Spinor.hpp"
-
 using namespace klft;
 
 #define HLINE "=========================================================\n"
 
 template <size_t Nc, size_t Nd>
-void print_spinor(const Spinor<Nc, Nd> &s, const char *name = "Spinor")
-{
+void print_spinor(const Spinor<Nc, Nd>& s, const char* name = "Spinor") {
   printf("%s:\n", name);
-  for (size_t c = 0; c < Nc; ++c)
-  {
+  for (size_t c = 0; c < Nc; ++c) {
     printf("  Color %zu:\n", c);
-    for (size_t d = 0; d < Nd; ++d)
-    {
+    for (size_t d = 0; d < Nd; ++d) {
       double re = s[c][d].real();
       double im = s[c][d].imag();
       printf("    [%zu] = (% .6f, % .6f i)\n", d, re, im);
@@ -26,8 +23,7 @@ void print_spinor(const Spinor<Nc, Nd> &s, const char *name = "Spinor")
   }
 }
 
-int main(int argc, char const *argv[])
-{
+int main(int argc, char const* argv[]) {
   printf(HLINE);
   printf("Testing Spinor GammaMatrix interaction\n");
   printf(HLINE);
@@ -50,11 +46,9 @@ int main(int argc, char const *argv[])
   printf("Testing Gamma*Spinor: \n");
   Spinor<3, 4> id = zeroSpinor<3, 4>();
 #pragma unroll
-  for (size_t i = 0; i < 3; ++i)
-  {
+  for (size_t i = 0; i < 3; ++i) {
 #pragma unroll
-    for (size_t j = 0; j < 4; ++j)
-    {
+    for (size_t j = 0; j < 4; ++j) {
       id[i][j] = complex_t(i * 4 + j, 0.0);
     }
   }
@@ -63,5 +57,12 @@ int main(int argc, char const *argv[])
          get_gamma0() * get_gamma1() * get_gamma2() * get_gamma3() * id);
   printf(HLINE);
   printf("Finished\n");
+  auto idx = IndexArray<4>{0, 3, 3, 0};
+  auto dim = IndexArray<4>{4, 4, 4, 4};
+  auto idx_new = shift_index_minus_bc(idx, 0, 1, 3, -1, dim);
+  printf("Shifted index: ");
+  printf("(%zu, %zu, %zu, %zu) with sign %f\n", idx_new.first[0],
+         idx_new.first[1], idx_new.first[2], idx_new.first[3], idx_new.second);
+  printf(HLINE);
   return 0;
 }

@@ -19,7 +19,7 @@ void print_spinor(const Spinor<Nc, Nd>& s, const char* name = "Spinor") {
     for (size_t d = 0; d < Nd; ++d) {
       double re = s[c][d].real();
       double im = s[c][d].imag();
-      printf("    [%zu] = (% .15f, % .15f i)\n", d, re, im);
+      printf("    [%zu] = (% .20f, % .20f i)\n", d, re, im);
     }
   }
 }
@@ -60,12 +60,21 @@ int main(int argc, char* argv[]) {
     printf("Initialize Solver...\n");
     CGSolver solver(test, x, D);
     printf("Apply Solver...\n");
+    auto eps = 1e-13;
     timer.reset();
-    solver.solve(x0, 1e-13);
+
+    solver.solve(x0, eps);
     auto diracTime2 = std::min(diracTime, timer.seconds());
     printf("Solver Kernel Time:     %11.4e s\n", diracTime2);
     printf("Comparing Solver result to expected result...\n");
     print_spinor<3, 4>(solver.x(0, 0, 0, 0) - u(0, 0, 0, 0), "Solver Result");
+    auto res_norm =
+        spinor_norm<4, 3, 4>(spinor_sub_mul<4, 3, 4>(u, solver.x, 1));
+    auto norm = spinor_norm<4, 3, 4>(u);
+
+    printf("Norm of Residual: %.20f\n", res_norm / norm);
+    printf("Is the residual norm smaller than %.2e ? %i\n", eps,
+           res_norm / norm < eps);
     // printf("i%i\n", solver.x(0, 0, 0, 0) == u(0, 0, 0, 0));
   }
 

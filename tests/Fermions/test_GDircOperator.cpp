@@ -36,15 +36,15 @@ int main(int argc, char* argv[]) {
     auto gammas = get_gammas<4>();
     GammaMat<4> gamma5 = get_gamma5();
     diracParameters<4, 3, 4> params(IndexArray<4>{L0, L1, L2, L3}, gammas,
-                                    gamma5, 0.5);
+                                    gamma5, -0.5);
     printf("Lattice Dimension %ix%ix%ix%i \n", L0, L1, L2, L3);
     printf("Generate SpinorFields...\n");
 
     Kokkos::Random_XorShift64_Pool<> random_pool(/*seed=*/1234);
     deviceSpinorField<3, 4> u(L0, L1, L2, L3, random_pool, 0, 1.0 / 1.41);
     deviceSpinorField<3, 4> v(L0, L1, L2, L3, random_pool, 0, 1.0 / 1.41);
-    real_t norm = spinor_norm<4, 3, 4>(u);
-    norm *= spinor_norm<4, 3, 4>(v);
+    real_t norm = spinor_norm_sq<4, 3, 4>(u);
+    norm *= spinor_norm_sq<4, 3, 4>(v);
     norm = Kokkos::sqrt(norm);
 
     printf("Generating Random Gauge Config\n");
@@ -79,7 +79,7 @@ int main(int argc, char* argv[]) {
     // Use the normal GaugeField, because it can be initialised with random
     // SU(3) matrices, however only use mu = 0
     deviceGaugeField<4, 3> gaugeTrafo(L0, L1, L2, L3, random_pool, 1);
-    real_t norm_trafo = spinor_norm<4, 3, 4>(u);
+    real_t norm_trafo = spinor_norm_sq<4, 3, 4>(u);
     // Dont know if this function is needed again, therefore only defined here,
     // and not in an include file.
     printf("Apply Gauge Trafos...\n");
@@ -109,7 +109,7 @@ int main(int argc, char* argv[]) {
                       const index_t i3) {
           Mu(i0, i1, i2, i3) -= Mu_trafo(i0, i1, i2, i3);
         });
-    real_t norm_trafo1 = spinor_norm<4, 3, 4>(Mu);
+    real_t norm_trafo1 = spinor_norm_sq<4, 3, 4>(Mu);
     norm_trafo1 = Kokkos::sqrt(norm_trafo1 / norm);
     if (norm_trafo1 < 1e-14) {
       printf("Passed invariance test with %.21f \n", norm_trafo1);
@@ -136,8 +136,8 @@ int main(int argc, char* argv[]) {
     Kokkos::Random_XorShift64_Pool<> random_pool(/*seed=*/1234);
     deviceSpinorField<2, 4> u_SU2(L0, L1, L2, L3, random_pool, 0, 1.0 / 1.41);
     deviceSpinorField<2, 4> v_SU2(L0, L1, L2, L3, random_pool, 0, 1.0 / 1.41);
-    real_t norm_SU2 = spinor_norm<4, 2, 4>(u_SU2);
-    norm_SU2 *= spinor_norm<4, 2, 4>(v_SU2);
+    real_t norm_SU2 = spinor_norm_sq<4, 2, 4>(u_SU2);
+    norm_SU2 *= spinor_norm_sq<4, 2, 4>(v_SU2);
     norm_SU2 = Kokkos::sqrt(norm_SU2);
 
     printf("Generating Random Gauge Config\n");
@@ -173,7 +173,7 @@ int main(int argc, char* argv[]) {
     // Use the normal GaugeField, because it can be initialised with random
     // SU(3) matrices, however only use mu = 0
     deviceGaugeField<4, 2> gaugeTrafo_SU2(L0, L1, L2, L3, random_pool, 1);
-    real_t norm_trafo_SU2 = spinor_norm<4, 2, 4>(u_SU2);
+    real_t norm_trafo_SU2 = spinor_norm_sq<4, 2, 4>(u_SU2);
     // Dont know if this function is needed again, therefore only defined here,
     // and not in an include file.
     printf("Apply Gauge Trafos...\n");
@@ -205,7 +205,7 @@ int main(int argc, char* argv[]) {
                       const index_t i3) {
           Mu_SU2(i0, i1, i2, i3) -= Mu_trafo_SU2(i0, i1, i2, i3);
         });
-    real_t norm_trafo1_SU2 = spinor_norm<4, 2, 4>(Mu_SU2);
+    real_t norm_trafo1_SU2 = spinor_norm_sq<4, 2, 4>(Mu_SU2);
     norm_trafo1_SU2 = Kokkos::sqrt(norm_trafo1_SU2 / norm_SU2);
     if (norm_trafo1_SU2 < 1e-14) {
       printf("Passed invariance test with %.21f \n", norm_trafo1_SU2);
@@ -233,8 +233,8 @@ int main(int argc, char* argv[]) {
     Kokkos::Random_XorShift64_Pool<> random_pool(/*seed=*/1234);
     deviceSpinorField<1, 4> u_U1(L0, L1, L2, L3, random_pool, 0, 1.0 / 1.41);
     deviceSpinorField<1, 4> v_U1(L0, L1, L2, L3, random_pool, 0, 1.0 / 1.41);
-    real_t norm_U1 = spinor_norm<4, 1, 4>(u_U1);
-    norm_U1 *= spinor_norm<4, 1, 4>(v_U1);
+    real_t norm_U1 = spinor_norm_sq<4, 1, 4>(u_U1);
+    norm_U1 *= spinor_norm_sq<4, 1, 4>(v_U1);
     norm_U1 = Kokkos::sqrt(norm_U1);
 
     printf("Generating Random Gauge Config\n");
@@ -270,7 +270,7 @@ int main(int argc, char* argv[]) {
     // Use the normal GaugeField, because it can be initialised with random
     // SU(3) matrices, however only use mu = 0
     deviceGaugeField<4, 1> gaugeTrafo_U1(L0, L1, L2, L3, random_pool, 1);
-    real_t norm_trafo_U1 = spinor_norm<4, 1, 4>(u_U1);
+    real_t norm_trafo_U1 = spinor_norm_sq<4, 1, 4>(u_U1);
     // Dont know if this function is needed again, therefore only defined here,
     // and not in an include file.
     printf("Spinor before Gauge Trafo:\n");
@@ -306,7 +306,7 @@ int main(int argc, char* argv[]) {
                       const index_t i3) {
           Mu_U1(i0, i1, i2, i3) -= Mu_trafo_U1(i0, i1, i2, i3);
         });
-    real_t norm_trafo1_U1 = spinor_norm<4, 1, 4>(Mu_U1);
+    real_t norm_trafo1_U1 = spinor_norm_sq<4, 1, 4>(Mu_U1);
     norm_trafo1_U1 = Kokkos::sqrt(norm_trafo1_U1 / norm_U1);
     if (norm_trafo1_U1 < 1e-14) {
       printf("Passed invariance test with %.21f \n", norm_trafo1_U1);
