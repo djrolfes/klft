@@ -134,11 +134,11 @@ using SUNAdjField =
 
 template <size_t Nd, size_t Nc>
 using SUNAdjField3D =
-    Kokkos::View<SUNAdj<Nc> ****[Nd], Kokkos::MemoryTraits<Kokkos::Restrict>>;
+    Kokkos::View<SUNAdj<Nc> ***[Nd], Kokkos::MemoryTraits<Kokkos::Restrict>>;
 
 template <size_t Nd, size_t Nc>
 using SUNAdjField2D =
-    Kokkos::View<SUNAdj<Nc> ****[Nd], Kokkos::MemoryTraits<Kokkos::Restrict>>;
+    Kokkos::View<SUNAdj<Nc> **[Nd], Kokkos::MemoryTraits<Kokkos::Restrict>>;
 
 template <size_t Nc>
 using SUNField =

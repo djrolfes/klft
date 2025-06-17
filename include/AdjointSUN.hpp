@@ -18,6 +18,12 @@ KOKKOS_FORCEINLINE_FUNCTION SUNAdj<Nc> operator*(const SUNAdj<Nc> &a,
 }
 
 template <size_t Nc, typename Tin>
+KOKKOS_FORCEINLINE_FUNCTION SUNAdj<Nc> operator*(const Tin &b,
+                                                 const SUNAdj<Nc> &a) {
+  return a * b;
+}
+
+template <size_t Nc, typename Tin>
 KOKKOS_FORCEINLINE_FUNCTION void operator*=(SUNAdj<Nc> &a, const Tin &b) {
 #pragma unroll
   for (size_t i = 0; i < getNcAdj(Nc); ++i) {

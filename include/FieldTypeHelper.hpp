@@ -162,5 +162,24 @@ template <> struct DeviceScalarFieldType<4> {
   using type = deviceScalarField;
 };
 
+// Type selector
+template <size_t Nd, size_t Nc> struct ConstGaugeFieldSelector;
+
+template <size_t Nc> struct ConstGaugeFieldSelector<4, Nc> {
+  using type = constGaugeField<4, Nc>;
+};
+
+template <size_t Nc> struct ConstGaugeFieldSelector<3, Nc> {
+  using type = constGaugeField3D<3, Nc>;
+};
+
+template <size_t Nc> struct ConstGaugeFieldSelector<2, Nc> {
+  using type = constGaugeField2D<2, Nc>;
+};
+
+// Type alias for convenience
+template <size_t Nd, size_t Nc>
+using ConstGaugeFieldType = typename ConstGaugeFieldSelector<Nd, Nc>::type;
+
 // add the same for scalar fields here when needed
 } // namespace klft

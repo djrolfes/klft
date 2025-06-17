@@ -30,6 +30,22 @@ template <size_t Nd, size_t Nc> struct deviceGaugeField {
 
   deviceGaugeField() = delete;
 
+  deviceGaugeField(GaugeField<Nd, Nc> &f_in)
+      : dimensions(
+            {f_in.extent(0), f_in.extent(1), f_in.extent(2), f_in.extent(3)}) {
+    Kokkos::realloc(Kokkos::WithoutInitializing, field, f_in.extent(0),
+                    f_in.extent(1), f_in.extent(2), f_in.extent(3));
+    Kokkos::deep_copy(field, f_in);
+  }
+
+  deviceGaugeField(const GaugeField<Nd, Nc> &f_in)
+      : dimensions(
+            {f_in.extent(0), f_in.extent(1), f_in.extent(2), f_in.extent(3)}) {
+    Kokkos::realloc(Kokkos::WithoutInitializing, field, f_in.extent(0),
+                    f_in.extent(1), f_in.extent(2), f_in.extent(3));
+    Kokkos::deep_copy(field, f_in);
+  }
+
   // initialize all sites to a given value
   deviceGaugeField(const index_t L0, const index_t L1, const index_t L2,
                    const index_t L3, const complex_t init)
@@ -187,7 +203,8 @@ template <size_t Nd, size_t Nc> struct deviceGaugeField {
   //                                end_dims_no_mu[2]);
   //   tune_and_launch_for<3>(
   //       "openBC", start, end_dims,
-  //       KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2) {
+  //       KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2)
+  //       {
   //         if constexpr (mu == 0)
   //           IndexArray<4> site{dimensions[0], i0, i1, i2};
   //         if constexpr (mu == 1)
@@ -268,8 +285,24 @@ template <size_t Nd, size_t Nc> struct deviceGaugeField {
 };
 
 template <size_t Nd, size_t Nc> struct deviceGaugeField3D {
+  GaugeField3D<Nd, Nc> field;
+  const IndexArray<3> dimensions;
 
   deviceGaugeField3D() = delete;
+
+  deviceGaugeField3D(GaugeField3D<Nd, Nc> &f_in)
+      : dimensions({f_in.extent(0), f_in.extent(1), f_in.extent(2)}) {
+    Kokkos::realloc(Kokkos::WithoutInitializing, field, f_in.extent(0),
+                    f_in.extent(1), f_in.extent(2));
+    Kokkos::deep_copy(field, f_in);
+  }
+
+  deviceGaugeField3D(const GaugeField3D<Nd, Nc> &f_in)
+      : dimensions({f_in.extent(0), f_in.extent(1), f_in.extent(2)}) {
+    Kokkos::realloc(Kokkos::WithoutInitializing, field, f_in.extent(0),
+                    f_in.extent(1), f_in.extent(2));
+    Kokkos::deep_copy(field, f_in);
+  }
 
   // initialize all sites to a given value
   deviceGaugeField3D(const index_t L0, const index_t L1, const index_t L2,
@@ -379,9 +412,6 @@ template <size_t Nd, size_t Nc> struct deviceGaugeField3D {
         });
     Kokkos::fence();
   }
-
-  GaugeField3D<Nd, Nc> field;
-  const IndexArray<3> dimensions;
 
   // define accessors for the field
   template <typename indexType>
@@ -495,6 +525,20 @@ template <size_t Nd, size_t Nc> struct deviceGaugeField3D {
 template <size_t Nd, size_t Nc> struct deviceGaugeField2D {
 
   deviceGaugeField2D() = delete;
+
+  deviceGaugeField2D(GaugeField2D<Nd, Nc> &f_in)
+      : dimensions({f_in.extent(0), f_in.extent(1)}) {
+    Kokkos::realloc(Kokkos::WithoutInitializing, field, f_in.extent(0),
+                    f_in.extent(1));
+    Kokkos::deep_copy(field, f_in);
+  }
+
+  deviceGaugeField2D(const GaugeField2D<Nd, Nc> &f_in)
+      : dimensions({f_in.extent(0), f_in.extent(1)}) {
+    Kokkos::realloc(Kokkos::WithoutInitializing, field, f_in.extent(0),
+                    f_in.extent(1));
+    Kokkos::deep_copy(field, f_in);
+  }
 
   // initialize all sites to a given value
   deviceGaugeField2D(const index_t L0, const index_t L1, const complex_t init)

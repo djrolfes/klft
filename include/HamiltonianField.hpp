@@ -5,6 +5,8 @@
 #include "GaugeField.hpp"
 #include "Kokkos_Macros.hpp"
 #include "Tuner.hpp"
+#include "decl/Kokkos_Declare_OPENMP.hpp"
+#include "impl/Kokkos_Profiling.hpp"
 #include <type_traits>
 
 namespace klft {
@@ -25,36 +27,55 @@ struct HamiltonianField {
 
   GaugeField gauge_field;
   AdjointField adjoint_field;
+  struct EKin {};
 
-  HamiltonianField() = default;
+  HamiltonianField() = delete;
 
   HamiltonianField(const GaugeField &_gauge_field,
                    const AdjointField &_adjoint_field)
       : gauge_field(_gauge_field), adjoint_field(_adjoint_field) {}
 
-  //   real_t kinetic_energy() {
-  //     real_t kinetic_energy = 0.0;
-  // tune_and_launch_for<rank>("kinetic_energy", BulkPolicy,
-  // KOKKOS_CLASS_LAMBDA(const int x, const int y, const int z, const int t,
-  // const int mu) {
-  //       Adjoint tmp = adjoint_field.get_adjoint(x,y,z,t,mu);
-  //       local_sum += 0.5*tmp.norm2();
-  //     }, kinetic_energy);
-  //     return kinetic_energy;
-  //   }
+  // Rank-4 version
+  KOKKOS_INLINE_FUNCTION void operator()(EKin, index_t i0, index_t i1,
+                                         index_t i2, index_t i3,
+                                         real_t &rtn) const {
+    real_t tmp = 0.0;
+    for (index_t mu = 0; mu < 4; ++mu) {
+      tmp += norm2<Nc>(adjoint_field(i0, i1, i2, i3, mu));
+    }
+    rtn += tmp;
+  }
 
-  // TODO:write the randomize_momentum function using  the randSUNAdj call
+  // Rank-3 version
+  KOKKOS_INLINE_FUNCTION void operator()(EKin, index_t i0, index_t i1,
+                                         index_t i2, real_t &rtn) const {
+    real_t tmp = 0.0;
+    for (index_t mu = 0; mu < 3; ++mu) {
+      tmp += norm2<Nc>(adjoint_field(i0, i1, i2, mu));
+    }
+    rtn += tmp;
+  }
+
+  // Rank-2 version
+  KOKKOS_INLINE_FUNCTION void operator()(EKin, index_t i0, index_t i1,
+                                         real_t &rtn) const {
+    real_t tmp = 0.0;
+    for (index_t mu = 0; mu < 2; ++mu) {
+      tmp += norm2<Nc>(adjoint_field(i0, i1, mu));
+    }
+    rtn += tmp;
+  }
+
+  real_t kinetic_energy() {
+    real_t kinetic_energy = 0.0;
+    auto rp = Kokkos::MDRangePolicy<EKin, Kokkos::Rank<this->rank>>(
+        IndexArray<this->rank>{0}, this->adjoint_field.dimensions);
+    Kokkos::parallel_reduce("kinetic_energy", rp, *this, kinetic_energy);
+    return kinetic_energy;
+  }
+
   template <class RNG> void randomize_momentum(RNG rng) {
-    tune_and_launch_for<rank>(
-        "randomize_momentum", IndexArray<rank>{0}, adjoint_field.dimension,
-        KOKKOS_LAMBDA(const int x, const int y, const int z, const int t,
-                      const int mu) {
-          auto generator = rng.get_state();
-          Adjoint U;
-          U.get_random(generator);
-          adjoint_field.set_adjoint(x, y, z, t, mu, U);
-          rng.free_state(generator);
-        });
+    adjoint_field.template randomize_field<RNG>(rng);
   }
 };
 

@@ -1,5 +1,6 @@
 #pragma once
 #include "AdjointGroup.hpp"
+#include "AdjointSUN.hpp"
 #include "GLOBAL.hpp"
 #include "Kokkos_Core.hpp"
 #include "Kokkos_Macros.hpp"
@@ -20,6 +21,7 @@ template <size_t Nd, size_t Nc> struct deviceAdjointField {
       : dimensions({L0, L1, L2, L3}) {
     do_init(field, init);
   }
+
   void do_init(SUNAdjField<Nd, Nc> &V, const SUNAdj<Nc> &init) {
     Kokkos::realloc(Kokkos::WithoutInitializing, V, dimensions[0],
                     dimensions[1], dimensions[2], dimensions[3]);
@@ -30,6 +32,18 @@ template <size_t Nd, size_t Nc> struct deviceAdjointField {
 #pragma unroll
           for (index_t mu = 0; mu < Nd; ++mu) {
             V(i0, i1, i2, i3, mu) = init;
+          }
+        });
+  }
+
+  template <class RNG> void randomize_field(RNG rng) {
+    tune_and_launch_for(
+        "randomize_adj_field", IndexArray<Nd>{0}, dimensions,
+        KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2,
+                      const index_t i3) {
+          for (index_t mu = 0; mu < Nd; ++mu) {
+            auto generator = rng.get_state();
+            randSUNAdj<Nc>((*this)(i0, i1, i2, i3, mu), generator);
           }
         });
   }
@@ -67,7 +81,7 @@ template <size_t Nd, size_t Nc> struct deviceAdjointField3D {
 
   deviceAdjointField3D() = delete;
 
-  SUNAdjField<Nd, Nc> field;
+  SUNAdjField3D<Nd, Nc> field;
   IndexArray<Nd> dimensions;
 
   deviceAdjointField3D(const index_t L0, const index_t L1, const index_t L2,
@@ -75,7 +89,7 @@ template <size_t Nd, size_t Nc> struct deviceAdjointField3D {
       : dimensions({L0, L1, L2}) {
     do_init(field, init);
   }
-  void do_init(SUNAdjField<Nd, Nc> &V, const SUNAdj<Nc> &init) {
+  void do_init(SUNAdjField3D<Nd, Nc> &V, const SUNAdj<Nc> &init) {
     Kokkos::realloc(Kokkos::WithoutInitializing, V, dimensions[0],
                     dimensions[1], dimensions[2]);
     tune_and_launch_for(
@@ -84,6 +98,17 @@ template <size_t Nd, size_t Nc> struct deviceAdjointField3D {
 #pragma unroll
           for (index_t mu = 0; mu < Nd; ++mu) {
             V(i0, i1, i2, mu) = init;
+          }
+        });
+  }
+
+  template <class RNG> void randomize_field(RNG rng) {
+    tune_and_launch_for(
+        "randomize_adj_field", IndexArray<Nd>{0}, dimensions,
+        KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2) {
+          for (index_t mu = 0; mu < Nd; ++mu) {
+            auto generator = rng.get_state();
+            randSUNAdj<Nc>((*this)(i0, i1, i2, mu), generator);
           }
         });
   }
@@ -121,7 +146,7 @@ template <size_t Nd, size_t Nc> struct deviceAdjointField2D {
 
   deviceAdjointField2D() = delete;
 
-  SUNAdjField<Nd, Nc> field;
+  SUNAdjField2D<Nd, Nc> field;
   IndexArray<Nd> dimensions;
 
   deviceAdjointField2D(const index_t L0, const index_t L1,
@@ -129,7 +154,7 @@ template <size_t Nd, size_t Nc> struct deviceAdjointField2D {
       : dimensions({L0, L1}) {
     do_init(field, init);
   }
-  void do_init(SUNAdjField<Nd, Nc> &V, const SUNAdj<Nc> &init) {
+  void do_init(SUNAdjField2D<Nd, Nc> &V, const SUNAdj<Nc> &init) {
     Kokkos::realloc(Kokkos::WithoutInitializing, V, dimensions[0],
                     dimensions[1]);
     tune_and_launch_for(
@@ -138,6 +163,17 @@ template <size_t Nd, size_t Nc> struct deviceAdjointField2D {
 #pragma unroll
           for (index_t mu = 0; mu < Nd; ++mu) {
             V(i0, i1, mu) = init;
+          }
+        });
+  }
+
+  template <class RNG> void randomize_field(RNG rng) {
+    tune_and_launch_for(
+        "randomize_adj_field", IndexArray<Nd>{0}, dimensions,
+        KOKKOS_LAMBDA(const index_t i0, const index_t i1) {
+          for (index_t mu = 0; mu < Nd; ++mu) {
+            auto generator = rng.get_state();
+            randSUNAdj<Nc>((*this)(i0, i1, mu), generator);
           }
         });
   }

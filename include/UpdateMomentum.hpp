@@ -2,6 +2,7 @@
 #pragma once
 #include "FieldTypeHelper.hpp"
 #include "GLOBAL.hpp"
+#include "Gauge_Util.hpp"
 
 namespace klft {
 
@@ -13,45 +14,50 @@ public:
   // update the momentum of the system
   // using the given step size
   virtual void update(const real_t step_size) = 0;
+
+protected:
+  explicit UpdateMomentum(int Tag) {}
 };
 
-template <typename DGaugeFieldType,
-          typename DAdjFieldType> // TODO: Add a check, that DGaugeFieldType
-                                  // actually is a DeviceGaugeFieldType
+template <typename DGaugeFieldType, typename DAdjFieldType>
 class UpdateMomentumGauge : public UpdateMomentum {
 public:
+  // template argument deduction and safety
+  static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
+  static_assert(isDeviceAdjFieldType<DAdjFieldType>::value);
+  constexpr static size_t rank =
+      DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank;
+  constexpr static size_t Nc = DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc;
+  static_assert((rank == DeviceAdjFieldTypeTraits<DAdjFieldType>::Rank) &&
+                (Nc == DeviceAdjFieldTypeTraits<DAdjFieldType>::Nc));
+
   using GaugeFieldType = typename DGaugeFieldType::type;
   using AdjFieldType = typename DAdjFieldType::type;
-  static constexpr size_t rank =
-      DeviceGaugeFieldTypeTraits<GaugeFieldType>::Rank;
-  static constexpr size_t Nc = DeviceGaugeFieldTypeTraits<GaugeFieldType>::Nc;
-  static constexpr GaugeFieldType kind =
-      DeviceGaugeFieldTypeTraits<GaugeFieldType>::Kind;
   GaugeFieldType gauge_field;
   AdjFieldType adjoint_field;
-  const real_t beta;
+  real_t beta;
 
-  const IndexArray<rank> dimensions;
   real_t eps;
-  constGaugeField<rank, Nc> staple_field;
+  ConstGaugeFieldType<rank, Nc> staple_field;
 
   UpdateMomentumGauge() = delete;
   ~UpdateMomentumGauge() = default;
 
-  UpdateMomentumGauge(const GaugeFieldType gauge_field_,
-                      const AdjFieldType adjoint_field_,
-                      const IndexArray<rank> dimensions_, const real_t beta_)
-      : gauge_field(gauge_field_), adjoint_field(adjoint_field_),
-        dimensions(dimensions_), beta(beta_), eps(0.0) {}
+  UpdateMomentumGauge(const GaugeFieldType &gauge_field_,
+                      const AdjFieldType &adjoint_field_, const real_t &beta_)
+      : UpdateMomentum(0), gauge_field(gauge_field_),
+        adjoint_field(adjoint_field_), beta(beta_), eps(0.0) {}
   // todo: Add Force as a function instead of it being incorporated into the
   // functor.
 
   template <typename... Indices>
   KOKKOS_FORCEINLINE_FUNCTION void operator()(const Indices... Idcs) const {
     // Update the momentum field
-    adjoint_field(Idcs...) -=
-        this->eps * (this->beta / this->Nc) *
-        traceT(this->gauge_field(Idcs...) * this->staple_field(Idcs...));
+    for (index_t mu = 0; mu < rank; ++mu) {
+      adjoint_field(Idcs..., mu) -= this->eps * (this->beta / this->Nc) *
+                                    traceT(this->gauge_field(Idcs..., mu) *
+                                           this->staple_field(Idcs..., mu));
+    }
   }
 
   void update(const real_t step_size) override {
@@ -61,8 +67,9 @@ public:
       start[i] = 0;
     }
     // launch the kernels
-    staple_field = stapleField(gauge_field.field);
-    tune_and_launch_for<rank>("UpdateMomentumGauge", start, dimensions, *this);
+    staple_field = stapleField<DGaugeFieldType>(gauge_field);
+    tune_and_launch_for<rank>("UpdateMomentumGauge", start,
+                              gauge_field.dimensions, *this);
     Kokkos::fence();
   }
 };
