@@ -48,8 +48,6 @@ struct diracParameters {
         gamma5(_gamma5),
         kappa(_kappa) {}
 };
-struct TagD {};
-struct TagDdagger {};
 
 template <typename _Derived, size_t rank, size_t Nc, size_t RepDim>
 class DiracOperator : public std::enable_shared_from_this<
@@ -61,6 +59,8 @@ class DiracOperator : public std::enable_shared_from_this<
   using GaugeFieldType = typename DeviceGaugeFieldType<rank, Nc>::type;
 
  public:
+  struct TagD {};
+  struct TagDdagger {};
   ~DiracOperator() = default;
 
   SpinorFieldType applyD(const SpinorFieldType& s_in) {
@@ -113,7 +113,7 @@ class WilsonDiracOperator
       DiracOperator<WilsonDiracOperator<rank, Nc, RepDim>, rank, Nc, RepDim>;
   using Base::Base;
   template <typename... Indices>
-  KOKKOS_FORCEINLINE_FUNCTION void operator()(TagD,
+  KOKKOS_FORCEINLINE_FUNCTION void operator()(typename Base::TagD,
                                               const Indices... Idcs) const {
     Spinor<Nc, RepDim> temp;
 #pragma unroll
@@ -137,7 +137,7 @@ class WilsonDiracOperator
 
   // only for testing purpose, not the real Ddagger operator
   template <typename... Indices>
-  KOKKOS_FORCEINLINE_FUNCTION void operator()(TagDdagger,
+  KOKKOS_FORCEINLINE_FUNCTION void operator()(typename Base::TagDdagger,
                                               const Indices... Idcs) const {
     Spinor<Nc, RepDim> temp;
 #pragma unroll
@@ -180,7 +180,7 @@ class HWilsonDiracOperator
       DiracOperator<HWilsonDiracOperator<rank, Nc, RepDim>, rank, Nc, RepDim>;
   using Base::Base;
   template <typename... Indices>
-  KOKKOS_FORCEINLINE_FUNCTION void operator()(TagD,
+  KOKKOS_FORCEINLINE_FUNCTION void operator()(typename Base::TagD,
                                               const Indices... Idcs) const {
     Spinor<Nc, RepDim> temp;
 #pragma unroll
@@ -205,9 +205,9 @@ class HWilsonDiracOperator
 
   // only for testing porpose, not the real Ddagger operator
   template <typename... Indices>
-  KOKKOS_FORCEINLINE_FUNCTION void operator()(TagDdagger,
+  KOKKOS_FORCEINLINE_FUNCTION void operator()(typename Base::TagDdagger,
                                               const Indices... Idcs) const {
-    operator()(TagD{}, Idcs...);
+    operator()(typename Base::TagD(), Idcs...);
   }
 };
 // Deduction guide
