@@ -1,4 +1,5 @@
 #pragma once
+#include "GLOBAL.hpp"
 #include "SUN.hpp"
 
 #define SQRT3 1.7320508075688772936
@@ -6,12 +7,17 @@
 
 namespace klft {
 
+// template <typename T> struct SUNAdjTraits;
+// template <size_t _Nc> struct SUNAdjTraits<SUNAdj<_Nc>> {
+//   static constexpr size_t Nc = _Nc;
+// };
+
 template <size_t Nc, typename Tin>
 KOKKOS_FORCEINLINE_FUNCTION SUNAdj<Nc> operator*(const SUNAdj<Nc> &a,
                                                  const Tin &b) {
   SUNAdj<Nc> c;
 #pragma unroll
-  for (size_t i = 0; i < getNcAdj(Nc); ++i) {
+  for (size_t i = 0; i < NcAdj<Nc>; ++i) {
     c[i] = a[i] * b;
   }
   return c;
@@ -24,9 +30,20 @@ KOKKOS_FORCEINLINE_FUNCTION SUNAdj<Nc> operator*(const Tin &b,
 }
 
 template <size_t Nc, typename Tin>
+KOKKOS_FORCEINLINE_FUNCTION SUNAdj<Nc> multSUNAdj(const SUNAdj<Nc> &a,
+                                                  const Tin &b) {
+  SUNAdj<Nc> c;
+#pragma unroll
+  for (size_t i = 0; i < NcAdj<Nc>; ++i) {
+    c[i] = a[i] * b;
+  }
+  return c;
+}
+
+template <size_t Nc, typename Tin>
 KOKKOS_FORCEINLINE_FUNCTION void operator*=(SUNAdj<Nc> &a, const Tin &b) {
 #pragma unroll
-  for (size_t i = 0; i < getNcAdj(Nc); ++i) {
+  for (size_t i = 0; i < NcAdj<Nc>; ++i) {
     a[i] *= b;
   }
 }
@@ -36,7 +53,7 @@ KOKKOS_FORCEINLINE_FUNCTION SUNAdj<Nc> operator+(const SUNAdj<Nc> &a,
                                                  const SUNAdj<Nc> &b) {
   SUNAdj<Nc> c;
 #pragma unroll
-  for (size_t i = 0; i < getNcAdj(Nc); ++i) {
+  for (size_t i = 0; i < NcAdj<Nc>; ++i) {
     c[i] = a[i] + b[i];
   }
   return c;
@@ -46,7 +63,7 @@ template <size_t Nc>
 KOKKOS_FORCEINLINE_FUNCTION void operator+=(SUNAdj<Nc> &a,
                                             const SUNAdj<Nc> &b) {
 #pragma unroll
-  for (size_t i = 0; i < getNcAdj(Nc); ++i) {
+  for (size_t i = 0; i < NcAdj<Nc>; ++i) {
     a[i] += b[i];
   }
 }
@@ -56,7 +73,7 @@ KOKKOS_FORCEINLINE_FUNCTION SUNAdj<Nc> operator-(const SUNAdj<Nc> &a,
                                                  const SUNAdj<Nc> &b) {
   SUNAdj<Nc> c;
 #pragma unroll
-  for (size_t i = 0; i < getNcAdj(Nc); ++i) {
+  for (size_t i = 0; i < NcAdj<Nc>; ++i) {
     c[i] = a[i] - b[i];
   }
   return c;
@@ -66,7 +83,7 @@ template <size_t Nc>
 KOKKOS_FORCEINLINE_FUNCTION void operator-=(SUNAdj<Nc> &a,
                                             const SUNAdj<Nc> &b) {
 #pragma unroll
-  for (size_t i = 0; i < getNcAdj(Nc); ++i) {
+  for (size_t i = 0; i < NcAdj<Nc>; ++i) {
     a[i] -= b[i];
   }
 }
@@ -75,7 +92,7 @@ template <size_t Nc>
 KOKKOS_FORCEINLINE_FUNCTION real_t norm2(const SUNAdj<Nc> &a) {
   real_t c = 0.0;
 #pragma unroll
-  for (size_t i = 0; i < getNcAdj(Nc); ++i) {
+  for (size_t i = 0; i < NcAdj<Nc>; ++i) {
     c += a[i] * a[i];
   }
   return c;
@@ -85,7 +102,7 @@ KOKKOS_FORCEINLINE_FUNCTION real_t norm2(const SUNAdj<Nc> &a) {
 template <size_t Nc, class RNG>
 KOKKOS_FORCEINLINE_FUNCTION void randSUNAdj(SUNAdj<Nc> &r, RNG &generator) {
 #pragma unroll
-  for (size_t i = 0; i < getNcAdj(Nc); ++i) {
+  for (size_t i = 0; i < NcAdj<Nc>; ++i) {
     r[i] = generator.normal(0.0, 1.0);
   }
 }

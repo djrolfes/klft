@@ -54,9 +54,10 @@ public:
   KOKKOS_FORCEINLINE_FUNCTION void operator()(const Indices... Idcs) const {
     // Update the momentum field
     for (index_t mu = 0; mu < rank; ++mu) {
-      adjoint_field(Idcs..., mu) -= this->eps * (this->beta / this->Nc) *
-                                    traceT(this->gauge_field(Idcs..., mu) *
-                                           this->staple_field(Idcs..., mu));
+      adjoint_field(Idcs..., mu) -=
+          multSUNAdj<Nc>(traceT(this->gauge_field(Idcs..., mu) *
+                                this->staple_field(Idcs..., mu)),
+                         (this->eps * (this->beta / this->Nc)));
     }
   }
 
