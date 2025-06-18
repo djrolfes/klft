@@ -41,7 +41,7 @@ struct HamiltonianField {
                                          real_t &rtn) const {
     real_t tmp = 0.0;
     for (index_t mu = 0; mu < 4; ++mu) {
-      tmp += norm2<Nc>(adjoint_field(i0, i1, i2, i3, mu));
+      tmp += 0.5 * norm2<Nc>(adjoint_field(i0, i1, i2, i3, mu));
     }
     rtn += tmp;
   }
@@ -51,7 +51,7 @@ struct HamiltonianField {
                                          index_t i2, real_t &rtn) const {
     real_t tmp = 0.0;
     for (index_t mu = 0; mu < 3; ++mu) {
-      tmp += norm2<Nc>(adjoint_field(i0, i1, i2, mu));
+      tmp += 0.5 * norm2<Nc>(adjoint_field(i0, i1, i2, mu));
     }
     rtn += tmp;
   }
@@ -71,7 +71,7 @@ struct HamiltonianField {
     auto rp = Kokkos::MDRangePolicy<EKin, Kokkos::Rank<this->rank>>(
         IndexArray<this->rank>{0}, this->adjoint_field.dimensions);
     Kokkos::parallel_reduce("kinetic_energy", rp, *this, kinetic_energy);
-    return kinetic_energy;
+    return 0.5 * kinetic_energy;
   }
 
   template <class RNG> void randomize_momentum(RNG &rng) {
