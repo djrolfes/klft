@@ -132,7 +132,7 @@ bool parseInputFile(const std::string &filename,
     }
     return true;
   } catch (const YAML::Exception &e) {
-    printf("Error parsing input file: %s\n", e.what());
+    printf("(GaugeObservableParams) Error parsing input file: %s\n", e.what());
     return false;
   }
 }
@@ -154,6 +154,7 @@ bool parseInputFile(const std::string &filename, HMCParams &hmcParams) {
       hmcParams.tau = mp["tau"].as<real_t>(1.0);
       hmcParams.seed = mp["seed"].as<index_t>(1234);
       hmcParams.nsteps = mp["nsteps"].as<index_t>(10);
+      hmcParams.nstepsGauge = mp["nstepsGauge"].as<index_t>(20);
       // parameters specific to the GaugeField
       hmcParams.Nd = mp["Nd"].as<size_t>(4);
       hmcParams.Nc = mp["Nc"].as<size_t>(2);
@@ -167,7 +168,7 @@ bool parseInputFile(const std::string &filename, HMCParams &hmcParams) {
     }
     return true;
   } catch (const YAML::Exception &e) {
-    printf("Error parsing input file: %s\n", e.what());
+    printf("(HMC Params) Error parsing input file: %s\n", e.what());
     return false;
   }
 }

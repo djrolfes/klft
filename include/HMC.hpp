@@ -67,6 +67,7 @@ public:
     for (int i = 0; i < monomials.size(); ++i) {
       monomials[i]->accept(hamiltonian_field);
       delta_H += monomials[i]->get_delta_H();
+      Kokkos::printf("delta_H: %f\n", delta_H);
     }
     bool accept = true;
     if (delta_H > 0.0) {

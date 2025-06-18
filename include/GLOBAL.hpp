@@ -104,7 +104,27 @@ using sun = Kokkos::Array<real_t, std::max<size_t>(Nc *Nc - 1, 1)>;
 // define adjoint groups
 template <size_t Nc> constexpr size_t NcAdj = (Nc * Nc > 1) ? Nc * Nc - 1 : 1;
 
-template <size_t Nc> using SUNAdj = Wrapper<Kokkos::Array<real_t, NcAdj<Nc>>>;
+template <size_t Nc> struct SUNAdj {
+  Kokkos::Array<real_t, NcAdj<Nc>> data;
+
+  KOKKOS_INLINE_FUNCTION
+  auto operator->() { return &data; }
+
+  KOKKOS_INLINE_FUNCTION
+  auto operator->() const { return &data; }
+
+  // operator[] forwarding
+  template <typename Index> KOKKOS_INLINE_FUNCTION auto &operator[](Index i) {
+    return data[i];
+  }
+
+  template <typename Index>
+  KOKKOS_INLINE_FUNCTION const auto &operator[](Index i) const {
+    return data[i];
+  }
+};
+// template <size_t Nc> using SUNAdj = Wrapper<Kokkos::Array<real_t,
+// NcAdj<Nc>>>;
 
 // define field view types
 // by default all views are 4D

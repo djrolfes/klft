@@ -74,7 +74,7 @@ struct HamiltonianField {
     return kinetic_energy;
   }
 
-  template <class RNG> void randomize_momentum(RNG rng) {
+  template <class RNG> void randomize_momentum(RNG &rng) {
     adjoint_field.template randomize_field<RNG>(rng);
   }
 };

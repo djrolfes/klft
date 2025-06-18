@@ -61,9 +61,10 @@ int run_HMC(typename DGaugeFieldType::type &g_in,
   Update_P update_p(g_in, a_in, hmcparams.beta);
   // the integrate might need to be passed into the run_HMC as an argument as it
   // contains a large amount of design decisions
-  std::shared_ptr<LeapFrog> leap_frog = std::make_shared<LeapFrog>(
-      15, true, nullptr, std::make_shared<Update_Q>(update_q),
-      std::make_shared<Update_P>(update_p));
+  std::shared_ptr<LeapFrog> leap_frog =
+      std::make_shared<LeapFrog>(hmcparams.nstepsGauge, true, nullptr,
+                                 std::make_shared<Update_Q>(update_q),
+                                 std::make_shared<Update_P>(update_p));
 
   // now define and run the hmc
   std::mt19937 mt(hmcparams.seed);
@@ -90,8 +91,8 @@ int run_HMC(typename DGaugeFieldType::type &g_in,
     acc_rate = acc_sum / static_cast<real_t>(step + 1);
 
     if (KLFT_VERBOSITY > 0) {
-      printf("Step: %ld, accepted: %b, Acceptance rate: %f, Time: %f\n", step,
-             accept, acc_rate, time);
+      printf("Step: %ld, accepted: %ld, Acceptance rate: %f, Time: %f\n", step,
+             static_cast<size_t>(accept), acc_rate, time);
     }
     // measure the gauge observables
     measureGaugeObservables<rank, Nc>(g_in, gaugeObsParams, step);

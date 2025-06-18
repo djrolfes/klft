@@ -52,12 +52,12 @@ public:
 
   template <typename... Indices>
   KOKKOS_FORCEINLINE_FUNCTION void operator()(const Indices... Idcs) const {
-    // Update the momentum field
+// Update the momentum field
+#pragma unroll
     for (index_t mu = 0; mu < rank; ++mu) {
-      adjoint_field(Idcs..., mu) -=
-          multSUNAdj<Nc>(traceT(this->gauge_field(Idcs..., mu) *
-                                this->staple_field(Idcs..., mu)),
-                         (this->eps * (this->beta / this->Nc)));
+      adjoint_field(Idcs..., mu) -= (traceT(this->gauge_field(Idcs..., mu) *
+                                            this->staple_field(Idcs..., mu)) *
+                                     (this->eps * (this->beta / this->Nc)));
     }
   }
 

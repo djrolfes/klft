@@ -36,8 +36,11 @@ public:
 
   template <typename... Indices>
   KOKKOS_FORCEINLINE_FUNCTION void operator()(const Indices... Idcs) const {
-    gauge_field(Idcs...) =
-        expoSUN(adjoint_field(Idcs...) * eps) * gauge_field(Idcs...);
+#pragma unroll
+    for (index_t mu = 0; mu < rank; ++mu) {
+      gauge_field(Idcs..., mu) =
+          expoSUN(adjoint_field(Idcs..., mu) * eps) * gauge_field(Idcs..., mu);
+    }
   }
 
   void update(const real_t step_size) override {

@@ -1,6 +1,5 @@
 #pragma once
 #include "GLOBAL.hpp"
-#include "GaugeField.hpp"
 #include "GaugePlaquette.hpp"
 #include "HamiltonianField.hpp"
 #include "Monomial.hpp"

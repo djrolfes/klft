@@ -37,9 +37,10 @@ struct HMCParams {
   // hard cutoff at 4 for now, since we have not
   // implemented any 5D cases yet
   // more dimensions can and will be added when necessary
-  real_t tau;     // integration "time" for the hmc
-  index_t seed;   // seed for the random number generator
-  index_t nsteps; // number of hmc steps
+  real_t tau;          // integration "time" for the hmc
+  index_t seed;        // seed for the random number generator
+  index_t nsteps;      // number of hmc steps
+  index_t nstepsGauge; // number of integration steps in gaugefield integration
 
   // parameters specific to the GaugeField
   size_t Nd; // number of mu degrees of freedom
@@ -63,6 +64,7 @@ struct HMCParams {
     tau = 1.0;
     seed = 1234;
     nsteps = 10;
+    nstepsGauge = 20;
 
     Nd = 4;
     Nc = 2;
@@ -85,7 +87,8 @@ struct HMCParams {
       printf("L3: %d\n", L3);
       printf("tau: %.3f\n", tau);
       printf("seed: %d\n", seed);
-      printf("n_steps: %zu\n", Nd);
+      printf("nsteps: %d\n", nsteps);
+      printf("nstepsGauge: %d\n", nstepsGauge);
       printf("GaugeField Parameters:\n");
       printf("Nd: %zu\n", Nd);
       printf("Nc: %zu\n", Nc);

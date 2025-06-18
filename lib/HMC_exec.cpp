@@ -1,3 +1,4 @@
+#include "HMC_exec.hpp"
 #include "../include/HMC.hpp"
 #include "../include/InputParser.hpp"
 #include "../include/klft.hpp"
@@ -5,7 +6,6 @@
 #include "FieldTypeHelper.hpp"
 #include "GaugeObservable.hpp"
 #include "HMC_Params.hpp"
-#include "HMC_exec.hpp"
 
 using RNGType = Kokkos::Random_XorShift64_Pool<Kokkos::DefaultExecutionSpace>;
 
@@ -35,11 +35,11 @@ int HMC_execute(const std::string &input_file) {
   }
   HMCParams hmcParams;
   GaugeObservableParams gaugeObsParams;
-  if (!parseInputFile(input_file, hmcParams)) {
+  if (!parseInputFile(input_file, gaugeObsParams)) {
     printf("Error parsing input file\n");
     return -1;
   }
-  if (!parseInputFile(input_file, gaugeObsParams)) {
+  if (!parseInputFile(input_file, hmcParams)) {
     printf("Error parsing input file\n");
     return -1;
   }
