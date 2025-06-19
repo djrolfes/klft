@@ -1,13 +1,9 @@
 #pragma once
-#include "AdjointField.hpp"
 #include "FieldTypeHelper.hpp"
 #include "GLOBAL.hpp"
-#include "GaugeField.hpp"
 #include "Kokkos_Macros.hpp"
-#include "Tuner.hpp"
 #include "decl/Kokkos_Declare_OPENMP.hpp"
 #include "impl/Kokkos_Profiling.hpp"
-#include <type_traits>
 
 namespace klft {
 
@@ -25,14 +21,13 @@ struct HamiltonianField {
   using GaugeField = typename DGaugeFieldType::type;
   using AdjointField = typename DAdjFieldType::type;
 
-  GaugeField gauge_field;
-  AdjointField adjoint_field;
+  GaugeField &gauge_field;
+  AdjointField &adjoint_field;
   struct EKin {};
 
   HamiltonianField() = delete;
 
-  HamiltonianField(const GaugeField &_gauge_field,
-                   const AdjointField &_adjoint_field)
+  HamiltonianField(GaugeField &_gauge_field, AdjointField &_adjoint_field)
       : gauge_field(_gauge_field), adjoint_field(_adjoint_field) {}
 
   // Rank-4 version
@@ -61,7 +56,7 @@ struct HamiltonianField {
                                          real_t &rtn) const {
     real_t tmp = 0.0;
     for (index_t mu = 0; mu < 2; ++mu) {
-      tmp += norm2<Nc>(adjoint_field(i0, i1, mu));
+      tmp += 0.5 * norm2<Nc>(adjoint_field(i0, i1, mu));
     }
     rtn += tmp;
   }
@@ -71,7 +66,7 @@ struct HamiltonianField {
     auto rp = Kokkos::MDRangePolicy<EKin, Kokkos::Rank<this->rank>>(
         IndexArray<this->rank>{0}, this->adjoint_field.dimensions);
     Kokkos::parallel_reduce("kinetic_energy", rp, *this, kinetic_energy);
-    return 0.5 * kinetic_energy;
+    return kinetic_energy;
   }
 
   template <class RNG> void randomize_momentum(RNG &rng) {

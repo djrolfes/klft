@@ -38,8 +38,8 @@ public:
   KOKKOS_FORCEINLINE_FUNCTION void operator()(const Indices... Idcs) const {
 #pragma unroll
     for (index_t mu = 0; mu < rank; ++mu) {
-      gauge_field(Idcs..., mu) = expoSUN(adjoint_field(Idcs..., mu) * (eps)) *
-                                 gauge_field(Idcs..., mu);
+      gauge_field(Idcs..., mu) =
+          expoSUN(eps * adjoint_field(Idcs..., mu)) * gauge_field(Idcs..., mu);
     }
   }
 

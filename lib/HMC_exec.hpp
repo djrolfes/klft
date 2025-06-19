@@ -1,13 +1,10 @@
 
 #include "../include/HMC.hpp"
-#include "../include/InputParser.hpp"
-#include "../include/klft.hpp"
 #include "FieldTypeHelper.hpp"
 #include "GLOBAL.hpp"
 #include "GaugeObservable.hpp"
 #include "HamiltonianField.hpp"
 #include "Integrator.hpp"
-#include "Metropolis.hpp"
 #include "UpdateMomentum.hpp"
 #include "UpdatePosition.hpp"
 #include <cstddef>

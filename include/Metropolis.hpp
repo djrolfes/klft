@@ -150,7 +150,7 @@ real_t sweep_Metropolis(typename DeviceGaugeFieldType<rank, Nc>::type &g_in,
       params.print();
       printf("Lattice dimensions: ");
       for (index_t j = 0; j < rank; ++j) {
-        printf("%d ", dimensions[j]);
+        printf("%d ", static_cast<int>(dimensions[j]));
       }
       printf("\n");
       printf("Current number of accepted steps: %11.6f\n", nAccepted.sum());

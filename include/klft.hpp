@@ -1,5 +1,5 @@
 #pragma once
-#include "GLOBAL.hpp"
+#include <string>
 
 namespace klft {
 

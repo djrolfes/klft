@@ -33,8 +33,8 @@ public:
 
   using GaugeFieldType = typename DGaugeFieldType::type;
   using AdjFieldType = typename DAdjFieldType::type;
-  GaugeFieldType gauge_field;
-  AdjFieldType adjoint_field;
+  GaugeFieldType &gauge_field;
+  AdjFieldType &adjoint_field;
   real_t beta;
 
   real_t eps;
@@ -43,8 +43,8 @@ public:
   UpdateMomentumGauge() = delete;
   ~UpdateMomentumGauge() = default;
 
-  UpdateMomentumGauge(const GaugeFieldType &gauge_field_,
-                      const AdjFieldType &adjoint_field_, const real_t &beta_)
+  UpdateMomentumGauge(GaugeFieldType &gauge_field_,
+                      AdjFieldType &adjoint_field_, const real_t &beta_)
       : UpdateMomentum(0), gauge_field(gauge_field_),
         adjoint_field(adjoint_field_), beta(beta_), eps(0.0) {}
   // todo: Add Force as a function instead of it being incorporated into the
@@ -55,9 +55,10 @@ public:
 // Update the momentum field
 #pragma unroll
     for (index_t mu = 0; mu < rank; ++mu) {
-      adjoint_field(Idcs..., mu) -= (traceT(this->gauge_field(Idcs..., mu) *
-                                            this->staple_field(Idcs..., mu)) *
-                                     (this->eps * (this->beta / this->Nc)));
+      adjoint_field(Idcs..., mu) -=
+          this->eps *
+          ((this->beta / this->Nc) * (traceT(this->gauge_field(Idcs..., mu) *
+                                             this->staple_field(Idcs..., mu))));
     }
   }
 

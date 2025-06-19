@@ -1,5 +1,4 @@
 #include "HMC_exec.hpp"
-#include "../include/HMC.hpp"
 #include "../include/InputParser.hpp"
 #include "../include/klft.hpp"
 #include "AdjointSUN.hpp"
@@ -51,134 +50,275 @@ int HMC_execute(const std::string &input_file) {
   // initialize gauge field and run hmc
   // based on the system parameters
   // case 4D
-  if (hmcParams.Ndims == 4) {
-    // case U(1)
-    if (hmcParams.Nc == 1) {
-      using DGaugeFieldType = DeviceGaugeFieldType<4, 1>;
-      using DAdjFieldType = DeviceAdjFieldType<4, 1>;
-      typename DGaugeFieldType::type dev_g_U1_4D(hmcParams.L0, hmcParams.L1,
+  if (hmcParams.coldStart) {
+    if (hmcParams.Ndims == 4) {
+      // case U(1)
+      if (hmcParams.Nc == 1) {
+        using DGaugeFieldType = DeviceGaugeFieldType<4, 1>;
+        using DAdjFieldType = DeviceAdjFieldType<4, 1>;
+        typename DGaugeFieldType::type dev_g_U1_4D(hmcParams.L0, hmcParams.L1,
+                                                   hmcParams.L2, hmcParams.L3,
+                                                   identitySUN<1>());
+        typename DAdjFieldType::type dev_a_U1_4D(hmcParams.L0, hmcParams.L1,
                                                  hmcParams.L2, hmcParams.L3,
-                                                 identitySUN<1>());
-      typename DAdjFieldType::type dev_a_U1_4D(hmcParams.L0, hmcParams.L1,
-                                               hmcParams.L2, hmcParams.L3,
-                                               traceT(identitySUN<1>()));
-      run_HMC<DGaugeFieldType, DAdjFieldType>(dev_g_U1_4D, dev_a_U1_4D,
-                                              hmcParams, gaugeObsParams, rng);
-    }
-    // case SU(2)
-    else if (hmcParams.Nc == 2) {
-      using DGaugeFieldType = DeviceGaugeFieldType<4, 2>;
-      using DAdjFieldType = DeviceAdjFieldType<4, 2>;
-      typename DGaugeFieldType::type dev_g_SU2_4D(hmcParams.L0, hmcParams.L1,
+                                                 traceT(identitySUN<1>()));
+        run_HMC<DGaugeFieldType, DAdjFieldType>(dev_g_U1_4D, dev_a_U1_4D,
+                                                hmcParams, gaugeObsParams, rng);
+      }
+      // case SU(2)
+      else if (hmcParams.Nc == 2) {
+        using DGaugeFieldType = DeviceGaugeFieldType<4, 2>;
+        using DAdjFieldType = DeviceAdjFieldType<4, 2>;
+        typename DGaugeFieldType::type dev_g_SU2_4D(hmcParams.L0, hmcParams.L1,
+                                                    hmcParams.L2, hmcParams.L3,
+                                                    identitySUN<2>());
+        typename DAdjFieldType::type dev_a_SU2_4D(hmcParams.L0, hmcParams.L1,
                                                   hmcParams.L2, hmcParams.L3,
-                                                  identitySUN<2>());
-      typename DAdjFieldType::type dev_a_SU2_4D(hmcParams.L0, hmcParams.L1,
-                                                hmcParams.L2, hmcParams.L3,
-                                                traceT(identitySUN<2>()));
-      run_HMC<DGaugeFieldType, DAdjFieldType>(dev_g_SU2_4D, dev_a_SU2_4D,
-                                              hmcParams, gaugeObsParams, rng);
+                                                  traceT(identitySUN<2>()));
+        run_HMC<DGaugeFieldType, DAdjFieldType>(dev_g_SU2_4D, dev_a_SU2_4D,
+                                                hmcParams, gaugeObsParams, rng);
+      }
+      // case SU(3)
+      // else if (hmcParams.Nc == 3) {
+      //   using DGaugeFieldType = DeviceGaugeFieldType<4, 3>;
+      //   using DAdjFieldType = DeviceAdjFieldType<4, 3>;
+      //   typename DGaugeFieldType::type dev_g_SU3_4D(hmcParams.L0,
+      //   hmcParams.L1,
+      //                                              hmcParams.L2,
+      //                                              hmcParams.L3,
+      //                                              identitySUN<3>());
+      //   typename DAdjFieldType::type dev_a_SU3_4D(hmcParams.L0, hmcParams.L1,
+      //                                            hmcParams.L2, hmcParams.L3,
+      //                                            traceT(identitySUN<3>()));
+      //   run_HMC<DGaugeFieldType, DAdjFieldType>(
+      //       dev_g_SU3_4D, dev_a_SU3_4D, hmcParams, gaugeObsParams, rng);
+      // }
+      // case SU(N)
+      else {
+        printf("Error: Unsupported gauge group\n");
+        return -1;
+      }
     }
-    // case SU(3)
-    // else if (hmcParams.Nc == 3) {
-    //   using DGaugeFieldType = DeviceGaugeFieldType<4, 3>;
-    //   using DAdjFieldType = DeviceAdjFieldType<4, 3>;
-    //   typename DGaugeFieldType::type dev_g_SU3_4D(hmcParams.L0, hmcParams.L1,
-    //                                              hmcParams.L2, hmcParams.L3,
-    //                                              identitySUN<3>());
-    //   typename DAdjFieldType::type dev_a_SU3_4D(hmcParams.L0, hmcParams.L1,
-    //                                            hmcParams.L2, hmcParams.L3,
-    //                                            traceT(identitySUN<3>()));
-    //   run_HMC<DGaugeFieldType, DAdjFieldType>(
-    //       dev_g_SU3_4D, dev_a_SU3_4D, hmcParams, gaugeObsParams, rng);
-    // }
-    // case SU(N)
-    else {
-      printf("Error: Unsupported gauge group\n");
-      return -1;
+    // case 3D
+    else if (hmcParams.Ndims == 3) {
+      // case U(1)
+      if (hmcParams.Nc == 1) {
+        using DGaugeFieldType = DeviceGaugeFieldType<3, 1>;
+        using DAdjFieldType = DeviceAdjFieldType<3, 1>;
+        typename DGaugeFieldType::type dev_g_U1_3D(
+            hmcParams.L0, hmcParams.L1, hmcParams.L2, identitySUN<1>());
+        typename DAdjFieldType::type dev_a_U1_3D(
+            hmcParams.L0, hmcParams.L1, hmcParams.L2, traceT(identitySUN<1>()));
+        run_HMC<DGaugeFieldType, DAdjFieldType>(dev_g_U1_3D, dev_a_U1_3D,
+                                                hmcParams, gaugeObsParams, rng);
+      }
+      // case SU(2)
+      else if (hmcParams.Nc == 2) {
+        using DGaugeFieldType = DeviceGaugeFieldType<3, 2>;
+        using DAdjFieldType = DeviceAdjFieldType<3, 2>;
+        typename DGaugeFieldType::type dev_g_SU2_3D(
+            hmcParams.L0, hmcParams.L1, hmcParams.L2, identitySUN<2>());
+        typename DAdjFieldType::type dev_a_SU2_3D(
+            hmcParams.L0, hmcParams.L1, hmcParams.L2, traceT(identitySUN<2>()));
+        run_HMC<DGaugeFieldType, DAdjFieldType>(dev_g_SU2_3D, dev_a_SU2_3D,
+                                                hmcParams, gaugeObsParams, rng);
+      }
+      // case SU(3)
+      // else if (hmcParams.Nc == 3) {
+      //   using DGaugeFieldType = DeviceGaugeFieldType<3, 3>;
+      //   using DAdjFieldType = DeviceAdjFieldType<3, 3>;
+      //   typename DGaugeFieldType::type dev_g_SU3_3D(hmcParams.L0,
+      //   hmcParams.L1,
+      //                                              hmcParams.L2,
+      //                                              identitySUN<3>());
+      //   typename DAdjFieldType::type dev_a_SU3_3D(hmcParams.L0, hmcParams.L1,
+      //                                            hmcParams.L2,
+      //                                            traceT(identitySUN<3>()));
+      //   run_HMC<DGaugeFieldType, DAdjFieldType>(
+      //       dev_g_SU3_3D, dev_a_SU3_3D, hmcParams, gaugeObsParams, rng);
+      // }
+      // case SU(N)
+      else {
+        printf("Error: Unsupported gauge group\n");
+        return -1;
+      }
     }
-  }
-  // case 3D
-  else if (hmcParams.Ndims == 3) {
-    // case U(1)
-    if (hmcParams.Nc == 1) {
-      using DGaugeFieldType = DeviceGaugeFieldType<3, 1>;
-      using DAdjFieldType = DeviceAdjFieldType<3, 1>;
-      typename DGaugeFieldType::type dev_g_U1_3D(
-          hmcParams.L0, hmcParams.L1, hmcParams.L2, identitySUN<1>());
-      typename DAdjFieldType::type dev_a_U1_3D(
-          hmcParams.L0, hmcParams.L1, hmcParams.L2, traceT(identitySUN<1>()));
-      run_HMC<DGaugeFieldType, DAdjFieldType>(dev_g_U1_3D, dev_a_U1_3D,
-                                              hmcParams, gaugeObsParams, rng);
+    // case 2D
+    else if (hmcParams.Ndims == 2) {
+      // case U(1)
+      if (hmcParams.Nc == 1) {
+        using DGaugeFieldType = DeviceGaugeFieldType<2, 1>;
+        using DAdjFieldType = DeviceAdjFieldType<2, 1>;
+        typename DGaugeFieldType::type dev_g_U1_2D(hmcParams.L0, hmcParams.L1,
+                                                   identitySUN<1>());
+        typename DAdjFieldType::type dev_a_U1_2D(hmcParams.L0, hmcParams.L1,
+                                                 traceT(identitySUN<1>()));
+        run_HMC<DGaugeFieldType, DAdjFieldType>(dev_g_U1_2D, dev_a_U1_2D,
+                                                hmcParams, gaugeObsParams, rng);
+      }
+      // case SU(2)
+      else if (hmcParams.Nc == 2) {
+        using DGaugeFieldType = DeviceGaugeFieldType<2, 2>;
+        using DAdjFieldType = DeviceAdjFieldType<2, 2>;
+        typename DGaugeFieldType::type dev_g_SU2_2D(hmcParams.L0, hmcParams.L1,
+                                                    identitySUN<2>());
+        typename DAdjFieldType::type dev_a_SU2_2D(hmcParams.L0, hmcParams.L1,
+                                                  traceT(identitySUN<2>()));
+        run_HMC<DGaugeFieldType, DAdjFieldType>(dev_g_SU2_2D, dev_a_SU2_2D,
+                                                hmcParams, gaugeObsParams, rng);
+      }
+      // case SU(3)
+      // else if (hmcParams.Nc == 3) {
+      //   using DGaugeFieldType = DeviceGaugeFieldType<2, 3>;
+      //   using DAdjFieldType = DeviceAdjFieldType<2, 3>;
+      //   typename DGaugeFieldType::type dev_g_SU3_2D(hmcParams.L0,
+      //   hmcParams.L1,
+      //                                              identitySUN<3>());
+      //   typename DAdjFieldType::type dev_a_SU3_2D(hmcParams.L0, hmcParams.L1,
+      //                                            traceT(identitySUN<3>()));
+      //   run_HMC<DGaugeFieldType, DAdjFieldType>(
+      //       dev_g_SU3_2D, dev_a_SU3_2D, hmcParams, gaugeObsParams, rng);
+      // }
+      // case SU(N)
+      else {
+        printf("Error: Unsupported gauge group\n");
+        return -1;
+      }
     }
-    // case SU(2)
-    else if (hmcParams.Nc == 2) {
-      using DGaugeFieldType = DeviceGaugeFieldType<3, 2>;
-      using DAdjFieldType = DeviceAdjFieldType<3, 2>;
-      typename DGaugeFieldType::type dev_g_SU2_3D(
-          hmcParams.L0, hmcParams.L1, hmcParams.L2, identitySUN<2>());
-      typename DAdjFieldType::type dev_a_SU2_3D(
-          hmcParams.L0, hmcParams.L1, hmcParams.L2, traceT(identitySUN<2>()));
-      run_HMC<DGaugeFieldType, DAdjFieldType>(dev_g_SU2_3D, dev_a_SU2_3D,
-                                              hmcParams, gaugeObsParams, rng);
+  } else {
+    if (hmcParams.Ndims == 4) {
+      // case U(1)
+      if (hmcParams.Nc == 1) {
+        using DGaugeFieldType = DeviceGaugeFieldType<4, 1>;
+        using DAdjFieldType = DeviceAdjFieldType<4, 1>;
+        typename DGaugeFieldType::type dev_g_U1_4D(hmcParams.L0, hmcParams.L1,
+                                                   hmcParams.L2, hmcParams.L3,
+                                                   rng, hmcParams.rngDelta);
+        typename DAdjFieldType::type dev_a_U1_4D(hmcParams.L0, hmcParams.L1,
+                                                 hmcParams.L2, hmcParams.L3,
+                                                 traceT(identitySUN<1>()));
+        run_HMC<DGaugeFieldType, DAdjFieldType>(dev_g_U1_4D, dev_a_U1_4D,
+                                                hmcParams, gaugeObsParams, rng);
+      }
+      // case SU(2)
+      else if (hmcParams.Nc == 2) {
+        using DGaugeFieldType = DeviceGaugeFieldType<4, 2>;
+        using DAdjFieldType = DeviceAdjFieldType<4, 2>;
+        typename DGaugeFieldType::type dev_g_SU2_4D(hmcParams.L0, hmcParams.L1,
+                                                    hmcParams.L2, hmcParams.L3,
+                                                    rng, hmcParams.rngDelta);
+        typename DAdjFieldType::type dev_a_SU2_4D(hmcParams.L0, hmcParams.L1,
+                                                  hmcParams.L2, hmcParams.L3,
+                                                  traceT(identitySUN<2>()));
+        run_HMC<DGaugeFieldType, DAdjFieldType>(dev_g_SU2_4D, dev_a_SU2_4D,
+                                                hmcParams, gaugeObsParams, rng);
+      }
+      // case SU(3)
+      // else if (hmcParams.Nc == 3) {
+      //   using DGaugeFieldType = DeviceGaugeFieldType<4, 3>;
+      //   using DAdjFieldType = DeviceAdjFieldType<4, 3>;
+      //   typename DGaugeFieldType::type dev_g_SU3_4D(hmcParams.L0,
+      //   hmcParams.L1,
+      //                                              hmcParams.L2,
+      //                                              hmcParams.L3, rng,
+      //                                              hmcParams.rngDelta);
+      //   typename DAdjFieldType::type dev_a_SU3_4D(hmcParams.L0, hmcParams.L1,
+      //                                            hmcParams.L2, hmcParams.L3,
+      //                                            traceT(identitySUN<3>()));
+      //   run_HMC<DGaugeFieldType, DAdjFieldType>(
+      //       dev_g_SU3_4D, dev_a_SU3_4D, hmcParams, gaugeObsParams, rng);
+      // }
+      // case SU(N)
+      else {
+        printf("Error: Unsupported gauge group\n");
+        return -1;
+      }
     }
-    // case SU(3)
-    // else if (hmcParams.Nc == 3) {
-    //   using DGaugeFieldType = DeviceGaugeFieldType<3, 3>;
-    //   using DAdjFieldType = DeviceAdjFieldType<3, 3>;
-    //   typename DGaugeFieldType::type dev_g_SU3_3D(hmcParams.L0, hmcParams.L1,
-    //                                              hmcParams.L2,
-    //                                              identitySUN<3>());
-    //   typename DAdjFieldType::type dev_a_SU3_3D(hmcParams.L0, hmcParams.L1,
-    //                                            hmcParams.L2,
-    //                                            traceT(identitySUN<3>()));
-    //   run_HMC<DGaugeFieldType, DAdjFieldType>(
-    //       dev_g_SU3_3D, dev_a_SU3_3D, hmcParams, gaugeObsParams, rng);
-    // }
-    // case SU(N)
-    else {
-      printf("Error: Unsupported gauge group\n");
-      return -1;
+    // case 3D
+    else if (hmcParams.Ndims == 3) {
+      // case U(1)
+      if (hmcParams.Nc == 1) {
+        using DGaugeFieldType = DeviceGaugeFieldType<3, 1>;
+        using DAdjFieldType = DeviceAdjFieldType<3, 1>;
+        typename DGaugeFieldType::type dev_g_U1_3D(
+            hmcParams.L0, hmcParams.L1, hmcParams.L2, rng, hmcParams.rngDelta);
+        typename DAdjFieldType::type dev_a_U1_3D(
+            hmcParams.L0, hmcParams.L1, hmcParams.L2, traceT(identitySUN<1>()));
+        run_HMC<DGaugeFieldType, DAdjFieldType>(dev_g_U1_3D, dev_a_U1_3D,
+                                                hmcParams, gaugeObsParams, rng);
+      }
+      // case SU(2)
+      else if (hmcParams.Nc == 2) {
+        using DGaugeFieldType = DeviceGaugeFieldType<3, 2>;
+        using DAdjFieldType = DeviceAdjFieldType<3, 2>;
+        typename DGaugeFieldType::type dev_g_SU2_3D(
+            hmcParams.L0, hmcParams.L1, hmcParams.L2, rng, hmcParams.rngDelta);
+        typename DAdjFieldType::type dev_a_SU2_3D(
+            hmcParams.L0, hmcParams.L1, hmcParams.L2, traceT(identitySUN<2>()));
+        run_HMC<DGaugeFieldType, DAdjFieldType>(dev_g_SU2_3D, dev_a_SU2_3D,
+                                                hmcParams, gaugeObsParams, rng);
+      }
+      // case SU(3)
+      // else if (hmcParams.Nc == 3) {
+      //   using DGaugeFieldType = DeviceGaugeFieldType<3, 3>;
+      //   using DAdjFieldType = DeviceAdjFieldType<3, 3>;
+      //   typename DGaugeFieldType::type dev_g_SU3_3D(hmcParams.L0,
+      //   hmcParams.L1,
+      //                                              hmcParams.L2,
+      //                                              rng, hmcParams.rngDelta);
+      //   typename DAdjFieldType::type dev_a_SU3_3D(hmcParams.L0, hmcParams.L1,
+      //                                            hmcParams.L2,
+      //                                            traceT(identitySUN<3>()));
+      //   run_HMC<DGaugeFieldType, DAdjFieldType>(
+      //       dev_g_SU3_3D, dev_a_SU3_3D, hmcParams, gaugeObsParams, rng);
+      // }
+      // case SU(N)
+      else {
+        printf("Error: Unsupported gauge group\n");
+        return -1;
+      }
     }
-  }
-  // case 2D
-  else if (hmcParams.Ndims == 2) {
-    // case U(1)
-    if (hmcParams.Nc == 1) {
-      using DGaugeFieldType = DeviceGaugeFieldType<2, 1>;
-      using DAdjFieldType = DeviceAdjFieldType<2, 1>;
-      typename DGaugeFieldType::type dev_g_U1_2D(hmcParams.L0, hmcParams.L1,
-                                                 identitySUN<1>());
-      typename DAdjFieldType::type dev_a_U1_2D(hmcParams.L0, hmcParams.L1,
-                                               traceT(identitySUN<1>()));
-      run_HMC<DGaugeFieldType, DAdjFieldType>(dev_g_U1_2D, dev_a_U1_2D,
-                                              hmcParams, gaugeObsParams, rng);
-    }
-    // case SU(2)
-    else if (hmcParams.Nc == 2) {
-      using DGaugeFieldType = DeviceGaugeFieldType<2, 2>;
-      using DAdjFieldType = DeviceAdjFieldType<2, 2>;
-      typename DGaugeFieldType::type dev_g_SU2_2D(hmcParams.L0, hmcParams.L1,
-                                                  identitySUN<2>());
-      typename DAdjFieldType::type dev_a_SU2_2D(hmcParams.L0, hmcParams.L1,
-                                                traceT(identitySUN<2>()));
-      run_HMC<DGaugeFieldType, DAdjFieldType>(dev_g_SU2_2D, dev_a_SU2_2D,
-                                              hmcParams, gaugeObsParams, rng);
-    }
-    // case SU(3)
-    // else if (hmcParams.Nc == 3) {
-    //   using DGaugeFieldType = DeviceGaugeFieldType<2, 3>;
-    //   using DAdjFieldType = DeviceAdjFieldType<2, 3>;
-    //   typename DGaugeFieldType::type dev_g_SU3_2D(hmcParams.L0, hmcParams.L1,
-    //                                              identitySUN<3>());
-    //   typename DAdjFieldType::type dev_a_SU3_2D(hmcParams.L0, hmcParams.L1,
-    //                                            traceT(identitySUN<3>()));
-    //   run_HMC<DGaugeFieldType, DAdjFieldType>(
-    //       dev_g_SU3_2D, dev_a_SU3_2D, hmcParams, gaugeObsParams, rng);
-    // }
-    // case SU(N)
-    else {
-      printf("Error: Unsupported gauge group\n");
-      return -1;
+    // case 2D
+    else if (hmcParams.Ndims == 2) {
+      // case U(1)
+      if (hmcParams.Nc == 1) {
+        using DGaugeFieldType = DeviceGaugeFieldType<2, 1>;
+        using DAdjFieldType = DeviceAdjFieldType<2, 1>;
+        typename DGaugeFieldType::type dev_g_U1_2D(hmcParams.L0, hmcParams.L1,
+                                                   rng, hmcParams.rngDelta);
+        typename DAdjFieldType::type dev_a_U1_2D(hmcParams.L0, hmcParams.L1,
+                                                 traceT(identitySUN<1>()));
+        run_HMC<DGaugeFieldType, DAdjFieldType>(dev_g_U1_2D, dev_a_U1_2D,
+                                                hmcParams, gaugeObsParams, rng);
+      }
+      // case SU(2)
+      else if (hmcParams.Nc == 2) {
+        using DGaugeFieldType = DeviceGaugeFieldType<2, 2>;
+        using DAdjFieldType = DeviceAdjFieldType<2, 2>;
+        typename DGaugeFieldType::type dev_g_SU2_2D(hmcParams.L0, hmcParams.L1,
+                                                    rng, hmcParams.rngDelta);
+        typename DAdjFieldType::type dev_a_SU2_2D(hmcParams.L0, hmcParams.L1,
+                                                  traceT(identitySUN<2>()));
+        run_HMC<DGaugeFieldType, DAdjFieldType>(dev_g_SU2_2D, dev_a_SU2_2D,
+                                                hmcParams, gaugeObsParams, rng);
+      }
+      // case SU(3)
+      // else if (hmcParams.Nc == 3) {
+      //   using DGaugeFieldType = DeviceGaugeFieldType<2, 3>;
+      //   using DAdjFieldType = DeviceAdjFieldType<2, 3>;
+      //   typename DGaugeFieldType::type dev_g_SU3_2D(hmcParams.L0,
+      //   hmcParams.L1,
+      //                                              rng, hmcParams.rngDelta);
+      //   typename DAdjFieldType::type dev_a_SU3_2D(hmcParams.L0, hmcParams.L1,
+      //                                            traceT(identitySUN<3>()));
+      //   run_HMC<DGaugeFieldType, DAdjFieldType>(
+      //       dev_g_SU3_2D, dev_a_SU3_2D, hmcParams, gaugeObsParams, rng);
+      // }
+      // case SU(N)
+      else {
+        printf("Error: Unsupported gauge group\n");
+        return -1;
+      }
     }
   }
   // if tuning is enabled, write the cache file

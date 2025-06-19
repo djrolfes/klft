@@ -37,7 +37,7 @@ public:
   HMC() = default;
 
   HMC(const HMCParams params_,
-      HamiltonianField<DGaugeFieldType, DAdjFieldType> hamiltonian_field_,
+      HamiltonianField<DGaugeFieldType, DAdjFieldType> &hamiltonian_field_,
       std::shared_ptr<Integrator> integrator_, RNG rng_,
       std::uniform_real_distribution<real_t> dist_, std::mt19937 mt_)
       : params(params_), rng(rng_), dist(dist_), mt(mt_),
@@ -67,7 +67,7 @@ public:
     for (int i = 0; i < monomials.size(); ++i) {
       monomials[i]->accept(hamiltonian_field);
       delta_H += monomials[i]->get_delta_H();
-      Kokkos::printf("delta_H: %f\n", delta_H);
+      // Kokkos::printf("delta_H: %f\n", delta_H);
     }
     bool accept = true;
     if (delta_H > 0.0) {

@@ -25,14 +25,13 @@
 #include "GaugeObservable.hpp"
 #include "HMC_Params.hpp"
 #include "Metropolis_Params.hpp"
-#include <fstream>
 #include <yaml-cpp/yaml.h>
 
 namespace klft {
 
 // get MetropolisParams from input file
-bool parseInputFile(const std::string &filename,
-                    MetropolisParams &metropolisParams) {
+inline bool parseInputFile(const std::string &filename,
+                           MetropolisParams &metropolisParams) {
   try {
     YAML::Node config = YAML::LoadFile(filename);
 
@@ -68,8 +67,8 @@ bool parseInputFile(const std::string &filename,
 }
 
 // get GaugeObservableParams from input file
-bool parseInputFile(const std::string &filename,
-                    GaugeObservableParams &gaugeObservableParams) {
+inline bool parseInputFile(const std::string &filename,
+                           GaugeObservableParams &gaugeObservableParams) {
   try {
     YAML::Node config = YAML::LoadFile(filename);
 
@@ -138,7 +137,7 @@ bool parseInputFile(const std::string &filename,
 }
 
 // get HMCParams from input file
-bool parseInputFile(const std::string &filename, HMCParams &hmcParams) {
+inline bool parseInputFile(const std::string &filename, HMCParams &hmcParams) {
   try {
     YAML::Node config = YAML::LoadFile(filename);
 
@@ -155,6 +154,8 @@ bool parseInputFile(const std::string &filename, HMCParams &hmcParams) {
       hmcParams.seed = mp["seed"].as<index_t>(1234);
       hmcParams.nsteps = mp["nsteps"].as<index_t>(10);
       hmcParams.nstepsGauge = mp["nstepsGauge"].as<index_t>(20);
+      hmcParams.rngDelta = mp["rngDelta"].as<double>(1.0);
+      hmcParams.coldStart = mp["coldStart"].as<bool>(false);
       // parameters specific to the GaugeField
       hmcParams.Nd = mp["Nd"].as<size_t>(4);
       hmcParams.Nc = mp["Nc"].as<size_t>(2);

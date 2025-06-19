@@ -13,24 +13,24 @@ MetropolisParams:
   delta: 0.1
 
 HMCParams:
-  Ndims: 4
+  Ndims: 3
   L0: 12
   L1: 12
   L2: 12
   L3: 12
   tau: 1.0
   seed: 1234
-  n_steps: 20 
-  Nd: 4
+  nsteps: 20 
+  nstepsGauge: 100
+  Nd: 3
   Nc: 2
-  beta: 1.0
-  delta: 0.1
+  beta: 4.0
 
 GaugeObservableParams:
   measurement_interval: 10
   measure_plaquette: true
-  measure_wilson_loop_temporal: true
-  measure_wilson_loop_mu_nu: true
+  measure_wilson_loop_temporal: false
+  measure_wilson_loop_mu_nu: false
 
   W_temp_L_T_pairs:
     - [2, 3]
@@ -48,4 +48,4 @@ GaugeObservableParams:
   W_temp_filename: "wilson_temp_output.txt"
   W_mu_nu_filename: "wilson_mu_nu_output.txt"
 
-  write_to_file: true
+  write_to_file: false
