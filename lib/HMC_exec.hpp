@@ -93,11 +93,13 @@ int run_HMC(typename DGaugeFieldType::type &g_in,
     }
     // measure the gauge observables
     measureGaugeObservables<rank, Nc>(g_in, gaugeObsParams, step);
-    if (step % 50 == 0) {
-      // flush every 50 steps as well to not lose data on program interuption
-      // TODO: this should be set by the Params
-      flushAllGaugeObservables(gaugeObsParams);
-    }
+    // TODO:make flushAllGaugeObservables append the Observables to the files ->
+    // don't lose all progress when the simulation is interupted if (step % 50
+    // == 0) {
+    //   // flush every 50 steps as well to not lose data on program interuption
+    //   // TODO: this should be set by the Params
+    //   flushAllGaugeObservables(gaugeObsParams);
+    // }
   }
   // flush the measurements to the files
   flushAllGaugeObservables(gaugeObsParams);
