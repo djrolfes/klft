@@ -1,33 +1,35 @@
 MetropolisParams:
   Ndims: 4
-  L0: 32
-  L1: 32
-  L2: 32
-  L3: 32
+  L0: 24
+  L1: 24
+  L2: 24
+  L3: 24
   nHits: 10
   nSweep: 1000
   seed: 1234
   Nd: 4
   Nc: 2
-  beta: 1.0
+  beta: 2.0
   delta: 0.1
 
 HMCParams:
-  Ndims: 3
-  L0: 12
-  L1: 12
-  L2: 12
-  L3: 12
+  Ndims: 4
+  L0: 24
+  L1: 24
+  L2: 24
+  L3: 24
   tau: 1.0
   seed: 1234
-  nsteps: 20 
-  nstepsGauge: 100
-  Nd: 3
+  nsteps: 100 
+  nstepsGauge: 50
+  Nd: 4
   Nc: 2
-  beta: 4.0
+  beta: 2.0
+  coldStart: false
+  rngDelta: 1.0
 
 GaugeObservableParams:
-  measurement_interval: 10
+  measurement_interval: 5
   measure_plaquette: true
   measure_wilson_loop_temporal: false
   measure_wilson_loop_mu_nu: false
@@ -44,8 +46,8 @@ GaugeObservableParams:
     - [2, 2]
     - [3, 3]
 
-  plaquette_filename: "plaquette_output.txt"
-  W_temp_filename: "wilson_temp_output.txt"
-  W_mu_nu_filename: "wilson_mu_nu_output.txt"
+  plaquette_filename: "plaquette_output20.txt"
+  W_temp_filename: "wilson_temp_output20.txt"
+  W_mu_nu_filename: "wilson_mu_nu_output20.txt"
 
-  write_to_file: false
+  write_to_file: true

@@ -1,6 +1,7 @@
 
-#include "klft.hpp" // or wherever HMC_execute is declared
 #include <getopt.h>
+
+#include "klft.hpp"  // or wherever HMC_execute is declared
 
 using namespace klft;
 
@@ -11,12 +12,12 @@ using namespace klft;
 
 using RNGType = Kokkos::Random_XorShift64_Pool<Kokkos::DefaultExecutionSpace>;
 
-#define HLINE                                                                  \
+#define HLINE \
   "====================================================================\n"
 
 int parse_args(int argc, char **argv, std::string &input_file) {
   // Defaults
-  input_file = "input.yaml";
+  input_file = "../../../test_yaml.yaml";
 
   const std::string help_string =
       "  -f <file_name> --filename <file_name>\n"
@@ -37,19 +38,19 @@ int parse_args(int argc, char **argv, std::string &input_file) {
   while ((c = getopt_long(argc, argv, "f:h", long_options, &option_index)) !=
          -1)
     switch (c) {
-    case 'f':
-      input_file = optarg;
-      break;
-    case 'h':
-      printf("%s", help_string.c_str());
-      return -2;
-      break;
-    case 0:
-      break;
-    default:
-      printf("%s", help_string.c_str());
-      return -1;
-      break;
+      case 'f':
+        input_file = optarg;
+        break;
+      case 'h':
+        printf("%s", help_string.c_str());
+        return -2;
+        break;
+      case 0:
+        break;
+      default:
+        printf("%s", help_string.c_str());
+        return -1;
+        break;
     }
   return 0;
 }

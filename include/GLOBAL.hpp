@@ -42,10 +42,12 @@ using complex_t = Kokkos::complex<real_t>;
 using index_t = int;
 
 // define index_arrays
-template <size_t rank> using IndexArray = Kokkos::Array<index_t, rank>;
+template <size_t rank>
+using IndexArray = Kokkos::Array<index_t, rank>;
 
 // define groups for gauge fields
-template <typename T> struct Wrapper {
+template <typename T>
+struct Wrapper {
   T data;
 
   // Implicit conversion to T&
@@ -71,7 +73,8 @@ template <typename T> struct Wrapper {
   // }
 
   // operator[] forwarding
-  template <typename Index> KOKKOS_INLINE_FUNCTION auto &operator[](Index i) {
+  template <typename Index>
+  KOKKOS_INLINE_FUNCTION auto &operator[](Index i) {
     return data[i];
   }
 
@@ -97,14 +100,33 @@ template <typename T> struct Wrapper {
 template <size_t Nc>
 using SUN = Wrapper<Kokkos::Array<Kokkos::Array<complex_t, Nc>, Nc>>;
 
+// define Spinor Type
+// info correct dispatch is only guaranteed for    Nd != Nc ! -> Conflicts with
+// SUN.hpp version Maybe via class to make it safe
+template <size_t Nc, size_t Nd>
+using Spinor = Kokkos::Array<Kokkos::Array<complex_t, Nd>, Nc>;
+
+// define field view types
+// by default all views are 4D
+// some dimensions are set to 1 for lower dimensions
+// I'm still not sure if this is the best way to do it
+// Nd here is templated, but for a 4D gauge field,
+// shouldn't Nd always be 4?
+// Nc is the number of colors
+template <size_t Nc, size_t RepDim>
+using SpinorField = Kokkos::View<Spinor<Nc, RepDim> ****,
+                                 Kokkos::MemoryTraits<Kokkos::Restrict>>;
+
 // define adjoint groups of gauge fields
 template <size_t Nc>
 using sun = Kokkos::Array<real_t, std::max<size_t>(Nc *Nc - 1, 1)>;
 
 // define adjoint groups
-template <size_t Nc> constexpr size_t NcAdj = (Nc * Nc > 1) ? Nc * Nc - 1 : 1;
+template <size_t Nc>
+constexpr size_t NcAdj = (Nc * Nc > 1) ? Nc *Nc - 1 : 1;
 
-template <size_t Nc> struct SUNAdj {
+template <size_t Nc>
+struct SUNAdj {
   Kokkos::Array<real_t, NcAdj<Nc>> data;
 
   KOKKOS_INLINE_FUNCTION
@@ -114,7 +136,8 @@ template <size_t Nc> struct SUNAdj {
   auto operator->() const { return &data; }
 
   // operator[] forwarding
-  template <typename Index> KOKKOS_INLINE_FUNCTION auto &operator[](Index i) {
+  template <typename Index>
+  KOKKOS_INLINE_FUNCTION auto &operator[](Index i) {
     return data[i];
   }
 
@@ -207,6 +230,10 @@ using LinkScalarField2D =
 
 // define corresponding constant fields
 #if defined(KOKKOS_ENABLE_CUDA)
+template <size_t Nc, size_t RepDim>
+using constSpinorField =
+    Kokkos::View<const Spinor<Nc, RepDim> ****,
+                 Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
 
 template <size_t Nd, size_t Nc>
 using constGaugeField =
@@ -290,6 +317,9 @@ using constLinkScalarField2D =
                  Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
 
 #else
+template <size_t Nc, size_t RepDim>
+using constSpinorField = Kokkos::View<const Spinor<Nc, RepDim> ****,
+                                      Kokkos::MemoryTraits<Kokkos::Restrict>>;
 
 template <size_t Nd, size_t Nc>
 using constGaugeField = Kokkos::View<const SUN<Nc> ****[Nd],
@@ -366,14 +396,17 @@ using constLinkScalarField2D =
 #endif
 
 // define policy as mdrange
-template <size_t rank> using Policy = Kokkos::MDRangePolicy<Kokkos::Rank<rank>>;
+template <size_t rank, class WorkTag = void>
+using Policy = Kokkos::MDRangePolicy<WorkTag, Kokkos::Rank<rank>>;
 
 // special case for 1D
-using Policy1D = Kokkos::RangePolicy<>;
+template <class WorkTag = void>
+using Policy1D = Kokkos::RangePolicy<WorkTag>;
 
 // define a global zero field generator
 // for the color x color matrix
-template <size_t Nc> constexpr KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> zeroSUN() {
+template <size_t Nc>
+constexpr KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> zeroSUN() {
   SUN<Nc> zero;
 #pragma unroll
   for (index_t c1 = 0; c1 < Nc; ++c1) {
@@ -384,7 +417,20 @@ template <size_t Nc> constexpr KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> zeroSUN() {
   }
   return zero;
 }
-
+// define a global zero generator
+// for spinor
+template <size_t Nc, size_t Nd>
+constexpr KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, Nd> zeroSpinor() {
+  Spinor<Nc, Nd> zero;
+#pragma unroll
+  for (size_t i = 0; i < Nc; ++i) {
+#pragma unroll
+    for (size_t j = 0; j < Nd; ++j) {
+      zero[i][j] = complex_t(0.0, 0.0);
+    }
+  }
+  return zero;
+}
 // define a global identity field generator
 // for the color x color matrix
 template <size_t Nc>
@@ -393,6 +439,21 @@ constexpr KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> identitySUN() {
 #pragma unroll
   for (index_t c1 = 0; c1 < Nc; ++c1) {
     id[c1][c1] = complex_t(1.0, 0.0);
+  }
+  return id;
+}
+
+// define a global one generator
+// for spinor
+template <size_t Nc, size_t Nd>
+constexpr KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, Nd> oneSpinor() {
+  Spinor<Nc, Nd> id = zeroSpinor<Nc, Nd>();
+#pragma unroll
+  for (size_t i = 0; i < Nc; ++i) {
+#pragma unroll
+    for (size_t j = 0; j < Nd; ++j) {
+      id[i][j] = complex_t(1.0, 0.0);
+    }
   }
   return id;
 }
@@ -415,4 +476,4 @@ inline int KLFT_TUNING = 0;
 
 inline void setTuning(int t) { KLFT_TUNING = t; }
 
-} // namespace klft
+}  // namespace klft
