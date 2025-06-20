@@ -5,12 +5,13 @@
 #include "FieldTypeHelper.hpp"
 #include "GaugeObservable.hpp"
 #include "HMC_Params.hpp"
+#include "diracParams.hpp"
 
 using RNGType = Kokkos::Random_XorShift64_Pool<Kokkos::DefaultExecutionSpace>;
 
 namespace klft {
 
-int HMC_execute(const std::string &input_file) {
+int HMC_execute(const std::string& input_file) {
   // get verbosity from environment
   const int verbosity = std::getenv("KLFT_VERBOSITY")
                             ? std::atoi(std::getenv("KLFT_VERBOSITY"))
@@ -23,7 +24,7 @@ int HMC_execute(const std::string &input_file) {
   // if tuning is enbled, check if the user has set the
   // KLFT_CACHE_FILE environment variable
   if (tuning) {
-    const char *cache_file = std::getenv("KLFT_CACHE_FILE");
+    const char* cache_file = std::getenv("KLFT_CACHE_FILE");
     // if it exists, read the cache
     if (cache_file) {
       if (KLFT_VERBOSITY > 0) {
@@ -42,8 +43,14 @@ int HMC_execute(const std::string &input_file) {
     printf("Error parsing input file\n");
     return -1;
   }
+  FermionParams fparams;
+  if (!parseInputFile(input_file, fparams)) {
+    printf("Error parsing input file\n");
+    return -1;
+  }
   // print the parameters
   hmcParams.print();
+  fparams.print();
   // initialize RNG
   RNGType rng(hmcParams.seed);
 
@@ -323,7 +330,7 @@ int HMC_execute(const std::string &input_file) {
   }
   // if tuning is enabled, write the cache file
   if (KLFT_TUNING) {
-    const char *cache_file = std::getenv("KLFT_CACHE_FILE");
+    const char* cache_file = std::getenv("KLFT_CACHE_FILE");
     if (cache_file) {
       writeTuneCache(cache_file);
     } else {
@@ -334,4 +341,4 @@ int HMC_execute(const std::string &input_file) {
   return 0;
 }
 
-} // namespace klft
+}  // namespace klft

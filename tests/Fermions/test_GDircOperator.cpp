@@ -35,8 +35,8 @@ int main(int argc, char* argv[]) {
     index_t L0 = 32, L1 = 32, L2 = 32, L3 = 32;
     auto gammas = get_gammas<4>();
     GammaMat<4> gamma5 = get_gamma5();
-    diracParameters<4, 3, 4> params(IndexArray<4>{L0, L1, L2, L3}, gammas,
-                                    gamma5, -0.5);
+    diracParams<4, 3, 4> params(IndexArray<4>{L0, L1, L2, L3}, gammas, gamma5,
+                                -0.5);
     printf("Lattice Dimension %ix%ix%ix%i \n", L0, L1, L2, L3);
     printf("Generate SpinorFields...\n");
 
@@ -126,8 +126,8 @@ int main(int argc, char* argv[]) {
     index_t L0 = 32, L1 = 32, L2 = 32, L3 = 32;
     auto gammas = get_gammas<4>();
     GammaMat<4> gamma5 = get_gamma5();
-    diracParameters<4, 2, 4> params(IndexArray<4>{L0, L1, L2, L3}, gammas,
-                                    gamma5, 0.5);
+    diracParams<4, 2, 4> params(IndexArray<4>{L0, L1, L2, L3}, gammas, gamma5,
+                                0.5);
     printf("Lattice Dimension %ix%ix%ix%i", L0, L1, L2, L3);
     printf("\n= Testing hermiticity =\n");
 
@@ -223,8 +223,8 @@ int main(int argc, char* argv[]) {
     index_t L0 = 32, L1 = 32, L2 = 32, L3 = 32;
     auto gammas = get_gammas<4>();
     GammaMat<4> gamma5 = get_gamma5();
-    diracParameters<4, 1, 4> params(IndexArray<4>{L0, L1, L2, L3}, gammas,
-                                    gamma5, 0.5);
+    diracParams<4, 1, 4> params(IndexArray<4>{L0, L1, L2, L3}, gammas, gamma5,
+                                0.5);
     printf("Lattice Dimension %ix%ix%ix%i", L0, L1, L2, L3);
     printf("\n= Testing hermiticity =\n");
 

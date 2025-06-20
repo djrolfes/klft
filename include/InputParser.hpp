@@ -22,22 +22,23 @@
 // different Param structs
 
 #pragma once
+#include <yaml-cpp/yaml.h>
 #include "GaugeObservable.hpp"
 #include "HMC_Params.hpp"
 #include "Metropolis_Params.hpp"
-#include <yaml-cpp/yaml.h>
+#include "diracParams.hpp"
 
 namespace klft {
 
 // get MetropolisParams from input file
-inline bool parseInputFile(const std::string &filename,
-                           MetropolisParams &metropolisParams) {
+inline bool parseInputFile(const std::string& filename,
+                           MetropolisParams& metropolisParams) {
   try {
     YAML::Node config = YAML::LoadFile(filename);
 
     // Parse MetropolisParams
     if (config["MetropolisParams"]) {
-      const auto &mp = config["MetropolisParams"];
+      const auto& mp = config["MetropolisParams"];
       // general parameters
       metropolisParams.Ndims = mp["Ndims"].as<index_t>(4);
       metropolisParams.L0 = mp["L0"].as<index_t>(32);
@@ -60,21 +61,21 @@ inline bool parseInputFile(const std::string &filename,
       return false;
     }
     return true;
-  } catch (const YAML::Exception &e) {
+  } catch (const YAML::Exception& e) {
     printf("Error parsing input file: %s\n", e.what());
     return false;
   }
 }
 
 // get GaugeObservableParams from input file
-inline bool parseInputFile(const std::string &filename,
-                           GaugeObservableParams &gaugeObservableParams) {
+inline bool parseInputFile(const std::string& filename,
+                           GaugeObservableParams& gaugeObservableParams) {
   try {
     YAML::Node config = YAML::LoadFile(filename);
 
     // Parse GaugeObservableParams
     if (config["GaugeObservableParams"]) {
-      const auto &gp = config["GaugeObservableParams"];
+      const auto& gp = config["GaugeObservableParams"];
       // interval between measurements
       gaugeObservableParams.measurement_interval =
           gp["measurement_interval"].as<size_t>(0);
@@ -90,7 +91,7 @@ inline bool parseInputFile(const std::string &filename,
 
       // pairs of (L,T) for the temporal Wilson loop
       if (gp["W_temp_L_T_pairs"]) {
-        for (const auto &pair : gp["W_temp_L_T_pairs"]) {
+        for (const auto& pair : gp["W_temp_L_T_pairs"]) {
           gaugeObservableParams.W_temp_L_T_pairs.push_back(
               IndexArray<2>({pair[0].as<index_t>(), pair[1].as<index_t>()}));
         }
@@ -98,7 +99,7 @@ inline bool parseInputFile(const std::string &filename,
 
       // pairs of (mu,nu) for the mu-nu Wilson loop
       if (gp["W_mu_nu_pairs"]) {
-        for (const auto &pair : gp["W_mu_nu_pairs"]) {
+        for (const auto& pair : gp["W_mu_nu_pairs"]) {
           gaugeObservableParams.W_mu_nu_pairs.push_back(
               IndexArray<2>({pair[0].as<index_t>(), pair[1].as<index_t>()}));
         }
@@ -106,7 +107,7 @@ inline bool parseInputFile(const std::string &filename,
 
       // pairs of (Lmu,Lnu) for the Wilson loop
       if (gp["W_Lmu_Lnu_pairs"]) {
-        for (const auto &pair : gp["W_Lmu_Lnu_pairs"]) {
+        for (const auto& pair : gp["W_Lmu_Lnu_pairs"]) {
           gaugeObservableParams.W_Lmu_Lnu_pairs.push_back(
               IndexArray<2>({pair[0].as<index_t>(), pair[1].as<index_t>()}));
         }
@@ -130,20 +131,20 @@ inline bool parseInputFile(const std::string &filename,
       return false;
     }
     return true;
-  } catch (const YAML::Exception &e) {
+  } catch (const YAML::Exception& e) {
     printf("(GaugeObservableParams) Error parsing input file: %s\n", e.what());
     return false;
   }
 }
 
 // get HMCParams from input file
-inline bool parseInputFile(const std::string &filename, HMCParams &hmcParams) {
+inline bool parseInputFile(const std::string& filename, HMCParams& hmcParams) {
   try {
     YAML::Node config = YAML::LoadFile(filename);
 
     // Parse MetropolisParams
     if (config["HMCParams"]) {
-      const auto &mp = config["HMCParams"];
+      const auto& mp = config["HMCParams"];
       // general parameters
       hmcParams.Ndims = mp["Ndims"].as<index_t>(4);
       hmcParams.L0 = mp["L0"].as<index_t>(32);
@@ -168,9 +169,51 @@ inline bool parseInputFile(const std::string &filename, HMCParams &hmcParams) {
       return false;
     }
     return true;
-  } catch (const YAML::Exception &e) {
+  } catch (const YAML::Exception& e) {
     printf("(HMC Params) Error parsing input file: %s\n", e.what());
     return false;
   }
 }
-} // namespace klft
+inline bool parseInputFile(const std::string& filename,
+                           FermionParams& fermionParams) {
+  try {
+    YAML::Node config = YAML::LoadFile(filename);
+
+    // Parse FermionParams
+    if (config["FermionParams"]) {
+      const auto& fp = config["FermionParams"];
+      auto fermionType = fp["fermion"].as<std::string>("Wilson");
+      if (fermionType != "wilson" || fermionType != "HWilson") {
+        printf("Error: Unsupported fermion type '%s'\n", fermionType.c_str());
+        return false;
+      }
+
+      fermionParams.fermion_type = fermionType;
+      auto solverType = fp["solver"].as<std::string>("CG");
+      if (solverType != "CG") {
+        printf("Error: Unsupported solver type '%s'\n", solverType.c_str());
+        return false;
+      } else {
+        if (fermionType != "HWilson") {
+          printf("Error: Only HWilson fermion type supports CG solver\n");
+          return false;
+        }
+      }
+
+      fermionParams.rank = fp["Nd"].as<size_t>(4);
+      fermionParams.Nc = fp["Nc"].as<size_t>(2);
+      fermionParams.RepDim = fp["RepDim"].as<size_t>(4);
+      fermionParams.kappa = fp["mass"].as<real_t>(0.1);
+      fermionParams.tol = fp["tol"].as<real_t>(1e-8);
+
+      // ...
+      // add more parameters above this line as needed
+    } else {
+      printf("Error: FermionParams not found in input file\n");
+      return false;
+    }
+    return true;
+  } catch (const YAML::Exception& e) {
+    printf("(Fermion Params) Error parsing input file: %s\n", e.what());
+    return false;
+  }  // namespace klft

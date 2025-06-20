@@ -1,17 +1,17 @@
 #pragma once
+#include <random>
 #include "GLOBAL.hpp"
 #include "GaugeMonomial.hpp"
 #include "HMC_Params.hpp"
 #include "HamiltonianField.hpp"
 #include "Integrator.hpp"
 #include "Monomial.hpp"
-#include <random>
 
 namespace klft {
 
 template <typename DGaugeFieldType, typename DAdjFieldType, class RNG>
 class HMC {
-public:
+ public:
   // template argument deduction and safety
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
   static_assert(isDeviceAdjFieldType<DAdjFieldType>::value);
@@ -26,7 +26,7 @@ public:
 
   struct randomize_momentum_s {};
   HMCParams params;
-  HamiltonianField<DGaugeFieldType, DAdjFieldType> &hamiltonian_field;
+  HamiltonianField<DGaugeFieldType, DAdjFieldType>& hamiltonian_field;
   std::vector<std::unique_ptr<Monomial<DGaugeFieldType, DAdjFieldType>>>
       monomials;
   std::shared_ptr<Integrator> integrator;
@@ -37,10 +37,15 @@ public:
   HMC() = default;
 
   HMC(const HMCParams params_,
-      HamiltonianField<DGaugeFieldType, DAdjFieldType> &hamiltonian_field_,
-      std::shared_ptr<Integrator> integrator_, RNG rng_,
-      std::uniform_real_distribution<real_t> dist_, std::mt19937 mt_)
-      : params(params_), rng(rng_), dist(dist_), mt(mt_),
+      HamiltonianField<DGaugeFieldType, DAdjFieldType>& hamiltonian_field_,
+      std::shared_ptr<Integrator> integrator_,
+      RNG rng_,
+      std::uniform_real_distribution<real_t> dist_,
+      std::mt19937 mt_)
+      : params(params_),
+        rng(rng_),
+        dist(dist_),
+        mt(mt_),
         hamiltonian_field(hamiltonian_field_),
         integrator(std::move(integrator_)) {}
 
@@ -54,6 +59,16 @@ public:
     monomials.emplace_back(
         std::make_unique<KineticMonomial<DGaugeFieldType, DAdjFieldType>>(
             _time_scale));
+  }
+  template <class RNG>
+  void add_fermion_monomial(const diracParams<rank, Nc, 1>& params_,
+                            const real_t& tol_,
+                            RNG& rng,
+                            const unsigned int _time_scale) {
+    monomials.emplace_back(
+        std::make_unique<
+            FermionMonomial<DGaugeFieldType, DAdjFieldType, rank, Nc, 1>>(
+            params_, tol_, rng, _time_scale));
   }
 
   bool hmc_step() {
@@ -81,4 +96,4 @@ public:
     return accept;
   }
 };
-} // namespace klft
+}  // namespace klft

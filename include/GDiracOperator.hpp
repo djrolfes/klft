@@ -25,28 +25,8 @@
 #include "GammaMatrix.hpp"
 #include "IndexHelper.hpp"
 #include "Spinor.hpp"
-
+#include "diracParams.hpp"
 namespace klft {
-
-template <size_t _rank, size_t _Nc, size_t _RepDim>
-struct diracParameters {
-  static constexpr size_t rank = _rank;
-  static constexpr size_t Nc = _Nc;
-  static constexpr size_t RepDim = _RepDim;
-  using VecGammaMatrix = Kokkos::Array<GammaMat<RepDim>, 4>;
-  const VecGammaMatrix gammas;
-  const GammaMat<RepDim> gamma_id = get_identity<RepDim>();
-  const GammaMat<RepDim> gamma5;
-  const real_t kappa;
-  const IndexArray<rank> dimensions;
-  diracParameters(const IndexArray<rank> _dimensions,
-                  const VecGammaMatrix& _gammas,
-                  const GammaMat<RepDim>& _gamma5, const real_t& _kappa)
-      : dimensions(_dimensions),
-        gammas(_gammas),
-        gamma5(_gamma5),
-        kappa(_kappa) {}
-};
 
 template <typename _Derived, size_t rank, size_t Nc, size_t RepDim>
 class DiracOperator : public std::enable_shared_from_this<
@@ -86,10 +66,10 @@ class DiracOperator : public std::enable_shared_from_this<
   SpinorFieldType s_in;
   SpinorFieldType s_out;
   const GaugeFieldType g_in;
-  const diracParameters<rank, Nc, RepDim> params;
+  const diracParams<rank, Nc, RepDim> params;
 
   DiracOperator(const GaugeFieldType& g_in,
-                const diracParameters<rank, Nc, RepDim>& params)
+                const diracParams<rank, Nc, RepDim>& params)
       : g_in(g_in), params(params) {}
 
  protected:
@@ -98,7 +78,9 @@ class DiracOperator : public std::enable_shared_from_this<
 
 template <size_t _rank, size_t _Nc, size_t _RepDim>
 class WilsonDiracOperator
-    : public DiracOperator<WilsonDiracOperator<_rank, _Nc, _RepDim>, _rank, _Nc,
+    : public DiracOperator<WilsonDiracOperator<_rank, _Nc, _RepDim>,
+                           _rank,
+                           _Nc,
                            _RepDim> {
  public:
   constexpr static size_t Nc = _Nc;
@@ -163,8 +145,10 @@ WilsonDiracOperator(const GaugeType&, const ParamType&)
 
 template <size_t _rank, size_t _Nc, size_t _RepDim>
 class HWilsonDiracOperator
-    : public DiracOperator<HWilsonDiracOperator<_rank, _Nc, _RepDim>, _rank,
-                           _Nc, _RepDim> {
+    : public DiracOperator<HWilsonDiracOperator<_rank, _Nc, _RepDim>,
+                           _rank,
+                           _Nc,
+                           _RepDim> {
  public:
   constexpr static size_t Nc = _Nc;
   constexpr static size_t RepDim = _RepDim;
