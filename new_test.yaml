@@ -1,10 +1,10 @@
 
 HMCParams:
   Ndims: 4
-  L0: 32
-  L1: 32
-  L2: 32
-  L3: 32
+  L0: 24
+  L1: 24
+  L2: 24
+  L3: 24
   seed: 1234
   Nd: 4
   Nc: 2

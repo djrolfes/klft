@@ -184,7 +184,7 @@ inline int parseInputFile(const std::string& filename,
 
       fermionParams.tol = fp["tol"].as<real_t>(1e-8);
     } else {
-      printf("Info: No Fermion Monomial detected\n");
+      // No Fermions
       return -1;
     }
     return true;

@@ -41,7 +41,7 @@ std::shared_ptr<Integrator> createIntegrator(
   // startingpoit of integrator chain
   std::shared_ptr<Integrator> nested_integrator = nullptr;
   for (const auto& monomial : integratorParams.monomials) {
-    std::shared_ptr<Integrator> integrator;
+    std::shared_ptr<Integrator> integrator = nullptr;
     if (monomial.level == 0) {
       // if the level is 0, we create a new integrator with nullptr as inner
       // integrator
@@ -92,8 +92,7 @@ std::shared_ptr<Integrator> createIntegrator(
         //   }
       }
       nested_integrator = integrator;
-    }
-    if (gaugeMonomialParams.level == monomial.level) {
+    } else if (gaugeMonomialParams.level == monomial.level) {
       // if the level is the same, we create a new integrator with the
       // previous one as inner integrator
       UpdatePositionGauge<Nd, Nc> update_q(g_in, a_in);
@@ -218,21 +217,41 @@ int HMC_execute(const std::string& input_file) {
   }
 
   gaugeMonomialParams.print();
+  RNGType rng(hmcParams.seed);
 
   // Start building the Fields
   using DGaugeFieldType = DeviceGaugeFieldType<4, 2>;
   using DAdjFieldType = DeviceAdjFieldType<4, 2>;
   typename DGaugeFieldType::type g_in(hmcParams.L0, hmcParams.L1, hmcParams.L2,
-                                      hmcParams.L3, identitySUN<2>());
+                                      hmcParams.L3, rng, hmcParams.rngDelta);
   typename DAdjFieldType::type a_in(hmcParams.L0, hmcParams.L1, hmcParams.L2,
                                     hmcParams.L3, traceT(identitySUN<2>()));
+
   // Buid. the Integrator
   auto testIntegrator = createIntegrator<DGaugeFieldType, DAdjFieldType>(
       g_in, a_in, integratorParams, gaugeMonomialParams, fermionParams,
       resParsef);
   using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
   HField hamiltonian_field = HField(g_in, a_in);
-  RNGType rng(hmcParams.seed);
+
+  // using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
+  // using Update_Q = UpdatePositionGauge<4, 2>;
+  // using Update_P = UpdateMomentumGauge<DGaugeFieldType, DAdjFieldType>;
+
+  // HField hamiltonian_field = HField(g_in, a_in);
+  // Update_Q update_q(g_in, a_in);
+  // Update_P update_p(g_in, a_in, gaugeMonomialParams.beta);
+  // // the integrate might need to be passed into the run_HMC as an argument as
+  // it
+  // // contains a large amount of design decisions
+  // std::shared_ptr<LeapFrog> testIntegrator =
+  //     std::make_shared<LeapFrog>(integratorParams.monomials[0].steps, true,
+  //                                nullptr,
+  //                                std::make_shared<Update_Q>(update_q),
+  //                                std::make_shared<Update_P>(update_p));
+  const auto& dimensions = g_in.dimensions;
+  // first we check that all the parameters are correct
+
   // for test make stuff manually
   // now define and run the hmc
   std::mt19937 mt(hmcParams.seed);
