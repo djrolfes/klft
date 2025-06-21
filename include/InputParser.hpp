@@ -9,8 +9,8 @@
 namespace klft {
 
 // get MetropolisParams from input file
-inline bool parseInputFile(const std::string& filename,
-                           MetropolisParams& metropolisParams) {
+inline int parseInputFile(const std::string& filename,
+                          MetropolisParams& metropolisParams) {
   try {
     YAML::Node config = YAML::LoadFile(filename);
 
@@ -46,8 +46,8 @@ inline bool parseInputFile(const std::string& filename,
 }
 
 // get GaugeObservableParams from input file
-inline bool parseInputFile(const std::string& filename,
-                           GaugeObservableParams& gaugeObservableParams) {
+inline int parseInputFile(const std::string& filename,
+                          GaugeObservableParams& gaugeObservableParams) {
   try {
     YAML::Node config = YAML::LoadFile(filename);
 
@@ -146,8 +146,8 @@ inline bool parseInputFile(const std::string& filename, HMCParams& hmcParams) {
   }
 }
 
-inline bool parseInputFile(const std::string& filename,
-                           GaugeMonomial_Params& gmparams) {
+inline int parseInputFile(const std::string& filename,
+                          GaugeMonomial_Params& gmparams) {
   try {
     YAML::Node config = YAML::LoadFile(filename);
 
@@ -168,8 +168,8 @@ inline bool parseInputFile(const std::string& filename,
   return true;
 }
 
-inline bool parseInputFile(const std::string& filename,
-                           FermionMonomial_Params& fermionParams) {
+inline int parseInputFile(const std::string& filename,
+                          FermionMonomial_Params& fermionParams) {
   try {
     YAML::Node config = YAML::LoadFile(filename);
 
@@ -185,7 +185,7 @@ inline bool parseInputFile(const std::string& filename,
       fermionParams.tol = fp["tol"].as<real_t>(1e-8);
     } else {
       printf("Info: No Fermion Monomial detected\n");
-      return false;
+      return -1;
     }
     return true;
   } catch (const YAML::Exception& e) {
@@ -194,8 +194,8 @@ inline bool parseInputFile(const std::string& filename,
   }
 }
 
-inline bool parseInputFile(const std::string& filename,
-                           Integrator_Params& intParams) {
+inline int parseInputFile(const std::string& filename,
+                          Integrator_Params& intParams) {
   try {
     YAML::Node config = YAML::LoadFile(filename);
 
@@ -238,9 +238,10 @@ inline bool parseInputFile(const std::string& filename,
     return false;
   }
 }
-inline bool parseSanityChecks(const Integrator_Params& iparams,
-                              const GaugeMonomial_Params& gmparams,
-                              const FermionMonomial_Params& fparams) {
+inline int parseSanityChecks(const Integrator_Params& iparams,
+                             const GaugeMonomial_Params& gmparams,
+                             const FermionMonomial_Params& fparams,
+                             const int resParsef) {
   // Check if the integrator has at least one monomial
   if (iparams.monomials.empty()) {
     printf("Error: Integrator must have at least one monomial\n");
@@ -252,32 +253,37 @@ inline bool parseSanityChecks(const Integrator_Params& iparams,
     printf("Error: Gauge Monomial beta must be positive\n");
     return false;
   }
-  if (fparams.fermion_type.empty()) {
-    printf("Error: Fermion Monomial type must be specified\n");
-    return false;
-  }
-  if (fparams.fermion_type != "HWilson" || fparams.fermion_type != "Wilson") {
-    printf("Error: Unsupported Fermion Monomial type: %s\n",
-           fparams.fermion_type.c_str());
-    return false;
-  }
-  // Check for correct solver
-  if (fparams.Solver != "CG" && fparams.fermion_type != "HWilson") {
-    printf(
-        "Error: Unsupported Fermion Monomial solver: %s for Fermion Type: %s\n",
-        fparams.Solver.c_str(), fparams.fermion_type.c_str());
-    return false;
-  }
+  printf("resParsef: %d\n", resParsef);
+  if (!(resParsef <= 0)) {
+    if (fparams.fermion_type.empty()) {
+      printf("Error: Fermion Monomial type must be specified\n");
+      return false;
+    }
+    if (!(fparams.fermion_type == "HWilson" ||
+          fparams.fermion_type == "Wilson")) {
+      printf("Error: Unsupported Fermion Monomial type: %s\n",
+             fparams.fermion_type.c_str());
+      return false;
+    }
+    // Check for correct solver
+    if (!(fparams.Solver == "CG" && fparams.fermion_type == "HWilson")) {
+      printf(
+          "Error: Unsupported Fermion Monomial solver: %s for Fermion Type: "
+          "%s\n",
+          fparams.Solver.c_str(), fparams.fermion_type.c_str());
+      return false;
+    }
 
-  // Check if the fermion monomial parameters are set
-  if (fparams.RepDim != 4 && fparams.RepDim != 2) {
-    printf("Error: Fermion Monomial RepDim must be 2 or 4\n");
-    return false;
-  }
-  // Check if the fermion monomial parameters are set
-  if (fparams.kappa < 0) {
-    printf("Error: Fermion Monomial kappa must be positive\n");
-    return false;
+    // Check if the fermion monomial parameters are set
+    if (fparams.RepDim != 4 && fparams.RepDim != 2) {
+      printf("Error: Fermion Monomial RepDim must be 2 or 4\n");
+      return false;
+    }
+    // Check if the fermion monomial parameters are set
+    if (fparams.kappa < 0) {
+      printf("Error: Fermion Monomial kappa must be positive\n");
+      return false;
+    }
   }
   return true;
   //
@@ -287,7 +293,7 @@ inline bool parseSanityChecks(const Integrator_Params& iparams,
 namespace YAML {
 template <>
 struct convert<klft::Integrator_Monomial_Params> {
-  static bool decode(const Node& node, klft::Integrator_Monomial_Params& rhs) {
+  static int decode(const Node& node, klft::Integrator_Monomial_Params& rhs) {
     if (!node["level"]) {
       printf("Monomial missing required field 'level'\n");
       return false;

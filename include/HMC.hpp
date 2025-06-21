@@ -25,7 +25,7 @@ class HMC {
   using AdjFieldType = typename DAdjFieldType::type;
 
   struct randomize_momentum_s {};
-  HMCParams params;
+  Integrator_Params params;
   HamiltonianField<DGaugeFieldType, DAdjFieldType>& hamiltonian_field;
   std::vector<std::unique_ptr<Monomial<DGaugeFieldType, DAdjFieldType>>>
       monomials;
@@ -36,7 +36,7 @@ class HMC {
 
   HMC() = default;
 
-  HMC(const HMCParams params_,
+  HMC(const Integrator_Params params_,
       HamiltonianField<DGaugeFieldType, DAdjFieldType>& hamiltonian_field_,
       std::shared_ptr<Integrator> integrator_,
       RNG rng_,
@@ -60,16 +60,16 @@ class HMC {
         std::make_unique<KineticMonomial<DGaugeFieldType, DAdjFieldType>>(
             _time_scale));
   }
-  template <class RNG>
-  void add_fermion_monomial(const diracParams<rank, Nc, 1>& params_,
-                            const real_t& tol_,
-                            RNG& rng,
-                            const unsigned int _time_scale) {
-    monomials.emplace_back(
-        std::make_unique<
-            FermionMonomial<DGaugeFieldType, DAdjFieldType, rank, Nc, 1>>(
-            params_, tol_, rng, _time_scale));
-  }
+  // template <class RNG>
+  // void add_fermion_monomial(const diracParams<rank, Nc, 1>& params_,
+  //                           const real_t& tol_,
+  //                           RNG& rng,
+  //                           const unsigned int _time_scale) {
+  //   monomials.emplace_back(
+  //       std::make_unique<
+  //           FermionMonomial<DGaugeFieldType, DAdjFieldType, rank, Nc, 1>>(
+  //           params_, tol_, rng, _time_scale));
+  // }
 
   bool hmc_step() {
     hamiltonian_field.randomize_momentum(rng);

@@ -15,9 +15,9 @@ using RNGType = Kokkos::Random_XorShift64_Pool<Kokkos::DefaultExecutionSpace>;
 #define HLINE \
   "====================================================================\n"
 
-int parse_args(int argc, char **argv, std::string &input_file) {
+int parse_args(int argc, char** argv, std::string& input_file) {
   // Defaults
-  input_file = "../../../test_yaml.yaml";
+  input_file = "../../../new_test.yaml";
 
   const std::string help_string =
       "  -f <file_name> --filename <file_name>\n"
@@ -55,7 +55,7 @@ int parse_args(int argc, char **argv, std::string &input_file) {
   return 0;
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
   printf(HLINE);
   printf("HMC for SU(N) gauge fields\n");
   printf(HLINE);

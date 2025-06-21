@@ -1,3 +1,4 @@
+#include "../include/HMC.hpp"
 #include "../include/InputParser.hpp"
 #include "../include/klft.hpp"
 #include "AdjointSUN.hpp"
@@ -5,8 +6,148 @@
 #include "FieldTypeHelper.hpp"
 #include "GaugeObservable.hpp"
 #include "HMC_Params.hpp"
+#include "Integrator.hpp"
+#include "UpdateMomentum.hpp"
+#include "UpdatePosition.hpp"
+using RNGType = Kokkos::Random_XorShift64_Pool<Kokkos::DefaultExecutionSpace>;
 
 namespace klft {
+
+// this will not work, have also give it the fields, for Fermions one has to do
+// more (probably)
+template <typename DGaugeFieldType, typename DAdjFieldType>
+std::shared_ptr<Integrator> createIntegrator(
+    typename DGaugeFieldType::type& g_in,
+    typename DAdjFieldType::type& a_in,
+    const Integrator_Params& integratorParams,
+    const GaugeMonomial_Params& gaugeMonomialParams,
+    const FermionMonomial_Params& fermionParams,
+    const int& resParsef) {
+  static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
+  static_assert(isDeviceAdjFieldType<DAdjFieldType>::value);
+  constexpr static size_t rank =
+      DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank;
+  constexpr static size_t Nc = DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc;
+  static_assert((rank == DeviceAdjFieldTypeTraits<DAdjFieldType>::Rank) &&
+                (Nc == DeviceAdjFieldTypeTraits<DAdjFieldType>::Nc));
+  constexpr const size_t Nd = rank;
+  using GaugeField = typename DGaugeFieldType::type;
+  using AdjointField = typename DAdjFieldType::type;
+  // Create the integrator based on the type
+  if (integratorParams.monomials.empty()) {
+    printf("Error: Integrator must have at least one monomial\n");
+    return nullptr;
+  }
+  // startingpoit of integrator chain
+  std::shared_ptr<Integrator> nested_integrator = nullptr;
+  for (const auto& monomial : integratorParams.monomials) {
+    std::shared_ptr<Integrator> integrator;
+    if (monomial.level == 0) {
+      // if the level is 0, we create a new integrator with nullptr as inner
+      // integrator
+      if (gaugeMonomialParams.level == 0) {
+        UpdatePositionGauge<Nd, Nc> update_q(g_in, a_in);
+        UpdateMomentumGauge<DGaugeFieldType, DAdjFieldType> update_p(
+            g_in, a_in, gaugeMonomialParams.beta);
+        if (monomial.type == "leapfrog") {
+          integrator = std::make_shared<LeapFrog>(
+              monomial.steps,
+              monomial.level == integratorParams.monomials.back().level,
+              nullptr, std::make_shared<UpdatePositionGauge<Nd, Nc>>(update_q),
+              std::make_shared<
+                  UpdateMomentumGauge<DGaugeFieldType, DAdjFieldType>>(
+                  update_p));
+        } else {
+          integrator = std::make_shared<LeapFrog>(
+              monomial.steps,
+              monomial.level == integratorParams.monomials.back().level,
+              nullptr, std::make_shared<UpdatePositionGauge<Nd, Nc>>(update_q),
+              std::make_shared<
+                  UpdateMomentumGauge<DGaugeFieldType, DAdjFieldType>>(
+                  update_p));
+        }
+        // create gauge update momentum and position
+        // } else if (fermionParams.level == 0 && resParsef > 0) {
+        //   // if the level is 0, we create a new integrator with nullptr as
+        //   inner
+        //   // integrator
+        //   UpdatePositionFermion<rank, Nc, 1> update_q(fermionParams.RepDim,
+        //                                               fermionParams.kappa);
+        //   UpdateMomentumFermion<DAdjFieldType, rank, Nc, 1> update_p(
+        //       fermionParams.RepDim, fermionParams.kappa, fermionParams.tol);
+        //   switch (monomial.type) {
+        //     case "leapfrog":
+        //       integrator = std::make_shared<Leapfrog>(
+        //           monomial.steps,
+        //           monomial.level == integratorParams.monomials.back().level,
+        //           nullptr, update_q, update_p);
+        //       break;
+
+        //       default "leapfrog": integrator = std::make_shared<Leapfrog>(
+        //           monomial.steps,
+        //           monomial.level == integratorParams.monomials.back().level,
+        //           nullptr, update_q, update_p);
+
+        //       break;
+        //   }
+      }
+      nested_integrator = integrator;
+    }
+    if (gaugeMonomialParams.level == monomial.level) {
+      // if the level is the same, we create a new integrator with the
+      // previous one as inner integrator
+      UpdatePositionGauge<Nd, Nc> update_q(g_in, a_in);
+      UpdateMomentumGauge<DGaugeFieldType, DAdjFieldType> update_p(
+          g_in, a_in, gaugeMonomialParams.beta);
+      if (monomial.type == "leapfrog") {
+        integrator = std::make_shared<LeapFrog>(
+            monomial.steps,
+            monomial.level == integratorParams.monomials.back().level,
+            nested_integrator,
+            std::make_shared<UpdatePositionGauge<Nd, Nc>>(update_q),
+            std::make_shared<
+                UpdateMomentumGauge<DGaugeFieldType, DAdjFieldType>>(update_p));
+
+      } else {
+        integrator = std::make_shared<LeapFrog>(
+            monomial.steps,
+            monomial.level == integratorParams.monomials.back().level,
+            nested_integrator,
+            std::make_shared<UpdatePositionGauge<Nd, Nc>>(update_q),
+            std::make_shared<
+                UpdateMomentumGauge<DGaugeFieldType, DAdjFieldType>>(update_p));
+      }
+
+      // } else if (fermionParams.level == monomial.level && resParsef > 0) {
+      //   // if the level is the same, we create a new integrator with the
+      //   previous
+      //   // one as inner integrator
+      //   UpdatePositionFermion<rank, Nc, 1> update_q(fermionParams.RepDim,
+      //                                               fermionParams.kappa);
+      //   UpdateMomentumFermion<DAdjFieldType, rank, Nc, 1> update_p(
+      //       fermionParams.RepDim, fermionParams.kappa, fermionParams.tol);
+      //   switch (monomial.type) {
+      //     case "leapfrog":
+      //       integrator = std::make_shared<Leapfrog>(
+      //           monomial.steps,
+      //           monomial.level == integratorParams.monomials.back().level,
+      //           nested_integrator, update_q, update_p);
+      //       break;
+
+      //       default "leapfrog" : integrator = std::make_shared<Leapfrog>(
+      //           monomial.steps,
+      //           monomial.level == integratorParams.monomials.back().level,
+      //           nested_integrator, update_q, update_p);
+
+      //       break;
+      //   }
+    }
+    nested_integrator = integrator;
+  }
+
+  return nested_integrator;
+}
+
 int HMC_execute(const std::string& input_file) {
   // get verbosity from environment
   const int verbosity = std::getenv("KLFT_VERBOSITY")
@@ -46,30 +187,95 @@ int HMC_execute(const std::string& input_file) {
     return -1;
   }
   FermionMonomial_Params fermionParams;
-  if (!parseInputFile(input_file, fermionParams)) {
+  auto resParsef = parseInputFile(input_file, fermionParams);
+  if (resParsef == 0) {
     printf("Error parsing input file\n");
     return -1;
+  } else if (resParsef < 0) {
+    printf("Info: No Fermion Monomial detected, skipping\n");
   }
   GaugeMonomial_Params gaugeMonomialParams;
   if (!parseInputFile(input_file, gaugeMonomialParams)) {
     printf("Error parsing input file\n");
     return -1;
   }
-  if (!parseSanityChecks(integratorParams, gaugeMonomialParams, fermionParams))
-    //   FermionParams fparams;
-    //   if (!parseInputFile(input_file, fparams)) {
-    //     printf("Error parsing input file\n");
-    //     return -1;
-    //   }
-    // print the parameters
-    hmcParams.print();
+  if (!parseSanityChecks(integratorParams, gaugeMonomialParams, fermionParams,
+                         resParsef)) {
+    printf("Error in sanity checks\n");
+    return -1;
+  }
+  //   FermionParams fparams;
+  //   if (!parseInputFile(input_file, fparams)) {
+  //     printf("Error parsing input file\n");
+  //     return -1;
+  //   }
+  // print the parameters
+  hmcParams.print();
   integratorParams.print();
   //   gaugeObsParams.print();
-  fermionParams.print();
+  if (resParsef > 0) {
+    fermionParams.print();
+  }
+
   gaugeMonomialParams.print();
 
   // Start building the Fields
+  using DGaugeFieldType = DeviceGaugeFieldType<4, 2>;
+  using DAdjFieldType = DeviceAdjFieldType<4, 2>;
+  typename DGaugeFieldType::type g_in(hmcParams.L0, hmcParams.L1, hmcParams.L2,
+                                      hmcParams.L3, identitySUN<2>());
+  typename DAdjFieldType::type a_in(hmcParams.L0, hmcParams.L1, hmcParams.L2,
+                                    hmcParams.L3, traceT(identitySUN<2>()));
+  // Buid. the Integrator
+  auto testIntegrator = createIntegrator<DGaugeFieldType, DAdjFieldType>(
+      g_in, a_in, integratorParams, gaugeMonomialParams, fermionParams,
+      resParsef);
+  using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
+  HField hamiltonian_field = HField(g_in, a_in);
+  RNGType rng(hmcParams.seed);
+  // for test make stuff manually
+  // now define and run the hmc
+  std::mt19937 mt(hmcParams.seed);
+  std::uniform_real_distribution<real_t> dist(0.0, 1.0);
+  using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
+  HMC hmc(integratorParams, hamiltonian_field, testIntegrator, rng, dist, mt);
+  hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
+  hmc.add_kinetic_monomial(0);
 
-  return 1;
+  // timer to measure the time per step
+  Kokkos::Timer timer;
+  bool accept;
+  real_t acc_sum{0.0};
+  real_t acc_rate{0.0};
+  // hmc loop
+  for (size_t step = 0; step < integratorParams.nsteps; ++step) {
+    timer.reset();
+
+    // perform hmc_step
+    accept = hmc.hmc_step();
+
+    const real_t time = timer.seconds();
+    acc_sum += static_cast<real_t>(accept);
+    acc_rate = acc_sum / static_cast<real_t>(step + 1);
+
+    if (KLFT_VERBOSITY > 0) {
+      printf("Step: %ld, accepted: %ld, Acceptance rate: %f, Time: %f\n", step,
+             static_cast<size_t>(accept), acc_rate, time);
+    }
+    // measure the gauge observables
+    measureGaugeObservables<4, 2>(g_in, gaugeObsParams, step);
+    // TODO:make flushAllGaugeObservables append the Observables to the files ->
+    // don't lose all progress when the simulation is interupted if (step % 50
+    // == 0) {
+    //   // flush every 50 steps as well to not lose data on program interuption
+    //   // TODO: this should be set by the Params
+    //   flushAllGaugeObservables(gaugeObsParams);
+    // }
+  }
+  // flush the measurements to the files
+  flushAllGaugeObservables(gaugeObsParams);
+
+  return 0;
+  // return 1;
 }
 }  // namespace klft
