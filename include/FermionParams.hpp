@@ -1,4 +1,5 @@
 #pragma once
+#include "FieldTypeHelper.hpp"
 #include "GLOBAL.hpp"
 #include "GammaMatrix.hpp"
 
@@ -16,10 +17,8 @@ struct diracParams {
   const GammaMat<RepDim> gamma5;
   const real_t kappa;
   const IndexArray<rank> dimensions;
-  diracParams(const IndexArray<rank> _dimensions,
-              const VecGammaMatrix& _gammas,
-              const GammaMat<RepDim>& _gamma5,
-              const real_t& _kappa)
+  diracParams(const IndexArray<rank> _dimensions, const VecGammaMatrix& _gammas,
+              const GammaMat<RepDim>& _gamma5, const real_t& _kappa)
       : dimensions(_dimensions),
         gammas(_gammas),
         gamma5(_gamma5),
@@ -34,18 +33,15 @@ struct FermionParams {
   size_t RepDim;
   real_t kappa;
   real_t tol;
-  FermionParams(size_t _rank,
-                size_t _Nc,
-                size_t _RepDim,
-                real_t _kappa,
-                real_t _tol,
-                const std::string& _fermion_type = "Wilson")
+  FermionParams(size_t _rank, size_t _Nc, size_t _RepDim, real_t _kappa,
+                real_t _tol, const std::string& _fermion_type = "Wilson")
       : rank(_rank),
         Nc(_Nc),
         RepDim(_RepDim),
         kappa(_kappa),
         tol(_tol),
         fermion_type(_fermion_type) {}
+  FermionParams() = default;
   void print() const {
     printf("Fermion Parameter:\n");
     printf("  Fermion Type: %s\n", fermion_type.c_str());
@@ -57,5 +53,26 @@ struct FermionParams {
     printf("  Tolerance: %f\n", tol);
   }
 };
+template <typename DGaugeFieldType>
+auto getDiracParams(const FermionParams& fparams, const IndexArray<4>& dims) {
+  if (fparams.RepDim == 4) {
+    auto gammas = get_gammas<4>();
+    GammaMat<4> gamma5 = get_gamma5();
+    diracParams<DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank,
+                DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc, 4>
+        dParams(dims, gammas, gamma5, fparams.kappa);
+    return dParams;
+
+  } else {
+    printf("Warning: Unsupported Gamma Matrix Representation\n");
+    printf("Warning: Fallback RepDim = 4\n");
+    auto gammas = get_gammas<4>();
+    GammaMat<4> gamma5 = get_gamma5();
+    diracParams<DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank,
+                DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc, 4>
+        dParams(dims, gammas, gamma5, fparams.kappa);
+    return dParams;
+  }
+}
 
 }  // namespace klft

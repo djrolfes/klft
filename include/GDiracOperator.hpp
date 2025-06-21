@@ -21,11 +21,11 @@
 // lattice units following Gattringer2010 (5.55) f. and absorbing the constant C
 // into the field definition
 #pragma once
+#include "FermionParams.hpp"
 #include "FieldTypeHelper.hpp"
 #include "GammaMatrix.hpp"
 #include "IndexHelper.hpp"
 #include "Spinor.hpp"
-#include "diracParams.hpp"
 namespace klft {
 
 template <typename _Derived, size_t rank, size_t Nc, size_t RepDim>
@@ -78,9 +78,7 @@ class DiracOperator : public std::enable_shared_from_this<
 
 template <size_t _rank, size_t _Nc, size_t _RepDim>
 class WilsonDiracOperator
-    : public DiracOperator<WilsonDiracOperator<_rank, _Nc, _RepDim>,
-                           _rank,
-                           _Nc,
+    : public DiracOperator<WilsonDiracOperator<_rank, _Nc, _RepDim>, _rank, _Nc,
                            _RepDim> {
  public:
   constexpr static size_t Nc = _Nc;
@@ -145,10 +143,8 @@ WilsonDiracOperator(const GaugeType&, const ParamType&)
 
 template <size_t _rank, size_t _Nc, size_t _RepDim>
 class HWilsonDiracOperator
-    : public DiracOperator<HWilsonDiracOperator<_rank, _Nc, _RepDim>,
-                           _rank,
-                           _Nc,
-                           _RepDim> {
+    : public DiracOperator<HWilsonDiracOperator<_rank, _Nc, _RepDim>, _rank,
+                           _Nc, _RepDim> {
  public:
   constexpr static size_t Nc = _Nc;
   constexpr static size_t RepDim = _RepDim;

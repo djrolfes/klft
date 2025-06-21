@@ -1,0 +1,59 @@
+
+HMCParams:
+  Ndims: 4
+  L0: 24
+  L1: 24
+  L2: 24
+  L3: 24
+  seed: 1234
+  Nd: 4
+  Nc: 2
+  coldStart: false
+  rngDelta: 1.0
+# Level is the innermost level of the Integrator, i.e that is executed most frequently.
+Integrator:
+  tau: 1.0
+  nSteps: 10
+  Monomials:
+
+    - Type: "Leapfrog"
+      level: 1
+      steps: 10
+    - Type: "Leapfrog"
+      level: 0
+      steps: 5
+Gauge Monomial:
+  level: 1
+  beta: 2.0
+
+Fermion Monomial:
+  level: 0
+  fermion: "HWilson"
+  solver: "CG"
+  RepDim: 4
+  kappa: 0.135
+  tol: 1e-8
+
+GaugeObservableParams:
+  measurement_interval: 5
+  measure_plaquette: true
+  measure_wilson_loop_temporal: false
+  measure_wilson_loop_mu_nu: false
+
+  W_temp_L_T_pairs:
+    - [2, 3]
+    - [3, 4]
+
+  W_mu_nu_pairs:
+    - [0, 1]
+    - [1, 2]
+
+  W_Lmu_Lnu_pairs:
+    - [2, 2]
+    - [3, 3]
+
+  plaquette_filename: "plaquette_output20.txt"
+  W_temp_filename: "wilson_temp_output20.txt"
+  W_mu_nu_filename: "wilson_mu_nu_output20.txt"
+
+  write_to_file: true

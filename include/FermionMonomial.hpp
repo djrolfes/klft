@@ -8,14 +8,8 @@
 #define SQRT2INV \
   = 0.707106781186547524400844362104849039284835937688474036588339868995366239231053519425193767163820786367506  // Oeis A010503
 namespace klft {
-template <typename DiracOperator,
-          class Solver,
-          class RNG,
-          size_t rank,
-          size_t Nc,
-          size_t RepDim,
-          typename DGaugeFieldType,
-          typename DAdjFieldType>
+template <typename DiracOperator, class Solver, class RNG, size_t RepDim,
+          typename DGaugeFieldType, typename DAdjFieldType>
 class FermionMonomial
     : public Monomial<DeviceSpinorFieldType<rank, Nc, RepDim>, DAdjFieldType> {
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
@@ -24,8 +18,10 @@ class FermionMonomial
                  DeviceAdjFieldTypeTraits<DAdjFieldType>::Rank) &&
                 (Nc == DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc ==
                  DeviceAdjFieldTypeTraits<DAdjFieldType>::Nc));
-  using SpinorFieldType =
-      typename DeviceSpinorFieldType<rank, Nc, RepDim>::type;
+  constexpr using rank = DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank;
+  constexpr using Nc =
+      DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc using SpinorFieldType =
+          typename DeviceSpinorFieldType<rank, Nc, RepDim>::type;
 
  public:
   SpinorFieldType phi;
@@ -33,9 +29,7 @@ class FermionMonomial
   const real_t tol;
   RNG rng;
   FermionMonomial(const diracParams<rank, Nc, RepDim>& params_,
-                  const real_t& tol_,
-                  RNG& RNG_,
-                  unsigned int _time_scale)
+                  const real_t& tol_, RNG& RNG_, unsigned int _time_scale)
       : Monomial<DeviceSpinorFieldType<rank, Nc, RepDim>, DAdjFieldType>(
             _time_scale),
         params(params_),
