@@ -1,5 +1,9 @@
 #pragma once
+#include "FermionParams.hpp"
+#include "GDiracOperator.hpp"
+#include "IndexHelper.hpp"
 #include "UpdateMomentum.hpp"
+namespace klft {
 
 template <size_t rank, size_t Nc, size_t RepDim, class Derived>
 class UpdateMomentumFermion : public UpdateMomentum {
@@ -7,13 +11,14 @@ class UpdateMomentumFermion : public UpdateMomentum {
   // Define Tags for different Operators
   struct HWilsonDiracOperator {};
 
-  using SpinorFieldType = typename DeviceSpinorFieldType<Nc, RepDim>::type;
+  using SpinorFieldType =
+      typename DeviceSpinorFieldType<rank, Nc, RepDim>::type;
   using GaugeFieldType = typename DeviceGaugeFieldType<rank, Nc>::type;
   using AdjFieldType = typename DeviceAdjFieldType<rank, Nc>::type;
   SpinorFieldType spinor_field;
   GaugeFieldType gauge_field;
   AdjFieldType momentum;
-  const diracParams params;
+  const diracParams<rank, Nc, RepDim> params;
   // Assumes Spinor field has been inverted i.e \chi = (DD\dagger)^-1 \eta,
   // where \eta = D R, where R gaussian random field.
   SpinorFieldType& chi;
@@ -24,13 +29,11 @@ class UpdateMomentumFermion : public UpdateMomentum {
   UpdateMomentumFermion() = delete;
   ~UpdateMomentumFermion() = default;
 
-  UpdateMomentumFermion(SpinorFieldType& chi_,
-                        SpinorFieldType& chi_alt_,
+  UpdateMomentumFermion(SpinorFieldType& chi_, SpinorFieldType& chi_alt_,
                         GaugeFieldType& gauge_field_,
                         AdjFieldType& adjoint_field_,
                         const IndexArray<rank>& dimensions_)
-      : UpdateMomentum(),
-        chi(chi_),
+      : chi(chi_),
         gauge_field(gauge_field_),
         momentum(adjoint_field_),
         dimensions(dimensions_),
@@ -42,11 +45,11 @@ class UpdateMomentumFermion : public UpdateMomentum {
     // Update the momentum of the fermion field
 #pragma unroll
     for (size_t mu = 0; mu < rank; ++mu) {
-      auto xm = shift_index_minus_bc<_rank, size_t>(
-          Kokkos::Array<size_t, _rank>{Idcs...}, mu, 1, 3, -1,
+      auto xm = shift_index_minus_bc<rank, size_t>(
+          Kokkos::Array<size_t, rank>{Idcs...}, mu, 1, 3, -1,
           this->params.dimensions);
-      auto xp = shift_index_plus_bc<_rank, size_t>(
-          Kokkos::Array<size_t, _rank>{Idcs...}, mu, 1, 3, -1,
+      auto xp = shift_index_plus_bc<rank, size_t>(
+          Kokkos::Array<size_t, rank>{Idcs...}, mu, 1, 3, -1,
           this->params.dimensions);
       auto first_term = (-xp.second * complex_t(0, 1 / 2)) *
                         (this->params.gamma_id - this->params.gammas[mu]) *
@@ -70,9 +73,9 @@ class UpdateMomentumFermion : public UpdateMomentum {
     eps = step_size;
     IndexArray<rank> start;
     Derived D(gauge_field, this->params);
-    chi_alt = D.applyDdagger(chi)
+    chi_alt = D.applyDdagger(chi);
 
-                  for (size_t i = 0; i < rank; ++i) {
+    for (size_t i = 0; i < rank; ++i) {
       start[i] = 0;
     }
 
@@ -82,3 +85,5 @@ class UpdateMomentumFermion : public UpdateMomentum {
     Kokkos::fence();
   }
 };
+
+}  // namespace klft
