@@ -60,14 +60,12 @@ struct DeviceGaugeFieldType<4, Nc, GaugeFieldKind::Standard> {
 };
 
 // now do the same for the SpinorField field types
-template <size_t rank,
-          size_t Nc,
-          size_t RepDim,
+template <size_t rank, size_t Nc, size_t RepDim,
           SpinorFieldKind k = SpinorFieldKind::Standard>
 struct DeviceSpinorFieldType;
 
 template <size_t Nc>
-struct DeviceSpinorFieldType<4, Nc, 4, SpinorFieldKind::Standard> {
+struct DeviceSpinorFieldType<4, Nc, 4> {
   using type = deviceSpinorField<Nc, 4>;
 };
 
