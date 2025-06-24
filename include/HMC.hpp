@@ -1,5 +1,7 @@
 #pragma once
 #include <random>
+#include "FermionMonomial.hpp"
+#include "FermionParams.hpp"
 #include "GLOBAL.hpp"
 #include "GaugeMonomial.hpp"
 #include "HMC_Params.hpp"
@@ -60,16 +62,22 @@ class HMC {
         std::make_unique<KineticMonomial<DGaugeFieldType, DAdjFieldType>>(
             _time_scale));
   }
-  // template <class RNG>
-  // void add_fermion_monomial(const diracParams<rank, Nc, 1>& params_,
-  //                           const real_t& tol_,
-  //                           RNG& rng,
-  //                           const unsigned int _time_scale) {
-  //   monomials.emplace_back(
-  //       std::make_unique<
-  //           FermionMonomial<DGaugeFieldType, DAdjFieldType, rank, Nc, 1>>(
-  //           params_, tol_, rng, _time_scale));
-  // }
+  template <typename DiracOperator, typename Solver, typename DSpinorFieldType>
+  void add_fermion_monomial(
+      const DSpinorFieldType& spinorField,
+      diracParams<DeviceFermionFieldTypeTraits<DSpinorFieldType>::Rank,
+
+                  DeviceFermionFieldTypeTraits<DSpinorFieldType>::RepDim>&
+          params_,
+      const real_t& tol_,
+      RNG& rng,
+      const unsigned int _time_scale) {
+    monomials.emplace_back(
+        std::make_unique<
+            FermionMonomial<DiracOperator, Solver, RNG, DSpinorFieldType,
+                            DGaugeFieldType, DAdjFieldType>>(
+            spinorField, params_, tol_, rng, _time_scale));
+  }
 
   bool hmc_step() {
     hamiltonian_field.randomize_momentum(rng);
@@ -82,8 +90,8 @@ class HMC {
     for (int i = 0; i < monomials.size(); ++i) {
       monomials[i]->accept(hamiltonian_field);
       delta_H += monomials[i]->get_delta_H();
-      // Kokkos::printf("delta_H: %f\n", delta_H);
     }
+    // Kokkos::printf("delta_H: %f\n", delta_H);
     bool accept = true;
     if (delta_H > 0.0) {
       if (dist(mt) > Kokkos::exp(-delta_H)) {

@@ -2,23 +2,23 @@
 #include "FieldTypeHelper.hpp"
 #include "GLOBAL.hpp"
 #include "GammaMatrix.hpp"
+#include "HMC_Params.hpp"
 
 namespace klft {
 
 // Parameters specific to the Dirac operator
-template <size_t _rank, size_t _Nc, size_t _RepDim>
+template <size_t rank, size_t RepDim>
 struct diracParams {
-  static constexpr size_t rank = _rank;
-  static constexpr size_t Nc = _Nc;
-  static constexpr size_t RepDim = _RepDim;
   using VecGammaMatrix = Kokkos::Array<GammaMat<RepDim>, 4>;
   const VecGammaMatrix gammas;
   const GammaMat<RepDim> gamma_id = get_identity<RepDim>();
   const GammaMat<RepDim> gamma5;
   const real_t kappa;
   const IndexArray<rank> dimensions;
-  diracParams(const IndexArray<rank> _dimensions, const VecGammaMatrix& _gammas,
-              const GammaMat<RepDim>& _gamma5, const real_t& _kappa)
+  diracParams(const IndexArray<rank> _dimensions,
+              const VecGammaMatrix& _gammas,
+              const GammaMat<RepDim>& _gamma5,
+              const real_t& _kappa)
       : dimensions(_dimensions),
         gammas(_gammas),
         gamma5(_gamma5),
@@ -33,8 +33,12 @@ struct FermionParams {
   size_t RepDim;
   real_t kappa;
   real_t tol;
-  FermionParams(size_t _rank, size_t _Nc, size_t _RepDim, real_t _kappa,
-                real_t _tol, const std::string& _fermion_type = "Wilson")
+  FermionParams(size_t _rank,
+                size_t _Nc,
+                size_t _RepDim,
+                real_t _kappa,
+                real_t _tol,
+                const std::string& _fermion_type = "Wilson")
       : rank(_rank),
         Nc(_Nc),
         RepDim(_RepDim),
@@ -53,14 +57,13 @@ struct FermionParams {
     printf("  Tolerance: %f\n", tol);
   }
 };
-template <typename DGaugeFieldType>
-auto getDiracParams(const FermionParams& fparams, const IndexArray<4>& dims) {
+template <size_t rank>
+auto getDiracParams(const IndexArray<rank>& dimensions,
+                    const FermionMonomial_Params& fparams) {
   if (fparams.RepDim == 4) {
     auto gammas = get_gammas<4>();
     GammaMat<4> gamma5 = get_gamma5();
-    diracParams<DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank,
-                DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc, 4>
-        dParams(dims, gammas, gamma5, fparams.kappa);
+    diracParams<rank, 4> dParams(dimensions, gammas, gamma5, fparams.kappa);
     return dParams;
 
   } else {
@@ -68,9 +71,7 @@ auto getDiracParams(const FermionParams& fparams, const IndexArray<4>& dims) {
     printf("Warning: Fallback RepDim = 4\n");
     auto gammas = get_gammas<4>();
     GammaMat<4> gamma5 = get_gamma5();
-    diracParams<DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank,
-                DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc, 4>
-        dParams(dims, gammas, gamma5, fparams.kappa);
+    diracParams<rank, 4> dParams(dimensions, gammas, gamma5, fparams.kappa);
     return dParams;
   }
 }

@@ -16,14 +16,15 @@ namespace klft {
 
 // this will not work, have also give it the fields, for Fermions one has to do
 // more (probably)
-template <typename DGaugeFieldType, typename DAdjFieldType,
-          typename DSpinorFieldType>
+// Still need to add check for different Dirac Operators
+template <typename DGaugeFieldType, typename DAdjFieldType>
 std::shared_ptr<Integrator> createIntegrator(
-    typename DGaugeFieldType::type& g_in, typename DAdjFieldType::type& a_in,
-    typename DSpinorFieldType::type& f_in,
+    typename DGaugeFieldType::type& g_in,
+    typename DAdjFieldType::type& a_in,
     const Integrator_Params& integratorParams,
     const GaugeMonomial_Params& gaugeMonomialParams,
-    const FermionMonomial_Params& fermionParams, const int& resParsef) {
+    const FermionMonomial_Params& fermionParams,
+    const int& resParsef) {
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
   static_assert(isDeviceAdjFieldType<DAdjFieldType>::value);
   constexpr static size_t rank =
@@ -71,23 +72,46 @@ std::shared_ptr<Integrator> createIntegrator(
       } else if (fermionParams.level == 0 && resParsef > 0) {
         // if the level is 0, we create a new integrator with nullptr as inner
         // integrator
-        UpdatePositionGauge<Nd, Nc> update_q(g_in, a_in);
-        UpdateMomentumFermion<rank, Nc, 4, HWilsonDiracOperator> update_p(
-            fermionParams.RepDim, fermionParams.kappa, fermionParams.tol);
-        switch (monomial.type) {
-          case "leapfrog":
-            integrator = std::make_shared<Leapfrog>(
+        if (fermionParams.RepDim == 4) {
+          auto diracParams =
+              getDiracParams<rank>(g_in.dimensions, fermionParams);
+          auto spinorField = typename DeviceSpinorFieldType<rank, Nc, 4>::type(
+              g_in.dimensions, 0);
+          UpdatePositionGauge<Nd, Nc> update_q(g_in, a_in);
+          UpdateMomentumFermion<
+              DeviceSpinorFieldType<rank, Nc, 4>, DGaugeFieldType,
+              DAdjFieldType,
+              HWilsonDiracOperator<DeviceSpinorFieldType<rank, Nc, 4>,
+                                   DGaugeFieldType>>
+              update_p(spinorField, g_in, a_in, diracParams);
+
+          if (monomial.type == "leapfrog") {
+            integrator = std::make_shared<LeapFrog>(
                 monomial.steps,
                 monomial.level == integratorParams.monomials.back().level,
-                nullptr, update_q, update_p);
-            break;
+                nullptr,
+                std::make_shared<UpdatePositionGauge<Nd, Nc>>(update_q),
+                std::make_shared<UpdateMomentumFermion<
+                    DeviceSpinorFieldType<rank, Nc, 4>, DGaugeFieldType,
+                    DAdjFieldType,
+                    HWilsonDiracOperator<DeviceSpinorFieldType<rank, Nc, 4>,
+                                         DGaugeFieldType>>>(update_p));
 
-            default "leapfrog": integrator = std::make_shared<Leapfrog>(
+          } else {
+            integrator = std::make_shared<LeapFrog>(
                 monomial.steps,
                 monomial.level == integratorParams.monomials.back().level,
-                nullptr, update_q, update_p);
-
-            break;
+                nullptr,
+                std::make_shared<UpdatePositionGauge<Nd, Nc>>(update_q),
+                std::make_shared<UpdateMomentumFermion<
+                    DeviceSpinorFieldType<rank, Nc, 4>, DGaugeFieldType,
+                    DAdjFieldType,
+                    HWilsonDiracOperator<DeviceSpinorFieldType<rank, Nc, 4>,
+                                         DGaugeFieldType>>>(update_p));
+          }
+        } else {
+          printf("Error: Fermion RepDim must be 4\n");
+          return nullptr;
         }
       }
       nested_integrator = integrator;
@@ -116,29 +140,47 @@ std::shared_ptr<Integrator> createIntegrator(
                 UpdateMomentumGauge<DGaugeFieldType, DAdjFieldType>>(update_p));
       }
 
-      // } else if (fermionParams.level == monomial.level && resParsef > 0) {
-      //   // if the level is the same, we create a new integrator with the
-      //   previous
-      //   // one as inner integrator
-      //   UpdatePositionFermion<rank, Nc, 1> update_q(fermionParams.RepDim,
-      //                                               fermionParams.kappa);
-      //   UpdateMomentumFermion<DAdjFieldType, rank, Nc, 1> update_p(
-      //       fermionParams.RepDim, fermionParams.kappa, fermionParams.tol);
-      //   switch (monomial.type) {
-      //     case "leapfrog":
-      //       integrator = std::make_shared<Leapfrog>(
-      //           monomial.steps,
-      //           monomial.level == integratorParams.monomials.back().level,
-      //           nested_integrator, update_q, update_p);
-      //       break;
+    } else if (fermionParams.level == monomial.level && resParsef > 0) {
+      // if the level is 0, we create a new integrator with nullptr as inner
+      // integrator
+      if (fermionParams.RepDim == 4) {
+        auto diracParams = getDiracParams<rank>(g_in.dimensions, fermionParams);
+        auto spinorField = typename DeviceSpinorFieldType<rank, Nc, 4>::type(
+            g_in.dimensions, 0);
+        UpdatePositionGauge<Nd, Nc> update_q(g_in, a_in);
+        UpdateMomentumFermion<
+            DeviceSpinorFieldType<rank, Nc, 4>, DGaugeFieldType, DAdjFieldType,
+            HWilsonDiracOperator<DeviceSpinorFieldType<rank, Nc, 4>,
+                                 DGaugeFieldType>>
+            update_p(spinorField, g_in, a_in, diracParams);
 
-      //       default "leapfrog" : integrator = std::make_shared<Leapfrog>(
-      //           monomial.steps,
-      //           monomial.level == integratorParams.monomials.back().level,
-      //           nested_integrator, update_q, update_p);
-
-      //       break;
-      //   }
+        if (monomial.type == "leapfrog") {
+          integrator = std::make_shared<LeapFrog>(
+              monomial.steps,
+              monomial.level == integratorParams.monomials.back().level,
+              nested_integrator,
+              std::make_shared<UpdatePositionGauge<Nd, Nc>>(update_q),
+              std::make_shared<UpdateMomentumFermion<
+                  DeviceSpinorFieldType<rank, Nc, 4>, DGaugeFieldType,
+                  DAdjFieldType,
+                  HWilsonDiracOperator<DeviceSpinorFieldType<rank, Nc, 4>,
+                                       DGaugeFieldType>>>(update_p));
+        } else {
+          integrator = std::make_shared<LeapFrog>(
+              monomial.steps,
+              monomial.level == integratorParams.monomials.back().level,
+              nested_integrator,
+              std::make_shared<UpdatePositionGauge<Nd, Nc>>(update_q),
+              std::make_shared<UpdateMomentumFermion<
+                  DeviceSpinorFieldType<rank, Nc, 4>, DGaugeFieldType,
+                  DAdjFieldType,
+                  HWilsonDiracOperator<DeviceSpinorFieldType<rank, Nc, 4>,
+                                       DGaugeFieldType>>>(update_p));
+        }
+      } else {
+        printf("Error: Fermion RepDim must be 4\n");
+        return nullptr;
+      }
     }
     nested_integrator = integrator;
   }
@@ -226,16 +268,28 @@ int HMC_execute(const std::string& input_file) {
                                       hmcParams.L3, rng, hmcParams.rngDelta);
   typename DAdjFieldType::type a_in(hmcParams.L0, hmcParams.L1, hmcParams.L2,
                                     hmcParams.L3, traceT(identitySUN<2>()));
-  typename DSpinorFieldType::type f_in(hmcParams.L0, hmcParams.L1, hmcParams.L2,
-                                       hmcParams.L3, complex_t(0.0, 0.0));
+  // typename DSpinorFieldType::type f_in(hmcParams.L0, hmcParams.L1,
+  // hmcParams.L2,
+  //                                      hmcParams.L3, complex_t(0.0, 0.0));
 
   // Buid. the Integrator
   auto testIntegrator = createIntegrator<DGaugeFieldType, DAdjFieldType>(
-      g_in, a_in, f_in, integratorParams, gaugeMonomialParams, fermionParams,
+      g_in, a_in, integratorParams, gaugeMonomialParams, fermionParams,
       resParsef);
   using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
   HField hamiltonian_field = HField(g_in, a_in);
 
+  // Warning Works only for the specific setup
+  auto casted = std::dynamic_pointer_cast<UpdateMomentumFermion<
+      DSpinorFieldType, DGaugeFieldType, DAdjFieldType,
+      HWilsonDiracOperator<DSpinorFieldType, DGaugeFieldType>>>(
+      testIntegrator->update_p);
+  if (!testIntegrator) {
+    printf("Error creating integrator\n");
+    return -1;
+  }
+  auto& spinorField = casted->chi;
+  auto diracParams = getDiracParams<4>(g_in.dimensions, fermionParams);
   // using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
   // using Update_Q = UpdatePositionGauge<4, 2>;
   // using Update_P = UpdateMomentumGauge<DGaugeFieldType, DAdjFieldType>;
@@ -243,11 +297,12 @@ int HMC_execute(const std::string& input_file) {
   // HField hamiltonian_field = HField(g_in, a_in);
   // Update_Q update_q(g_in, a_in);
   // Update_P update_p(g_in, a_in, gaugeMonomialParams.beta);
-  // // the integrate might need to be passed into the run_HMC as an argument as
-  // it
+  // // the integrate might need to be passed into the run_HMC as an
+  // argument as it
   // // contains a large amount of design decisions
   // std::shared_ptr<LeapFrog> testIntegrator =
-  //     std::make_shared<LeapFrog>(integratorParams.monomials[0].steps, true,
+  //     std::make_shared<LeapFrog>(integratorParams.monomials[0].steps,
+  //     true,
   //                                nullptr,
   //                                std::make_shared<Update_Q>(update_q),
   //                                std::make_shared<Update_P>(update_p));
@@ -262,6 +317,14 @@ int HMC_execute(const std::string& input_file) {
   HMC hmc(integratorParams, hamiltonian_field, testIntegrator, rng, dist, mt);
   hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
   hmc.add_kinetic_monomial(0);
+  if (resParsef > 0) {
+    hmc.add_fermion_monomial<
+        HWilsonDiracOperator<DSpinorFieldType, DGaugeFieldType>,
+        CGSolver<HWilsonDiracOperator<DSpinorFieldType, DGaugeFieldType>,
+                 DSpinorFieldType, DGaugeFieldType>,
+        DSpinorFieldType>(spinorField, diracParams, fermionParams.tol, rng, 0);
+    /* code */
+  }
 
   // timer to measure the time per step
   Kokkos::Timer timer;
@@ -285,10 +348,13 @@ int HMC_execute(const std::string& input_file) {
     }
     // measure the gauge observables
     measureGaugeObservables<4, 2>(g_in, gaugeObsParams, step);
-    // TODO:make flushAllGaugeObservables append the Observables to the files ->
-    // don't lose all progress when the simulation is interupted if (step % 50
+    // TODO:make flushAllGaugeObservables append the Observables to the
+    // files
+    // -> don't lose all progress when the simulation is interupted if (step
+    // % 50
     // == 0) {
-    //   // flush every 50 steps as well to not lose data on program interuption
+    //   // flush every 50 steps as well to not lose data on program
+    //   interuption
     //   // TODO: this should be set by the Params
     //   flushAllGaugeObservables(gaugeObsParams);
     // }

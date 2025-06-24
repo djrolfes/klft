@@ -23,7 +23,6 @@
 // dimensionality from Nd, you can not use the definitions here
 
 #pragma once
-#include <cstddef>
 
 #include "AdjointField.hpp"
 #include "Field.hpp"
@@ -60,12 +59,14 @@ struct DeviceGaugeFieldType<4, Nc, GaugeFieldKind::Standard> {
 };
 
 // now do the same for the SpinorField field types
-template <size_t rank, size_t Nc, size_t RepDim,
+template <size_t rank,
+          size_t Nc,
+          size_t RepDim,
           SpinorFieldKind k = SpinorFieldKind::Standard>
 struct DeviceSpinorFieldType;
 
 template <size_t Nc>
-struct DeviceSpinorFieldType<4, Nc, 4> {
+struct DeviceSpinorFieldType<4, Nc, 4, SpinorFieldKind::Standard> {
   using type = deviceSpinorField<Nc, 4>;
 };
 
@@ -100,9 +101,28 @@ struct DeviceGaugeFieldTypeTraits<DeviceGaugeFieldType<_rank, _Nc, _k>> {
 template <typename T>
 struct isDeviceGaugeFieldType : std::false_type {};
 
+template <typename T>
+struct isDeviceFermionFieldType : std::false_type {};
+
 template <size_t rank, size_t Nc, GaugeFieldKind k>
 struct isDeviceGaugeFieldType<DeviceGaugeFieldType<rank, Nc, k>>
     : std::true_type {};
+
+template <size_t rank, size_t Nc, size_t RepDim, SpinorFieldKind k>
+struct isDeviceFermionFieldType<DeviceSpinorFieldType<rank, Nc, RepDim, k>>
+    : std::true_type {};
+
+template <typename T>
+struct DeviceFermionFieldTypeTraits;
+
+template <size_t _rank, size_t _Nc, size_t _RepDim, SpinorFieldKind _k>
+struct DeviceFermionFieldTypeTraits<
+    DeviceSpinorFieldType<_rank, _Nc, _RepDim, _k>> {
+  static constexpr size_t Rank = _rank;
+  static constexpr size_t Nc = _Nc;
+  static constexpr size_t RepDim = _RepDim;
+  static constexpr SpinorFieldKind Kind = _k;
+};
 
 // define a function to get the gauge field type based on the rank,
 // with the default Field being the default GaugeField

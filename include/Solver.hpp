@@ -23,38 +23,58 @@
 #include "SpinorFieldLinAlg.hpp"
 namespace klft {
 
-template <typename Derived, size_t rank, size_t Nc, size_t RepDim>
-class Solver
-    : public std::enable_shared_from_this<Solver<Derived, rank, Nc, RepDim>> {
+template <typename Derived, typename DSpinorFieldType, typename DGaugeFieldType>
+class Solver {
+  // template argument deduction and safety
+  static_assert(isDeviceFermionFieldType<DSpinorFieldType>::value);
+  static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
+  constexpr static size_t rank =
+      DeviceFermionFieldTypeTraits<DSpinorFieldType>::Rank;
+  constexpr static size_t Nc =
+      DeviceFermionFieldTypeTraits<DSpinorFieldType>::Nc;
+  constexpr static size_t RepDim =
+      DeviceFermionFieldTypeTraits<DSpinorFieldType>::RepDim;
+  static_assert((rank == DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank) &&
+                (Nc == DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc));
+
  public:
-  using SpinorFieldType =
-      typename DeviceSpinorFieldType<rank, Nc, RepDim>::type;
-  using GaugeFieldType = typename DeviceGaugeFieldType<rank, Nc>::type;
+  using SpinorFieldType = typename DSpinorFieldType::type;
+  using GaugeFieldType = typename DGaugeFieldType::type;
   const SpinorFieldType b;
   SpinorFieldType x;  // Solution to DiracOP*x=b
-  DiracOperator<Derived, rank, Nc, RepDim> dirac_op;
-  Solver(const SpinorFieldType& b, SpinorFieldType& x,
-         const DiracOperator<Derived, rank, Nc, RepDim>& dirac_op)
+  DiracOperator<Derived, DSpinorFieldType, DGaugeFieldType> dirac_op;
+  Solver(
+      const SpinorFieldType& b,
+      SpinorFieldType& x,
+      const DiracOperator<Derived, DSpinorFieldType, DGaugeFieldType>& dirac_op)
       : b(b), x(x), dirac_op(dirac_op) {}
 
   virtual void solve(const SpinorFieldType& x0, const real_t& tol) = 0;
 };
-// Deduction guide for Solver
-template <typename Operator, typename SpinorType>
-Solver(const SpinorType&, SpinorType&, const Operator&)
-    -> Solver<typename Operator::Derived, SpinorType::rank, SpinorType::Nc,
-              SpinorType::RepDim>;
+// // Deduction guide for Solver
+// template <typename Operator, typename SpinorType>
+// Solver(const SpinorType&, SpinorType&, const Operator&)
+//     -> Solver<typename Operator::Derived,
+//               SpinorType::rank,
+//               SpinorType::Nc,
+//               SpinorType::RepDim>;
 
-template <typename Derived, size_t rank, size_t Nc, size_t RepDim>
-class CGSolver : public Solver<Derived, rank, Nc, RepDim> {
+template <typename Derived, typename DSpinorFieldType, typename DGaugeFieldType>
+class CGSolver : public Solver<Derived, DSpinorFieldType, DGaugeFieldType> {
  public:
-  using SpinorFieldType =
-      typename DeviceSpinorFieldType<rank, Nc, RepDim>::type;
-  using GaugeFieldType = typename DeviceGaugeFieldType<rank, Nc>::type;
+  using SpinorFieldType = typename DSpinorFieldType::type;
+  using GaugeFieldType = typename DGaugeFieldType::type;
+  constexpr static size_t rank =
+      DeviceFermionFieldTypeTraits<DSpinorFieldType>::Rank;
+  constexpr static size_t Nc =
+      DeviceFermionFieldTypeTraits<DSpinorFieldType>::Nc;
+  constexpr static size_t RepDim =
+      DeviceFermionFieldTypeTraits<DSpinorFieldType>::RepDim;
   CGSolver() = delete;
-  CGSolver(const SpinorFieldType& b, SpinorFieldType& x,
-           DiracOperator<Derived, rank, Nc, RepDim>& dirac_op)
-      : Solver<Derived, rank, Nc, RepDim>(b, x, dirac_op) {}
+  CGSolver(const SpinorFieldType& b,
+           SpinorFieldType& x,
+           DiracOperator<Derived, DSpinorFieldType, DGaugeFieldType>& dirac_op)
+      : Solver<Derived, DSpinorFieldType, DGaugeFieldType>(b, x, dirac_op) {}
 
   void solve(const SpinorFieldType& x0, const real_t& tol) override {
     SpinorFieldType xk(this->dirac_op.params.dimensions, complex_t(0.0, 0.0));

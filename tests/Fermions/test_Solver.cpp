@@ -50,7 +50,9 @@ int main(int argc, char* argv[]) {
     deviceSpinorField<3, 4> x0(L0, L1, L2, L3, complex_t(0.0, 0.0));
     deviceGaugeField<4, 3> gauge(L0, L1, L2, L3, random_pool, 1);
     printf("Instantiate DiracOperator...\n");
-    HWilsonDiracOperator D(gauge, param);
+    HWilsonDiracOperator<DeviceSpinorFieldType<4, 3, 4>,
+                         DeviceGaugeFieldType<4, 3>>
+        D(gauge, param);
     printf("Apply dirac Operator...\n");
     print_spinor(u(0, 0, 0, 0));
     timer.reset();

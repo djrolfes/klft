@@ -28,14 +28,25 @@
 #include "Spinor.hpp"
 namespace klft {
 
-template <typename _Derived, size_t rank, size_t Nc, size_t RepDim>
-class DiracOperator : public std::enable_shared_from_this<
-                          DiracOperator<_Derived, rank, Nc, RepDim>> {
+template <typename _Derived,
+          typename DSpinorFieldType,
+          typename DGaugeFieldType>
+class DiracOperator {
+  static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
+  static_assert(isDeviceFermionFieldType<DSpinorFieldType>::value);
+  constexpr static size_t rank =
+      DeviceFermionFieldTypeTraits<DSpinorFieldType>::Rank;
+  constexpr static size_t Nc =
+      DeviceFermionFieldTypeTraits<DSpinorFieldType>::Nc;
+  constexpr static size_t RepDim =
+      DeviceFermionFieldTypeTraits<DSpinorFieldType>::RepDim;
+  static_assert((rank == DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank) &&
+                (Nc == DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc));
+
   using Derived = _Derived;
   // Define Tags for template dispatch:
-  using SpinorFieldType =
-      typename DeviceSpinorFieldType<rank, Nc, RepDim>::type;
-  using GaugeFieldType = typename DeviceGaugeFieldType<rank, Nc>::type;
+  using SpinorFieldType = typename DSpinorFieldType::type;
+  using GaugeFieldType = typename DGaugeFieldType::type;
 
  public:
   struct TagD {};
@@ -65,41 +76,48 @@ class DiracOperator : public std::enable_shared_from_this<
   }
   SpinorFieldType s_in;
   SpinorFieldType s_out;
-  const GaugeFieldType g_in;
-  const diracParams<rank, Nc, RepDim> params;
+  const GaugeFieldType& g_in;
+  const diracParams<rank, RepDim> params;
 
   DiracOperator(const GaugeFieldType& g_in,
-                const diracParams<rank, Nc, RepDim>& params)
+                const diracParams<rank, RepDim>& params)
       : g_in(g_in), params(params) {}
 
  protected:
   DiracOperator() = default;
 };
 
-template <size_t _rank, size_t _Nc, size_t _RepDim>
+template <typename DSpinorFieldType, typename DGaugeFieldType>
 class WilsonDiracOperator
-    : public DiracOperator<WilsonDiracOperator<_rank, _Nc, _RepDim>, _rank, _Nc,
-                           _RepDim> {
+    : public DiracOperator<
+          WilsonDiracOperator<DSpinorFieldType, DGaugeFieldType>,
+          DSpinorFieldType,
+          DGaugeFieldType> {
  public:
-  constexpr static size_t Nc = _Nc;
-  constexpr static size_t RepDim = _RepDim;
-  constexpr static size_t rank = _rank;
+  constexpr static size_t Nc =
+      DeviceFermionFieldTypeTraits<DSpinorFieldType>::Nc;
+  constexpr static size_t RepDim =
+      DeviceFermionFieldTypeTraits<DSpinorFieldType>::RepDim;
+  constexpr static size_t rank =
+      DeviceFermionFieldTypeTraits<DSpinorFieldType>::Rank;
 
   ~WilsonDiracOperator() = default;
   using Base =
-      DiracOperator<WilsonDiracOperator<rank, Nc, RepDim>, rank, Nc, RepDim>;
+      DiracOperator<WilsonDiracOperator<DSpinorFieldType, DGaugeFieldType>,
+                    DSpinorFieldType,
+                    DGaugeFieldType>;
   using Base::Base;
   template <typename... Indices>
   KOKKOS_FORCEINLINE_FUNCTION void operator()(typename Base::TagD,
                                               const Indices... Idcs) const {
     Spinor<Nc, RepDim> temp;
 #pragma unroll
-    for (size_t mu = 0; mu < _rank; ++mu) {
-      auto xm = shift_index_minus_bc<_rank, size_t>(
-          Kokkos::Array<size_t, _rank>{Idcs...}, mu, 1, 3, -1,
+    for (size_t mu = 0; mu < rank; ++mu) {
+      auto xm = shift_index_minus_bc<rank, size_t>(
+          Kokkos::Array<size_t, rank>{Idcs...}, mu, 1, 3, -1,
           this->params.dimensions);
-      auto xp = shift_index_plus_bc<_rank, size_t>(
-          Kokkos::Array<size_t, _rank>{Idcs...}, mu, 1, 3, -1,
+      auto xp = shift_index_plus_bc<rank, size_t>(
+          Kokkos::Array<size_t, rank>{Idcs...}, mu, 1, 3, -1,
           this->params.dimensions);
 
       temp += (this->params.gamma_id - this->params.gammas[mu]) * 0.5 *
@@ -118,12 +136,12 @@ class WilsonDiracOperator
                                               const Indices... Idcs) const {
     Spinor<Nc, RepDim> temp;
 #pragma unroll
-    for (size_t mu = 0; mu < _rank; ++mu) {
-      auto xm = shift_index_minus_bc<_rank, size_t>(
-          Kokkos::Array<size_t, _rank>{Idcs...}, mu, 1, 3, -1,
+    for (size_t mu = 0; mu < rank; ++mu) {
+      auto xm = shift_index_minus_bc<rank, size_t>(
+          Kokkos::Array<size_t, rank>{Idcs...}, mu, 1, 3, -1,
           this->params.dimensions);
-      auto xp = shift_index_plus_bc<_rank, size_t>(
-          Kokkos::Array<size_t, _rank>{Idcs...}, mu, 1, 3, -1,
+      auto xp = shift_index_plus_bc<rank, size_t>(
+          Kokkos::Array<size_t, rank>{Idcs...}, mu, 1, 3, -1,
           this->params.dimensions);
 
       temp += (this->params.gamma_id - this->params.gammas[mu]) * 0.5 *
@@ -136,35 +154,43 @@ class WilsonDiracOperator
     this->s_out(Idcs...) += this->s_in(Idcs...) - this->params.kappa * temp;
   }
 };
-// Deduction guide
-template <typename GaugeType, typename ParamType>
-WilsonDiracOperator(const GaugeType&, const ParamType&)
-    -> WilsonDiracOperator<ParamType::rank, ParamType::Nc, ParamType::RepDim>;
+// // Deduction guide
+// template <typename GaugeType, typename ParamType>
+// WilsonDiracOperator(const GaugeType&, const ParamType&)
+//     -> WilsonDiracOperator<ParamType::rank, ParamType::Nc,
+//     ParamType::RepDim>;
 
-template <size_t _rank, size_t _Nc, size_t _RepDim>
+template <typename DSpinorFieldType, typename DGaugeFieldType>
 class HWilsonDiracOperator
-    : public DiracOperator<HWilsonDiracOperator<_rank, _Nc, _RepDim>, _rank,
-                           _Nc, _RepDim> {
+    : public DiracOperator<
+          HWilsonDiracOperator<DSpinorFieldType, DGaugeFieldType>,
+          DSpinorFieldType,
+          DGaugeFieldType> {
  public:
-  constexpr static size_t Nc = _Nc;
-  constexpr static size_t RepDim = _RepDim;
-  constexpr static size_t rank = _rank;
+  constexpr static size_t Nc =
+      DeviceFermionFieldTypeTraits<DSpinorFieldType>::Nc;
+  constexpr static size_t RepDim =
+      DeviceFermionFieldTypeTraits<DSpinorFieldType>::RepDim;
+  constexpr static size_t rank =
+      DeviceFermionFieldTypeTraits<DSpinorFieldType>::Rank;
 
   ~HWilsonDiracOperator() = default;
   using Base =
-      DiracOperator<HWilsonDiracOperator<rank, Nc, RepDim>, rank, Nc, RepDim>;
+      DiracOperator<HWilsonDiracOperator<DSpinorFieldType, DGaugeFieldType>,
+                    DSpinorFieldType,
+                    DGaugeFieldType>;
   using Base::Base;
   template <typename... Indices>
   KOKKOS_FORCEINLINE_FUNCTION void operator()(typename Base::TagD,
                                               const Indices... Idcs) const {
     Spinor<Nc, RepDim> temp;
 #pragma unroll
-    for (size_t mu = 0; mu < _rank; ++mu) {
-      auto xm = shift_index_minus_bc<_rank, size_t>(
-          Kokkos::Array<size_t, _rank>{Idcs...}, mu, 1, 3, -1,
+    for (size_t mu = 0; mu < rank; ++mu) {
+      auto xm = shift_index_minus_bc<rank, size_t>(
+          Kokkos::Array<size_t, rank>{Idcs...}, mu, 1, 3, -1,
           this->params.dimensions);
-      auto xp = shift_index_plus_bc<_rank, size_t>(
-          Kokkos::Array<size_t, _rank>{Idcs...}, mu, 1, 3, -1,
+      auto xp = shift_index_plus_bc<rank, size_t>(
+          Kokkos::Array<size_t, rank>{Idcs...}, mu, 1, 3, -1,
           this->params.dimensions);
 
       temp += (this->params.gamma_id - this->params.gammas[mu]) * 0.5 *
@@ -185,9 +211,10 @@ class HWilsonDiracOperator
     operator()(typename Base::TagD(), Idcs...);
   }
 };
-// Deduction guide
-template <typename GaugeType, typename ParamType>
-HWilsonDiracOperator(const GaugeType&, const ParamType&)
-    -> HWilsonDiracOperator<ParamType::rank, ParamType::Nc, ParamType::RepDim>;
+// // Deduction guide
+// template <typename GaugeType, typename ParamType>
+// HWilsonDiracOperator(const GaugeType&, const ParamType&)
+//     -> HWilsonDiracOperator<ParamType::rank, ParamType::Nc,
+//     ParamType::RepDim>;
 
 }  // namespace klft
