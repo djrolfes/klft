@@ -2,6 +2,7 @@
 
 #include <Kokkos_Complex.hpp>
 #include <Kokkos_Core.hpp>
+
 #include "../../include/GDiracOperator.hpp"
 #include "../../include/GammaMatrix.hpp"
 #include "../../include/Solver.hpp"
@@ -39,7 +40,7 @@ int main(int argc, char* argv[]) {
     auto gammas = get_gammas<4>();
     GammaMat<4> gamma5 = get_gamma5();
     IndexArray<4> dims = {L0, L1, L2, L3};
-    diracParams<4, 3, 4> param(dims, gammas, gamma5, 0.1);
+    diracParams<4, 4> param(dims, gammas, gamma5, 0.1);
 
     printf("Lattice Dimension %ix%ix%ix%i \n", L0, L1, L2, L3);
     printf("Generate SpinorFields...\n");

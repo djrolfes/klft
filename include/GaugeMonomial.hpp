@@ -23,14 +23,14 @@ class GaugeMonomial : public Monomial<DGaugeFieldType, DAdjFieldType> {
   real_t beta;
 
   GaugeMonomial(real_t _beta, unsigned int _time_scale)
-      : Monomial<GaugeFieldType, DAdjFieldType>::Monomial(_time_scale) {
+      : Monomial<DGaugeFieldType, DAdjFieldType>::Monomial(_time_scale) {
     beta = _beta;
-    Monomial<GaugeFieldType, DAdjFieldType>::monomial_type =
+    Monomial<DGaugeFieldType, DAdjFieldType>::monomial_type =
         KLFT_MONOMIAL_GAUGE;
   }
 
   void heatbath(HamiltonianField<DGaugeFieldType, DAdjFieldType> h) override {
-    Monomial<GaugeFieldType, DAdjFieldType>::H_old =
+    Monomial<DGaugeFieldType, DAdjFieldType>::H_old =
         -(beta / static_cast<real_t>(Nc)) *
         GaugePlaquette<rank, Nc>(h.gauge_field, false);
   }

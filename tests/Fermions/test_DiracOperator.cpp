@@ -35,8 +35,8 @@ int main(int argc, char* argv[]) {
     index_t L0 = 32, L1 = 32, L2 = 32, L3 = 32;
     auto gammas = get_gammas<4>();
     GammaMat<4> gamma5 = get_gamma5();
-    diracParams<4, 3, 4> params(IndexArray<4>{L0, L1, L2, L3}, gammas, gamma5,
-                                -0.5);
+    diracParams<4, 4> params(IndexArray<4>{L0, L1, L2, L3}, gammas, gamma5,
+                             -0.5);
     printf("Lattice Dimension %ix%ix%ix%i \n", L0, L1, L2, L3);
     printf("Generate SpinorFields...\n");
 
@@ -50,7 +50,9 @@ int main(int argc, char* argv[]) {
     printf("Generating Random Gauge Config\n");
     deviceGaugeField<4, 3> gauge(L0, L1, L2, L3, random_pool, 1);
     printf("Instantiate DiracOperator...\n");
-    HWilsonDiracOperator<4, 3, 4> D(gauge, params);
+    HWilsonDiracOperator<DeviceSpinorFieldType<4, 3, 4>,
+                         DeviceGaugeFieldType<4, 3>>
+        D(gauge, params);
     printf("Apply DiracOperator...\n");
 
     deviceSpinorField Mu = D.applyD(u);

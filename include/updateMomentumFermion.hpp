@@ -6,10 +6,8 @@
 #include "UpdateMomentum.hpp"
 namespace klft {
 
-template <typename DFermionField,
-          typename DGaugeFieldType,
-          typename DAdjFieldType,
-          class Derived>
+template <typename DFermionField, typename DGaugeFieldType,
+          typename DAdjFieldType, class Derived>
 class UpdateMomentumFermion : public UpdateMomentum {
   static_assert(isDeviceFermionFieldType<DFermionField>::value);
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
@@ -48,8 +46,7 @@ class UpdateMomentumFermion : public UpdateMomentum {
   UpdateMomentumFermion() = delete;
   ~UpdateMomentumFermion() = default;
 
-  UpdateMomentumFermion(SpinorFieldType& chi_,
-                        GaugeFieldType& gauge_field_,
+  UpdateMomentumFermion(SpinorFieldType& chi_, GaugeFieldType& gauge_field_,
                         AdjFieldType& adjoint_field_,
                         const diracParams<rank, RepDim>& params_)
       : UpdateMomentum(0),
@@ -82,11 +79,10 @@ class UpdateMomentumFermion : public UpdateMomentum {
       auto total_term =
           conj(chi(Idcs...)) * first_term + conj(chi(xm.first)) * second_term;
 
-      momentum(Idcs...) -=
-          eps *
-          traceT(-2 *
-                 realSpinor(
-                     total_term));  // in leap frog therese the minus sign here
+      momentum(Idcs..., mu) -=
+          eps * -2 *
+          traceT(
+              realSUN(total_term));  // in leap frog therese the minus sign here
     }
   }
 

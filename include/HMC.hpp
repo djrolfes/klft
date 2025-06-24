@@ -1,5 +1,6 @@
 #pragma once
 #include <random>
+
 #include "FermionMonomial.hpp"
 #include "FermionParams.hpp"
 #include "GLOBAL.hpp"
@@ -40,10 +41,8 @@ class HMC {
 
   HMC(const Integrator_Params params_,
       HamiltonianField<DGaugeFieldType, DAdjFieldType>& hamiltonian_field_,
-      std::shared_ptr<Integrator> integrator_,
-      RNG rng_,
-      std::uniform_real_distribution<real_t> dist_,
-      std::mt19937 mt_)
+      std::shared_ptr<Integrator> integrator_, RNG rng_,
+      std::uniform_real_distribution<real_t> dist_, std::mt19937 mt_)
       : params(params_),
         rng(rng_),
         dist(dist_),
@@ -64,14 +63,12 @@ class HMC {
   }
   template <typename DiracOperator, typename Solver, typename DSpinorFieldType>
   void add_fermion_monomial(
-      const DSpinorFieldType& spinorField,
+      const typename DSpinorFieldType::type& spinorField,
       diracParams<DeviceFermionFieldTypeTraits<DSpinorFieldType>::Rank,
 
                   DeviceFermionFieldTypeTraits<DSpinorFieldType>::RepDim>&
           params_,
-      const real_t& tol_,
-      RNG& rng,
-      const unsigned int _time_scale) {
+      const real_t& tol_, RNG& rng, const unsigned int _time_scale) {
     monomials.emplace_back(
         std::make_unique<
             FermionMonomial<DiracOperator, Solver, RNG, DSpinorFieldType,
