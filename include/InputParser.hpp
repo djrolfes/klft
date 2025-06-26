@@ -221,7 +221,7 @@ inline int parseInputFile(const std::string& filename,
         std::sort(intParams.monomials.begin(), intParams.monomials.end(),
                   [](const Integrator_Monomial_Params& a,
                      const Integrator_Monomial_Params& b) {
-                    return a.level > b.level;
+                    return a.level < b.level;
                   });
       } else {
         printf("Warning: No monomials found\n");

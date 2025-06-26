@@ -32,7 +32,10 @@ int main(int argc, char* argv[]) {
     Kokkos::Timer timer;
 
     real_t diracTime = std::numeric_limits<real_t>::max();
-    setVerbosity(1);
+    const int verbosity = std::getenv("KLFT_VERBOSITY")
+                              ? std::atoi(std::getenv("KLFT_VERBOSITY"))
+                              : 0;
+    setVerbosity(verbosity);
     printf("%i", KLFT_VERBOSITY);
     printf("\n=== Testing DiracOperator SU(3)  ===\n");
     printf("\n= Testing hermiticity =\n");
@@ -40,7 +43,7 @@ int main(int argc, char* argv[]) {
     auto gammas = get_gammas<4>();
     GammaMat<4> gamma5 = get_gamma5();
     IndexArray<4> dims = {L0, L1, L2, L3};
-    diracParams<4, 4> param(dims, gammas, gamma5, 0.1);
+    diracParams<4, 4> param(dims, gammas, gamma5, 0.01);
 
     printf("Lattice Dimension %ix%ix%ix%i \n", L0, L1, L2, L3);
     printf("Generate SpinorFields...\n");

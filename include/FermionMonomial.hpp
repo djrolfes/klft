@@ -8,8 +8,11 @@
 #define SQRT2INV \
   0.707106781186547524400844362104849039284835937688474036588339868995366239231053519425193767163820786367506  // Oeis A010503
 namespace klft {
-template <typename DiracOperator, class Solver, class RNGType,
-          typename DFermionFieldType, typename DGaugeFieldType,
+template <typename DiracOperator,
+          class Solver,
+          class RNGType,
+          typename DFermionFieldType,
+          typename DGaugeFieldType,
           typename DAdjFieldType>
 class FermionMonomial : public Monomial<DGaugeFieldType, DAdjFieldType> {
   static_assert(isDeviceFermionFieldType<DFermionFieldType>::value);
@@ -30,12 +33,15 @@ class FermionMonomial : public Monomial<DGaugeFieldType, DAdjFieldType> {
   using FermionField = typename DFermionFieldType::type;
 
  public:
-  FermionField phi;
+  FermionField& phi;
   const diracParams<rank, RepDim> params;
   const real_t tol;
   RNGType rng;
-  FermionMonomial(FermionField _phi, const diracParams<rank, RepDim>& params_,
-                  const real_t& tol_, RNGType& RNG_, unsigned int _time_scale)
+  FermionMonomial(FermionField& _phi,
+                  const diracParams<rank, RepDim>& params_,
+                  const real_t& tol_,
+                  RNGType& RNG_,
+                  unsigned int _time_scale)
       : Monomial<DGaugeFieldType, DAdjFieldType>(_time_scale),
         phi(_phi),
         params(params_),
@@ -50,7 +56,7 @@ class FermionMonomial : public Monomial<DGaugeFieldType, DAdjFieldType> {
 
     FermionField R(dims, rng, 0, SQRT2INV);
     DiracOperator dirac_op(h.gauge_field, params);
-    this->phi = dirac_op.applyD(R);
+    dirac_op.applyD_inplace(R, this->phi);
 
     Monomial<DGaugeFieldType, DAdjFieldType>::H_old =
         spinor_norm_sq<rank, Nc, RepDim>(R);

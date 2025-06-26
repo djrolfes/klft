@@ -74,6 +74,21 @@ class DiracOperator {
                                           static_cast<_Derived&>(*this));
     return s_out;
   }
+  void applyD_inplace(const SpinorFieldType& s_in, SpinorFieldType& s_out) {
+    this->s_in = s_in;
+    this->s_out = s_out;
+    tune_and_launch_for<rank, TagD>(typeid(Derived).name(), IndexArray<rank>{},
+                                    params.dimensions,
+                                    static_cast<_Derived&>(*this));
+  }
+  void applyDdagger_inplace(const SpinorFieldType& s_in,
+                            SpinorFieldType& s_out) {
+    this->s_in = s_in;
+    this->s_out = s_out;
+    tune_and_launch_for<rank, TagDdagger>(typeid(Derived).name(),
+                                          IndexArray<rank>{}, params.dimensions,
+                                          static_cast<_Derived&>(*this));
+  }
   SpinorFieldType s_in;
   SpinorFieldType s_out;
   const GaugeFieldType& g_in;
@@ -144,10 +159,9 @@ class WilsonDiracOperator
           Kokkos::Array<size_t, rank>{Idcs...}, mu, 1, 3, -1,
           this->params.dimensions);
 
-      temp += (this->params.gamma_id - this->params.gammas[mu]) * 0.5 *
-              xp.second * (this->g_in(Idcs..., mu) * this->s_in(xp.first));
-      temp += (this->params.gamma_id + this->params.gammas[mu]) * 0.5 *
-              xm.second *
+      temp += (this->params.gamma_id - this->params.gammas[mu]) * xp.second *
+              (this->g_in(Idcs..., mu) * this->s_in(xp.first));
+      temp += (this->params.gamma_id + this->params.gammas[mu]) * xm.second *
               (conj(this->g_in(xm.first, mu)) * this->s_in(xm.first));
     }
 
@@ -193,10 +207,9 @@ class HWilsonDiracOperator
           Kokkos::Array<size_t, rank>{Idcs...}, mu, 1, 3, -1,
           this->params.dimensions);
 
-      temp += (this->params.gamma_id - this->params.gammas[mu]) * 0.5 *
-              xp.second * (this->g_in(Idcs..., mu) * this->s_in(xp.first));
-      temp += (this->params.gamma_id + this->params.gammas[mu]) * 0.5 *
-              xm.second *
+      temp += (this->params.gamma_id - this->params.gammas[mu]) * xp.second *
+              (this->g_in(Idcs..., mu) * this->s_in(xp.first));
+      temp += (this->params.gamma_id + this->params.gammas[mu]) * xm.second *
               (conj(this->g_in(xm.first, mu)) * this->s_in(xm.first));
     }
 

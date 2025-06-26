@@ -17,14 +17,17 @@ namespace klft {
 // this will not work, have also give it the fields, for Fermions one has to do
 // more (probably)
 // Still need to add check for different Dirac Operators
-template <typename DGaugeFieldType, typename DAdjFieldType,
+template <typename DGaugeFieldType,
+          typename DAdjFieldType,
           typename DSpinorFieldType>
 std::shared_ptr<Integrator> createIntegrator(
-    typename DGaugeFieldType::type& g_in, typename DAdjFieldType::type& a_in,
+    typename DGaugeFieldType::type& g_in,
+    typename DAdjFieldType::type& a_in,
     typename DSpinorFieldType::type& s_in,
     const Integrator_Params& integratorParams,
     const GaugeMonomial_Params& gaugeMonomialParams,
-    const FermionMonomial_Params& fermionParams, const int& resParsef) {
+    const FermionMonomial_Params& fermionParams,
+    const int& resParsef) {
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
   static_assert(isDeviceAdjFieldType<DAdjFieldType>::value);
   constexpr static size_t rank =
@@ -282,7 +285,6 @@ int HMC_execute(const std::string& input_file) {
   //   return -1;
   // }
   // auto& spinorField = casted->chi;
-  auto diracParams = getDiracParams<4>(g_in.dimensions, fermionParams);
   // using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
   // using Update_Q = UpdatePositionGauge<4, 2>;
   // using Update_P = UpdateMomentumGauge<DGaugeFieldType, DAdjFieldType>;
@@ -310,8 +312,11 @@ int HMC_execute(const std::string& input_file) {
   HMC hmc(integratorParams, hamiltonian_field, testIntegrator, rng, dist, mt);
   hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
   hmc.add_kinetic_monomial(0);
-  using DiracOperator = HWilsonDiracOperator<DSpinorFieldType, DGaugeFieldType>;
   if (resParsef > 0) {
+    auto diracParams = getDiracParams<4>(g_in.dimensions, fermionParams);
+
+    using DiracOperator =
+        HWilsonDiracOperator<DSpinorFieldType, DGaugeFieldType>;
     hmc.add_fermion_monomial<
         DiracOperator,
         CGSolver<DiracOperator, DSpinorFieldType, DGaugeFieldType>,

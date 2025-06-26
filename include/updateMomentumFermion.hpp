@@ -6,8 +6,10 @@
 #include "UpdateMomentum.hpp"
 namespace klft {
 
-template <typename DFermionField, typename DGaugeFieldType,
-          typename DAdjFieldType, class Derived>
+template <typename DFermionField,
+          typename DGaugeFieldType,
+          typename DAdjFieldType,
+          class Derived>
 class UpdateMomentumFermion : public UpdateMomentum {
   static_assert(isDeviceFermionFieldType<DFermionField>::value);
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
@@ -32,7 +34,6 @@ class UpdateMomentumFermion : public UpdateMomentum {
       typename DeviceSpinorFieldType<rank, Nc, RepDim>::type;
   using GaugeFieldType = typename DeviceGaugeFieldType<rank, Nc>::type;
   using AdjFieldType = typename DeviceAdjFieldType<rank, Nc>::type;
-  SpinorFieldType spinor_field;
   GaugeFieldType gauge_field;
   AdjFieldType momentum;
   const diracParams<rank, RepDim> params;
@@ -46,7 +47,8 @@ class UpdateMomentumFermion : public UpdateMomentum {
   UpdateMomentumFermion() = delete;
   ~UpdateMomentumFermion() = default;
 
-  UpdateMomentumFermion(SpinorFieldType& chi_, GaugeFieldType& gauge_field_,
+  UpdateMomentumFermion(SpinorFieldType& chi_,
+                        GaugeFieldType& gauge_field_,
                         AdjFieldType& adjoint_field_,
                         const diracParams<rank, RepDim>& params_)
       : UpdateMomentum(0),
