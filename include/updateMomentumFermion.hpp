@@ -6,23 +6,22 @@
 #include "UpdateMomentum.hpp"
 namespace klft {
 
-template <typename DFermionField,
-          typename DGaugeFieldType,
-          typename DAdjFieldType,
-          class Derived>
+template <typename DFermionFieldType, typename DGaugeFieldType,
+          typename DAdjFieldType, class Derived, class Solver>
 class UpdateMomentumFermion : public UpdateMomentum {
-  static_assert(isDeviceFermionFieldType<DFermionField>::value);
+  static_assert(isDeviceFermionFieldType<DFermionFieldType>::value);
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
   static_assert(isDeviceAdjFieldType<DAdjFieldType>::value);
   constexpr static size_t rank =
       DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank;
   constexpr static size_t Nc = DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc;
   constexpr static size_t RepDim =
-      DeviceFermionFieldTypeTraits<DFermionField>::RepDim;
+      DeviceFermionFieldTypeTraits<DFermionFieldType>::RepDim;
   static_assert(rank == DeviceAdjFieldTypeTraits<DAdjFieldType>::Rank &&
-                    rank == DeviceFermionFieldTypeTraits<DFermionField>::Rank &&
+                    rank ==
+                        DeviceFermionFieldTypeTraits<DFermionFieldType>::Rank &&
                     Nc == DeviceAdjFieldTypeTraits<DAdjFieldType>::Nc &&
-                    Nc == DeviceFermionFieldTypeTraits<DFermionField>::Nc,
+                    Nc == DeviceFermionFieldTypeTraits<DFermionFieldType>::Nc,
                 "Rank and Nc must match between gauge, adjoint, and fermion "
                 "field types.");
 
@@ -30,33 +29,34 @@ class UpdateMomentumFermion : public UpdateMomentum {
   // Define Tags for different Operators
   struct HWilsonDiracOperatorTag {};
 
-  using SpinorFieldType =
-      typename DeviceSpinorFieldType<rank, Nc, RepDim>::type;
+  using FermionField = typename DFermionFieldType::type;
   using GaugeFieldType = typename DeviceGaugeFieldType<rank, Nc>::type;
   using AdjFieldType = typename DeviceAdjFieldType<rank, Nc>::type;
-  GaugeFieldType gauge_field;
-  AdjFieldType momentum;
+  GaugeFieldType& gauge_field;
+  AdjFieldType& momentum;
   const diracParams<rank, RepDim> params;
-  // Assumes Spinor field has been inverted i.e \chi = (DD\dagger)^-1 \eta,
-  // where \eta = D R, where R gaussian random field.
-  SpinorFieldType& chi;
-  SpinorFieldType chi_alt;
+  // \phi = D R, where R gaussian random field.
+  FermionField& phi;
 
+  FermionField chi;
+  FermionField chi_alt;
+  const real_t tol;
   real_t eps;
 
   UpdateMomentumFermion() = delete;
   ~UpdateMomentumFermion() = default;
 
-  UpdateMomentumFermion(SpinorFieldType& chi_,
-                        GaugeFieldType& gauge_field_,
+  UpdateMomentumFermion(FermionField& phi_, GaugeFieldType& gauge_field_,
                         AdjFieldType& adjoint_field_,
-                        const diracParams<rank, RepDim>& params_)
+                        const diracParams<rank, RepDim>& params_,
+                        const real_t& tol_)
       : UpdateMomentum(0),
-        chi(chi_),
+        phi(phi_),
         gauge_field(gauge_field_),
         momentum(adjoint_field_),
         params(params_),
-        eps(0.0) {}
+        eps(0.0),
+        tol(tol_) {}
 
   template <typename... Indices>
   KOKKOS_FORCEINLINE_FUNCTION void operator()(HWilsonDiracOperatorTag,
@@ -71,16 +71,16 @@ class UpdateMomentumFermion : public UpdateMomentum {
           Kokkos::Array<size_t, rank>{Idcs...}, mu, 1, 3, -1,
           this->params.dimensions);
       auto first_term =
-          (-xp.second * complex_t(0, 1 / 2)) *
+          (-xp.second * complex_t(0, this->params.kappa)) *
           ((this->params.gamma_id - this->params.gammas[mu]) *
            (this->gauge_field(Idcs..., mu) * this->chi_alt(xp.first)));
       auto second_term =
-          (xm.second * complex_t(0, 1 / 2)) *
+          (xm.second * complex_t(0, this->params.kappa)) *
           ((this->params.gamma_id + this->params.gammas[mu]) *
            (conj(this->gauge_field(Idcs..., mu)) * this->chi_alt(Idcs...)));
       auto total_term =
-          conj(chi(Idcs...)) * first_term + conj(chi(xm.first)) * second_term;
-
+          conj(chi(Idcs...)) * (this->params.gamma5 * first_term) +
+          conj(chi(xm.first)) * (this->params.gamma5 * second_term);
       momentum(Idcs..., mu) -=
           eps * -2 *
           traceT(
@@ -92,7 +92,19 @@ class UpdateMomentumFermion : public UpdateMomentum {
     eps = step_size;
     IndexArray<rank> start;
     Derived D(gauge_field, this->params);
+    FermionField x(this->params.dimensions, complex_t(0.0, 0.0));
+    FermionField x0(this->params.dimensions, complex_t(0.0, 0.0));
+    // print_spinor_int(this->phi(0, 0, 0, 0),
+    //                  "Spinor s_in(0,0,0,0) in update Momentum Fermion");
+    Solver solver(this->phi, x, D);
+    if (KLFT_VERBOSITY > 4) {
+      printf("Solving insde updateMomentumFermion:");
+    }
+
+    solver.solve(x0, this->tol);
+    chi = solver.x;
     chi_alt = D.applyDdagger(chi);
+    // print_spinor_int(solver.x(0, 0, 0, 0), "chi after solve");
 
     for (size_t i = 0; i < rank; ++i) {
       start[i] = 0;

@@ -35,11 +35,8 @@ struct deviceSpinorField {
 
   // initialize all sites to a given value
 
-  deviceSpinorField(const index_t L0,
-                    const index_t L1,
-                    const index_t L2,
-                    const index_t L3,
-                    const complex_t init)
+  deviceSpinorField(const index_t L0, const index_t L1, const index_t L2,
+                    const index_t L3, const complex_t init)
       : dimensions({L0, L1, L2, L3}) {
     do_init(L0, L1, L2, L3, field, init);
   }
@@ -51,11 +48,8 @@ struct deviceSpinorField {
   }
 
   // initialize all sites to given Spinor
-  deviceSpinorField(const index_t L0,
-                    const index_t L1,
-                    const index_t L2,
-                    const index_t L3,
-                    const Spinor<Nc, RepDim>& init)
+  deviceSpinorField(const index_t L0, const index_t L1, const index_t L2,
+                    const index_t L3, const Spinor<Nc, RepDim>& init)
       : dimensions({L0, L1, L2, L3}) {
     do_init(L0, L1, L2, L3, field, init);
   }
@@ -69,10 +63,8 @@ struct deviceSpinorField {
   // initialize all latice size to random value drawn from a Normal Distribution
   // N(mean,var)
   template <class RNG>
-  deviceSpinorField(const IndexArray<4>& dimensions,
-                    RNG& rng,
-                    const real_t& mean,
-                    const real_t& var)
+  deviceSpinorField(const IndexArray<4>& dimensions, RNG& rng,
+                    const real_t& mean, const real_t& var)
       : dimensions(dimensions) {
     do_init(dimensions[0], dimensions[1], dimensions[2], dimensions[3], field,
             rng, mean, var);
@@ -81,12 +73,8 @@ struct deviceSpinorField {
   // initialize all latice size to random value drawn from a Normal Distribution
   // N(mean,var)
   template <class RNG>
-  deviceSpinorField(const index_t L0,
-                    const index_t L1,
-                    const index_t L2,
-                    const index_t L3,
-                    RNG& rng,
-                    const real_t& mean,
+  deviceSpinorField(const index_t L0, const index_t L1, const index_t L2,
+                    const index_t L3, RNG& rng, const real_t& mean,
                     const real_t& var)
       : dimensions({L0, L1, L2, L3}) {
     do_init(dimensions[0], dimensions[1], dimensions[2], dimensions[3], field,
@@ -94,11 +82,8 @@ struct deviceSpinorField {
   }
 
   // Initialize SpinorField with Single Value
-  void do_init(const index_t L0,
-               const index_t L1,
-               const index_t L2,
-               const index_t L3,
-               SpinorField<Nc, RepDim>& V,
+  void do_init(const index_t L0, const index_t L1, const index_t L2,
+               const index_t L3, SpinorField<Nc, RepDim>& V,
                const complex_t init) {
     Kokkos::realloc(Kokkos::WithoutInitializing, V, L0, L1, L2, L3);
     tune_and_launch_for<4>(
@@ -116,11 +101,8 @@ struct deviceSpinorField {
         });
     Kokkos::fence();
   }
-  void do_init(const index_t L0,
-               const index_t L1,
-               const index_t L2,
-               const index_t L3,
-               SpinorField<Nc, RepDim>& V,
+  void do_init(const index_t L0, const index_t L1, const index_t L2,
+               const index_t L3, SpinorField<Nc, RepDim>& V,
                const Spinor<Nc, RepDim>& init) {
     Kokkos::realloc(Kokkos::WithoutInitializing, V, L0, L1, L2, L3);
     tune_and_launch_for<4>(
@@ -131,14 +113,9 @@ struct deviceSpinorField {
     Kokkos::fence();
   }
   template <class RNG>
-  void do_init(const index_t L0,
-               const index_t L1,
-               const index_t L2,
-               const index_t L3,
-               SpinorField<Nc, RepDim>& V,
-               RNG& rng,
-               const real_t& mean,
-               const real_t& var) {
+  void do_init(const index_t L0, const index_t L1, const index_t L2,
+               const index_t L3, SpinorField<Nc, RepDim>& V, RNG& rng,
+               const real_t& mean, const real_t& std) {
     Kokkos::realloc(Kokkos::WithoutInitializing, V, L0, L1, L2, L3);
     tune_and_launch_for<4>(
         "init_deviceSpinorField", IndexArray<4>{0, 0, 0, 0},
@@ -151,8 +128,8 @@ struct deviceSpinorField {
 #pragma unroll
             for (index_t c2 = 0; c2 < RepDim; ++c2) {
               V(i0, i1, i2, i3)
-              [c1][c2] = complex_t(generator.normal(mean, var),
-                                   generator.normal(mean, var));
+              [c1][c2] = complex_t(generator.normal(mean, std),
+                                   generator.normal(mean, std));
             }
           }
           // free state here corrct in l.138 of GaugeField it isn't done.
@@ -167,18 +144,14 @@ struct deviceSpinorField {
   // define accessors
   template <typename indexType>
   KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, RepDim>& operator()(
-      const indexType i0,
-      const indexType i1,
-      const indexType i2,
+      const indexType i0, const indexType i1, const indexType i2,
       const indexType i3) const {
     return field(i0, i1, i2, i3);
   }
 
   template <typename indexType>
   KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, RepDim>& operator()(
-      const indexType i0,
-      const indexType i1,
-      const indexType i2,
+      const indexType i0, const indexType i1, const indexType i2,
       const indexType i3) {
     return field(i0, i1, i2, i3);
   }

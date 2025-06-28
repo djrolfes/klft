@@ -159,7 +159,8 @@ inline int parseInputFile(const std::string& filename,
     } else {
       printf(
           "Error: You have to provide a  Gauge Monomial  in the input file\n");
-      return false;
+      // TODO: Change back
+      // return false;
     }
   } catch (const YAML::Exception& e) {
     printf("(Gauge Monomial) Error parsing input file: %s\n", e.what());
@@ -251,7 +252,8 @@ inline int parseSanityChecks(const Integrator_Params& iparams,
   // Check if the gauge monomial parameters are set
   if (gmparams.beta <= 0) {
     printf("Error: Gauge Monomial beta must be positive\n");
-    return false;
+    // TODO: Change back
+    //  return false;
   }
   printf("resParsef: %d\n", resParsef);
   if (!(resParsef <= 0)) {
@@ -280,10 +282,10 @@ inline int parseSanityChecks(const Integrator_Params& iparams,
       return false;
     }
     // Check if the fermion monomial parameters are set
-    if (fparams.kappa < 0) {
-      printf("Error: Fermion Monomial kappa must be positive\n");
-      return false;
-    }
+    // if (fparams.kappa < 0) {
+    //   printf("Error: Fermion Monomial kappa must be positive\n");
+    //   return false;
+    // }
   }
   return true;
   //

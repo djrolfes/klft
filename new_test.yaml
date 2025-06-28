@@ -1,10 +1,10 @@
 
 HMCParams:
   Ndims: 4
-  L0: 24
-  L1: 24
-  L2: 24
-  L3: 24
+  L0: 16
+  L1: 16
+  L2: 16
+  L3: 16
   seed: 1234
   Nd: 4
   Nc: 2
@@ -12,7 +12,7 @@ HMCParams:
   rngDelta: 1.0
 # Level is the innermost level of the Integrator, i.e that is executed most frequently.
 Integrator:
-  tau: 1.0
+  tau: 1
   nSteps: 2000
   Monomials:
     - Type: "Leapfrog"
@@ -30,8 +30,8 @@ Fermion Monomial:
   fermion: "HWilson"
   solver: "CG"
   RepDim: 4
-  kappa: 0.135
-  tol: 1e-13
+  kappa: 0.05
+  tol: 1e-14
 
 GaugeObservableParams:
   measurement_interval: 5

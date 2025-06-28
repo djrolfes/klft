@@ -222,5 +222,16 @@ KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, Nd> conj(const Spinor<Nc, Nd>& a) {
   }
   return res;
 }
-
+template <size_t Nc, size_t Nd>
+void print_spinor_int(const Spinor<Nc, Nd>& s, const char* name = "Spinor") {
+  printf("%s:\n", name);
+  for (size_t c = 0; c < Nc; ++c) {
+    printf("  Color %zu:\n", c);
+    for (size_t d = 0; d < Nd; ++d) {
+      double re = s[c][d].real();
+      double im = s[c][d].imag();
+      printf("    [%zu] = (% .6f, % .20f i)\n", d, re, im);
+    }
+  }
+}
 }  // namespace klft

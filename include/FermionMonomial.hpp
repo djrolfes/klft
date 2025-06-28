@@ -8,11 +8,8 @@
 #define SQRT2INV \
   0.707106781186547524400844362104849039284835937688474036588339868995366239231053519425193767163820786367506  // Oeis A010503
 namespace klft {
-template <typename DiracOperator,
-          class Solver,
-          class RNGType,
-          typename DFermionFieldType,
-          typename DGaugeFieldType,
+template <typename DiracOperator, class Solver, class RNGType,
+          typename DFermionFieldType, typename DGaugeFieldType,
           typename DAdjFieldType>
 class FermionMonomial : public Monomial<DGaugeFieldType, DAdjFieldType> {
   static_assert(isDeviceFermionFieldType<DFermionFieldType>::value);
@@ -37,11 +34,8 @@ class FermionMonomial : public Monomial<DGaugeFieldType, DAdjFieldType> {
   const diracParams<rank, RepDim> params;
   const real_t tol;
   RNGType rng;
-  FermionMonomial(FermionField& _phi,
-                  const diracParams<rank, RepDim>& params_,
-                  const real_t& tol_,
-                  RNGType& RNG_,
-                  unsigned int _time_scale)
+  FermionMonomial(FermionField& _phi, const diracParams<rank, RepDim>& params_,
+                  const real_t& tol_, RNGType& RNG_, unsigned int _time_scale)
       : Monomial<DGaugeFieldType, DAdjFieldType>(_time_scale),
         phi(_phi),
         params(params_),
@@ -55,9 +49,11 @@ class FermionMonomial : public Monomial<DGaugeFieldType, DAdjFieldType> {
     auto dims = h.gauge_field.dimensions;
 
     FermionField R(dims, rng, 0, SQRT2INV);
+    // print_spinor_int(R(0, 0, 0, 0), "Spinor R(0,0,0,0) in in Heatbath");
     DiracOperator dirac_op(h.gauge_field, params);
     dirac_op.applyD_inplace(R, this->phi);
-
+    // print_spinor_int(this->phi(0, 0, 0, 0),
+    //                  "Spinor s_in(0,0,0,0) in after Heatbath");
     Monomial<DGaugeFieldType, DAdjFieldType>::H_old =
         spinor_norm_sq<rank, Nc, RepDim>(R);
   }
@@ -69,6 +65,10 @@ class FermionMonomial : public Monomial<DGaugeFieldType, DAdjFieldType> {
     FermionField x0(dims, complex_t(0.0, 0.0));
     DiracOperator dirac_op(h.gauge_field, params);
     Solver solver(this->phi, x, dirac_op);
+    if (KLFT_VERBOSITY > 4) {
+      printf("Solving inside Fermion Monomial accept:");
+    }
+
     solver.solve(x0, this->tol);
     const FermionField chi = solver.x;
 

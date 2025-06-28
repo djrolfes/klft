@@ -151,7 +151,7 @@ KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> realSUN(const SUN<Nc> &a) {
   for (size_t i = 0; i < Nc; ++i) {
 #pragma unroll
     for (size_t j = 0; j < Nc; ++j) {
-      res[i][j] = a[i][j].real();
+      res[i][j] = 0.5 * (a[i][j] + conj(a[j][i]));
     }
   }
   return res;
