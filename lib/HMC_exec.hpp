@@ -5,6 +5,7 @@
 #include "GaugeObservable.hpp"
 #include "HamiltonianField.hpp"
 #include "Integrator.hpp"
+#include "SimulationLogging.hpp"
 #include "UpdateMomentum.hpp"
 #include "UpdatePosition.hpp"
 #include <cstddef>
@@ -17,7 +18,8 @@ namespace klft {
 template <typename DGaugeFieldType, typename DAdjFieldType, class RNG>
 int run_HMC(typename DGaugeFieldType::type &g_in,
             typename DAdjFieldType::type &a_in, const HMCParams &hmcparams,
-            GaugeObservableParams &gaugeObsParams, const RNG &rng) {
+            GaugeObservableParams &gaugeObsParams,
+            SimulationLoggingParams &simLogParams, const RNG &rng) {
   // initiate and execute the HMC with the given parameters
   printf("Executing HMC ...");
   hmcparams.print();
@@ -93,6 +95,7 @@ int run_HMC(typename DGaugeFieldType::type &g_in,
     }
     // measure the gauge observables
     measureGaugeObservables<rank, Nc>(g_in, gaugeObsParams, step);
+    addLogData(simLogParams, step, hmc.delta_H, acc_rate);
     // TODO:make flushAllGaugeObservables append the Observables to the files ->
     // don't lose all progress when the simulation is interupted if (step % 50
     // == 0) {
@@ -103,6 +106,7 @@ int run_HMC(typename DGaugeFieldType::type &g_in,
   }
   // flush the measurements to the files
   flushAllGaugeObservables(gaugeObsParams);
+  flushSimulationLogs(simLogParams);
 
   return 0;
 }
@@ -110,27 +114,32 @@ int run_HMC(typename DGaugeFieldType::type &g_in,
 template int run_HMC<DeviceGaugeFieldType<4, 1>, DeviceAdjFieldType<4, 1>>(
     typename DeviceGaugeFieldType<4, 1>::type &g_in,
     typename DeviceAdjFieldType<4, 1>::type &a_in, const HMCParams &hmcparams,
-    GaugeObservableParams &gaugeObsParams, const RNGType &rng);
+    GaugeObservableParams &gaugeObsParams,
+    SimulationLoggingParams &simLogParams, const RNGType &rng);
 
 template int run_HMC<DeviceGaugeFieldType<4, 2>, DeviceAdjFieldType<4, 2>>(
     typename DeviceGaugeFieldType<4, 2>::type &g_in,
     typename DeviceAdjFieldType<4, 2>::type &a_in, const HMCParams &hmcparams,
-    GaugeObservableParams &gaugeObsParams, const RNGType &rng);
+    GaugeObservableParams &gaugeObsParams,
+    SimulationLoggingParams &simLogParams, const RNGType &rng);
 
 template int run_HMC<DeviceGaugeFieldType<3, 1>, DeviceAdjFieldType<3, 1>>(
     typename DeviceGaugeFieldType<3, 1>::type &g_in,
     typename DeviceAdjFieldType<3, 1>::type &a_in, const HMCParams &hmcparams,
-    GaugeObservableParams &gaugeObsParams, const RNGType &rng);
+    GaugeObservableParams &gaugeObsParams,
+    SimulationLoggingParams &simLogParams, const RNGType &rng);
 
 template int run_HMC<DeviceGaugeFieldType<2, 1>, DeviceAdjFieldType<2, 1>>(
     typename DeviceGaugeFieldType<2, 1>::type &g_in,
     typename DeviceAdjFieldType<2, 1>::type &a_in, const HMCParams &hmcparams,
-    GaugeObservableParams &gaugeObsParams, const RNGType &rng);
+    GaugeObservableParams &gaugeObsParams,
+    SimulationLoggingParams &simLogParams, const RNGType &rng);
 
 template int run_HMC<DeviceGaugeFieldType<2, 2>, DeviceAdjFieldType<2, 2>>(
     typename DeviceGaugeFieldType<2, 2>::type &g_in,
     typename DeviceAdjFieldType<2, 2>::type &a_in, const HMCParams &hmcparams,
-    GaugeObservableParams &gaugeObsParams, const RNGType &rng);
+    GaugeObservableParams &gaugeObsParams,
+    SimulationLoggingParams &simLogParams, const RNGType &rng);
 
 // TODO: when SU3 is fully implemented, add Nc=3 here.
 

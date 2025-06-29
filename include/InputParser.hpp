@@ -25,6 +25,7 @@
 #include "GaugeObservable.hpp"
 #include "HMC_Params.hpp"
 #include "Metropolis_Params.hpp"
+#include "SimulationLogging.hpp"
 #include <yaml-cpp/yaml.h>
 
 namespace klft {
@@ -163,6 +164,33 @@ inline bool parseInputFile(const std::string &filename, HMCParams &hmcParams) {
       hmcParams.beta = mp["beta"].as<double>(1.0);
       // ...
       // add more parameters above this as needed
+    } else {
+      printf("Error: HMCParams not found in input file\n");
+      return false;
+    }
+    return true;
+  } catch (const YAML::Exception &e) {
+    printf("(HMC Params) Error parsing input file: %s\n", e.what());
+    return false;
+  }
+}
+
+// get SimulationLoggingParams from input file
+inline bool parseInputFile(const std::string &filename,
+                           SimulationLoggingParams &simParams) {
+  try {
+    YAML::Node config = YAML::LoadFile(filename);
+
+    // Parse MetropolisParams
+    if (config["SimulationLoggingParams"]) {
+      const auto &mp = config["SimulationLoggingParams"];
+      // general parameters
+      simParams.log_interval = mp["log_interval"].as<size_t>(0);
+      simParams.log_filename = mp["log_filename"].as<std::string>("");
+      simParams.write_to_file = mp["write_to_file"].as<bool>(false);
+
+      simParams.log_delta_H = mp["log_delta_H"].as<bool>(false);
+      simParams.log_acceptance = mp["log_acceptance"].as<bool>(false);
     } else {
       printf("Error: HMCParams not found in input file\n");
       return false;

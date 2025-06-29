@@ -33,6 +33,7 @@ public:
   RNG rng;
   std::mt19937 mt;
   std::uniform_real_distribution<real_t> dist;
+  real_t delta_H;
 
   HMC() = default;
 
@@ -63,7 +64,7 @@ public:
       monomials[i]->heatbath(hamiltonian_field);
     }
     integrator->integrate(params.tau, false);
-    real_t delta_H = 0.0;
+    delta_H = 0.0;
     for (int i = 0; i < monomials.size(); ++i) {
       monomials[i]->accept(hamiltonian_field);
       delta_H += monomials[i]->get_delta_H();
