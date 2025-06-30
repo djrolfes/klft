@@ -82,6 +82,7 @@ int run_HMC(typename DGaugeFieldType::type &g_in,
   for (size_t step = 0; step < hmcparams.nsteps; ++step) {
     timer.reset();
 
+    Kokkos::printf("before step\n");
     // perform hmc_step
     accept = hmc.hmc_step();
 

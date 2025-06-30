@@ -95,7 +95,7 @@ template <typename T> struct Wrapper {
 };
 
 template <size_t Nc>
-using SUN = Wrapper<Kokkos::Array<Kokkos::Array<complex_t, Nc>, Nc>>;
+using SUN = Kokkos::Array<Kokkos::Array<complex_t, Nc>, Nc>;
 
 // define adjoint groups of gauge fields
 template <size_t Nc>

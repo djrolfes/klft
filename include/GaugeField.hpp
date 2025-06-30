@@ -30,16 +30,13 @@ template <size_t Nd, size_t Nc> struct deviceGaugeField {
 
   deviceGaugeField() = delete;
 
-  deviceGaugeField(GaugeField<Nd, Nc> &f_in)
-      : dimensions({static_cast<int>(f_in.extent(0)),
-                    static_cast<int>(f_in.extent(1)),
-                    static_cast<int>(f_in.extent(2)),
-                    static_cast<int>(f_in.extent(3))}) {
-    Kokkos::realloc(
-        Kokkos::WithoutInitializing, field, static_cast<int>(f_in.extent(0)),
-        static_cast<int>(f_in.extent(1)), static_cast<int>(f_in.extent(2)),
-        static_cast<int>(f_in.extent(3)));
-    Kokkos::deep_copy(field, f_in);
+  deviceGaugeField(GaugeField<Nd, Nc> &f_in, const complex_t init)
+      : dimensions({static_cast<index_t>(f_in.extent(0)),
+                    static_cast<index_t>(f_in.extent(1)),
+                    static_cast<index_t>(f_in.extent(2)),
+                    static_cast<index_t>(f_in.extent(3))}) {
+    do_init(dimensions[0], dimensions[1], dimensions[2], dimensions[3], field,
+            init);
   }
 
   deviceGaugeField(const GaugeField<Nd, Nc> &f_in)
@@ -82,6 +79,15 @@ template <size_t Nd, size_t Nc> struct deviceGaugeField {
                    const index_t L3, RNG &rng)
       : dimensions({L0, L1, L2, L3}) {
     do_init(L0, L1, L2, L3, field, rng);
+  }
+
+  void do_init(const index_t L0, const index_t L1, const index_t L2,
+               const index_t L3, GaugeField<Nd, Nc> &V,
+               GaugeField<Nd, Nc> &f_in) {
+    Kokkos::printf("before_realloc\n");
+    Kokkos::realloc(Kokkos::WithoutInitializing, V, L0, L1, L2, L3);
+    Kokkos::printf("after_realloc\n");
+    // Kokkos::deep_copy(V, f_in);
   }
 
   void do_init(const index_t L0, const index_t L1, const index_t L2,
@@ -298,15 +304,21 @@ template <size_t Nd, size_t Nc> struct deviceGaugeField3D {
 
   deviceGaugeField3D() = delete;
 
-  deviceGaugeField3D(GaugeField3D<Nd, Nc> &f_in)
-      : dimensions({static_cast<int>(f_in.extent(0)),
-                    static_cast<int>(f_in.extent(1)),
-                    static_cast<int>(f_in.extent(2))}) {
-    Kokkos::realloc(
-        Kokkos::WithoutInitializing, field, static_cast<int>(f_in.extent(0)),
-        static_cast<int>(f_in.extent(1)), static_cast<int>(f_in.extent(2)));
-    Kokkos::deep_copy(field, f_in);
+  deviceGaugeField3D(GaugeField3D<Nd, Nc> &f_in, const complex_t init)
+      : dimensions({static_cast<index_t>(f_in.extent(0)),
+                    static_cast<index_t>(f_in.extent(1)),
+                    static_cast<index_t>(f_in.extent(2))}) {
+    do_init(dimensions[0], dimensions[1], dimensions[2], field, init);
   }
+  // deviceGaugeField3D(GaugeField3D<Nd, Nc> &f_in)
+  //     : dimensions({static_cast<int>(f_in.extent(0)),
+  //                   static_cast<int>(f_in.extent(1)),
+  //                   static_cast<int>(f_in.extent(2))}) {
+  //   Kokkos::realloc(
+  //       Kokkos::WithoutInitializing, field, static_cast<int>(f_in.extent(0)),
+  //       static_cast<int>(f_in.extent(1)), static_cast<int>(f_in.extent(2)));
+  //   Kokkos::deep_copy(field, f_in);
+  // }
 
   deviceGaugeField3D(const GaugeField3D<Nd, Nc> &f_in)
       : dimensions({static_cast<int>(f_in.extent(0)),
@@ -540,14 +552,19 @@ template <size_t Nd, size_t Nc> struct deviceGaugeField2D {
 
   deviceGaugeField2D() = delete;
 
-  deviceGaugeField2D(GaugeField2D<Nd, Nc> &f_in)
-      : dimensions({static_cast<int>(f_in.extent(0)),
-                    static_cast<int>(f_in.extent(1))}) {
-    Kokkos::realloc(Kokkos::WithoutInitializing, field,
-                    static_cast<int>(f_in.extent(0)),
-                    static_cast<int>(f_in.extent(1)));
-    Kokkos::deep_copy(field, f_in);
+  deviceGaugeField2D(GaugeField2D<Nd, Nc> &f_in, const complex_t init)
+      : dimensions({static_cast<index_t>(f_in.extent(0)),
+                    static_cast<index_t>(f_in.extent(1))}) {
+    do_init(dimensions[0], dimensions[1], field, init);
   }
+  // deviceGaugeField2D(GaugeField2D<Nd, Nc> &f_in)
+  //     : dimensions({static_cast<int>(f_in.extent(0)),
+  //                   static_cast<int>(f_in.extent(1))}) {
+  //   Kokkos::realloc(Kokkos::WithoutInitializing, field,
+  //                   static_cast<int>(f_in.extent(0)),
+  //                   static_cast<int>(f_in.extent(1)));
+  //   Kokkos::deep_copy(field, f_in);
+  // }
 
   deviceGaugeField2D(const GaugeField2D<Nd, Nc> &f_in)
       : dimensions({static_cast<int>(f_in.extent(0)),

@@ -34,6 +34,7 @@ public:
   std::mt19937 mt;
   std::uniform_real_distribution<real_t> dist;
   real_t delta_H;
+  GaugeFieldType gauge_old;
 
   HMC() = default;
 
@@ -43,7 +44,8 @@ public:
       std::uniform_real_distribution<real_t> dist_, std::mt19937 mt_)
       : params(params_), rng(rng_), dist(dist_), mt(mt_),
         hamiltonian_field(hamiltonian_field_),
-        integrator(std::move(integrator_)) {}
+        integrator(std::move(integrator_)),
+        gauge_old(hamiltonian_field.gauge_field.field, complex_t(0.0, 1.0)) {}
 
   void add_gauge_monomial(const real_t _beta, const unsigned int _time_scale) {
     monomials.emplace_back(
@@ -59,11 +61,38 @@ public:
 
   bool hmc_step() {
     hamiltonian_field.randomize_momentum(rng);
-    GaugeFieldType gauge_old(hamiltonian_field.gauge_field.field);
+    Kokkos::printf("before gauge_old\n");
+
+    for (int d = 0; d < 5; ++d) {
+      Kokkos::printf(
+          "extent[%d]: gauge_old = %d, hamiltonian = %d\n", d,
+          static_cast<int>(gauge_old.field.extent(d)),
+          static_cast<int>(hamiltonian_field.gauge_field.field.extent(d)));
+    }
+    Kokkos::fence();
+    auto &dst = gauge_old.field;
+    Kokkos::printf("after assign hfield\n");
+    auto &src = hamiltonian_field.gauge_field.field;
+
+    Kokkos::fence(); // flush prior work
+
+    Kokkos::printf("COPYING GAUGE FIELD\n");
+    Kokkos::printf("src: %d %d %d %d %d\n", src.extent(0), src.extent(1),
+                   src.extent(2), src.extent(3), src.extent(4));
+    Kokkos::printf("dst: %d %d %d %d %d\n ", dst.extent(0), dst.extent(1),
+                   dst.extent(2), dst.extent(3), dst.extent(4));
+
+    Kokkos::fence();             // flush prior work
+    Kokkos::deep_copy(dst, src); // <--- crash point
+    //     Kokkos::deep_copy(gauge_old.field,
+    //     hamiltonian_field.gauge_field.field);
+    Kokkos::printf("before Heatbath\n");
     for (int i = 0; i < monomials.size(); ++i) {
       monomials[i]->heatbath(hamiltonian_field);
     }
+    Kokkos::printf("after Heatbath\n");
     integrator->integrate(params.tau, false);
+    Kokkos::printf("after Integrate\n");
     delta_H = 0.0;
     for (int i = 0; i < monomials.size(); ++i) {
       monomials[i]->accept(hamiltonian_field);

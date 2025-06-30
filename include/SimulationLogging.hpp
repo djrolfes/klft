@@ -21,7 +21,9 @@ struct SimulationLoggingParams {
   // constructor to initialize the parameters
   SimulationLoggingParams()
       : log_interval(0), write_to_file(false), log_delta_H(false),
-        log_acceptance(false) {}
+        log_acceptance(false) {
+    Kokkos::printf("init SimLog\n");
+  }
 };
 
 // define a function to log simulation information
