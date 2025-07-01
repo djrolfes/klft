@@ -37,13 +37,14 @@ template <size_t Nd, size_t Nc> struct deviceAdjointField {
   }
 
   template <class RNG> void randomize_field(RNG &rng) {
+    auto self = field;
     tune_and_launch_for(
         "randomize_adj_field", IndexArray<Nd>{0}, dimensions,
         KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2,
                       const index_t i3) {
           auto generator = rng.get_state();
           for (index_t mu = 0; mu < Nd; ++mu) {
-            randSUNAdj<Nc>((*this)(i0, i1, i2, i3, mu), generator);
+            randSUNAdj<Nc>(self(i0, i1, i2, i3, mu), generator);
           }
           rng.free_state(generator);
         });
@@ -104,12 +105,13 @@ template <size_t Nd, size_t Nc> struct deviceAdjointField3D {
   }
 
   template <class RNG> void randomize_field(RNG &rng) {
+    auto self = field;
     tune_and_launch_for(
         "randomize_adj_field", IndexArray<Nd>{0}, dimensions,
         KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2) {
           auto generator = rng.get_state();
           for (index_t mu = 0; mu < Nd; ++mu) {
-            randSUNAdj<Nc>((*this)(i0, i1, i2, mu), generator);
+            randSUNAdj<Nc>(self(i0, i1, i2, mu), generator);
           }
           rng.free_state(generator);
         });
@@ -170,12 +172,13 @@ template <size_t Nd, size_t Nc> struct deviceAdjointField2D {
   }
 
   template <class RNG> void randomize_field(RNG &rng) {
+    auto self = field;
     tune_and_launch_for(
         "randomize_adj_field", IndexArray<Nd>{0}, dimensions,
         KOKKOS_LAMBDA(const index_t i0, const index_t i1) {
           auto generator = rng.get_state();
           for (index_t mu = 0; mu < Nd; ++mu) {
-            randSUNAdj<Nc>((*this)(i0, i1, mu), generator);
+            randSUNAdj<Nc>(self(i0, i1, mu), generator);
           }
           rng.free_state(generator);
         });

@@ -13,7 +13,7 @@ MetropolisParams:
   delta: 0.1
 
 HMCParams:
-  Ndims: 3
+  Ndims: 4
   L0: 12
   L1: 12
   L2: 12
@@ -22,7 +22,7 @@ HMCParams:
   seed: 1234
   nsteps: 20 
   nstepsGauge: 100
-  Nd: 3
+  Nd: 4
   Nc: 2
   beta: 4.0
 
@@ -52,8 +52,8 @@ GaugeObservableParams:
 
 SimulationLoggingParams:
   log_interval: 1
-  log_delta_H: false
-  log_acceptance: false
+  log_delta_H: true
+  log_acceptance: true
   
   log_filename: "simulation_log.txt"
-  write_to_file: false
+  write_to_file: true

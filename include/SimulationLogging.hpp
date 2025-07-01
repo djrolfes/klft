@@ -88,9 +88,6 @@ inline void flushSimulationLogs(const SimulationLoggingParams &params,
 
   // write the logs
   for (size_t i = 0; i < params.log_steps.size(); ++i) {
-    file << params.log_steps[i] << ", " << params.delta_H[i] << ", "
-         << params.acceptance[i] << "\n";
-
     file << params.log_steps[i];
     if (params.log_acceptance) {
       file << ", " << params.acceptance[i];

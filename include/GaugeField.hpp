@@ -21,8 +21,8 @@
 
 #pragma once
 #include "GLOBAL.hpp"
+#include "Kokkos_Core.hpp"
 #include "SUN.hpp"
-#include "Tuner.hpp"
 
 namespace klft {
 
@@ -30,25 +30,19 @@ template <size_t Nd, size_t Nc> struct deviceGaugeField {
 
   deviceGaugeField() = delete;
 
-  deviceGaugeField(GaugeField<Nd, Nc> &f_in, const complex_t init)
-      : dimensions({static_cast<index_t>(f_in.extent(0)),
+  GaugeField<Nd, Nc> field;
+  const IndexArray<4> dimensions;
+
+  deviceGaugeField(const GaugeField<Nd, Nc> &f_in)
+      : field("gauge_field", 0, 0, 0, 0),
+        dimensions({static_cast<index_t>(f_in.extent(0)),
                     static_cast<index_t>(f_in.extent(1)),
                     static_cast<index_t>(f_in.extent(2)),
                     static_cast<index_t>(f_in.extent(3))}) {
-    do_init(dimensions[0], dimensions[1], dimensions[2], dimensions[3], field,
-            init);
-  }
 
-  deviceGaugeField(const GaugeField<Nd, Nc> &f_in)
-      : dimensions({static_cast<int>(f_in.extent(0)),
-                    static_cast<int>(f_in.extent(1)),
-                    static_cast<int>(f_in.extent(2)),
-                    static_cast<int>(f_in.extent(3))}) {
-    Kokkos::realloc(
-        Kokkos::WithoutInitializing, field, static_cast<int>(f_in.extent(0)),
-        static_cast<int>(f_in.extent(1)), static_cast<int>(f_in.extent(2)),
-        static_cast<int>(f_in.extent(3)));
-    Kokkos::deep_copy(field, f_in);
+    static_assert(std::is_same_v<decltype(f_in), const GaugeField<Nd, Nc> &>,
+                  "WRONG TYPE PASSED TO CONSTRUCTOR");
+    do_init(field, f_in);
   }
 
   // initialize all sites to a given value
@@ -81,17 +75,20 @@ template <size_t Nd, size_t Nc> struct deviceGaugeField {
     do_init(L0, L1, L2, L3, field, rng);
   }
 
-  void do_init(const index_t L0, const index_t L1, const index_t L2,
-               const index_t L3, GaugeField<Nd, Nc> &V,
-               GaugeField<Nd, Nc> &f_in) {
-    Kokkos::printf("before_realloc\n");
-    Kokkos::realloc(Kokkos::WithoutInitializing, V, L0, L1, L2, L3);
-    Kokkos::printf("after_realloc\n");
-    // Kokkos::deep_copy(V, f_in);
+  void do_init(GaugeField<Nd, Nc> &V, const GaugeField<Nd, Nc> &f_in) {
+    if (!V.is_allocated()) {
+      V = GaugeField<Nd, Nc>("gauge_field_tmp", 0, 0, 0, 0);
+    }
+    Kokkos::realloc(Kokkos::WithoutInitializing, V, dimensions[0],
+                    dimensions[1], dimensions[2], dimensions[3]);
+    Kokkos::deep_copy(V, f_in);
   }
 
   void do_init(const index_t L0, const index_t L1, const index_t L2,
                const index_t L3, GaugeField<Nd, Nc> &V, complex_t init) {
+    if (!V.is_allocated()) {
+      V = GaugeField<Nd, Nc>("gauge_field_tmp", 0, 0, 0, 0);
+    }
     Kokkos::realloc(Kokkos::WithoutInitializing, V, L0, L1, L2, L3);
     tune_and_launch_for<4>(
         "init_deviceGaugeField", IndexArray<4>{0, 0, 0, 0},
@@ -114,6 +111,9 @@ template <size_t Nd, size_t Nc> struct deviceGaugeField {
 
   void do_init(const index_t L0, const index_t L1, const index_t L2,
                const index_t L3, GaugeField<Nd, Nc> &V, const SUN<Nc> &init) {
+    if (!V.is_allocated()) {
+      V = GaugeField<Nd, Nc>("gauge_field_tmp", 0, 0, 0, 0);
+    }
     Kokkos::realloc(Kokkos::WithoutInitializing, V, L0, L1, L2, L3);
     tune_and_launch_for<4>(
         "init_deviceGaugeField", IndexArray<4>{0, 0, 0, 0},
@@ -132,6 +132,9 @@ template <size_t Nd, size_t Nc> struct deviceGaugeField {
   void do_init(const index_t L0, const index_t L1, const index_t L2,
                const index_t L3, GaugeField<Nd, Nc> &V, RNG &rng,
                const real_t delta) {
+    if (!V.is_allocated()) {
+      V = GaugeField<Nd, Nc>("gauge_field_tmp", 0, 0, 0, 0);
+    }
     Kokkos::realloc(Kokkos::WithoutInitializing, V, L0, L1, L2, L3);
     tune_and_launch_for<4>(
         "init_deviceGaugeField", IndexArray<4>{0, 0, 0, 0},
@@ -151,6 +154,9 @@ template <size_t Nd, size_t Nc> struct deviceGaugeField {
   template <class RNG>
   void do_init(const index_t L0, const index_t L1, const index_t L2,
                const index_t L3, GaugeField<Nd, Nc> &V, RNG &rng) {
+    if (!V.is_allocated()) {
+      V = GaugeField<Nd, Nc>("gauge_field_tmp", 0, 0, 0, 0);
+    }
     Kokkos::realloc(Kokkos::WithoutInitializing, V, L0, L1, L2, L3);
     tune_and_launch_for<4>(
         "init_deviceGaugeField", IndexArray<4>{0, 0, 0, 0},
@@ -173,9 +179,6 @@ template <size_t Nd, size_t Nc> struct deviceGaugeField {
         });
     Kokkos::fence();
   }
-
-  GaugeField<Nd, Nc> field;
-  const IndexArray<4> dimensions;
 
   // define accessors for the field
   template <typename indexType>
@@ -304,36 +307,18 @@ template <size_t Nd, size_t Nc> struct deviceGaugeField3D {
 
   deviceGaugeField3D() = delete;
 
-  deviceGaugeField3D(GaugeField3D<Nd, Nc> &f_in, const complex_t init)
-      : dimensions({static_cast<index_t>(f_in.extent(0)),
+  deviceGaugeField3D(const GaugeField3D<Nd, Nc> &f_in)
+      : field("gauge_field", 0, 0, 0),
+        dimensions({static_cast<index_t>(f_in.extent(0)),
                     static_cast<index_t>(f_in.extent(1)),
                     static_cast<index_t>(f_in.extent(2))}) {
-    do_init(dimensions[0], dimensions[1], dimensions[2], field, init);
-  }
-  // deviceGaugeField3D(GaugeField3D<Nd, Nc> &f_in)
-  //     : dimensions({static_cast<int>(f_in.extent(0)),
-  //                   static_cast<int>(f_in.extent(1)),
-  //                   static_cast<int>(f_in.extent(2))}) {
-  //   Kokkos::realloc(
-  //       Kokkos::WithoutInitializing, field, static_cast<int>(f_in.extent(0)),
-  //       static_cast<int>(f_in.extent(1)), static_cast<int>(f_in.extent(2)));
-  //   Kokkos::deep_copy(field, f_in);
-  // }
-
-  deviceGaugeField3D(const GaugeField3D<Nd, Nc> &f_in)
-      : dimensions({static_cast<int>(f_in.extent(0)),
-                    static_cast<int>(f_in.extent(1)),
-                    static_cast<int>(f_in.extent(2))}) {
-    Kokkos::realloc(
-        Kokkos::WithoutInitializing, field, static_cast<int>(f_in.extent(0)),
-        static_cast<int>(f_in.extent(1)), static_cast<int>(f_in.extent(2)));
-    Kokkos::deep_copy(field, f_in);
+    do_init(field, f_in);
   }
 
   // initialize all sites to a given value
   deviceGaugeField3D(const index_t L0, const index_t L1, const index_t L2,
                      const complex_t init)
-      : dimensions({L0, L1, L2}) {
+      : field("gauge_field", 0, 0, 0), dimensions({L0, L1, L2}) {
     do_init(L0, L1, L2, field, init);
   }
 
@@ -360,8 +345,20 @@ template <size_t Nd, size_t Nc> struct deviceGaugeField3D {
     do_init(L0, L1, L2, field, rng);
   }
 
+  void do_init(GaugeField3D<Nd, Nc> &V, const GaugeField3D<Nd, Nc> &f_in) {
+    if (!V.is_allocated()) {
+      V = GaugeField3D<Nd, Nc>("gauge_field_tmp", 0, 0, 0);
+    }
+    Kokkos::realloc(Kokkos::WithoutInitializing, V, dimensions[0],
+                    dimensions[1], dimensions[2]);
+    Kokkos::deep_copy(V, f_in);
+  }
+
   void do_init(const index_t L0, const index_t L1, const index_t L2,
                GaugeField3D<Nd, Nc> &V, complex_t init) {
+    if (!V.is_allocated()) {
+      V = GaugeField3D<Nd, Nc>("gauge_field_tmp", 0, 0, 0);
+    }
     Kokkos::realloc(Kokkos::WithoutInitializing, V, L0, L1, L2);
     tune_and_launch_for<3>(
         "init_deviceGaugeField3D", IndexArray<3>{0, 0, 0},
@@ -383,6 +380,9 @@ template <size_t Nd, size_t Nc> struct deviceGaugeField3D {
 
   void do_init(const index_t L0, const index_t L1, const index_t L2,
                GaugeField3D<Nd, Nc> &V, const SUN<Nc> &init) {
+    if (!V.is_allocated()) {
+      V = GaugeField3D<Nd, Nc>("gauge_field_tmp", 0, 0, 0);
+    }
     Kokkos::realloc(Kokkos::WithoutInitializing, V, L0, L1, L2);
     tune_and_launch_for<3>(
         "init_deviceGaugeField3D", IndexArray<3>{0, 0, 0},
@@ -399,6 +399,9 @@ template <size_t Nd, size_t Nc> struct deviceGaugeField3D {
   template <class RNG>
   void do_init(const index_t L0, const index_t L1, const index_t L2,
                GaugeField3D<Nd, Nc> &V, RNG &rng, const real_t delta) {
+    if (!V.is_allocated()) {
+      V = GaugeField3D<Nd, Nc>("gauge_field_tmp", 0, 0, 0);
+    }
     Kokkos::realloc(Kokkos::WithoutInitializing, V, L0, L1, L2);
     tune_and_launch_for<3>(
         "init_deviceGaugeField3D", IndexArray<3>{0, 0, 0},
@@ -417,6 +420,9 @@ template <size_t Nd, size_t Nc> struct deviceGaugeField3D {
   template <class RNG>
   void do_init(const index_t L0, const index_t L1, const index_t L2,
                GaugeField3D<Nd, Nc> &V, RNG &rng) {
+    if (!V.is_allocated()) {
+      V = GaugeField3D<Nd, Nc>("gauge_field_tmp", 0, 0, 0);
+    }
     Kokkos::realloc(Kokkos::WithoutInitializing, V, L0, L1, L2);
     tune_and_launch_for<3>(
         "init_deviceGaugeField3D", IndexArray<3>{0, 0, 0},
@@ -549,61 +555,70 @@ template <size_t Nd, size_t Nc> struct deviceGaugeField3D {
 };
 
 template <size_t Nd, size_t Nc> struct deviceGaugeField2D {
+  GaugeField2D<Nd, Nc> field;
+  const IndexArray<2> dimensions;
 
   deviceGaugeField2D() = delete;
 
-  deviceGaugeField2D(GaugeField2D<Nd, Nc> &f_in, const complex_t init)
-      : dimensions({static_cast<index_t>(f_in.extent(0)),
-                    static_cast<index_t>(f_in.extent(1))}) {
-    do_init(dimensions[0], dimensions[1], field, init);
-  }
-  // deviceGaugeField2D(GaugeField2D<Nd, Nc> &f_in)
-  //     : dimensions({static_cast<int>(f_in.extent(0)),
-  //                   static_cast<int>(f_in.extent(1))}) {
-  //   Kokkos::realloc(Kokkos::WithoutInitializing, field,
-  //                   static_cast<int>(f_in.extent(0)),
-  //                   static_cast<int>(f_in.extent(1)));
-  //   Kokkos::deep_copy(field, f_in);
-  // }
-
   deviceGaugeField2D(const GaugeField2D<Nd, Nc> &f_in)
-      : dimensions({static_cast<int>(f_in.extent(0)),
-                    static_cast<int>(f_in.extent(1))}) {
-    Kokkos::realloc(Kokkos::WithoutInitializing, field,
-                    static_cast<int>(f_in.extent(0)),
-                    static_cast<int>(f_in.extent(1)));
-    Kokkos::deep_copy(field, f_in);
+      : field("gauge_field", f_in.extent(0),
+              f_in.extent(1)), // Allocate directly in constructor
+        dimensions({static_cast<index_t>(f_in.extent(0)),
+                    static_cast<index_t>(f_in.extent(1))}) {
+    do_init(field, f_in);
   }
 
   // initialize all sites to a given value
   deviceGaugeField2D(const index_t L0, const index_t L1, const complex_t init)
-      : dimensions({L0, L1}) {
+      : field("gauge_field", L0, L1), // Allocate directly in constructor
+        dimensions({L0, L1}) {
     do_init(L0, L1, field, init);
+    Kokkos::fence(); // Ensure initialization is complete
   }
 
   // initialize all links to a given SUN matrix
   deviceGaugeField2D(const index_t L0, const index_t L1, const SUN<Nc> &init)
-      : dimensions({L0, L1}) {
+      : field("gauge_field", L0, L1), // Allocate directly in constructor
+        dimensions({L0, L1}) {
     do_init(L0, L1, field, init);
+    Kokkos::fence(); // Ensure initialization is complete
   }
 
   // initialize all links to a random SUN matrix
   template <class RNG>
   deviceGaugeField2D(const index_t L0, const index_t L1, RNG &rng,
                      const real_t delta)
-      : dimensions({L0, L1}) {
+      : field("gauge_field", L0, L1), // Allocate directly in constructor
+        dimensions({L0, L1}) {
+    Kokkos::fence(); // Ensure allocation is complete
     do_init(L0, L1, field, rng, delta);
+    Kokkos::fence(); // Ensure initialization is complete
   }
 
   // initialize all sites to a random value
   template <class RNG>
   deviceGaugeField2D(const index_t L0, const index_t L1, RNG &rng)
-      : dimensions({L0, L1}) {
+      : field("gauge_field", L0, L1), // Allocate directly in constructor
+        dimensions({L0, L1}) {
+    Kokkos::fence(); // Ensure allocation is complete
     do_init(L0, L1, field, rng);
+    Kokkos::fence(); // Ensure initialization is complete
+  }
+
+  void do_init(GaugeField2D<Nd, Nc> &V, const GaugeField2D<Nd, Nc> &f_in) {
+    if (!V.is_allocated()) {
+      V = GaugeField2D<Nd, Nc>("gauge_field_tmp", 0, 0);
+    }
+    Kokkos::realloc(Kokkos::WithoutInitializing, V, dimensions[0],
+                    dimensions[1]);
+    Kokkos::deep_copy(V, f_in);
   }
 
   void do_init(const index_t L0, const index_t L1, GaugeField2D<Nd, Nc> &V,
                complex_t init) {
+    if (!V.is_allocated()) {
+      V = GaugeField2D<Nd, Nc>("gauge_field", 0, 0);
+    }
     Kokkos::realloc(Kokkos::WithoutInitializing, V, L0, L1);
     tune_and_launch_for<2>(
         "init_deviceGaugeField2D", IndexArray<2>{0, 0}, IndexArray<2>{L0, L1},
@@ -624,6 +639,9 @@ template <size_t Nd, size_t Nc> struct deviceGaugeField2D {
 
   void do_init(const index_t L0, const index_t L1, GaugeField2D<Nd, Nc> &V,
                const SUN<Nc> &init) {
+    if (!V.is_allocated()) {
+      V = GaugeField2D<Nd, Nc>("gauge_field", 0, 0);
+    }
     Kokkos::realloc(Kokkos::WithoutInitializing, V, L0, L1);
     tune_and_launch_for<2>(
         "init_deviceGaugeField2D", IndexArray<2>{0, 0}, IndexArray<2>{L0, L1},
@@ -639,6 +657,9 @@ template <size_t Nd, size_t Nc> struct deviceGaugeField2D {
   template <class RNG>
   void do_init(const index_t L0, const index_t L1, GaugeField2D<Nd, Nc> &V,
                RNG &rng, const real_t delta) {
+    if (!V.is_allocated()) {
+      V = GaugeField2D<Nd, Nc>("gauge_field", 0, 0);
+    }
     Kokkos::realloc(Kokkos::WithoutInitializing, V, L0, L1);
     tune_and_launch_for<2>(
         "init_deviceGaugeField2D", IndexArray<2>{0, 0}, IndexArray<2>{L0, L1},
@@ -656,6 +677,9 @@ template <size_t Nd, size_t Nc> struct deviceGaugeField2D {
   template <class RNG>
   void do_init(const index_t L0, const index_t L1, GaugeField2D<Nd, Nc> &V,
                RNG &rng) {
+    if (!V.is_allocated()) {
+      V = GaugeField2D<Nd, Nc>("gauge_field", 0, 0);
+    }
     Kokkos::realloc(Kokkos::WithoutInitializing, V, L0, L1);
     tune_and_launch_for<2>(
         "init_deviceGaugeField2D", IndexArray<2>{0, 0}, IndexArray<2>{L0, L1},
@@ -673,12 +697,10 @@ template <size_t Nd, size_t Nc> struct deviceGaugeField2D {
               }
             }
           }
+          rng.free_state(generator);
         });
     Kokkos::fence();
   }
-
-  GaugeField2D<Nd, Nc> field;
-  const IndexArray<2> dimensions;
 
   // define accessors for the field
   template <typename indexType>

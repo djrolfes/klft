@@ -33,8 +33,8 @@ public:
 
   using GaugeFieldType = typename DGaugeFieldType::type;
   using AdjFieldType = typename DAdjFieldType::type;
-  GaugeFieldType &gauge_field;
-  AdjFieldType &adjoint_field;
+  GaugeFieldType gauge_field;
+  AdjFieldType adjoint_field;
   real_t beta;
 
   real_t eps;
