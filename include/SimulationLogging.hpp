@@ -12,24 +12,29 @@ struct SimulationLoggingParams {
   // define flags for the different types of logs
   bool log_delta_H;
   bool log_acceptance;
+  bool log_accept;
+  bool log_time;
 
   // define vectors to hold the logs
   std::vector<size_t> log_steps;
   std::vector<real_t> delta_H;
   std::vector<real_t> acceptance;
+  std::vector<bool> accept;
+  std::vector<real_t> time;
 
   // constructor to initialize the parameters
   SimulationLoggingParams()
       : log_interval(0), write_to_file(false), log_delta_H(false),
-        log_acceptance(false) {
-    Kokkos::printf("init SimLog\n");
-  }
+        log_acceptance(false), log_accept(false), log_time(false) {}
 };
 
 // define a function to log simulation information
-inline void addLogData(SimulationLoggingParams &params, const size_t step,
-                       const real_t _delta_H = 0.0,
-                       const real_t _acceptance = 0.0) {
+inline void
+addLogData(SimulationLoggingParams &params, const size_t step,
+           const real_t _delta_H = 0.0, const real_t _acceptance = 0.0,
+           const bool _accept = false,
+           const real_t _time =
+               0.0) { // TODO: add overloads for different passed parameters
   if (params.log_interval == 0 || step % params.log_interval != 0 ||
       step == 0) {
     return;
@@ -51,6 +56,20 @@ inline void addLogData(SimulationLoggingParams &params, const size_t step,
     params.acceptance.push_back(_acceptance);
     if (KLFT_VERBOSITY > 0) {
       printf("acceptance: %11.6f\n", _acceptance);
+    }
+  }
+
+  if (params.log_accept) {
+    params.accept.push_back(_accept);
+    if (KLFT_VERBOSITY > 0) {
+      printf("accept: %s\n", params.accept.back() ? "true" : "false");
+    }
+  }
+
+  if (params.log_time) {
+    params.time.push_back(_time);
+    if (KLFT_VERBOSITY > 0) {
+      printf("time: %11.6f\n", _time);
     }
   }
 
@@ -83,6 +102,12 @@ inline void flushSimulationLogs(const SimulationLoggingParams &params,
     if (params.log_delta_H) {
       file << ", delta_H";
     }
+    if (params.log_accept) {
+      file << ", accept";
+    }
+    if (params.log_time) {
+      file << ", time";
+    }
     file << "\n";
   }
 
@@ -94,6 +119,12 @@ inline void flushSimulationLogs(const SimulationLoggingParams &params,
     }
     if (params.log_delta_H) {
       file << ", " << params.delta_H[i];
+    }
+    if (params.log_accept) {
+      file << ", " << (params.accept[i] ? 1 : 0);
+    }
+    if (params.log_time) {
+      file << ", " << params.time[i];
     }
     file << "\n";
   }

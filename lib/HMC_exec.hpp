@@ -89,7 +89,6 @@ int run_HMC(std::unique_ptr<typename DGaugeFieldType::type> g_in,
   for (size_t step = 0; step < hmcparams.nsteps; ++step) {
     timer.reset();
 
-    Kokkos::printf("before step\n");
     // perform hmc_step
     accept = hmc.hmc_step();
 
@@ -104,7 +103,7 @@ int run_HMC(std::unique_ptr<typename DGaugeFieldType::type> g_in,
     // measure the gauge observables
     measureGaugeObservables<rank, Nc>(hamiltonian_field.gauge_field(),
                                       gaugeObsParams, step);
-    addLogData(simLogParams, step, hmc.delta_H, acc_rate);
+    addLogData(simLogParams, step, hmc.delta_H, acc_rate, accept, time);
     // TODO:make flushAllGaugeObservables append the Observables to the files ->
     // don't lose all progress when the simulation is interupted if (step % 50
     // == 0) {
