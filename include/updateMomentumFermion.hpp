@@ -6,8 +6,11 @@
 #include "UpdateMomentum.hpp"
 namespace klft {
 
-template <typename DFermionFieldType, typename DGaugeFieldType,
-          typename DAdjFieldType, class Derived, class Solver>
+template <typename DFermionFieldType,
+          typename DGaugeFieldType,
+          typename DAdjFieldType,
+          class Derived,
+          class Solver>
 class UpdateMomentumFermion : public UpdateMomentum {
   static_assert(isDeviceFermionFieldType<DFermionFieldType>::value);
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
@@ -46,7 +49,8 @@ class UpdateMomentumFermion : public UpdateMomentum {
   UpdateMomentumFermion() = delete;
   ~UpdateMomentumFermion() = default;
 
-  UpdateMomentumFermion(FermionField& phi_, GaugeFieldType& gauge_field_,
+  UpdateMomentumFermion(FermionField& phi_,
+                        GaugeFieldType& gauge_field_,
                         AdjFieldType& adjoint_field_,
                         const diracParams<rank, RepDim>& params_,
                         const real_t& tol_)
@@ -71,20 +75,23 @@ class UpdateMomentumFermion : public UpdateMomentum {
           Kokkos::Array<size_t, rank>{Idcs...}, mu, 1, 3, -1,
           this->params.dimensions);
       auto first_term =
-          (-xp.second * complex_t(0, this->params.kappa)) *
+          (xp.second * complex_t(0, -this->params.kappa)) *
           ((this->params.gamma_id - this->params.gammas[mu]) *
            (this->gauge_field(Idcs..., mu) * this->chi_alt(xp.first)));
       auto second_term =
-          (xm.second * complex_t(0, this->params.kappa)) *
+          (xp.second * complex_t(0, this->params.kappa)) *
           ((this->params.gamma_id + this->params.gammas[mu]) *
            (conj(this->gauge_field(Idcs..., mu)) * this->chi_alt(Idcs...)));
       auto total_term =
           conj(chi(Idcs...)) * (this->params.gamma5 * first_term) +
-          conj(chi(xm.first)) * (this->params.gamma5 * second_term);
+          conj(chi(xp.first)) * (this->params.gamma5 * second_term);
+
+      //   Only for U(1) valid, trace gives the Im part of an U(1) element, so
+      //   taking the realpart is equivalent to multiplying with i, and get the
+      //   imaginary part.
+      auto derv = -2.0 * eps * complex_t(0, 1) * total_term;
       momentum(Idcs..., mu) -=
-          eps * -2 *
-          traceT(
-              realSUN(total_term));  // in leap frog therese the minus sign here
+          traceT(derv);  // in leap frog therese the minus sign here
     }
   }
 
@@ -96,24 +103,31 @@ class UpdateMomentumFermion : public UpdateMomentum {
     FermionField x0(this->params.dimensions, complex_t(0.0, 0.0));
     // print_spinor_int(this->phi(0, 0, 0, 0),
     //                  "Spinor s_in(0,0,0,0) in update Momentum Fermion");
-    Solver solver(this->phi, x, D);
+    Solver solver(FermionField(this->phi.field), x, D);
     if (KLFT_VERBOSITY > 4) {
       printf("Solving insde updateMomentumFermion:");
     }
 
     solver.solve(x0, this->tol);
-    chi = solver.x;
-    chi_alt = D.applyDdagger(chi);
-    // print_spinor_int(solver.x(0, 0, 0, 0), "chi after solve");
+    this->chi = FermionField(solver.x.field);
+    this->chi_alt = FermionField(D.applyDdagger(this->chi).field);
+    // print_spinor_int(solver.x(0, 0, 0, 0),
+    //                  "solver.x after solve (should be the same as chi)");
+    // print_spinor_int(this->chi(0, 0, 0, 0), "chi after solve");
 
     for (size_t i = 0; i < rank; ++i) {
       start[i] = 0;
     }
+    // print_SUNAdj(this->momentum(0, 0, 0, 0, 0),
+    //              "SUNAdj before update\
+    // Fermion");
 
     // launch the kernel
     tune_and_launch_for<rank, HWilsonDiracOperatorTag>(
-        "UpdateMomentumFermion", start, params.dimensions, *this);
+        "UpdateMomentumFermion", start, gauge_field.dimensions, *this);
     Kokkos::fence();
+    // print_SUNAdj(this->momentum(0, 0, 0, 0, 0), "SUNAdj after update
+    // Fermion");
   }
 };
 

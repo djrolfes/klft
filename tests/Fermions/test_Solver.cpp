@@ -63,6 +63,7 @@ int main(int argc, char* argv[]) {
     auto test = D.applyDdagger(D.applyD(u));
     auto diracTime1 = std::min(diracTime, timer.seconds());
     printf("QQ^\\dagger Kernel Time:     %11.4e s\n", diracTime1);
+    print_spinor(test(0, 0, 0, 0), "Spinor to solve before solving");
     printf("Initialize Solver...\n");
     CGSolver solver(test, x, D);
     printf("Apply Solver...\n");
@@ -71,6 +72,7 @@ int main(int argc, char* argv[]) {
 
     solver.solve(x0, eps);
     auto diracTime2 = std::min(diracTime, timer.seconds());
+    print_spinor(test(0, 0, 0, 0), "Spinor to solve after solving");
     printf("Solver Kernel Time:     %11.4e s\n", diracTime2);
     printf("Comparing Solver result to expected result...\n");
     print_spinor<3, 4>(solver.x(0, 0, 0, 0) - u(0, 0, 0, 0), "Solver Result");

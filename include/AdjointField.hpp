@@ -9,20 +9,23 @@
 
 namespace klft {
 
-template <size_t Nd, size_t Nc> struct deviceAdjointField {
-
+template <size_t Nd, size_t Nc>
+struct deviceAdjointField {
   deviceAdjointField() = delete;
 
   SUNAdjField<Nd, Nc> field;
   IndexArray<Nd> dimensions;
 
-  deviceAdjointField(const index_t L0, const index_t L1, const index_t L2,
-                     const index_t L3, const SUNAdj<Nc> &init)
+  deviceAdjointField(const index_t L0,
+                     const index_t L1,
+                     const index_t L2,
+                     const index_t L3,
+                     const SUNAdj<Nc>& init)
       : dimensions({L0, L1, L2, L3}) {
     do_init(field, init);
   }
 
-  void do_init(SUNAdjField<Nd, Nc> &V, const SUNAdj<Nc> &init) {
+  void do_init(SUNAdjField<Nd, Nc>& V, const SUNAdj<Nc>& init) {
     Kokkos::realloc(Kokkos::WithoutInitializing, V, dimensions[0],
                     dimensions[1], dimensions[2], dimensions[3]);
     tune_and_launch_for(
@@ -36,7 +39,8 @@ template <size_t Nd, size_t Nc> struct deviceAdjointField {
         });
   }
 
-  template <class RNG> void randomize_field(RNG &rng) {
+  template <class RNG>
+  void randomize_field(RNG& rng) {
     tune_and_launch_for(
         "randomize_adj_field", IndexArray<Nd>{0}, dimensions,
         KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2,
@@ -51,46 +55,54 @@ template <size_t Nd, size_t Nc> struct deviceAdjointField {
 
   // define accessors for the field
   template <typename indexType>
-  KOKKOS_FORCEINLINE_FUNCTION SUNAdj<Nc> &
-  operator()(const indexType i, const indexType j, const indexType k,
-             const indexType l, const index_t mu) const {
+  KOKKOS_FORCEINLINE_FUNCTION SUNAdj<Nc>& operator()(const indexType i,
+                                                     const indexType j,
+                                                     const indexType k,
+                                                     const indexType l,
+                                                     const index_t mu) const {
     return field(i, j, k, l, mu);
   }
 
   template <typename indexType>
-  KOKKOS_FORCEINLINE_FUNCTION SUNAdj<Nc> &
-  operator()(const indexType i, const indexType j, const indexType k,
-             const indexType l, const index_t mu) {
+  KOKKOS_FORCEINLINE_FUNCTION SUNAdj<Nc>& operator()(const indexType i,
+                                                     const indexType j,
+                                                     const indexType k,
+                                                     const indexType l,
+                                                     const index_t mu) {
     return field(i, j, k, l, mu);
   }
 
   // define accessors with 4D Kokkos array
   template <typename indexType>
-  KOKKOS_FORCEINLINE_FUNCTION SUNAdj<Nc> &
-  operator()(const Kokkos::Array<indexType, 4> site, const index_t mu) const {
+  KOKKOS_FORCEINLINE_FUNCTION SUNAdj<Nc>& operator()(
+      const Kokkos::Array<indexType, 4> site,
+      const index_t mu) const {
     return field(site[0], site[1], site[2], site[3], mu);
   }
 
   template <typename indexType>
-  KOKKOS_FORCEINLINE_FUNCTION SUNAdj<Nc> &
-  operator()(const Kokkos::Array<indexType, 4> site, const index_t mu) {
+  KOKKOS_FORCEINLINE_FUNCTION SUNAdj<Nc>& operator()(
+      const Kokkos::Array<indexType, 4> site,
+      const index_t mu) {
     return field(site[0], site[1], site[2], site[3], mu);
   }
 };
 
-template <size_t Nd, size_t Nc> struct deviceAdjointField3D {
-
+template <size_t Nd, size_t Nc>
+struct deviceAdjointField3D {
   deviceAdjointField3D() = delete;
 
   SUNAdjField3D<Nd, Nc> field;
   IndexArray<Nd> dimensions;
 
-  deviceAdjointField3D(const index_t L0, const index_t L1, const index_t L2,
-                       const SUNAdj<Nc> &init)
+  deviceAdjointField3D(const index_t L0,
+                       const index_t L1,
+                       const index_t L2,
+                       const SUNAdj<Nc>& init)
       : dimensions({L0, L1, L2}) {
     do_init(field, init);
   }
-  void do_init(SUNAdjField3D<Nd, Nc> &V, const SUNAdj<Nc> &init) {
+  void do_init(SUNAdjField3D<Nd, Nc>& V, const SUNAdj<Nc>& init) {
     Kokkos::realloc(Kokkos::WithoutInitializing, V, dimensions[0],
                     dimensions[1], dimensions[2]);
     tune_and_launch_for(
@@ -103,7 +115,8 @@ template <size_t Nd, size_t Nc> struct deviceAdjointField3D {
         });
   }
 
-  template <class RNG> void randomize_field(RNG &rng) {
+  template <class RNG>
+  void randomize_field(RNG& rng) {
     tune_and_launch_for(
         "randomize_adj_field", IndexArray<Nd>{0}, dimensions,
         KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2) {
@@ -117,46 +130,51 @@ template <size_t Nd, size_t Nc> struct deviceAdjointField3D {
 
   // define accessors for the field
   template <typename indexType>
-  KOKKOS_FORCEINLINE_FUNCTION SUNAdj<Nc> &
-  operator()(const indexType i, const indexType j, const indexType k,
-             const index_t mu) const {
+  KOKKOS_FORCEINLINE_FUNCTION SUNAdj<Nc>& operator()(const indexType i,
+                                                     const indexType j,
+                                                     const indexType k,
+                                                     const index_t mu) const {
     return field(i, j, k, mu);
   }
 
   template <typename indexType>
-  KOKKOS_FORCEINLINE_FUNCTION SUNAdj<Nc> &
-  operator()(const indexType i, const indexType j, const indexType k,
-             const index_t mu) {
+  KOKKOS_FORCEINLINE_FUNCTION SUNAdj<Nc>& operator()(const indexType i,
+                                                     const indexType j,
+                                                     const indexType k,
+                                                     const index_t mu) {
     return field(i, j, k, mu);
   }
 
   // define accessors with 4D Kokkos array
   template <typename indexType>
-  KOKKOS_FORCEINLINE_FUNCTION SUNAdj<Nc> &
-  operator()(const Kokkos::Array<indexType, 3> site, const index_t mu) const {
+  KOKKOS_FORCEINLINE_FUNCTION SUNAdj<Nc>& operator()(
+      const Kokkos::Array<indexType, 3> site,
+      const index_t mu) const {
     return field(site[0], site[1], site[2], mu);
   }
 
   template <typename indexType>
-  KOKKOS_FORCEINLINE_FUNCTION SUNAdj<Nc> &
-  operator()(const Kokkos::Array<indexType, 3> site, const index_t mu) {
+  KOKKOS_FORCEINLINE_FUNCTION SUNAdj<Nc>& operator()(
+      const Kokkos::Array<indexType, 3> site,
+      const index_t mu) {
     return field(site[0], site[1], site[2], mu);
   }
 };
 
-template <size_t Nd, size_t Nc> struct deviceAdjointField2D {
-
+template <size_t Nd, size_t Nc>
+struct deviceAdjointField2D {
   deviceAdjointField2D() = delete;
 
   SUNAdjField2D<Nd, Nc> field;
   IndexArray<Nd> dimensions;
 
-  deviceAdjointField2D(const index_t L0, const index_t L1,
-                       const SUNAdj<Nc> &init)
+  deviceAdjointField2D(const index_t L0,
+                       const index_t L1,
+                       const SUNAdj<Nc>& init)
       : dimensions({L0, L1}) {
     do_init(field, init);
   }
-  void do_init(SUNAdjField2D<Nd, Nc> &V, const SUNAdj<Nc> &init) {
+  void do_init(SUNAdjField2D<Nd, Nc>& V, const SUNAdj<Nc>& init) {
     Kokkos::realloc(Kokkos::WithoutInitializing, V, dimensions[0],
                     dimensions[1]);
     tune_and_launch_for(
@@ -169,7 +187,8 @@ template <size_t Nd, size_t Nc> struct deviceAdjointField2D {
         });
   }
 
-  template <class RNG> void randomize_field(RNG &rng) {
+  template <class RNG>
+  void randomize_field(RNG& rng) {
     tune_and_launch_for(
         "randomize_adj_field", IndexArray<Nd>{0}, dimensions,
         KOKKOS_LAMBDA(const index_t i0, const index_t i1) {
@@ -183,28 +202,32 @@ template <size_t Nd, size_t Nc> struct deviceAdjointField2D {
 
   // define accessors for the field
   template <typename indexType>
-  KOKKOS_FORCEINLINE_FUNCTION SUNAdj<Nc> &
-  operator()(const indexType i, const indexType j, const index_t mu) const {
+  KOKKOS_FORCEINLINE_FUNCTION SUNAdj<Nc>& operator()(const indexType i,
+                                                     const indexType j,
+                                                     const index_t mu) const {
     return field(i, j, mu);
   }
 
   template <typename indexType>
-  KOKKOS_FORCEINLINE_FUNCTION SUNAdj<Nc> &
-  operator()(const indexType i, const indexType j, const index_t mu) {
+  KOKKOS_FORCEINLINE_FUNCTION SUNAdj<Nc>& operator()(const indexType i,
+                                                     const indexType j,
+                                                     const index_t mu) {
     return field(i, j, mu);
   }
 
   // define accessors with 4D Kokkos array
   template <typename indexType>
-  KOKKOS_FORCEINLINE_FUNCTION SUNAdj<Nc> &
-  operator()(const Kokkos::Array<indexType, 2> site, const index_t mu) const {
+  KOKKOS_FORCEINLINE_FUNCTION SUNAdj<Nc>& operator()(
+      const Kokkos::Array<indexType, 2> site,
+      const index_t mu) const {
     return field(site[0], site[1], mu);
   }
 
   template <typename indexType>
-  KOKKOS_FORCEINLINE_FUNCTION SUNAdj<Nc> &
-  operator()(const Kokkos::Array<indexType, 2> site, const index_t mu) {
+  KOKKOS_FORCEINLINE_FUNCTION SUNAdj<Nc>& operator()(
+      const Kokkos::Array<indexType, 2> site,
+      const index_t mu) {
     return field(site[0], site[1], mu);
   }
 };
-} // namespace klft
+}  // namespace klft

@@ -91,8 +91,9 @@ class HMC {
     for (int i = 0; i < monomials.size(); ++i) {
       monomials[i]->accept(hamiltonian_field);
       delta_H += monomials[i]->get_delta_H();
-      Kokkos::printf("delta_H: %f\n", delta_H);
+      Kokkos::printf("delta_H_monomial: %.20f\n", monomials[i]->get_delta_H());
     }
+    Kokkos::printf("delta_H_ges %.20f \n", delta_H);
     bool accept = true;
     if (delta_H > 0.0) {
       if (dist(mt) > Kokkos::exp(-delta_H)) {
