@@ -62,6 +62,23 @@ class UpdateMomentumFermion : public UpdateMomentum {
         eps(0.0),
         tol(tol_) {}
 
+  // Implemntation of the force correspondig to the Hermitian Wilson dirac
+  // Operator
+  //* S_F  = \phi^{\dagger} * M^{-1} * \phi
+  //* dS_F = - \phi^{\dagger} * M^{-1} * dM * M^{-1} * \phi = - \chi^{\dagger} *
+  // dM * \chi
+  //* where \chi = M^{-1} * \phi
+  //* and M = Q*Q^{\dagger}
+  // Using that dS_f = - \chi ^{\dagger} (\pdv{D}{U_\mu(x)}D^\dagger + D
+  // \pdv{D^\dagger}{U_\mu(x)})\chi which can be simplified to -\chi^\dagger
+  // (\pdv{D}{U_\mu(x)}D^\dagger+ (\pdv{D}{U_\mu(x)}D^\dagger)^\dagger) =
+  // -2Re(\chi^\dagger \pdv{D}{U_\mu(x)}D^\dagger \chi)
+
+  // The Derivative of the Hermtian Wilson Dirac Operator should be given as
+  // \pdv{D(x,y)}{U_\mu(z)} = - \kappa \gamma_5 \delta_{x,z} (1-\gamma_mu)T_i
+  // U_mu(z)\delta_{x+\mu,y}
+  // +\kappa \gamma_5 \delta_{x+\mu,y} (1+\gamma_\mu) t_i
+  // U_\mu(z)^\dagger\delta_{z,y} <- Have to Check this
   template <typename... Indices>
   KOKKOS_FORCEINLINE_FUNCTION void operator()(HWilsonDiracOperatorTag,
                                               const Indices... Idcs) const {
@@ -82,6 +99,7 @@ class UpdateMomentumFermion : public UpdateMomentum {
           (xp.second * complex_t(0, this->params.kappa)) *
           ((this->params.gamma_id + this->params.gammas[mu]) *
            (conj(this->gauge_field(Idcs..., mu)) * this->chi_alt(Idcs...)));
+      // The first multiplication makes the force matrix
       auto total_term =
           conj(chi(Idcs...)) * (this->params.gamma5 * first_term) +
           conj(chi(xp.first)) * (this->params.gamma5 * second_term);
