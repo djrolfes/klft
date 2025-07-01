@@ -191,6 +191,8 @@ inline bool parseInputFile(const std::string &filename,
 
       simParams.log_delta_H = mp["log_delta_H"].as<bool>(false);
       simParams.log_acceptance = mp["log_acceptance"].as<bool>(false);
+      simParams.log_accept = mp["log_accept"].as<bool>(false);
+      simParams.log_time = mp["log_time"].as<bool>(false);
     } else {
       printf("Error: HMCParams not found in input file\n");
       return false;
