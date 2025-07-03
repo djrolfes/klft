@@ -6,11 +6,8 @@
 #include "UpdateMomentum.hpp"
 namespace klft {
 
-template <typename DFermionFieldType,
-          typename DGaugeFieldType,
-          typename DAdjFieldType,
-          class Derived,
-          class Solver>
+template <typename DFermionFieldType, typename DGaugeFieldType,
+          typename DAdjFieldType, class Derived, class Solver>
 class UpdateMomentumFermion : public UpdateMomentum {
   static_assert(isDeviceFermionFieldType<DFermionFieldType>::value);
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
@@ -49,8 +46,7 @@ class UpdateMomentumFermion : public UpdateMomentum {
   UpdateMomentumFermion() = delete;
   ~UpdateMomentumFermion() = default;
 
-  UpdateMomentumFermion(FermionField& phi_,
-                        GaugeFieldType& gauge_field_,
+  UpdateMomentumFermion(FermionField& phi_, GaugeFieldType& gauge_field_,
                         AdjFieldType& adjoint_field_,
                         const diracParams<rank, RepDim>& params_,
                         const real_t& tol_)
@@ -92,11 +88,11 @@ class UpdateMomentumFermion : public UpdateMomentum {
           Kokkos::Array<size_t, rank>{Idcs...}, mu, 1, 3, -1,
           this->params.dimensions);
       auto first_term =
-          (xp.second * complex_t(0, -this->params.kappa)) *
+          (xp.second * -this->params.kappa) *
           ((this->params.gamma_id - this->params.gammas[mu]) *
            (this->gauge_field(Idcs..., mu) * this->chi_alt(xp.first)));
       auto second_term =
-          (xp.second * complex_t(0, this->params.kappa)) *
+          (xp.second * this->params.kappa) *
           ((this->params.gamma_id + this->params.gammas[mu]) *
            (conj(this->gauge_field(Idcs..., mu)) * this->chi_alt(Idcs...)));
       // The first multiplication makes the force matrix
@@ -104,10 +100,8 @@ class UpdateMomentumFermion : public UpdateMomentum {
           conj(chi(Idcs...)) * (this->params.gamma5 * first_term) +
           conj(chi(xp.first)) * (this->params.gamma5 * second_term);
 
-      //   Only for U(1) valid, trace gives the Im part of an U(1) element, so
-      //   taking the realpart is equivalent to multiplying with i, and get the
-      //   imaginary part.
-      auto derv = -2.0 * eps * complex_t(0, 1) * total_term;
+      auto derv = 2.0 * eps * total_term;
+      // Taking the Real part is handled by the traceT
       momentum(Idcs..., mu) -=
           traceT(derv);  // in leap frog therese the minus sign here
     }
