@@ -44,8 +44,7 @@ class Solver {
   SpinorFieldType x;  // Solution to DiracOP*x=b
   DiracOperator<Derived, DSpinorFieldType, DGaugeFieldType> dirac_op;
   Solver(
-      const SpinorFieldType& b,
-      SpinorFieldType& x,
+      const SpinorFieldType& b, SpinorFieldType& x,
       const DiracOperator<Derived, DSpinorFieldType, DGaugeFieldType>& dirac_op)
       : b(b), x(x), dirac_op(dirac_op) {}
 
@@ -71,8 +70,7 @@ class CGSolver : public Solver<Derived, DSpinorFieldType, DGaugeFieldType> {
   constexpr static size_t RepDim =
       DeviceFermionFieldTypeTraits<DSpinorFieldType>::RepDim;
   CGSolver() = delete;
-  CGSolver(const SpinorFieldType& b,
-           SpinorFieldType& x,
+  CGSolver(const SpinorFieldType& b, SpinorFieldType& x,
            DiracOperator<Derived, DSpinorFieldType, DGaugeFieldType>& dirac_op)
       : Solver<Derived, DSpinorFieldType, DGaugeFieldType>(b, x, dirac_op) {}
 
@@ -120,11 +118,11 @@ class CGSolver : public Solver<Derived, DSpinorFieldType, DGaugeFieldType> {
             this->b, this->dirac_op.applyDdagger(this->dirac_op.applyD(xk)),
             1.0));
 
-    if (Kokkos::abs(rk_norm - ex_res) < tol) {
+    if (Kokkos::abs(ex_res / spinor_norm<rank, Nc, RepDim>(xk)) > tol) {
       printf("Roundoff Error, relaunching CG solver with new initial guess\n");
       this->solve(xk, tol);
     } else {
-      if (KLFT_VERBOSITY > 0) {
+      if (KLFT_VERBOSITY > 1) {
         printf("CG solver converged in %d iterations\n", num_iter);
       }
       this->x = xk;

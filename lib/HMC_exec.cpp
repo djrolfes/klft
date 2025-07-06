@@ -17,17 +17,14 @@ namespace klft {
 // this will not work, have also give it the fields, for Fermions one has to do
 // more (probably)
 // Still need to add check for different Dirac Operators
-template <typename DGaugeFieldType,
-          typename DAdjFieldType,
+template <typename DGaugeFieldType, typename DAdjFieldType,
           typename DSpinorFieldType>
 std::shared_ptr<Integrator> createIntegrator(
-    typename DGaugeFieldType::type& g_in,
-    typename DAdjFieldType::type& a_in,
+    typename DGaugeFieldType::type& g_in, typename DAdjFieldType::type& a_in,
     typename DSpinorFieldType::type& s_in,
     const Integrator_Params& integratorParams,
     const GaugeMonomial_Params& gaugeMonomialParams,
-    const FermionMonomial_Params& fermionParams,
-    const int& resParsef) {
+    const FermionMonomial_Params& fermionParams, const int& resParsef) {
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
   static_assert(isDeviceAdjFieldType<DAdjFieldType>::value);
   constexpr static size_t rank =
@@ -266,13 +263,13 @@ int HMC_execute(const std::string& input_file) {
   RNGType rng(hmcParams.seed);
 
   // Start building the Fields
-  using DGaugeFieldType = DeviceGaugeFieldType<4, 1>;
-  using DAdjFieldType = DeviceAdjFieldType<4, 1>;
-  using DSpinorFieldType = DeviceSpinorFieldType<4, 1, 4>;
+  using DGaugeFieldType = DeviceGaugeFieldType<4, 2>;
+  using DAdjFieldType = DeviceAdjFieldType<4, 2>;
+  using DSpinorFieldType = DeviceSpinorFieldType<4, 2, 4>;
   typename DGaugeFieldType::type g_in(hmcParams.L0, hmcParams.L1, hmcParams.L2,
                                       hmcParams.L3, rng, hmcParams.rngDelta);
   typename DAdjFieldType::type a_in(hmcParams.L0, hmcParams.L1, hmcParams.L2,
-                                    hmcParams.L3, traceT(identitySUN<1>()));
+                                    hmcParams.L3, traceT(identitySUN<2>()));
   typename DSpinorFieldType::type s_in(hmcParams.L0, hmcParams.L1, hmcParams.L2,
                                        hmcParams.L3, 0);
   // typename DSpinorFieldType::type f_in(hmcParams.L0, hmcParams.L1,
@@ -357,7 +354,7 @@ int HMC_execute(const std::string& input_file) {
              static_cast<size_t>(accept), acc_rate, time);
     }
     // measure the gauge observables
-    measureGaugeObservables<4, 1>(g_in, gaugeObsParams, step);
+    measureGaugeObservables<4, 2>(g_in, gaugeObsParams, step);
     // TODO:make flushAllGaugeObservables append the Observables to the
     // files
     // -> don't lose all progress when the simulation is interupted if (step
@@ -371,7 +368,8 @@ int HMC_execute(const std::string& input_file) {
   }
   // flush the measurements to the files
   flushAllGaugeObservables(gaugeObsParams);
-
+  printf("Total Acceptance rate: %f, Didn't Accept %f Configs", acc_rate,
+         acc_sum);
   return 0;
   // return 1;
 }

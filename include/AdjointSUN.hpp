@@ -14,8 +14,7 @@ namespace klft {
 
 template <size_t Nc>
 KOKKOS_FORCEINLINE_FUNCTION void print_SUNAdj(
-    const SUNAdj<Nc>& a,
-    const std::string& name = "SUNAdj:") {
+    const SUNAdj<Nc>& a, const std::string& name = "SUNAdj:") {
   printf("%s\n", name.c_str());
   for (size_t i = 0; i < Nc; ++i) {
     printf("    [%zu] = (% .20f)\n", i, a[i]);
@@ -198,7 +197,7 @@ SUN<2> expoSUN(const SUNAdj<2>& a) {
 //   }
 //   return coeffs;
 // }();
-//
+
 // // a function to generate SU(3) matrix from adjoint
 // constexpr KOKKOS_FORCEINLINE_FUNCTION SUN<3>
 // get_SU3_from_adj(const SUNAdj<3> &a) {
@@ -214,7 +213,7 @@ SUN<2> expoSUN(const SUNAdj<2>& a) {
 //   c[2][2] = complex_t(0.0, -SQRT3INV * a[7]);
 //   return c;
 // }
-//
+
 // // we also need the determinant of the SU(3) matrix
 // // returns i det(a)
 // constexpr KOKKOS_FORCEINLINE_FUNCTION real_t imag_det_SU3(const SUNAdj<3> &a)
@@ -227,7 +226,7 @@ SUN<2> expoSUN(const SUNAdj<2>& a) {
 //        2.0 * SQRT3INV * a[7] * (a[0] * a[0] + a[1] * a[1]);
 //   return d;
 // }
-//
+
 // KOKKOS_FORCEINLINE_FUNCTION
 // SUN<3> expoSUN(const SUNAdj<3> &a) {
 //   // Cayley-Hamilton expansion
@@ -247,7 +246,7 @@ SUN<2> expoSUN(const SUNAdj<2>& a) {
 //   // store a in a temporary variable
 //   // to perform the numerical stability step
 //   // a_tmp = a
-//   SUNadj<3> a_tmp = a;
+//   SUNAdj<3> a_tmp = a;
 //   // mm stores the number of times we need to
 //   // multiply by 0.5
 //   size_t mm = 0;

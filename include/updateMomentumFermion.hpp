@@ -100,7 +100,7 @@ class UpdateMomentumFermion : public UpdateMomentum {
           conj(chi(Idcs...)) * (this->params.gamma5 * first_term) +
           conj(chi(xp.first)) * (this->params.gamma5 * second_term);
 
-      auto derv = 2.0 * eps * total_term;
+      auto derv = 2 * this->eps * total_term;
       // Taking the Real part is handled by the traceT
       momentum(Idcs..., mu) -=
           traceT(derv);  // in leap frog therese the minus sign here
@@ -109,20 +109,21 @@ class UpdateMomentumFermion : public UpdateMomentum {
 
   void update(const real_t step_size) override {
     eps = step_size;
+
     IndexArray<rank> start;
     Derived D(gauge_field, this->params);
     FermionField x(this->params.dimensions, complex_t(0.0, 0.0));
     FermionField x0(this->params.dimensions, complex_t(0.0, 0.0));
     // print_spinor_int(this->phi(0, 0, 0, 0),
     //                  "Spinor s_in(0,0,0,0) in update Momentum Fermion");
-    Solver solver(FermionField(this->phi.field), x, D);
+    Solver solver(this->phi, x, D);
     if (KLFT_VERBOSITY > 4) {
       printf("Solving insde updateMomentumFermion:");
     }
 
     solver.solve(x0, this->tol);
-    this->chi = FermionField(solver.x.field);
-    this->chi_alt = FermionField(D.applyDdagger(this->chi).field);
+    this->chi = solver.x;
+    this->chi_alt = D.applyDdagger(this->chi);
     // print_spinor_int(solver.x(0, 0, 0, 0),
     //                  "solver.x after solve (should be the same as chi)");
     // print_spinor_int(this->chi(0, 0, 0, 0), "chi after solve");
@@ -130,16 +131,14 @@ class UpdateMomentumFermion : public UpdateMomentum {
     for (size_t i = 0; i < rank; ++i) {
       start[i] = 0;
     }
-    // print_SUNAdj(this->momentum(0, 0, 0, 0, 0),
-    //              "SUNAdj before update\
-    // Fermion");
+    auto before = this->momentum(0, 0, 0, 0, 0);
 
     // launch the kernel
     tune_and_launch_for<rank, HWilsonDiracOperatorTag>(
         "UpdateMomentumFermion", start, gauge_field.dimensions, *this);
     Kokkos::fence();
-    // print_SUNAdj(this->momentum(0, 0, 0, 0, 0), "SUNAdj after update
-    // Fermion");
+    // print_SUNAdj(before - this->momentum(0, 0, 0, 0, 0),
+    //              "SUNAdj after update Fermion");
   }
 };
 

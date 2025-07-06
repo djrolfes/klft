@@ -40,6 +40,9 @@ class GaugeMonomial : public Monomial<DGaugeFieldType, DAdjFieldType> {
         -(beta / static_cast<real_t>(Nc)) *
         GaugePlaquette<rank, Nc>(h.gauge_field, false);
   }
+  void print() override {
+    printf("Gauge Monomial: %20f\n", this->get_delta_H());
+  }
 };
 
 }  // namespace klft

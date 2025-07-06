@@ -7,17 +7,18 @@ HMCParams:
   L3: 16
   seed: 1234
   Nd: 4
-  Nc: 1
+  Nc: 2
   coldStart: false
   rngDelta: 1.0
 # Level is the innermost level of the Integrator, i.e that is executed most frequently.
 Integrator:
-  tau: 1
-  nSteps: 2000
+
+  tau: 0.002
+  nSteps: 100
   Monomials:
     - Type: "Leapfrog"
       level: 0
-      steps: 50
+      steps: 10
     - Type: "Leapfrog"
       level: 1
       steps: 5

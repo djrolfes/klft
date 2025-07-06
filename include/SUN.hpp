@@ -25,8 +25,7 @@
 namespace klft {
 template <size_t Nc>
 KOKKOS_FORCEINLINE_FUNCTION void print_SUN(
-    const SUN<Nc>& a,
-    const std::string& name = "SUN Matrix") {
+    const SUN<Nc>& a, const std::string& name = "SUN Matrix") {
   printf("%s:\n", name.c_str());
   for (size_t i = 0; i < Nc; i++) {
     for (size_t j = 0; j < Nc; j++) {
@@ -188,8 +187,7 @@ KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> realSUN(const SUN<Nc>& a) {
 
 // template <size_t N = Nc, typename std::enable_if<N == 1, int>::type = 0,
 template <class RNG>
-KOKKOS_FORCEINLINE_FUNCTION void randSUN(SUN<1>& r,
-                                         RNG& generator,
+KOKKOS_FORCEINLINE_FUNCTION void randSUN(SUN<1>& r, RNG& generator,
                                          real_t delta) {
   // SUN<1> r;
   r[0][0] = Kokkos::exp(
@@ -200,8 +198,7 @@ KOKKOS_FORCEINLINE_FUNCTION void randSUN(SUN<1>& r,
 
 // template <size_t N = Nc, typename std::enable_if<N == 2, int>::type = 0,
 template <class RNG>
-KOKKOS_FORCEINLINE_FUNCTION void randSUN(SUN<2>& r,
-                                         RNG& generator,
+KOKKOS_FORCEINLINE_FUNCTION void randSUN(SUN<2>& r, RNG& generator,
                                          real_t delta) {
   // SUN<2> r;
   real_t alpha =
@@ -220,8 +217,7 @@ KOKKOS_FORCEINLINE_FUNCTION void randSUN(SUN<2>& r,
 
 // template <size_t N = Nc, typename std::enable_if<N == 3, int>::type = 0,
 template <class RNG>
-KOKKOS_FORCEINLINE_FUNCTION void randSUN(SUN<3>& r,
-                                         RNG& generator,
+KOKKOS_FORCEINLINE_FUNCTION void randSUN(SUN<3>& r, RNG& generator,
                                          real_t delta) {
   // SUN<3> r;
   real_t r1[6], r2[6], norm, fact;
@@ -232,8 +228,7 @@ KOKKOS_FORCEINLINE_FUNCTION void randSUN(SUN<3>& r,
     }
     norm = Kokkos::sqrt(r1[0] * r1[0] + r1[1] * r1[1] + r1[2] * r1[2] +
                         r1[3] * r1[3] + r1[4] * r1[4] + r1[5] * r1[5]);
-    if (1.0 != (1.0 + norm))
-      break;
+    if (1.0 != (1.0 + norm)) break;
   }
   fact = 1.0 / norm;
   z1[0] = fact * complex_t(r1[0], r1[1]);
@@ -246,8 +241,7 @@ KOKKOS_FORCEINLINE_FUNCTION void randSUN(SUN<3>& r,
       }
       norm = Kokkos::sqrt(r2[0] * r2[0] + r2[1] * r2[1] + r2[2] * r2[2] +
                           r2[3] * r2[3] + r2[4] * r2[4] + r2[5] * r2[5]);
-      if (1.0 != (1.0 + norm))
-        break;
+      if (1.0 != (1.0 + norm)) break;
     }
     fact = 1.0 / norm;
     z2[0] = fact * complex_t(r2[0], r2[1]);
@@ -262,8 +256,7 @@ KOKKOS_FORCEINLINE_FUNCTION void randSUN(SUN<3>& r,
         Kokkos::sqrt(z2[0].real() * z2[0].real() + z2[0].imag() * z2[0].imag() +
                      z2[1].real() * z2[1].real() + z2[1].imag() * z2[1].imag() +
                      z2[2].real() * z2[2].real() + z2[2].imag() * z2[2].imag());
-    if (1.0 != (1.0 + norm))
-      break;
+    if (1.0 != (1.0 + norm)) break;
   }
   fact = 1.0 / norm;
   z2[0] *= fact;

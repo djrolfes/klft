@@ -28,8 +28,7 @@
 #include "Spinor.hpp"
 namespace klft {
 
-template <typename _Derived,
-          typename DSpinorFieldType,
+template <typename _Derived, typename DSpinorFieldType,
           typename DGaugeFieldType>
 class DiracOperator {
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
@@ -106,8 +105,7 @@ template <typename DSpinorFieldType, typename DGaugeFieldType>
 class WilsonDiracOperator
     : public DiracOperator<
           WilsonDiracOperator<DSpinorFieldType, DGaugeFieldType>,
-          DSpinorFieldType,
-          DGaugeFieldType> {
+          DSpinorFieldType, DGaugeFieldType> {
  public:
   constexpr static size_t Nc =
       DeviceFermionFieldTypeTraits<DSpinorFieldType>::Nc;
@@ -119,8 +117,7 @@ class WilsonDiracOperator
   ~WilsonDiracOperator() = default;
   using Base =
       DiracOperator<WilsonDiracOperator<DSpinorFieldType, DGaugeFieldType>,
-                    DSpinorFieldType,
-                    DGaugeFieldType>;
+                    DSpinorFieldType, DGaugeFieldType>;
   using Base::Base;
   template <typename... Indices>
   KOKKOS_FORCEINLINE_FUNCTION void operator()(typename Base::TagD,
@@ -142,7 +139,7 @@ class WilsonDiracOperator
               (conj(this->g_in(xm.first, mu)) * this->s_in(xm.first));
     }
 
-    this->s_out(Idcs...) += this->s_in(Idcs...) - this->params.kappa * temp;
+    this->s_out(Idcs...) = this->s_in(Idcs...) - this->params.kappa * temp;
   }
 
   // only for testing purpose, not the real Ddagger operator
@@ -165,7 +162,7 @@ class WilsonDiracOperator
               (conj(this->g_in(xm.first, mu)) * this->s_in(xm.first));
     }
 
-    this->s_out(Idcs...) += this->s_in(Idcs...) - this->params.kappa * temp;
+    this->s_out(Idcs...) = this->s_in(Idcs...) - this->params.kappa * temp;
   }
 };
 // // Deduction guide
@@ -178,8 +175,7 @@ template <typename DSpinorFieldType, typename DGaugeFieldType>
 class HWilsonDiracOperator
     : public DiracOperator<
           HWilsonDiracOperator<DSpinorFieldType, DGaugeFieldType>,
-          DSpinorFieldType,
-          DGaugeFieldType> {
+          DSpinorFieldType, DGaugeFieldType> {
  public:
   constexpr static size_t Nc =
       DeviceFermionFieldTypeTraits<DSpinorFieldType>::Nc;
@@ -191,8 +187,7 @@ class HWilsonDiracOperator
   ~HWilsonDiracOperator() = default;
   using Base =
       DiracOperator<HWilsonDiracOperator<DSpinorFieldType, DGaugeFieldType>,
-                    DSpinorFieldType,
-                    DGaugeFieldType>;
+                    DSpinorFieldType, DGaugeFieldType>;
   using Base::Base;
   template <typename... Indices>
   KOKKOS_FORCEINLINE_FUNCTION void operator()(typename Base::TagD,
@@ -213,7 +208,7 @@ class HWilsonDiracOperator
               (conj(this->g_in(xm.first, mu)) * this->s_in(xm.first));
     }
 
-    this->s_out(Idcs...) +=
+    this->s_out(Idcs...) =
         this->params.gamma5 * (this->s_in(Idcs...) - this->params.kappa * temp);
   }
 

@@ -8,11 +8,8 @@
 #define SQRT2INV \
   0.707106781186547524400844362104849039284835937688474036588339868995366239231053519425193767163820786367506  // Oeis A010503
 namespace klft {
-template <typename DiracOperator,
-          class Solver,
-          class RNGType,
-          typename DFermionFieldType,
-          typename DGaugeFieldType,
+template <typename DiracOperator, class Solver, class RNGType,
+          typename DFermionFieldType, typename DGaugeFieldType,
           typename DAdjFieldType>
 class FermionMonomial : public Monomial<DGaugeFieldType, DAdjFieldType> {
   static_assert(isDeviceFermionFieldType<DFermionFieldType>::value);
@@ -37,11 +34,8 @@ class FermionMonomial : public Monomial<DGaugeFieldType, DAdjFieldType> {
   const diracParams<rank, RepDim> params;
   const real_t tol;
   RNGType rng;
-  FermionMonomial(FermionField& _phi,
-                  const diracParams<rank, RepDim>& params_,
-                  const real_t& tol_,
-                  RNGType& RNG_,
-                  unsigned int _time_scale)
+  FermionMonomial(FermionField& _phi, const diracParams<rank, RepDim>& params_,
+                  const real_t& tol_, RNGType& RNG_, unsigned int _time_scale)
       : Monomial<DGaugeFieldType, DAdjFieldType>(_time_scale),
         phi(_phi),
         params(params_),
@@ -53,6 +47,9 @@ class FermionMonomial : public Monomial<DGaugeFieldType, DAdjFieldType> {
 
   void heatbath(HamiltonianField<DGaugeFieldType, DAdjFieldType> h) override {
     auto dims = h.gauge_field.dimensions;
+
+    // print_spinor_int(this->phi(0, 0, 0, 0),
+    //                  "Spinor s_in(0,0,0,0)  before Heatbath");
     // print_SUN(h.gauge_field(0, 0, 0, 0, 0), "SUN in Fermion heatbath");
     FermionField R(dims, rng, 0, SQRT2INV);
     // print_spinor_int(R(0, 0, 0, 0), "Spinor R(0,0,0,0) before dirac op in
@@ -62,7 +59,7 @@ class FermionMonomial : public Monomial<DGaugeFieldType, DAdjFieldType> {
     DiracOperator dirac_op(h.gauge_field, params);
     dirac_op.applyD_inplace(R, this->phi);
     // print_spinor_int(this->phi(0, 0, 0, 0),
-    //                  "Spinor s_in(0,0,0,0) in after Heatbath");
+    //                  "Spinor s_in(0,0,0,0) after  Heatbath");
   }
 
   void accept(HamiltonianField<DGaugeFieldType, DAdjFieldType> h) override {
@@ -84,6 +81,9 @@ class FermionMonomial : public Monomial<DGaugeFieldType, DAdjFieldType> {
         spinor_dot_product<rank, Nc, RepDim>(this->phi, chi).real();
     // print_SUNAdj(h.adjoint_field(0, 0, 0, 0, 0),
     //              "SUNAdj at accept Monomial Fermion");
+  }
+  void print() override {
+    printf("Fermion Monomial: %20f\n", this->get_delta_H());
   }
 };
 }  // namespace klft
