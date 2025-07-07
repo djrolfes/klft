@@ -169,16 +169,55 @@ KOKKOS_FORCEINLINE_FUNCTION complex_t trace(const SUN<Nc>& a) {
   }
   return c;
 }
+KOKKOS_FORCEINLINE_FUNCTION SUN<1> traceLessAntiHermitian(const SUN<1>& a) {
+  SUN<1> res;
+  res[0][0] = complex_t(0, a[0][0].imag());
+  return res;
+}
+KOKKOS_FORCEINLINE_FUNCTION SUN<2> traceLessAntiHermitian(const SUN<2>& M) {
+  SUN<2> A;
+  complex_t trace = 0.0;
+
+#pragma unroll
+  for (int i = 0; i < 2; ++i) {
+    for (int j = 0; j < 2; ++j) {
+      A[i][j] = 0.5 * (M[i][j] - conj(M[j][i]));  // anti-Hermitian part
+    }
+    trace += A[i][i];
+  }
+
+  complex_t correction = trace / 2.0;
+  for (int i = 0; i < 2; ++i) {
+    A[i][i] -= correction;  // ensure traceless
+  }
+
+  return A;
+}
+
 template <size_t Nc>
-KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> realSUN(const SUN<Nc>& a) {
+KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> traceLessAntiHermitian(const SUN<Nc>& a) {
   SUN<Nc> res;
+  complex_t trace = 0.0;
+
 #pragma unroll
   for (size_t i = 0; i < Nc; ++i) {
 #pragma unroll
     for (size_t j = 0; j < Nc; ++j) {
-      res[i][j] = 0.5 * (a[i][j] + conj(a[j][i]));
+      res[i][j] = 0.5 * (a[i][j] - conj(a[j][i]));
     }
   }
+
+#pragma unroll
+  for (size_t i = 0; i < Nc; ++i) {
+    trace += res[i][i];
+  }
+
+  complex_t tr_avg = trace / static_cast<real_t>(Nc);
+#pragma unroll
+  for (size_t i = 0; i < Nc; ++i) {
+    res[i][i] -= tr_avg;
+  }
+
   return res;
 }
 

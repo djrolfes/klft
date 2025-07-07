@@ -7,7 +7,7 @@
 namespace klft {
 
 class UpdateMomentum : public std::enable_shared_from_this<UpdateMomentum> {
-public:
+ public:
   UpdateMomentum() = delete;
   virtual ~UpdateMomentum() = default;
 
@@ -15,13 +15,13 @@ public:
   // using the given step size
   virtual void update(const real_t step_size) = 0;
 
-protected:
+ protected:
   explicit UpdateMomentum(int Tag) {}
 };
 
 template <typename DGaugeFieldType, typename DAdjFieldType>
 class UpdateMomentumGauge : public UpdateMomentum {
-public:
+ public:
   // template argument deduction and safety
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
   static_assert(isDeviceAdjFieldType<DAdjFieldType>::value);
@@ -45,8 +45,11 @@ public:
 
   UpdateMomentumGauge(GaugeFieldType &gauge_field_,
                       AdjFieldType &adjoint_field_, const real_t &beta_)
-      : UpdateMomentum(0), gauge_field(gauge_field_),
-        adjoint_field(adjoint_field_), beta(beta_), eps(0.0) {}
+      : UpdateMomentum(0),
+        gauge_field(gauge_field_),
+        adjoint_field(adjoint_field_),
+        beta(beta_),
+        eps(0.0) {}
   // todo: Add Force as a function instead of it being incorporated into the
   // functor.
 
@@ -68,6 +71,7 @@ public:
     for (size_t i = 0; i < rank; ++i) {
       start[i] = 0;
     }
+
     // launch the kernels
     staple_field = stapleField<DGaugeFieldType>(gauge_field);
     tune_and_launch_for<rank>("UpdateMomentumGauge", start,
@@ -76,4 +80,4 @@ public:
   }
 };
 
-} // namespace klft
+}  // namespace klft

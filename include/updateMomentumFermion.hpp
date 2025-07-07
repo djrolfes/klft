@@ -101,9 +101,16 @@ class UpdateMomentumFermion : public UpdateMomentum {
           conj(chi(xp.first)) * (this->params.gamma5 * second_term);
 
       auto derv = 2 * this->eps * total_term;
+      // if (Kokkos::Array<size_t, rank>{Idcs...} ==
+      //     Kokkos::Array<size_t, rank>{0, 0, 0, 0}) {
+      //   print_SUN(traceLessAntiHermitian(derv), "SUN Force Matrix ");
+      //   print_SUNAdj(traceT(traceLessAntiHermitian(derv)), "Adj Force
+      //   MAtrix");
+      // }
+
       // Taking the Real part is handled by the traceT
       momentum(Idcs..., mu) -=
-          traceT(derv);  // in leap frog therese the minus sign here
+          traceT((derv));  // in leap frog therese the minus sign here
     }
   }
 
@@ -127,18 +134,19 @@ class UpdateMomentumFermion : public UpdateMomentum {
     // print_spinor_int(solver.x(0, 0, 0, 0),
     //                  "solver.x after solve (should be the same as chi)");
     // print_spinor_int(this->chi(0, 0, 0, 0), "chi after solve");
-
+    // print_SUN(gauge_field(0, 0, 0, 0, 0), "In GaugeField in
+    // Fermionmomentum");
     for (size_t i = 0; i < rank; ++i) {
       start[i] = 0;
     }
-    auto before = this->momentum(0, 0, 0, 0, 0);
+    // auto before = this->momentum(0, 0, 0, 0, 0);
 
     // launch the kernel
     tune_and_launch_for<rank, HWilsonDiracOperatorTag>(
         "UpdateMomentumFermion", start, gauge_field.dimensions, *this);
     Kokkos::fence();
-    // print_SUNAdj(before - this->momentum(0, 0, 0, 0, 0),
-    //              "SUNAdj after update Fermion");
+    // print_SUNAdj(this->momentum(0, 0, 0, 0, 0), "SUNAdj after update
+    // Fermion");
   }
 };
 
