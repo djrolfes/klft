@@ -26,6 +26,17 @@
 #pragma once
 #include <Kokkos_Core.hpp>
 #include <Kokkos_Random.hpp>
+#ifdef ENABLE_DEBUG
+#include <iostream>
+#define DEBUG_LOG(msg)                                                         \
+  do {                                                                         \
+    std::cout << msg << std::endl;                                             \
+  } while (0)
+#else
+#define DEBUG_LOG(msg)                                                         \
+  do {                                                                         \
+  } while (0)
+#endif
 
 namespace klft {
 

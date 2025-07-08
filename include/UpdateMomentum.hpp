@@ -58,7 +58,7 @@ public:
       adjoint_field(Idcs..., mu) -=
           this->eps * ((this->beta / this->Nc) *
                        (traceT(this->gauge_field(Idcs..., mu) *
-                               conj(this->staple_field(Idcs..., mu)))));
+                               (this->staple_field(Idcs..., mu)))));
     }
   }
 

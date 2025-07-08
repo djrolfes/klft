@@ -77,6 +77,7 @@ public:
     for (int i = 0; i < monomials.size(); ++i) {
       monomials[i]->accept(hamiltonian_field);
       real_t dH = monomials[i]->get_delta_H();
+      DEBUG_LOG("dh " << i << ": " << dH);
       delta_H += dH;
     }
 
