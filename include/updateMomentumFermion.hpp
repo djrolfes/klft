@@ -6,8 +6,11 @@
 #include "UpdateMomentum.hpp"
 namespace klft {
 
-template <typename DFermionFieldType, typename DGaugeFieldType,
-          typename DAdjFieldType, class Derived, class Solver>
+template <typename DFermionFieldType,
+          typename DGaugeFieldType,
+          typename DAdjFieldType,
+          class Derived,
+          class Solver>
 class UpdateMomentumFermion : public UpdateMomentum {
   static_assert(isDeviceFermionFieldType<DFermionFieldType>::value);
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
@@ -46,7 +49,8 @@ class UpdateMomentumFermion : public UpdateMomentum {
   UpdateMomentumFermion() = delete;
   ~UpdateMomentumFermion() = default;
 
-  UpdateMomentumFermion(FermionField& phi_, GaugeFieldType& gauge_field_,
+  UpdateMomentumFermion(FermionField& phi_,
+                        GaugeFieldType& gauge_field_,
                         AdjFieldType& adjoint_field_,
                         const diracParams<rank, RepDim>& params_,
                         const real_t& tol_)
@@ -109,8 +113,8 @@ class UpdateMomentumFermion : public UpdateMomentum {
       // }
 
       // Taking the Real part is handled by the traceT
-      momentum(Idcs..., mu) -=
-          traceT((derv));  // in leap frog therese the minus sign here
+      momentum(Idcs..., mu) -= traceT(traceLessAntiHermitian(
+          derv));  // in leap frog therese the minus sign here
     }
   }
 
