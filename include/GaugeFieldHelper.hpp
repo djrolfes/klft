@@ -88,7 +88,7 @@ void unitarity_restore(const typename DGaugeFieldType::type &field) {
         KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2,
                       const index_t i3) {
           for (index_t mu = 0; mu < rank; ++mu) {
-            field(i0, i1, i2, i3, mu) = restoreSUN(field(i0, i1, i2, i3, mu));
+            restoreSUN(field(i0, i1, i2, i3, mu));
           }
         });
   } else if constexpr (rank == 3) {
@@ -96,7 +96,7 @@ void unitarity_restore(const typename DGaugeFieldType::type &field) {
         "UnitaryRestore", IndexArray<rank>{0}, field.dimensions,
         KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2) {
           for (index_t mu = 0; mu < rank; ++mu) {
-            field(i0, i1, i2, mu) = restoreSUN(field(i0, i1, i2, mu));
+            restoreSUN(field(i0, i1, i2, mu));
           }
         });
   } else if constexpr (rank == 2) {
@@ -104,7 +104,7 @@ void unitarity_restore(const typename DGaugeFieldType::type &field) {
         "UnitaryRestore", IndexArray<rank>{0}, field.dimensions,
         KOKKOS_LAMBDA(const index_t i0, const index_t i1) {
           for (index_t mu = 0; mu < rank; ++mu) {
-            field(i0, i1, mu) = restoreSUN(field(i0, i1, mu));
+            restoreSUN(field(i0, i1, mu));
           }
         });
   } else {
