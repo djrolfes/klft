@@ -2,6 +2,7 @@
 #include "../include/HMC.hpp"
 #include "FieldTypeHelper.hpp"
 #include "GLOBAL.hpp"
+#include "GaugeFieldHelper.hpp"
 #include "GaugeObservable.hpp"
 #include "HamiltonianField.hpp"
 #include "Integrator.hpp"
@@ -111,6 +112,9 @@ int run_HMC(std::unique_ptr<typename DGaugeFieldType::type> g_in,
     //   // TODO: this should be set by the Params
     //   flushAllGaugeObservables(gaugeObsParams);
     // }
+    DEBUG_LOG("Max unitarity defect: " << unitarity_check<DGaugeFieldType>(
+                                              hamiltonian_field.gauge_field())
+                                       << "\n");
   }
   // flush the measurements to the files
   flushAllGaugeObservables(gaugeObsParams);
