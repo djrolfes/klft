@@ -1,6 +1,17 @@
 #pragma once
 #include "UpdateMomentum.hpp"
 #include "UpdatePosition.hpp"
+#ifdef ENABLE_DEBUG
+#include <iostream>
+#define DEBUG_LOG(msg)                                                         \
+  do {                                                                         \
+    std::cout << msg << std::endl;                                             \
+  } while (0)
+#else
+#define DEBUG_LOG(msg)                                                         \
+  do {                                                                         \
+  } while (0)
+#endif
 
 namespace klft {
 
@@ -44,36 +55,75 @@ public:
 
   void halfstep(const real_t tau) const override {
     const real_t eps = tau / n_steps;
-    update_p->update(eps * 0.5);
-    if (nested)
+
+    DEBUG_LOG("[halfstep]  τ=" << tau << "  ⇒  eps=" << eps
+                               << "  |  update_p (½‑step) with ε/2="
+                               << eps * 0.5);
+
+    update_p->update(eps * real_t(0.5));
+
+    if (nested) {
+      DEBUG_LOG("[halfstep]  call nested->halfstep(ε)…");
       nested->halfstep(eps);
+    }
   }
 
+  //------------------------------------------------------------
+
   void integrate(const real_t tau, const bool last_step) const override {
-    if (outermost)
+    DEBUG_LOG("\n[integrate]  τ=" << tau << "  last_step=" << std::boolalpha
+                                  << last_step);
+
+    // ----- leading half‑step on the outermost level -----
+    if (outermost) {
+      DEBUG_LOG("[integrate]  outermost → leading halfstep() call");
       halfstep(tau);
+    }
+
     const real_t eps = tau / n_steps;
+    DEBUG_LOG("[integrate]  eps=" << eps << "  n_steps=" << n_steps);
+
+    // ----- main loop (n_steps‑1 full steps) -----
     for (size_t i = 0; i < n_steps - 1; ++i) {
+      DEBUG_LOG("[integrate]  loop step " << i + 1 << "/" << n_steps);
+
       if (nested) {
+        DEBUG_LOG("[integrate]    nested->integrate(ε, false)");
         nested->integrate(eps, false);
       } else {
+        DEBUG_LOG("[integrate]    update_q->update(ε)");
         update_q->update(eps);
       }
+
+      DEBUG_LOG("[integrate]    update_p->update(ε)");
       update_p->update(eps);
     }
+
+    // ----- final position update -----
     if (nested) {
+      DEBUG_LOG(
+          "[integrate]  final nested integrate (last/outermost handling)");
       if (outermost) {
         nested->integrate(eps, true);
       } else {
         nested->integrate(eps, last_step);
       }
     } else {
+      DEBUG_LOG("[integrate]  final update_q->update(ε)");
       update_q->update(eps);
     }
-    if (!last_step && !outermost)
+
+    // ----- trailing momentum update for inner/middle levels -----
+    if (!last_step && !outermost) {
+      DEBUG_LOG("[integrate]  trailing update_p->update(ε) on inner level");
       update_p->update(eps);
-    if (outermost)
+    }
+
+    // ----- trailing half‑step on the outermost level -----
+    if (outermost) {
+      DEBUG_LOG("[integrate]  outermost → trailing halfstep() call");
       halfstep(tau);
+    }
   }
 
 }; // class LeapFrog

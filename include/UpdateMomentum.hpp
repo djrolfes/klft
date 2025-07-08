@@ -56,9 +56,9 @@ public:
 #pragma unroll
     for (index_t mu = 0; mu < rank; ++mu) {
       adjoint_field(Idcs..., mu) -=
-          this->eps *
-          ((this->beta / this->Nc) * (traceT(this->gauge_field(Idcs..., mu) *
-                                             this->staple_field(Idcs..., mu))));
+          this->eps * ((this->beta / this->Nc) *
+                       (traceT(this->gauge_field(Idcs..., mu) *
+                               conj(this->staple_field(Idcs..., mu)))));
     }
   }
 

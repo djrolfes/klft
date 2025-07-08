@@ -61,8 +61,6 @@ struct HamiltonianField {
   using GaugeField = typename DGaugeFieldType::type;
   using AdjointField = typename DAdjFieldType::type;
 
-  struct EKin {};
-
   HamiltonianField() = delete;
 
   HamiltonianField(std::unique_ptr<GaugeField> g,
