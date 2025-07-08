@@ -67,4 +67,54 @@ real_t unitarity_check(const typename DGaugeFieldType::type &field) {
   return defect_max;
 }
 
+template <typename DGaugeFieldType>
+void unitarity_restore(const typename DGaugeFieldType::type &field) {
+  static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
+  constexpr static size_t rank =
+      DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank;
+  constexpr static size_t Nc = DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc;
+
+  if (KLFT_VERBOSITY > 5) {
+    Kokkos::printf("Restoring Unitarity of GaugeField.\n");
+    Kokkos::printf("Unitarity defect before restoration: %f\n",
+                   unitarity_check<DGaugeFieldType>(field));
+  }
+
+  const auto rp = Kokkos::MDRangePolicy<Kokkos::Rank<rank>>(IndexArray<rank>{0},
+                                                            field.dimensions);
+  if constexpr (rank == 4) {
+    tune_and_launch_for<rank>(
+        "UnitaryRestore", rp,
+        KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2,
+                      const index_t i3) {
+          for (index_t mu = 0; mu < rank; ++mu) {
+            field(i0, i1, i2, i3, mu) = restoreSUN(field(i0, i1, i2, i3, mu));
+          }
+        });
+  } else if constexpr (rank == 3) {
+    tune_and_launch_for<rank>(
+        "UnitaryRestore", rp,
+        KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2) {
+          for (index_t mu = 0; mu < rank; ++mu) {
+            field(i0, i1, i2, mu) = restoreSUN(field(i0, i1, i2, mu));
+          }
+        });
+  } else if constexpr (rank == 2) {
+    tune_and_launch_for<rank>(
+        "UnitaryRestore", rp,
+        KOKKOS_LAMBDA(const index_t i0, const index_t i1) {
+          for (index_t mu = 0; mu < rank; ++mu) {
+            field(i0, i1, mu) = restoreSUN(field(i0, i1, mu));
+          }
+        });
+  } else {
+    static_assert(rank == 2 || rank == 3 || rank == 4, "Unsupported rank");
+  }
+
+  if (KLFT_VERBOSITY > 5) {
+    Kokkos::printf("Unitarity defect after restoration: %f\n",
+                   unitarity_check<DGaugeFieldType>(field));
+  }
+}
+
 } // namespace klft

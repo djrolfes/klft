@@ -115,6 +115,9 @@ int run_HMC(std::unique_ptr<typename DGaugeFieldType::type> g_in,
     DEBUG_LOG("Max unitarity defect: " << unitarity_check<DGaugeFieldType>(
                                               hamiltonian_field.gauge_field())
                                        << "\n");
+    if (step % 100 == 0) {
+      unitarity_restore<DGaugeFieldType>(hamiltonian_field.gauge_field());
+    }
   }
   // flush the measurements to the files
   flushAllGaugeObservables(gaugeObsParams);
