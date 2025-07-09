@@ -65,8 +65,8 @@ class KineticMonomial : public Monomial<DGaugeFieldType, DAdjFieldType> {
     Monomial<DGaugeFieldType, DAdjFieldType>::H_old = h.kinetic_energy();
   }
   void accept(HamiltonianField<DGaugeFieldType, DAdjFieldType> h) override {
-    print_SUNAdj(h.adjoint_field(0, 0, 0, 0, 0),
-                 " SUNAdj accept step Momentum Monomial");
+    // print_SUNAdj(h.adjoint_field(0, 0, 0, 0, 0),
+    //              " SUNAdj accept step Momentum Monomial");
     Monomial<DGaugeFieldType, DAdjFieldType>::H_new = h.kinetic_energy();
   }
   void print() override {

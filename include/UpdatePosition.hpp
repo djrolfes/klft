@@ -22,8 +22,8 @@ class UpdatePositionGauge : public UpdatePosition {
  public:
   using GaugeFieldType = typename DeviceGaugeFieldType<rank, Nc>::type;
   using AdjFieldType = typename DeviceAdjFieldType<rank, Nc>::type;
-  GaugeFieldType& gauge_field;
-  AdjFieldType& adjoint_field;
+  GaugeFieldType gauge_field;
+  AdjFieldType adjoint_field;
   real_t eps;
 
   UpdatePositionGauge() = delete;

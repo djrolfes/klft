@@ -61,6 +61,7 @@ class DiracOperator {
     tune_and_launch_for<rank, TagD>(typeid(Derived).name(), IndexArray<rank>{},
                                     params.dimensions,
                                     static_cast<_Derived&>(*this));
+    Kokkos::fence();
     return s_out;
   }
   SpinorFieldType applyDdagger(const SpinorFieldType& s_in) {
@@ -71,6 +72,7 @@ class DiracOperator {
     tune_and_launch_for<rank, TagDdagger>(typeid(Derived).name(),
                                           IndexArray<rank>{}, params.dimensions,
                                           static_cast<_Derived&>(*this));
+    Kokkos::fence();
     return s_out;
   }
   void applyD_inplace(const SpinorFieldType& s_in, SpinorFieldType& s_out) {
@@ -79,6 +81,7 @@ class DiracOperator {
     tune_and_launch_for<rank, TagD>(typeid(Derived).name(), IndexArray<rank>{},
                                     params.dimensions,
                                     static_cast<_Derived&>(*this));
+    Kokkos::fence();
   }
   void applyDdagger_inplace(const SpinorFieldType& s_in,
                             SpinorFieldType& s_out) {
@@ -87,10 +90,11 @@ class DiracOperator {
     tune_and_launch_for<rank, TagDdagger>(typeid(Derived).name(),
                                           IndexArray<rank>{}, params.dimensions,
                                           static_cast<_Derived&>(*this));
+    Kokkos::fence();
   }
   SpinorFieldType s_in;
   SpinorFieldType s_out;
-  const GaugeFieldType& g_in;
+  const GaugeFieldType g_in;
   const diracParams<rank, RepDim> params;
 
   DiracOperator(const GaugeFieldType& g_in,

@@ -203,7 +203,7 @@ auto stapleField(const typename DGaugeFieldType::type &g_in)
       DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank;
   constexpr static size_t Nc = DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc;
 
-  typename DGaugeFieldType::type g_out(g_in.field);
+  typename DGaugeFieldType::type g_out(g_in.dimensions, 0);
 
   // get the start and end indices
   const auto &dimensions = g_in.field.layout().dimension;
@@ -251,6 +251,7 @@ auto stapleField(const typename DGaugeFieldType::type &g_in)
   Kokkos::fence();
   // return the output field
   return ConstGaugeFieldType<Nd, Nc>(g_out.field);
+  Kokkos::fence();
 }
 
-} // namespace klft
+}  // namespace klft

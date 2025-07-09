@@ -17,9 +17,8 @@ void print_spinor(const Spinor<Nc, Nd>& s, const char* name = "Spinor") {
   for (size_t c = 0; c < Nc; ++c) {
     printf("  Color %zu:\n", c);
     for (size_t d = 0; d < Nd; ++d) {
-      double re = s[c][d].real();
-      double im = s[c][d].imag();
-      printf("    [%zu] = (% .6f, % .6f i)\n", d, re, im);
+      Kokkos::printf("    [%zu] = (% .6f, % .6f i)\n", d, s[c][d].real(),
+                     s[c][d].imag());
     }
   }
 }
@@ -32,7 +31,7 @@ int main(int argc, char* argv[]) {
     printf("%i", KLFT_VERBOSITY);
     printf("\n=== Testing DiracOperator SU(3)  ===\n");
     printf("\n= Testing hermiticity =\n");
-    index_t L0 = 32, L1 = 32, L2 = 32, L3 = 32;
+    index_t L0 = 4, L1 = 4, L2 = 4, L3 = 4;
     auto gammas = get_gammas<4>();
     GammaMat<4> gamma5 = get_gamma5();
     diracParams<4, 4> params(IndexArray<4>{L0, L1, L2, L3}, gammas, gamma5,
@@ -46,7 +45,8 @@ int main(int argc, char* argv[]) {
     real_t norm = spinor_norm_sq<4, 3, 4>(u);
     norm *= spinor_norm_sq<4, 3, 4>(v);
     norm = Kokkos::sqrt(norm);
-
+    deviceSpinorField<3, 4> Mu(L0, L1, L2, L3, complex_t(0.0, 0.0));
+    deviceSpinorField<3, 4> Mv(L0, L1, L2, L3, complex_t(0.0, 0.0));
     printf("Generating Random Gauge Config\n");
     deviceGaugeField<4, 3> gauge(L0, L1, L2, L3, random_pool, 1);
     printf("Instantiate DiracOperator...\n");
@@ -55,8 +55,9 @@ int main(int argc, char* argv[]) {
         D(gauge, params);
     printf("Apply DiracOperator...\n");
 
-    deviceSpinorField Mu = D.applyD(u);
-    deviceSpinorField Mv = D.applyD(v);
+    D.applyD_inplace(u, Mu);
+    Kokkos::fence();
+    D.applyD_inplace(v, Mv);
     // deviceSpinorField<3, 4> Mu = apply_D<4, 3, 4>(u, gauge, gammas, -0.5);
     // deviceSpinorField<3, 4> Mv = apply_D<4, 3, 4>(v, gauge, gammas, -0.5);
 
@@ -280,7 +281,7 @@ int main(int argc, char* argv[]) {
     // Dont know if this function is needed again, therefore only defined here,
     // and not in an include file.
     printf("Spinor before Gauge Trafo:\n");
-    print_spinor(u_U1(0, 0, 0, 0));
+    // print_spinor(u_U1(0, 0, 0, 0));
     printf("Apply Gauge Trafos...\n");
     tune_and_launch_for<4>(
         "Gauge Trafo", IndexArray<4>{0, 0, 0, 0}, IndexArray<4>{L0, L1, L2, L3},
@@ -303,7 +304,7 @@ int main(int argc, char* argv[]) {
               gaugeTrafo_U1(i0, i1, i2, i3, 1) * Mu_U1(i0, i1, i2, i3);
         });
     printf("Spinor after Gauge Trafo:\n");
-    print_spinor(u_U1(0, 0, 0, 0));
+    // print_spinor(u_U1(0, 0, 0, 0));
     deviceSpinorField<1, 4> Mu_trafo_U1 = D_U1.applyD(u_U1);
     tune_and_launch_for<4>(
         "Subtract Spinors", IndexArray<4>{0, 0, 0, 0},

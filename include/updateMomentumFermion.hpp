@@ -6,11 +6,8 @@
 #include "UpdateMomentum.hpp"
 namespace klft {
 
-template <typename DFermionFieldType,
-          typename DGaugeFieldType,
-          typename DAdjFieldType,
-          class Derived,
-          class Solver>
+template <typename DFermionFieldType, typename DGaugeFieldType,
+          typename DAdjFieldType, class Derived, class Solver>
 class UpdateMomentumFermion : public UpdateMomentum {
   static_assert(isDeviceFermionFieldType<DFermionFieldType>::value);
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
@@ -35,11 +32,11 @@ class UpdateMomentumFermion : public UpdateMomentum {
   using FermionField = typename DFermionFieldType::type;
   using GaugeFieldType = typename DeviceGaugeFieldType<rank, Nc>::type;
   using AdjFieldType = typename DeviceAdjFieldType<rank, Nc>::type;
-  GaugeFieldType& gauge_field;
-  AdjFieldType& momentum;
+  GaugeFieldType gauge_field;
+  AdjFieldType momentum;
   const diracParams<rank, RepDim> params;
   // \phi = D R, where R gaussian random field.
-  FermionField& phi;
+  FermionField phi;
 
   FermionField chi;
   FermionField chi_alt;
@@ -49,8 +46,7 @@ class UpdateMomentumFermion : public UpdateMomentum {
   UpdateMomentumFermion() = delete;
   ~UpdateMomentumFermion() = default;
 
-  UpdateMomentumFermion(FermionField& phi_,
-                        GaugeFieldType& gauge_field_,
+  UpdateMomentumFermion(FermionField& phi_, GaugeFieldType& gauge_field_,
                         AdjFieldType& adjoint_field_,
                         const diracParams<rank, RepDim>& params_,
                         const real_t& tol_)

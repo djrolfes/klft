@@ -77,10 +77,16 @@ class HMC {
   }
 
   bool hmc_step() {
+    Kokkos::fence();
     hamiltonian_field.randomize_momentum(rng);
-    print_SUNAdj(hamiltonian_field.adjoint_field(0, 0, 0, 0, 0),
-                 "Randomized Momentum");
-    GaugeFieldType gauge_old(hamiltonian_field.gauge_field.field);
+    // print_SUNAdj(hamiltonian_field.adjoint_field(0, 0, 0, 0, 0),
+    //              "Randomized Momentum");
+
+    Kokkos::fence();
+    GaugeFieldType gauge_old(hamiltonian_field.gauge_field.dimensions, rng,
+                             0.1);
+    Kokkos::deep_copy(gauge_old.field, hamiltonian_field.gauge_field.field);
+    Kokkos::fence();
     for (int i = 0; i < monomials.size(); ++i) {
       monomials[i]->heatbath(hamiltonian_field);
     }

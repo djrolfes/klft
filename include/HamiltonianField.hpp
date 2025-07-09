@@ -1,4 +1,5 @@
 #pragma once
+#include "AdjointFieldHelper.hpp"
 #include "FieldTypeHelper.hpp"
 #include "GLOBAL.hpp"
 #include "Kokkos_Macros.hpp"
@@ -21,8 +22,8 @@ struct HamiltonianField {
   using GaugeField = typename DGaugeFieldType::type;
   using AdjointField = typename DAdjFieldType::type;
 
-  GaugeField &gauge_field;
-  AdjointField &adjoint_field;
+  GaugeField gauge_field;
+  AdjointField adjoint_field;
   struct EKin {};
 
   HamiltonianField() = delete;
@@ -71,7 +72,7 @@ struct HamiltonianField {
 
   template <class RNG>
   void randomize_momentum(RNG &rng) {
-    adjoint_field.template randomize_field<RNG>(rng);
+    randomize_field<DAdjFieldType, RNG>(adjoint_field, rng);
   }
 };
 

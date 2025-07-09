@@ -33,8 +33,8 @@ class UpdateMomentumGauge : public UpdateMomentum {
 
   using GaugeFieldType = typename DGaugeFieldType::type;
   using AdjFieldType = typename DAdjFieldType::type;
-  GaugeFieldType &gauge_field;
-  AdjFieldType &adjoint_field;
+  GaugeFieldType gauge_field;
+  AdjFieldType adjoint_field;
   real_t beta;
 
   real_t eps;
@@ -74,6 +74,7 @@ class UpdateMomentumGauge : public UpdateMomentum {
 
     // launch the kernels
     staple_field = stapleField<DGaugeFieldType>(gauge_field);
+    Kokkos::fence();
     tune_and_launch_for<rank>("UpdateMomentumGauge", start,
                               gauge_field.dimensions, *this);
     Kokkos::fence();
