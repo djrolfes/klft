@@ -70,7 +70,7 @@ class KineticMonomial : public Monomial<DGaugeFieldType, DAdjFieldType> {
     Monomial<DGaugeFieldType, DAdjFieldType>::H_new = h.kinetic_energy();
   }
   void print() override {
-    printf("Kinetic Monomial: %20f\n", this->get_delta_H());
+    printf("Kinetic Monomial: %.20f\n", this->get_delta_H());
   }
 };
 

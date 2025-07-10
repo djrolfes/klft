@@ -41,7 +41,7 @@ class GaugeMonomial : public Monomial<DGaugeFieldType, DAdjFieldType> {
         GaugePlaquette<rank, Nc>(h.gauge_field, false);
   }
   void print() override {
-    printf("Gauge Monomial:   %20f\n", this->get_delta_H());
+    printf("Gauge Monomial:   %.20f\n", this->get_delta_H());
   }
 };
 

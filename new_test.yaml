@@ -14,26 +14,26 @@ HMCParams:
 # Level is the innermost level of the Integrator, i.e that is executed most frequently.
 Integrator:
 
-  tau: 0.002
-  nSteps: 100
+  tau: 1
+  nSteps: 1000
   Monomials:
     - Type: "Leapfrog"
       level: 0
-      steps: 10
-    - Type: "Leapfrog"
-      level: 1
-      steps: 5
+      steps: 50
+    # - Type: "Leapfrog"
+    #   level: 1
+    #   steps: 5
 Gauge Monomial:
   level: 0
-  beta: 5.6
+  beta: 2
 
-Fermion Monomial:
-  level: 1
-  fermion: "HWilson"
-  solver: "CG"
-  RepDim: 4
-  kappa: 0.1
-  tol: 1e-14
+# Fermion Monomial:
+#   level: 1
+#   fermion: "HWilson"
+#   solver: "CG"
+#   RepDim: 4
+#   kappa: 0.1
+#   tol: 1e-14
 
 GaugeObservableParams:
   measurement_interval: 5

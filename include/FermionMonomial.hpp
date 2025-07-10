@@ -84,7 +84,7 @@ class FermionMonomial : public Monomial<DGaugeFieldType, DAdjFieldType> {
     //              "SUNAdj at accept Monomial Fermion");
   }
   void print() override {
-    printf("Fermion Monomial: %20f\n", this->get_delta_H());
+    printf("Fermion Monomial: %.20f\n", this->get_delta_H());
   }
 };
 }  // namespace klft

@@ -1,6 +1,7 @@
 #pragma once
 #include <random>
 
+#include "AdjointFieldHelper.hpp"
 #include "FermionMonomial.hpp"
 #include "FermionParams.hpp"
 #include "GLOBAL.hpp"
@@ -9,7 +10,6 @@
 #include "HamiltonianField.hpp"
 #include "Integrator.hpp"
 #include "Monomial.hpp"
-
 namespace klft {
 
 template <typename DGaugeFieldType, typename DAdjFieldType, class RNG>
@@ -76,7 +76,7 @@ class HMC {
             spinorField, params_, tol_, rng, _time_scale));
   }
 
-  bool hmc_step() {
+  bool hmc_step(const bool& check_Reversibility = false) {
     Kokkos::fence();
     hamiltonian_field.randomize_momentum(rng);
     // print_SUNAdj(hamiltonian_field.adjoint_field(0, 0, 0, 0, 0),
@@ -108,6 +108,29 @@ class HMC {
       if (dist(mt) > Kokkos::exp(-delta_H)) {
         accept = false;
       }
+    }
+    if (check_Reversibility) {
+      GaugeFieldType gauge_save(hamiltonian_field.gauge_field.dimensions, rng,
+                                0.1);
+      Kokkos::deep_copy(gauge_save.field, hamiltonian_field.gauge_field.field);
+      Kokkos::fence();
+      for (int i = 0; i < monomials.size(); ++i) {
+        monomials[i]->reset();
+        monomials[i]->heatbath(hamiltonian_field);
+      }
+      real_t delta_H_revers = 0;
+      flip_sign<DAdjFieldType>(hamiltonian_field.adjoint_field);
+      integrator->integrate(params.tau, false);
+      for (int i = 0; i < monomials.size(); ++i) {
+        monomials[i]->accept(hamiltonian_field);
+        delta_H_revers += monomials[i]->get_delta_H();
+        if (KLFT_VERBOSITY > 0) {
+          printf("ReverseCheck Monomial\n");
+          monomials[i]->print();
+        }
+      }
+      Kokkos::printf("Deltadelta_H_ges %.20f \n", delta_H + delta_H_revers);
+      Kokkos::deep_copy(hamiltonian_field.gauge_field.field, gauge_save.field);
     }
     if (!accept) {
       Kokkos::deep_copy(hamiltonian_field.gauge_field.field, gauge_old.field);

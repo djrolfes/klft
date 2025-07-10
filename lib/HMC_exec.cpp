@@ -343,7 +343,7 @@ int HMC_execute(const std::string& input_file) {
     timer.reset();
 
     // perform hmc_step
-    accept = hmc.hmc_step();
+    accept = hmc.hmc_step(true);
 
     const real_t time = timer.seconds();
     acc_sum += static_cast<real_t>(accept);

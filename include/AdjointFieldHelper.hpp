@@ -17,6 +17,21 @@ void randomize_field(typename DAdjFieldType::type& field, RNG& rng) {
         }
         rng.free_state(generator);
       });
-  // Kokkos::fence();
+  Kokkos::fence();
+}
+
+template <typename DAdjFieldType>
+void flip_sign(typename DAdjFieldType::type& field) {
+  size_t constexpr Nd = DeviceAdjFieldTypeTraits<DAdjFieldType>::Rank;
+  size_t constexpr Nc = DeviceAdjFieldTypeTraits<DAdjFieldType>::Nc;
+  tune_and_launch_for(
+      "randomize_adj_field", IndexArray<Nd>{0}, field.dimensions,
+      KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2,
+                    const index_t i3) {
+        for (index_t mu = 0; mu < Nd; ++mu) {
+          flip_sign<Nc>(field(i0, i1, i2, i3, mu));
+        }
+      });
+  Kokkos::fence();
 }
 }  // namespace klft

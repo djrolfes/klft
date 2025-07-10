@@ -96,6 +96,13 @@ KOKKOS_FORCEINLINE_FUNCTION void operator-=(SUNAdj<Nc>& a,
     a[i] -= b[i];
   }
 }
+template <size_t Nc>
+KOKKOS_FORCEINLINE_FUNCTION void flip_sign(SUNAdj<Nc>& a) {
+#pragma unroll
+  for (size_t i = 0; i < NcAdj<Nc>; ++i) {
+    a[i] = -1 * a[i];
+  }
+}
 
 template <size_t Nc>
 KOKKOS_FORCEINLINE_FUNCTION real_t norm2(const SUNAdj<Nc>& a) {
