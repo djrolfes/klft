@@ -58,3 +58,11 @@ GaugeObservableParams:
   W_mu_nu_filename: "wilson_mu_nu_output20.txt"
 
   write_to_file: true
+
+SimulationLoggingParams:
+  log_interval: 1
+  log_delta_H: true
+  log_acceptance: true
+  
+  log_filename: "simulation_log.txt"
+  write_to_file: true

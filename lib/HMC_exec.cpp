@@ -7,6 +7,7 @@
 #include "GaugeObservable.hpp"
 #include "HMC_Params.hpp"
 #include "Integrator.hpp"
+#include "SimulationLogging.hpp"
 #include "UpdateMomentum.hpp"
 #include "UpdatePosition.hpp"
 #include "updateMomentumFermion.hpp"
@@ -241,11 +242,17 @@ int HMC_execute(const std::string& input_file) {
     printf("Error parsing input file\n");
     return -1;
   }
+  SimulationLoggingParams simLogParams;
+  if (!parseInputFile(input_file, simLogParams)) {
+    printf("Error parsing input file\n");
+    return -1;
+  }
   if (!parseSanityChecks(integratorParams, gaugeMonomialParams, fermionParams,
                          resParsef)) {
     printf("Error in sanity checks\n");
     return -1;
   }
+
   //   FermionParams fparams;
   //   if (!parseInputFile(input_file, fparams)) {
   //     printf("Error parsing input file\n");
@@ -343,7 +350,7 @@ int HMC_execute(const std::string& input_file) {
     timer.reset();
 
     // perform hmc_step
-    accept = hmc.hmc_step(true);
+    accept = hmc.hmc_step();
 
     const real_t time = timer.seconds();
     acc_sum += static_cast<real_t>(accept);
@@ -355,6 +362,7 @@ int HMC_execute(const std::string& input_file) {
     }
     // measure the gauge observables
     measureGaugeObservables<4, 2>(g_in, gaugeObsParams, step);
+    addLogData(simLogParams, step, hmc.delta_H, acc_rate, accept, time);
     // TODO:make flushAllGaugeObservables append the Observables to the
     // files
     // -> don't lose all progress when the simulation is interupted if (step
@@ -368,6 +376,7 @@ int HMC_execute(const std::string& input_file) {
   }
   // flush the measurements to the files
   flushAllGaugeObservables(gaugeObsParams);
+  flushSimulationLogs(simLogParams);
   printf("Total Acceptance rate: %f, Didn't Accept %f Configs", acc_rate,
          acc_sum);
   return 0;
