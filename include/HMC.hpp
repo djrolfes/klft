@@ -69,6 +69,7 @@ public:
 
     if (not reverse) {
       hamiltonian_field.template randomize_momentum<RNG>(rng);
+      Kokkos::fence();
     }
 
     Kokkos::deep_copy(Kokkos::DefaultExecutionSpace{}, gauge_old.field,

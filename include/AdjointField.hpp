@@ -25,6 +25,7 @@ template <size_t Nd, size_t Nc> struct deviceAdjointField {
   void do_init(SUNAdjField<Nd, Nc> &V, const SUNAdj<Nc> &init) {
     Kokkos::realloc(Kokkos::WithoutInitializing, V, dimensions[0],
                     dimensions[1], dimensions[2], dimensions[3]);
+    Kokkos::fence();
     tune_and_launch_for(
         "init_DeviceAdjointField", IndexArray<Nd>{0}, dimensions,
         KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2,
@@ -34,6 +35,7 @@ template <size_t Nd, size_t Nc> struct deviceAdjointField {
             V(i0, i1, i2, i3, mu) = init;
           }
         });
+    Kokkos::fence();
   }
 
   template <class RNG> void randomize_field(RNG &rng) {
@@ -48,6 +50,7 @@ template <size_t Nd, size_t Nc> struct deviceAdjointField {
           }
           rng.free_state(generator);
         });
+    Kokkos::fence();
   }
 
   // define accessors for the field
