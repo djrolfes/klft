@@ -56,9 +56,9 @@ public:
 #pragma unroll
     for (index_t mu = 0; mu < rank; ++mu) {
       adjoint_field(Idcs..., mu) -=
-          this->eps * ((this->beta / this->Nc) *
-                       (traceT(this->gauge_field(Idcs..., mu) *
-                               (this->staple_field(Idcs..., mu)))));
+          this->eps *
+          ((this->beta / this->Nc) * traceT(this->gauge_field(Idcs..., mu) *
+                                            (this->staple_field(Idcs..., mu))));
     }
   }
 
@@ -70,6 +70,7 @@ public:
     }
     // launch the kernels
     staple_field = stapleField<DGaugeFieldType>(gauge_field);
+    Kokkos::fence();
     tune_and_launch_for<rank>("UpdateMomentumGauge", start,
                               gauge_field.dimensions, *this);
     Kokkos::fence();
