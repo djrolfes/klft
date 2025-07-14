@@ -1,9 +1,9 @@
 
-#include "../include/HMC.hpp"
 #include "FieldTypeHelper.hpp"
 #include "GLOBAL.hpp"
 #include "GaugeFieldHelper.hpp"
 #include "GaugeObservable.hpp"
+#include "HMC.hpp"
 #include "HamiltonianField.hpp"
 #include "Integrator.hpp"
 #include "SimulationLogging.hpp"

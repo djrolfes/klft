@@ -26,7 +26,7 @@ public:
   using AdjFieldType = typename DAdjFieldType::type;
 
   struct randomize_momentum_s {};
-  HMCParams params;
+  const HMCParams &params;
   HamiltonianField<DGaugeFieldType, DAdjFieldType> &hamiltonian_field;
   std::vector<std::unique_ptr<Monomial<DGaugeFieldType, DAdjFieldType>>>
       monomials;
@@ -39,7 +39,7 @@ public:
 
   HMC() = default;
 
-  HMC(const HMCParams params_,
+  HMC(const HMCParams &params_,
       HamiltonianField<DGaugeFieldType, DAdjFieldType> &hamiltonian_field_,
       std::shared_ptr<Integrator> integrator_, RNG rng_,
       std::uniform_real_distribution<real_t> dist_, std::mt19937 mt_)
@@ -60,9 +60,16 @@ public:
             _time_scale));
   }
 
-  bool hmc_step() {
+  void reset_gauge_field() {
+    Kokkos::deep_copy(hamiltonian_field.gauge_field().field, gauge_old.field);
+    Kokkos::DefaultExecutionSpace{}.fence();
+  }
 
-    hamiltonian_field.template randomize_momentum<RNG>(rng);
+  bool hmc_step(const bool &reverse = false) {
+
+    if (not reverse) {
+      hamiltonian_field.template randomize_momentum<RNG>(rng);
+    }
 
     Kokkos::deep_copy(Kokkos::DefaultExecutionSpace{}, gauge_old.field,
                       hamiltonian_field.gauge_field().field);
@@ -91,7 +98,7 @@ public:
     }
 
     if (!accept) {
-      Kokkos::deep_copy(hamiltonian_field.gauge_field().field, gauge_old.field);
+      reset_gauge_field();
     } else {
     }
 
