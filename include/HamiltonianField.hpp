@@ -65,16 +65,12 @@ struct HamiltonianField {
 
   HamiltonianField(std::unique_ptr<GaugeField> g,
                    std::unique_ptr<AdjointField> a)
-      : _gauge_field(std::move(g)), _adjoint_field(std::move(a)) {
+      : _gauge_field(std::move(g)), _adjoint_field(std::move(a)) {}
 
-    _gauge_field_device = _gauge_field.get();
-    _adjoint_field_device = _adjoint_field.get();
-  }
-
-  GaugeField &gauge_field() { return *_gauge_field_device; }
-  const GaugeField &gauge_field() const { return *_gauge_field_device; }
-  AdjointField &adjoint_field() { return *_adjoint_field_device; }
-  const AdjointField &adjoint_field() const { return *_adjoint_field_device; }
+  GaugeField &gauge_field() { return *_gauge_field.get(); }
+  const GaugeField &gauge_field() const { return *_gauge_field.get(); }
+  AdjointField &adjoint_field() { return *_adjoint_field.get(); }
+  const AdjointField &adjoint_field() const { return *_adjoint_field.get(); }
 
   real_t kinetic_energy() {
     real_t kinetic_energy = 0.0;
@@ -107,9 +103,6 @@ struct HamiltonianField {
 private:
   std::unique_ptr<GaugeField> _gauge_field;
   std::unique_ptr<AdjointField> _adjoint_field;
-
-  GaugeField *_gauge_field_device = nullptr;
-  AdjointField *_adjoint_field_device = nullptr;
 };
 
 } // namespace klft

@@ -27,7 +27,7 @@ public:
 
   struct randomize_momentum_s {};
   const HMCParams &params;
-  HamiltonianField<DGaugeFieldType, DAdjFieldType> hamiltonian_field;
+  HamiltonianField<DGaugeFieldType, DAdjFieldType> &hamiltonian_field;
   std::vector<std::unique_ptr<Monomial<DGaugeFieldType, DAdjFieldType>>>
       monomials;
   std::shared_ptr<Integrator> integrator;
@@ -40,7 +40,7 @@ public:
   HMC() = default;
 
   HMC(const HMCParams &params_,
-      HamiltonianField<DGaugeFieldType, DAdjFieldType> hamiltonian_field_,
+      HamiltonianField<DGaugeFieldType, DAdjFieldType> &hamiltonian_field_,
       std::shared_ptr<Integrator> integrator_, RNG rng_,
       std::uniform_real_distribution<real_t> dist_, std::mt19937 mt_)
       : params(params_), rng(rng_), dist(dist_), mt(mt_),
