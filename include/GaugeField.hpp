@@ -81,7 +81,9 @@ template <size_t Nd, size_t Nc> struct deviceGaugeField {
     }
     Kokkos::realloc(Kokkos::WithoutInitializing, V, dimensions[0],
                     dimensions[1], dimensions[2], dimensions[3]);
+    Kokkos::fence();
     Kokkos::deep_copy(V, f_in);
+    Kokkos::fence();
   }
 
   void do_init(const index_t L0, const index_t L1, const index_t L2,

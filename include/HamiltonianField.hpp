@@ -2,6 +2,7 @@
 #include "FieldTypeHelper.hpp"
 #include "GLOBAL.hpp"
 #include "Kokkos_Macros.hpp"
+#include "Tuner.hpp"
 #include "decl/Kokkos_Declare_OPENMP.hpp"
 #include "impl/Kokkos_Profiling.hpp"
 
@@ -86,8 +87,8 @@ struct HamiltonianField {
     } else {
       static_assert(r <= 4, "Unsupported rank in kinetic_energy");
     }
-    Kokkos::fence();
 
+    Kokkos::fence();
     return kinetic_energy;
   }
 
