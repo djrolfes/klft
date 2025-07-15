@@ -35,8 +35,10 @@ struct SimulationLoggingParams {
 
 // define a function to log simulation information
 inline void addLogData(
-    SimulationLoggingParams &params, const size_t step,
-    const real_t _delta_H = 0.0, const real_t _acceptance = 0.0,
+    SimulationLoggingParams& params,
+    const size_t step,
+    const real_t _delta_H = 0.0,
+    const real_t _acceptance = 0.0,
     const bool _accept = false,
     const real_t _time =
         0.0) {  // TODO: add overloads for different passed parameters
@@ -81,7 +83,8 @@ inline void addLogData(
   params.log_steps.push_back(step);
 }
 
-inline void flushSimulationLogs(const SimulationLoggingParams &params,
+inline void flushSimulationLogs(const SimulationLoggingParams& params,
+                                const std::string& output_directory,
                                 const bool HEADER = true) {
   // check if write_to_file is enabled
   if (!params.write_to_file) {
@@ -92,7 +95,7 @@ inline void flushSimulationLogs(const SimulationLoggingParams &params,
   }
 
   // open the log file
-  std::ofstream file(params.log_filename, std::ios::app);
+  std::ofstream file(output_directory + params.log_filename, std::ios::app);
   if (!file.is_open()) {
     printf("Error: could not open log file %s\n", params.log_filename.c_str());
     return;

@@ -3,7 +3,9 @@
 
 namespace klft {
 
-int Metropolis(const std::string &input_file);
+int Metropolis(const std::string& input_file,
+               const std::string& output_directory);
 
-int HMC_execute(const std::string &input_file);
-} // namespace klft
+int HMC_execute(const std::string& input_file,
+                const std::string& output_directory);
+}  // namespace klft

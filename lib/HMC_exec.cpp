@@ -18,14 +18,17 @@ namespace klft {
 // this will not work, have also give it the fields, for Fermions one has to do
 // more (probably)
 // Still need to add check for different Dirac Operators
-template <typename DGaugeFieldType, typename DAdjFieldType,
+template <typename DGaugeFieldType,
+          typename DAdjFieldType,
           typename DSpinorFieldType>
 std::shared_ptr<Integrator> createIntegrator(
-    typename DGaugeFieldType::type& g_in, typename DAdjFieldType::type& a_in,
+    typename DGaugeFieldType::type& g_in,
+    typename DAdjFieldType::type& a_in,
     typename DSpinorFieldType::type& s_in,
     const Integrator_Params& integratorParams,
     const GaugeMonomial_Params& gaugeMonomialParams,
-    const FermionMonomial_Params& fermionParams, const int& resParsef) {
+    const FermionMonomial_Params& fermionParams,
+    const int& resParsef) {
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
   static_assert(isDeviceAdjFieldType<DAdjFieldType>::value);
   constexpr static size_t rank =
@@ -191,7 +194,8 @@ std::shared_ptr<Integrator> createIntegrator(
   return nested_integrator;
 }
 
-int HMC_execute(const std::string& input_file) {
+int HMC_execute(const std::string& input_file,
+                const std::string& output_directory) {
   // get verbosity from environment
   const int verbosity = std::getenv("KLFT_VERBOSITY")
                             ? std::atoi(std::getenv("KLFT_VERBOSITY"))
@@ -375,8 +379,8 @@ int HMC_execute(const std::string& input_file) {
     // }
   }
   // flush the measurements to the files
-  flushAllGaugeObservables(gaugeObsParams);
-  flushSimulationLogs(simLogParams);
+  flushAllGaugeObservables(gaugeObsParams, output_directory);
+  flushSimulationLogs(simLogParams, output_directory);
   printf("Total Acceptance rate: %f, Didn't Accept %f Configs", acc_rate,
          acc_sum);
   return 0;

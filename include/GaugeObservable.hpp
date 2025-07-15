@@ -73,8 +73,9 @@ struct GaugeObservableParams {
 // define a function to measure the gauge observables
 template <size_t rank, size_t Nc>
 void measureGaugeObservables(
-    const typename DeviceGaugeFieldType<rank, Nc>::type &g_in,
-    GaugeObservableParams &params, const size_t step) {
+    const typename DeviceGaugeFieldType<rank, Nc>::type& g_in,
+    GaugeObservableParams& params,
+    const size_t step) {
   // check if the step is a measurement step
   if ((params.measurement_interval == 0) ||
       (step % params.measurement_interval != 0) || (step == 0)) {
@@ -103,7 +104,7 @@ void measureGaugeObservables(
     WilsonLoop_temporal<rank, Nc>(g_in, params.W_temp_L_T_pairs,
                                   temp_measurements);
     if (KLFT_VERBOSITY > 0) {
-      for (const auto &measure : temp_measurements) {
+      for (const auto& measure : temp_measurements) {
         printf("%d, %d, %11.6f\n", static_cast<index_t>(measure[0]),
                static_cast<index_t>(measure[1]), measure[2]);
       }
@@ -117,13 +118,13 @@ void measureGaugeObservables(
       printf("mu, nu, Lmu, Lnu, W_mu_nu\n");
     }
     std::vector<Kokkos::Array<real_t, 5>> temp_measurements;
-    for (const auto &pair_mu_nu : params.W_mu_nu_pairs) {
+    for (const auto& pair_mu_nu : params.W_mu_nu_pairs) {
       const index_t mu = pair_mu_nu[0];
       const index_t nu = pair_mu_nu[1];
       WilsonLoop_mu_nu<rank, Nc>(g_in, mu, nu, params.W_Lmu_Lnu_pairs,
                                  temp_measurements);
       if (KLFT_VERBOSITY > 0) {
-        for (const auto &measure : temp_measurements) {
+        for (const auto& measure : temp_measurements) {
           printf("%d, %d, %d, %d, %11.6f\n", static_cast<index_t>(measure[0]),
                  static_cast<index_t>(measure[1]),
                  static_cast<index_t>(measure[2]),
@@ -139,8 +140,8 @@ void measureGaugeObservables(
 }
 
 // flush the plaquette measurements to disk
-inline void flushPlaquette(std::ofstream &file,
-                           const GaugeObservableParams &params,
+inline void flushPlaquette(std::ofstream& file,
+                           const GaugeObservableParams& params,
                            const bool HEADER = true) {
   // check if the file is open
   if (!file.is_open()) {
@@ -152,7 +153,8 @@ inline void flushPlaquette(std::ofstream &file,
     printf("Error: no plaquette measurements available\n");
     return;
   }
-  if (HEADER) file << "# step, plaquette\n";
+  if (HEADER)
+    file << "# step, plaquette\n";
   for (size_t i = 0; i < params.measurement_steps.size(); ++i) {
     file << params.measurement_steps[i] << ", "
          << params.plaquette_measurements[i] << "\n";
@@ -160,8 +162,8 @@ inline void flushPlaquette(std::ofstream &file,
 }
 
 // flush the temporal Wilson loop measurements to disk
-inline void flushWilsonLoopTemporal(std::ofstream &file,
-                                    const GaugeObservableParams &params,
+inline void flushWilsonLoopTemporal(std::ofstream& file,
+                                    const GaugeObservableParams& params,
                                     const bool HEADER = true) {
   // check if the file is open
   if (!file.is_open()) {
@@ -173,9 +175,10 @@ inline void flushWilsonLoopTemporal(std::ofstream &file,
     printf("Error: no temporal Wilson loop measurements available\n");
     return;
   }
-  if (HEADER) file << "# step, L, T, W_temp\n";
+  if (HEADER)
+    file << "# step, L, T, W_temp\n";
   for (size_t i = 0; i < params.measurement_steps.size(); ++i) {
-    for (const auto &measurement : params.W_temp_measurements[i]) {
+    for (const auto& measurement : params.W_temp_measurements[i]) {
       file << params.measurement_steps[i] << ", " << measurement[0] << ", "
            << measurement[1] << ", " << measurement[2] << "\n";
     }
@@ -183,8 +186,8 @@ inline void flushWilsonLoopTemporal(std::ofstream &file,
 }
 
 // flush the mu-nu Wilson loop measurements to disk
-inline void flushWilsonLoopMuNu(std::ofstream &file,
-                                const GaugeObservableParams &params,
+inline void flushWilsonLoopMuNu(std::ofstream& file,
+                                const GaugeObservableParams& params,
                                 const bool HEADER = true) {
   // check if the file is open
   if (!file.is_open()) {
@@ -196,9 +199,10 @@ inline void flushWilsonLoopMuNu(std::ofstream &file,
     printf("Error: no mu-nu Wilson loop measurements available\n");
     return;
   }
-  if (HEADER) file << "# step, mu, nu, Lmu, Lnu, W_mu_nu\n";
+  if (HEADER)
+    file << "# step, mu, nu, Lmu, Lnu, W_mu_nu\n";
   for (size_t i = 0; i < params.measurement_steps.size(); ++i) {
-    for (const auto &measurement : params.W_mu_nu_measurements[i]) {
+    for (const auto& measurement : params.W_mu_nu_measurements[i]) {
       file << params.measurement_steps[i] << ", " << measurement[0] << ", "
            << measurement[1] << ", " << measurement[2] << ", " << measurement[3]
            << ", " << measurement[4] << "\n";
@@ -207,9 +211,10 @@ inline void flushWilsonLoopMuNu(std::ofstream &file,
 }
 
 // define a global function to flush all measurements
-inline void flushAllGaugeObservables(const GaugeObservableParams &params,
+inline void flushAllGaugeObservables(const GaugeObservableParams& params,
+                                     const std::string& output_directory,
                                      const bool HEADER = true,
-                                     const int &p = std::cout.precision()) {
+                                     const int& p = std::cout.precision()) {
   std::setprecision(p);
   // check if write_to_file is enabled
   if (!params.write_to_file) {
@@ -218,19 +223,22 @@ inline void flushAllGaugeObservables(const GaugeObservableParams &params,
   }
   // flush plaquette measurements
   if (params.plaquette_filename != "") {
-    std::ofstream file(params.plaquette_filename, std::ios::app);
+    std::ofstream file(output_directory + params.plaquette_filename,
+                       std::ios::app);
     flushPlaquette(file, params, HEADER);
     file.close();
   }
   // flush temporal Wilson loop measurements
   if (params.W_temp_filename != "") {
-    std::ofstream file(params.W_temp_filename, std::ios::app);
+    std::ofstream file(output_directory + params.W_temp_filename,
+                       std::ios::app);
     flushWilsonLoopTemporal(file, params, HEADER);
     file.close();
   }
   // flush mu-nu Wilson loop measurements
   if (params.W_mu_nu_filename != "") {
-    std::ofstream file(params.W_mu_nu_filename, std::ios::app);
+    std::ofstream file(output_directory + params.W_mu_nu_filename,
+                       std::ios::app);
     flushWilsonLoopMuNu(file, params, HEADER);
     file.close();
   }
@@ -239,7 +247,7 @@ inline void flushAllGaugeObservables(const GaugeObservableParams &params,
 }
 
 // function to clear all measurements
-inline void clearAllGaugeObservables(GaugeObservableParams &params) {
+inline void clearAllGaugeObservables(GaugeObservableParams& params) {
   params.measurement_steps.clear();
   params.plaquette_measurements.clear();
   params.W_temp_measurements.clear();
