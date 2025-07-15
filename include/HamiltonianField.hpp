@@ -86,6 +86,7 @@ struct HamiltonianField {
     } else {
       static_assert(r <= 4, "Unsupported rank in kinetic_energy");
     }
+    Kokkos::fence();
 
     return kinetic_energy;
   }
