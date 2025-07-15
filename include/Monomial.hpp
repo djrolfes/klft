@@ -34,9 +34,8 @@ public:
       : H_old(0.0), H_new(0.0), time_scale(_time_scale) {}
 
   virtual MonomialType get_monomial_type() { return monomial_type; }
-  virtual void
-  heatbath(HamiltonianField<DGaugeFieldType, DAdjFieldType> &h) = 0;
-  virtual void accept(HamiltonianField<DGaugeFieldType, DAdjFieldType> &h) = 0;
+  virtual void heatbath(HamiltonianField<DGaugeFieldType, DAdjFieldType> h) = 0;
+  virtual void accept(HamiltonianField<DGaugeFieldType, DAdjFieldType> h) = 0;
 
   void reset() {
     H_old = 0.0;
@@ -60,10 +59,10 @@ public:
     Monomial<DGaugeFieldType, DAdjFieldType>::monomial_type =
         KLFT_MONOMIAL_KINETIC;
   }
-  void heatbath(HamiltonianField<DGaugeFieldType, DAdjFieldType> &h) override {
+  void heatbath(HamiltonianField<DGaugeFieldType, DAdjFieldType> h) override {
     Monomial<DGaugeFieldType, DAdjFieldType>::H_old = h.kinetic_energy();
   }
-  void accept(HamiltonianField<DGaugeFieldType, DAdjFieldType> &h) override {
+  void accept(HamiltonianField<DGaugeFieldType, DAdjFieldType> h) override {
     Monomial<DGaugeFieldType, DAdjFieldType>::H_new = h.kinetic_energy();
   }
 };
