@@ -118,6 +118,7 @@ template <size_t Nd, size_t Nc> struct deviceAdjointField3D {
           }
           rng.free_state(generator);
         });
+    Kokkos::fence();
   }
 
   // define accessors for the field
@@ -185,6 +186,7 @@ template <size_t Nd, size_t Nc> struct deviceAdjointField2D {
           }
           rng.free_state(generator);
         });
+    Kokkos::fence();
   }
 
   // define accessors for the field
