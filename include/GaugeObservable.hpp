@@ -82,7 +82,7 @@ void measureGaugeObservables(
     return;
   }
   // otherwise, carry out the measurements
-  if (KLFT_VERBOSITY > 0) {
+  if (KLFT_VERBOSITY > 1) {
     printf("Measurement of Gauge Observables\n");
     printf("step: %zu\n", step);
   }
@@ -90,20 +90,20 @@ void measureGaugeObservables(
   if (params.measure_plaquette) {
     real_t P = GaugePlaquette<rank, Nc>(g_in);
     params.plaquette_measurements.push_back(P);
-    if (KLFT_VERBOSITY > 0) {
+    if (KLFT_VERBOSITY > 1) {
       printf("plaquette: %11.6f\n", P);
     }
   }
   // measure the Wilson loop in the temporal direction
   if (params.measure_wilson_loop_temporal) {
-    if (KLFT_VERBOSITY > 0) {
+    if (KLFT_VERBOSITY > 1) {
       printf("temporal Wilson loop:\n");
       printf("L, T, W_temp\n");
     }
     std::vector<Kokkos::Array<real_t, 3>> temp_measurements;
     WilsonLoop_temporal<rank, Nc>(g_in, params.W_temp_L_T_pairs,
                                   temp_measurements);
-    if (KLFT_VERBOSITY > 0) {
+    if (KLFT_VERBOSITY > 1) {
       for (const auto& measure : temp_measurements) {
         printf("%d, %d, %11.6f\n", static_cast<index_t>(measure[0]),
                static_cast<index_t>(measure[1]), measure[2]);
@@ -113,7 +113,7 @@ void measureGaugeObservables(
   }
   // measure the Wilson loop in the mu-nu plane
   if (params.measure_wilson_loop_mu_nu) {
-    if (KLFT_VERBOSITY > 0) {
+    if (KLFT_VERBOSITY > 1) {
       printf("Wilson loop in the mu-nu plane:\n");
       printf("mu, nu, Lmu, Lnu, W_mu_nu\n");
     }
@@ -123,7 +123,7 @@ void measureGaugeObservables(
       const index_t nu = pair_mu_nu[1];
       WilsonLoop_mu_nu<rank, Nc>(g_in, mu, nu, params.W_Lmu_Lnu_pairs,
                                  temp_measurements);
-      if (KLFT_VERBOSITY > 0) {
+      if (KLFT_VERBOSITY > 1) {
         for (const auto& measure : temp_measurements) {
           printf("%d, %d, %d, %d, %11.6f\n", static_cast<index_t>(measure[0]),
                  static_cast<index_t>(measure[1]),

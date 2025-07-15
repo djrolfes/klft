@@ -47,35 +47,35 @@ inline void addLogData(
     return;
   }
 
-  if (KLFT_VERBOSITY > 0) {
+  if (KLFT_VERBOSITY > 1) {
     printf("Logging Simulation Data\n");
     printf("step: %zu\n", step);
   }
 
   if (params.log_delta_H) {
     params.delta_H.push_back(_delta_H);
-    if (KLFT_VERBOSITY > 0) {
+    if (KLFT_VERBOSITY > 1) {
       printf("delta_H: %11.6f\n", _delta_H);
     }
   }
 
   if (params.log_acceptance) {
     params.acceptance.push_back(_acceptance);
-    if (KLFT_VERBOSITY > 0) {
+    if (KLFT_VERBOSITY > 1) {
       printf("acceptance: %11.6f\n", _acceptance);
     }
   }
 
   if (params.log_accept) {
     params.accept.push_back(_accept);
-    if (KLFT_VERBOSITY > 0) {
+    if (KLFT_VERBOSITY > 1) {
       printf("accept: %s\n", params.accept.back() ? "true" : "false");
     }
   }
 
   if (params.log_time) {
     params.time.push_back(_time);
-    if (KLFT_VERBOSITY > 0) {
+    if (KLFT_VERBOSITY > 1) {
       printf("time: %11.6f\n", _time);
     }
   }
