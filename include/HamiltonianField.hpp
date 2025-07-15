@@ -63,20 +63,14 @@ struct HamiltonianField {
 
   HamiltonianField() = delete;
 
-  HamiltonianField(std::unique_ptr<GaugeField> g,
-                   std::unique_ptr<AdjointField> a)
-      : _gauge_field(std::move(g)), _adjoint_field(std::move(a)) {}
-
-  GaugeField &gauge_field() { return *_gauge_field.get(); }
-  const GaugeField &gauge_field() const { return *_gauge_field.get(); }
-  AdjointField &adjoint_field() { return *_adjoint_field.get(); }
-  const AdjointField &adjoint_field() const { return *_adjoint_field.get(); }
+  HamiltonianField(GaugeField g, AdjointField a)
+      : gauge_field((g)), adjoint_field((a)) {}
 
   real_t kinetic_energy() {
     real_t kinetic_energy = 0.0;
     constexpr size_t r = rank; // for clarity
-    const auto &dim = adjoint_field().dimensions;
-    auto functor = KineticEnergyFunctor<DAdjFieldType>(adjoint_field());
+    const auto &dim = adjoint_field.dimensions;
+    auto functor = KineticEnergyFunctor<DAdjFieldType>(adjoint_field);
 
     if constexpr (r == 4) {
       Kokkos::MDRangePolicy<Kokkos::Rank<4>> rp(
@@ -97,12 +91,11 @@ struct HamiltonianField {
   }
 
   template <class RNG> void randomize_momentum(RNG &rng) {
-    adjoint_field().template randomize_field<RNG>(rng);
+    adjoint_field.template randomize_field<RNG>(rng);
   }
 
-private:
-  std::unique_ptr<GaugeField> _gauge_field;
-  std::unique_ptr<AdjointField> _adjoint_field;
+  GaugeField gauge_field;
+  AdjointField adjoint_field;
 };
 
 } // namespace klft

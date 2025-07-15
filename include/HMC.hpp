@@ -46,7 +46,7 @@ public:
       : params(params_), rng(rng_), dist(dist_), mt(mt_),
         hamiltonian_field(hamiltonian_field_),
         integrator(std::move(integrator_)),
-        gauge_old(hamiltonian_field_.gauge_field()) {}
+        gauge_old(hamiltonian_field_.gauge_field) {}
 
   void add_gauge_monomial(const real_t _beta, const unsigned int _time_scale) {
     monomials.emplace_back(
@@ -61,7 +61,7 @@ public:
   }
 
   void reset_gauge_field() {
-    Kokkos::deep_copy(hamiltonian_field.gauge_field().field, gauge_old.field);
+    Kokkos::deep_copy(hamiltonian_field.gauge_field.field, gauge_old.field);
     Kokkos::DefaultExecutionSpace{}.fence();
   }
 
@@ -73,7 +73,7 @@ public:
     }
 
     Kokkos::deep_copy(Kokkos::DefaultExecutionSpace{}, gauge_old.field,
-                      hamiltonian_field.gauge_field().field);
+                      hamiltonian_field.gauge_field.field);
     Kokkos::DefaultExecutionSpace{}.fence();
 
     for (int i = 0; i < monomials.size(); ++i) {

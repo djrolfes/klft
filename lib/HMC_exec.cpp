@@ -68,9 +68,9 @@ int HMC_execute(const std::string &input_file) {
                                                  hmcParams.L2, hmcParams.L3,
                                                  traceT(identitySUN<1>()));
         run_HMC<DGaugeFieldType, DAdjFieldType>(
-            std::make_unique<typename DGaugeFieldType::type>(dev_g_U1_4D),
-            std::make_unique<typename DAdjFieldType::type>(dev_a_U1_4D),
-            hmcParams, gaugeObsParams, simLogParams, rng);
+            typename DGaugeFieldType::type(dev_g_U1_4D),
+            typename DAdjFieldType::type(dev_a_U1_4D), hmcParams,
+            gaugeObsParams, simLogParams, rng);
       }
       // case SU(2)
       else if (hmcParams.Nc == 2) {
@@ -83,9 +83,9 @@ int HMC_execute(const std::string &input_file) {
                                                   hmcParams.L2, hmcParams.L3,
                                                   traceT(identitySUN<2>()));
         run_HMC<DGaugeFieldType, DAdjFieldType>(
-            std::make_unique<typename DGaugeFieldType::type>(dev_g_SU2_4D),
-            std::make_unique<typename DAdjFieldType::type>(dev_a_SU2_4D),
-            hmcParams, gaugeObsParams, simLogParams, rng);
+            typename DGaugeFieldType::type(dev_g_SU2_4D),
+            typename DAdjFieldType::type(dev_a_SU2_4D), hmcParams,
+            gaugeObsParams, simLogParams, rng);
       }
       // case SU(3)
       // else if (hmcParams.Nc == 3) {
@@ -100,8 +100,8 @@ int HMC_execute(const std::string &input_file) {
       //                                            hmcParams.L2, hmcParams.L3,
       //                                            traceT(identitySUN<3>()));
       //   run_HMC<DGaugeFieldType, DAdjFieldType>(
-      //       std::make_unique<typename DGaugeFieldType::type>(dev_g_SU3_4D),
-      //       std::make_unique<typename DAdjFieldType::type>(dev_a_SU3_4D),
+      //       typename DGaugeFieldType::type(dev_g_SU3_4D),
+      //       typename DAdjFieldType::type(dev_a_SU3_4D),
       //       hmcParams, gaugeObsParams, simLogParams, rng);
       // }
       // case SU(N)
@@ -121,9 +121,9 @@ int HMC_execute(const std::string &input_file) {
         typename DAdjFieldType::type dev_a_U1_3D(
             hmcParams.L0, hmcParams.L1, hmcParams.L2, traceT(identitySUN<1>()));
         run_HMC<DGaugeFieldType, DAdjFieldType>(
-            std::make_unique<typename DGaugeFieldType::type>(dev_g_U1_3D),
-            std::make_unique<typename DAdjFieldType::type>(dev_a_U1_3D),
-            hmcParams, gaugeObsParams, simLogParams, rng);
+            typename DGaugeFieldType::type(dev_g_U1_3D),
+            typename DAdjFieldType::type(dev_a_U1_3D), hmcParams,
+            gaugeObsParams, simLogParams, rng);
       }
       // case SU(2)
       else if (hmcParams.Nc == 2) {
@@ -134,9 +134,9 @@ int HMC_execute(const std::string &input_file) {
         typename DAdjFieldType::type dev_a_SU2_3D(
             hmcParams.L0, hmcParams.L1, hmcParams.L2, traceT(identitySUN<2>()));
         run_HMC<DGaugeFieldType, DAdjFieldType>(
-            std::make_unique<typename DGaugeFieldType::type>(dev_g_SU2_3D),
-            std::make_unique<typename DAdjFieldType::type>(dev_a_SU2_3D),
-            hmcParams, gaugeObsParams, simLogParams, rng);
+            typename DGaugeFieldType::type(dev_g_SU2_3D),
+            typename DAdjFieldType::type(dev_a_SU2_3D), hmcParams,
+            gaugeObsParams, simLogParams, rng);
       }
       // case SU(3)
       // else if (hmcParams.Nc == 3) {
@@ -150,8 +150,8 @@ int HMC_execute(const std::string &input_file) {
       //                                            hmcParams.L2,
       //                                            traceT(identitySUN<3>()));
       //   run_HMC<DGaugeFieldType, DAdjFieldType>(
-      //       std::make_unique<typename DGaugeFieldType::type>(dev_g_SU3_3D),
-      //       std::make_unique<typename DAdjFieldType::type>(dev_a_SU3_3D),
+      //       typename DGaugeFieldType::type(dev_g_SU3_3D),
+      //       typename DAdjFieldType::type(dev_a_SU3_3D),
       //       hmcParams, gaugeObsParams, simLogParams, rng);
       // }
       // case SU(N)
@@ -171,9 +171,9 @@ int HMC_execute(const std::string &input_file) {
         typename DAdjFieldType::type dev_a_U1_2D(hmcParams.L0, hmcParams.L1,
                                                  traceT(identitySUN<1>()));
         run_HMC<DGaugeFieldType, DAdjFieldType>(
-            std::make_unique<typename DGaugeFieldType::type>(dev_g_U1_2D),
-            std::make_unique<typename DAdjFieldType::type>(dev_a_U1_2D),
-            hmcParams, gaugeObsParams, simLogParams, rng);
+            typename DGaugeFieldType::type(dev_g_U1_2D),
+            typename DAdjFieldType::type(dev_a_U1_2D), hmcParams,
+            gaugeObsParams, simLogParams, rng);
       }
       // case SU(2)
       else if (hmcParams.Nc == 2) {
@@ -184,9 +184,9 @@ int HMC_execute(const std::string &input_file) {
         typename DAdjFieldType::type dev_a_SU2_2D(hmcParams.L0, hmcParams.L1,
                                                   traceT(identitySUN<2>()));
         run_HMC<DGaugeFieldType, DAdjFieldType>(
-            std::make_unique<typename DGaugeFieldType::type>(dev_g_SU2_2D),
-            std::make_unique<typename DAdjFieldType::type>(dev_a_SU2_2D),
-            hmcParams, gaugeObsParams, simLogParams, rng);
+            typename DGaugeFieldType::type(dev_g_SU2_2D),
+            typename DAdjFieldType::type(dev_a_SU2_2D), hmcParams,
+            gaugeObsParams, simLogParams, rng);
       }
       // case SU(3)
       // else if (hmcParams.Nc == 3) {
@@ -198,8 +198,8 @@ int HMC_execute(const std::string &input_file) {
       //   typename DAdjFieldType::type dev_a_SU3_2D(hmcParams.L0, hmcParams.L1,
       //                                            traceT(identitySUN<3>()));
       //   run_HMC<DGaugeFieldType, DAdjFieldType>(
-      //       std::make_unique<typename DGaugeFieldType::type>(dev_g_SU3_2D),
-      //       std::make_unique<typename DAdjFieldType::type>(dev_a_SU3_2D),
+      //       typename DGaugeFieldType::type(dev_g_SU3_2D),
+      //       typename DAdjFieldType::type(dev_a_SU3_2D),
       //       hmcParams, gaugeObsParams, simLogParams, rng);
       // }
       // case SU(N)
@@ -221,9 +221,9 @@ int HMC_execute(const std::string &input_file) {
                                                  hmcParams.L2, hmcParams.L3,
                                                  traceT(identitySUN<1>()));
         run_HMC<DGaugeFieldType, DAdjFieldType>(
-            std::make_unique<typename DGaugeFieldType::type>(dev_g_U1_4D),
-            std::make_unique<typename DAdjFieldType::type>(dev_a_U1_4D),
-            hmcParams, gaugeObsParams, simLogParams, rng);
+            typename DGaugeFieldType::type(dev_g_U1_4D),
+            typename DAdjFieldType::type(dev_a_U1_4D), hmcParams,
+            gaugeObsParams, simLogParams, rng);
       }
       // case SU(2)
       else if (hmcParams.Nc == 2) {
@@ -236,9 +236,9 @@ int HMC_execute(const std::string &input_file) {
                                                   hmcParams.L2, hmcParams.L3,
                                                   traceT(identitySUN<2>()));
         run_HMC<DGaugeFieldType, DAdjFieldType>(
-            std::make_unique<typename DGaugeFieldType::type>(dev_g_SU2_4D),
-            std::make_unique<typename DAdjFieldType::type>(dev_a_SU2_4D),
-            hmcParams, gaugeObsParams, simLogParams, rng);
+            typename DGaugeFieldType::type(dev_g_SU2_4D),
+            typename DAdjFieldType::type(dev_a_SU2_4D), hmcParams,
+            gaugeObsParams, simLogParams, rng);
       }
       // case SU(3)
       // else if (hmcParams.Nc == 3) {
@@ -253,8 +253,8 @@ int HMC_execute(const std::string &input_file) {
       //                                            hmcParams.L2, hmcParams.L3,
       //                                            traceT(identitySUN<3>()));
       //   run_HMC<DGaugeFieldType, DAdjFieldType>(
-      //       std::make_unique<typename DGaugeFieldType::type>(dev_g_SU3_4D),
-      //       std::make_unique<typename DAdjFieldType::type>(dev_a_SU3_4D),
+      //       typename DGaugeFieldType::type(dev_g_SU3_4D),
+      //       typename DAdjFieldType::type(dev_a_SU3_4D),
       //       hmcParams, gaugeObsParams, simLogParams, rng);
       // }
       // case SU(N)
@@ -274,9 +274,9 @@ int HMC_execute(const std::string &input_file) {
         typename DAdjFieldType::type dev_a_U1_3D(
             hmcParams.L0, hmcParams.L1, hmcParams.L2, traceT(identitySUN<1>()));
         run_HMC<DGaugeFieldType, DAdjFieldType>(
-            std::make_unique<typename DGaugeFieldType::type>(dev_g_U1_3D),
-            std::make_unique<typename DAdjFieldType::type>(dev_a_U1_3D),
-            hmcParams, gaugeObsParams, simLogParams, rng);
+            typename DGaugeFieldType::type(dev_g_U1_3D),
+            typename DAdjFieldType::type(dev_a_U1_3D), hmcParams,
+            gaugeObsParams, simLogParams, rng);
       }
       // case SU(2)
       else if (hmcParams.Nc == 2) {
@@ -287,9 +287,9 @@ int HMC_execute(const std::string &input_file) {
         typename DAdjFieldType::type dev_a_SU2_3D(
             hmcParams.L0, hmcParams.L1, hmcParams.L2, traceT(identitySUN<2>()));
         run_HMC<DGaugeFieldType, DAdjFieldType>(
-            std::make_unique<typename DGaugeFieldType::type>(dev_g_SU2_3D),
-            std::make_unique<typename DAdjFieldType::type>(dev_a_SU2_3D),
-            hmcParams, gaugeObsParams, simLogParams, rng);
+            typename DGaugeFieldType::type(dev_g_SU2_3D),
+            typename DAdjFieldType::type(dev_a_SU2_3D), hmcParams,
+            gaugeObsParams, simLogParams, rng);
       }
       // case SU(3)
       // else if (hmcParams.Nc == 3) {
@@ -303,8 +303,8 @@ int HMC_execute(const std::string &input_file) {
       //                                            hmcParams.L2,
       //                                            traceT(identitySUN<3>()));
       //   run_HMC<DGaugeFieldType, DAdjFieldType>(
-      //       std::make_unique<typename DGaugeFieldType::type>(dev_g_SU3_3D),
-      //       std::make_unique<typename DAdjFieldType::type>(dev_a_SU3_3D),
+      //       typename DGaugeFieldType::type(dev_g_SU3_3D),
+      //       typename DAdjFieldType::type(dev_a_SU3_3D),
       //       hmcParams, gaugeObsParams, simLogParams, rng);
       // }
       // case SU(N)
@@ -324,9 +324,9 @@ int HMC_execute(const std::string &input_file) {
         typename DAdjFieldType::type dev_a_U1_2D(hmcParams.L0, hmcParams.L1,
                                                  traceT(identitySUN<1>()));
         run_HMC<DGaugeFieldType, DAdjFieldType>(
-            std::make_unique<typename DGaugeFieldType::type>(dev_g_U1_2D),
-            std::make_unique<typename DAdjFieldType::type>(dev_a_U1_2D),
-            hmcParams, gaugeObsParams, simLogParams, rng);
+            typename DGaugeFieldType::type(dev_g_U1_2D),
+            typename DAdjFieldType::type(dev_a_U1_2D), hmcParams,
+            gaugeObsParams, simLogParams, rng);
       }
       // case SU(2)
       else if (hmcParams.Nc == 2) {
@@ -337,9 +337,9 @@ int HMC_execute(const std::string &input_file) {
         typename DAdjFieldType::type dev_a_SU2_2D(hmcParams.L0, hmcParams.L1,
                                                   traceT(identitySUN<2>()));
         run_HMC<DGaugeFieldType, DAdjFieldType>(
-            std::make_unique<typename DGaugeFieldType::type>(dev_g_SU2_2D),
-            std::make_unique<typename DAdjFieldType::type>(dev_a_SU2_2D),
-            hmcParams, gaugeObsParams, simLogParams, rng);
+            typename DGaugeFieldType::type(dev_g_SU2_2D),
+            typename DAdjFieldType::type(dev_a_SU2_2D), hmcParams,
+            gaugeObsParams, simLogParams, rng);
       }
       // case SU(3)
       // else if (hmcParams.Nc == 3) {
@@ -351,8 +351,8 @@ int HMC_execute(const std::string &input_file) {
       //   typename DAdjFieldType::type dev_a_SU3_2D(hmcParams.L0, hmcParams.L1,
       //                                            traceT(identitySUN<3>()));
       //   run_HMC<DGaugeFieldType, DAdjFieldType>(
-      //       std::make_unique<typename DGaugeFieldType::type>(dev_g_SU3_2D),
-      //       std::make_unique<typename DAdjFieldType::type>(dev_a_SU3_2D),
+      //       typename DGaugeFieldType::type(dev_g_SU3_2D),
+      //       typename DAdjFieldType::type(dev_a_SU3_2D),
       //       hmcParams, gaugeObsParams, simLogParams, rng);
       // }
       // case SU(N)

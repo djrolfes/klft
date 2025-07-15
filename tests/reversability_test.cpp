@@ -123,19 +123,14 @@ int main(int argc, char *argv[]) {
     using Update_Q = UpdatePositionGauge<Nd, Nc>;
     using Update_P = UpdateMomentumGauge<DGaugeFieldType, DAdjFieldType>;
 
-    auto gauge_ptr = std::move(
-        std::make_unique<typename DGaugeFieldType::type>(dev_g_SU2_4D));
-    auto adjoint_ptr =
-        std::move(std::make_unique<typename DAdjFieldType::type>(dev_a_SU2_4D));
-    HField hamiltonian_field =
-        HField(std::move(gauge_ptr), std::move(adjoint_ptr));
+    HField hamiltonian_field = HField(dev_g_SU2_4D, dev_a_SU2_4D);
     // after the move, the gauge and adjoint fields are no longer valid
-    const auto &dimensions = hamiltonian_field.gauge_field().dimensions;
+    const auto &dimensions = hamiltonian_field.gauge_field.dimensions;
 
-    Update_Q update_q(hamiltonian_field.gauge_field(),
-                      hamiltonian_field.adjoint_field());
-    Update_P update_p(hamiltonian_field.gauge_field(),
-                      hamiltonian_field.adjoint_field(), hmcParams.beta);
+    Update_Q update_q(hamiltonian_field.gauge_field,
+                      hamiltonian_field.adjoint_field);
+    Update_P update_p(hamiltonian_field.gauge_field,
+                      hamiltonian_field.adjoint_field, hmcParams.beta);
     // the integrate might need to be passed into the run_HMC as an argument as
     // it contains a large amount of design decisions
     std::shared_ptr<LeapFrog> leap_frog =
@@ -170,7 +165,7 @@ int main(int argc, char *argv[]) {
         printf("Step: %ld, accepted: %ld, Acceptance rate: %f, Time: %f\n",
                step, static_cast<size_t>(accept), acc_rate, time);
       }
-      measureGaugeObservables<Nd, Nc>(hamiltonian_field.gauge_field(),
+      measureGaugeObservables<Nd, Nc>(hamiltonian_field.gauge_field,
                                       gaugeObsParams, step);
       addLogData(simLogParams, step, hmc.delta_H, acc_rate, accept, time);
 

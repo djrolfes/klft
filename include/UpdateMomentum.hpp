@@ -43,8 +43,8 @@ public:
   UpdateMomentumGauge() = delete;
   ~UpdateMomentumGauge() = default;
 
-  UpdateMomentumGauge(GaugeFieldType &gauge_field_,
-                      AdjFieldType &adjoint_field_, const real_t &beta_)
+  UpdateMomentumGauge(GaugeFieldType gauge_field_, AdjFieldType adjoint_field_,
+                      const real_t &beta_)
       : UpdateMomentum(0), gauge_field(gauge_field_),
         adjoint_field(adjoint_field_), beta(beta_), eps(0.0) {}
   // todo: Add Force as a function instead of it being incorporated into the

@@ -17,9 +17,9 @@ using RNGType = Kokkos::Random_XorShift64_Pool<Kokkos::DefaultExecutionSpace>;
 namespace klft {
 
 template <typename DGaugeFieldType, typename DAdjFieldType, class RNG>
-int run_HMC(std::unique_ptr<typename DGaugeFieldType::type> g_in,
-            std::unique_ptr<typename DAdjFieldType::type> a_in,
-            const HMCParams &hmcparams, GaugeObservableParams &gaugeObsParams,
+int run_HMC(typename DGaugeFieldType::type g_in,
+            typename DAdjFieldType::type a_in, const HMCParams &hmcparams,
+            GaugeObservableParams &gaugeObsParams,
             SimulationLoggingParams &simLogParams, const RNG &rng) {
   // initiate and execute the HMC with the given parameters
   printf("Executing HMC ...");
@@ -43,12 +43,9 @@ int run_HMC(std::unique_ptr<typename DGaugeFieldType::type> g_in,
   using Update_Q = UpdatePositionGauge<Nd, Nc>;
   using Update_P = UpdateMomentumGauge<DGaugeFieldType, DAdjFieldType>;
 
-  auto gauge_ptr = std::move(g_in);
-  auto adjoint_ptr = std::move(a_in);
-  HField hamiltonian_field =
-      HField(std::move(gauge_ptr), std::move(adjoint_ptr));
+  HField hamiltonian_field = HField(g_in, a_in);
   // after the move, the gauge and adjoint fields are no longer valid
-  const auto &dimensions = hamiltonian_field.gauge_field().dimensions;
+  const auto &dimensions = hamiltonian_field.gauge_field.dimensions;
   // first we check that all the parameters are correct
   assert(hmcparams.Ndims == Nd);
   assert(hmcparams.Nd == Nd);
@@ -62,10 +59,10 @@ int run_HMC(std::unique_ptr<typename DGaugeFieldType::type> g_in,
     assert(hmcparams.L3 == dimensions[3]);
   }
 
-  Update_Q update_q(hamiltonian_field.gauge_field(),
-                    hamiltonian_field.adjoint_field());
-  Update_P update_p(hamiltonian_field.gauge_field(),
-                    hamiltonian_field.adjoint_field(), hmcparams.beta);
+  Update_Q update_q(hamiltonian_field.gauge_field,
+                    hamiltonian_field.adjoint_field);
+  Update_P update_p(hamiltonian_field.gauge_field,
+                    hamiltonian_field.adjoint_field, hmcparams.beta);
   // the integrate might need to be passed into the run_HMC as an argument as it
   // contains a large amount of design decisions
   std::shared_ptr<LeapFrog> leap_frog =
@@ -102,7 +99,7 @@ int run_HMC(std::unique_ptr<typename DGaugeFieldType::type> g_in,
              static_cast<size_t>(accept), acc_rate, time);
     }
     // measure the gauge observables
-    measureGaugeObservables<rank, Nc>(hamiltonian_field.gauge_field(),
+    measureGaugeObservables<rank, Nc>(hamiltonian_field.gauge_field,
                                       gaugeObsParams, step);
     addLogData(simLogParams, step, hmc.delta_H, acc_rate, accept, time);
     // TODO:make flushAllGaugeObservables append the Observables to the files ->
@@ -112,11 +109,11 @@ int run_HMC(std::unique_ptr<typename DGaugeFieldType::type> g_in,
     //   // TODO: this should be set by the Params
     //   flushAllGaugeObservables(gaugeObsParams);
     // }
-    DEBUG_LOG("Max unitarity defect: " << unitarity_check<DGaugeFieldType>(
-                                              hamiltonian_field.gauge_field())
-                                       << "\n");
+    DEBUG_LOG("Max unitarity defect: "
+              << unitarity_check<DGaugeFieldType>(hamiltonian_field.gauge_field)
+              << "\n");
     if (step % 1000 == 0) {
-      unitarity_restore<DGaugeFieldType>(hamiltonian_field.gauge_field());
+      unitarity_restore<DGaugeFieldType>(hamiltonian_field.gauge_field);
     }
   }
   // flush the measurements to the files
@@ -129,10 +126,9 @@ int run_HMC(std::unique_ptr<typename DGaugeFieldType::type> g_in,
 #define INSTANTIATE_HMC(R, N)                                                  \
   template int                                                                 \
   run_HMC<DeviceGaugeFieldType<R, N>, DeviceAdjFieldType<R, N>, RNGType>(      \
-      std::unique_ptr<typename DeviceGaugeFieldType<R, N>::type>,              \
-      std::unique_ptr<typename DeviceAdjFieldType<R, N>::type>,                \
-      const HMCParams &, GaugeObservableParams &, SimulationLoggingParams &,   \
-      const RNGType &)
+      typename DeviceGaugeFieldType<R, N>::type,                               \
+      typename DeviceAdjFieldType<R, N>::type, const HMCParams &,              \
+      GaugeObservableParams &, SimulationLoggingParams &, const RNGType &)
 
 INSTANTIATE_HMC(4, 1);
 INSTANTIATE_HMC(4, 2);

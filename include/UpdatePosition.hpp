@@ -29,8 +29,7 @@ public:
   UpdatePositionGauge() = delete;
   ~UpdatePositionGauge() = default;
 
-  UpdatePositionGauge(GaugeFieldType &gauge_field_,
-                      AdjFieldType &adjoint_field_)
+  UpdatePositionGauge(GaugeFieldType gauge_field_, AdjFieldType adjoint_field_)
       : UpdatePosition(0), gauge_field(gauge_field_),
         adjoint_field(adjoint_field_), eps(0.0) {}
 
