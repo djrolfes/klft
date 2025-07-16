@@ -1,1 +1,0 @@
-/usr/bin/c++ -g -DENABLE_DEBUG -DKOKKOS_DEPENDENCE CMakeFiles/hmc.dir/hmc.cpp.o -o hmc  ../lib/libklft.a ../yaml-cpp/libyaml-cppd.a ../kokkos/containers/src/libkokkoscontainers.a ../kokkos/core/src/libkokkoscore.a -ldl /usr/lib/gcc/x86_64-linux-gnu/9/libgomp.so /usr/lib/x86_64-linux-gnu/libpthread.so ../kokkos/simd/src/libkokkossimd.a
