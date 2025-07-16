@@ -1,4 +1,5 @@
 .vscode
+arc
 build
 *.code-workspace
 CMakePresets.json
