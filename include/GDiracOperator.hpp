@@ -28,7 +28,8 @@
 #include "Spinor.hpp"
 namespace klft {
 
-template <typename _Derived, typename DSpinorFieldType,
+template <typename _Derived,
+          typename DSpinorFieldType,
           typename DGaugeFieldType>
 class DiracOperator {
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
@@ -109,7 +110,8 @@ template <typename DSpinorFieldType, typename DGaugeFieldType>
 class WilsonDiracOperator
     : public DiracOperator<
           WilsonDiracOperator<DSpinorFieldType, DGaugeFieldType>,
-          DSpinorFieldType, DGaugeFieldType> {
+          DSpinorFieldType,
+          DGaugeFieldType> {
  public:
   constexpr static size_t Nc =
       DeviceFermionFieldTypeTraits<DSpinorFieldType>::Nc;
@@ -121,34 +123,11 @@ class WilsonDiracOperator
   ~WilsonDiracOperator() = default;
   using Base =
       DiracOperator<WilsonDiracOperator<DSpinorFieldType, DGaugeFieldType>,
-                    DSpinorFieldType, DGaugeFieldType>;
+                    DSpinorFieldType,
+                    DGaugeFieldType>;
   using Base::Base;
   template <typename... Indices>
   KOKKOS_FORCEINLINE_FUNCTION void operator()(typename Base::TagD,
-                                              const Indices... Idcs) const {
-    Spinor<Nc, RepDim> temp;
-#pragma unroll
-    for (size_t mu = 0; mu < rank; ++mu) {
-      auto xm = shift_index_minus_bc<rank, size_t>(
-          Kokkos::Array<size_t, rank>{Idcs...}, mu, 1, 3, -1,
-          this->params.dimensions);
-      auto xp = shift_index_plus_bc<rank, size_t>(
-          Kokkos::Array<size_t, rank>{Idcs...}, mu, 1, 3, -1,
-          this->params.dimensions);
-
-      temp += (this->params.gamma_id - this->params.gammas[mu]) * 0.5 *
-              xp.second * (this->g_in(Idcs..., mu) * this->s_in(xp.first));
-      temp += (this->params.gamma_id + this->params.gammas[mu]) * 0.5 *
-              xm.second *
-              (conj(this->g_in(xm.first, mu)) * this->s_in(xm.first));
-    }
-
-    this->s_out(Idcs...) = this->s_in(Idcs...) - this->params.kappa * temp;
-  }
-
-  // only for testing purpose, not the real Ddagger operator
-  template <typename... Indices>
-  KOKKOS_FORCEINLINE_FUNCTION void operator()(typename Base::TagDdagger,
                                               const Indices... Idcs) const {
     Spinor<Nc, RepDim> temp;
 #pragma unroll
@@ -168,6 +147,28 @@ class WilsonDiracOperator
 
     this->s_out(Idcs...) = this->s_in(Idcs...) - this->params.kappa * temp;
   }
+
+  template <typename... Indices>
+  KOKKOS_FORCEINLINE_FUNCTION void operator()(typename Base::TagDdagger,
+                                              const Indices... Idcs) const {
+    Spinor<Nc, RepDim> temp;
+#pragma unroll
+    for (size_t mu = 0; mu < rank; ++mu) {
+      auto xm = shift_index_minus_bc<rank, size_t>(
+          Kokkos::Array<size_t, rank>{Idcs...}, mu, 1, 3, -1,
+          this->params.dimensions);
+      auto xp = shift_index_plus_bc<rank, size_t>(
+          Kokkos::Array<size_t, rank>{Idcs...}, mu, 1, 3, -1,
+          this->params.dimensions);
+      // For the Ddagger operator only the signs of the gammas should change
+      temp += (this->params.gamma_id + this->params.gammas[mu]) * xp.second *
+              (this->g_in(Idcs..., mu) * this->s_in(xp.first));
+      temp += (this->params.gamma_id - this->params.gammas[mu]) * xm.second *
+              (conj(this->g_in(xm.first, mu)) * this->s_in(xm.first));
+    }
+
+    this->s_out(Idcs...) = this->s_in(Idcs...) - this->params.kappa * temp;
+  }
 };
 // // Deduction guide
 // template <typename GaugeType, typename ParamType>
@@ -179,7 +180,8 @@ template <typename DSpinorFieldType, typename DGaugeFieldType>
 class HWilsonDiracOperator
     : public DiracOperator<
           HWilsonDiracOperator<DSpinorFieldType, DGaugeFieldType>,
-          DSpinorFieldType, DGaugeFieldType> {
+          DSpinorFieldType,
+          DGaugeFieldType> {
  public:
   constexpr static size_t Nc =
       DeviceFermionFieldTypeTraits<DSpinorFieldType>::Nc;
@@ -191,7 +193,8 @@ class HWilsonDiracOperator
   ~HWilsonDiracOperator() = default;
   using Base =
       DiracOperator<HWilsonDiracOperator<DSpinorFieldType, DGaugeFieldType>,
-                    DSpinorFieldType, DGaugeFieldType>;
+                    DSpinorFieldType,
+                    DGaugeFieldType>;
   using Base::Base;
   template <typename... Indices>
   KOKKOS_FORCEINLINE_FUNCTION void operator()(typename Base::TagD,
