@@ -2,6 +2,7 @@
 #include "GLOBAL.hpp"
 #include "SUN.hpp"
 
+#define SQRT2 1.4142135623730950488
 #define SQRT3 1.7320508075688772936
 #define SQRT3INV 0.5773502691896257645
 
@@ -103,7 +104,7 @@ template <size_t Nc, class RNG>
 KOKKOS_FORCEINLINE_FUNCTION void randSUNAdj(SUNAdj<Nc> &r, RNG &generator) {
 #pragma unroll
   for (size_t i = 0; i < NcAdj<Nc>; ++i) {
-    r[i] = generator.normal(0.0, 1.0);
+    r[i] = SQRT2 * generator.normal(0.0, 1.0);
   }
 }
 
