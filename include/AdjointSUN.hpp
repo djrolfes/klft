@@ -151,12 +151,12 @@ SUN<1> expoSUN(const SUNAdj<1> &a) {
 }
 
 KOKKOS_FORCEINLINE_FUNCTION
-SUN<2> expoSUN(const SUNAdj<2> &a) {
-  const real_t alpha =
-      0.5 * Kokkos::sqrt(a[0] * a[0] + a[1] * a[1] + a[2] * a[2]);
-  constexpr real_t tiny = real_t(100) * std::numeric_limits<real_t>::epsilon();
-  if (alpha < tiny)
-    return identitySUN<2>();
+SUN<2> expoSUN(const SUNAdj<2> &b) {
+  SUNAdj<2> a = b;
+  const real_t alpha = Kokkos::sqrt(a[0] * a[0] + a[1] * a[1] + a[2] * a[2]);
+  // constexpr real_t tiny = real_t(100) *
+  // std::numeric_limits<real_t>::epsilon(); if (alpha < tiny)
+  //   return identitySUN<2>();
   const Kokkos::Array<real_t, 3> u = {a[0] / alpha, a[1] / alpha, a[2] / alpha};
   const real_t sin_alpha = Kokkos::sin(alpha);
   SUN<2> c;
