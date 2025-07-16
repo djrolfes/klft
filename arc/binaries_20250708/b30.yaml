@@ -1,0 +1,47 @@
+HMCParams:
+  Ndims: 4
+  L0: 8
+  L1: 8
+  L2: 8
+  L3: 8
+  tau: 1.0
+  seed: 1234
+  nsteps: 1000
+  nstepsGauge: 20
+  Nd: 4
+  Nc: 2
+  beta: 3.0
+
+GaugeObservableParams:
+  measurement_interval: 10
+  measure_plaquette: false
+  measure_wilson_loop_temporal: false
+  measure_wilson_loop_mu_nu: false
+
+  W_temp_L_T_pairs:
+    - [2, 3]
+    - [3, 4]
+
+  W_mu_nu_pairs:
+    - [0, 1]
+    - [1, 2]
+
+  W_Lmu_Lnu_pairs:
+    - [2, 2]
+    - [3, 3]
+
+  plaquette_filename: "data/config_0_plaquette_output.txt"
+  W_temp_filename: "data/config_0_wilson_temp_output.txt"
+  W_mu_nu_filename: "data/config_0_wilson_mu_nu_output.txt"
+
+  write_to_file: false
+
+SimulationLoggingParams:
+  log_interval: 1
+  log_delta_H: true
+  log_acceptance: true
+  log_accept: true
+  log_time: true
+  
+  log_filename: "data/config_0_sim.txt"
+  write_to_file: true

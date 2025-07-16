@@ -3,7 +3,6 @@
 #include "FieldTypeHelper.hpp"
 #include "GLOBAL.hpp"
 #include "Kokkos_Macros.hpp"
-#include "decl/Kokkos_Declare_OPENMP.hpp"
 #include "impl/Kokkos_Profiling.hpp"
 
 namespace klft {
@@ -70,10 +69,9 @@ struct HamiltonianField {
     return kinetic_energy;
   }
 
-  template <class RNG>
-  void randomize_momentum(RNG &rng) {
+  template <class RNG> void randomize_momentum(RNG &rng) {
     randomize_field<DAdjFieldType, RNG>(adjoint_field, rng);
   }
 };
 
-}  // namespace klft
+} // namespace klft
