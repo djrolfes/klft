@@ -104,7 +104,7 @@ template <size_t Nc, class RNG>
 KOKKOS_FORCEINLINE_FUNCTION void randSUNAdj(SUNAdj<Nc> &r, RNG &generator) {
 #pragma unroll
   for (size_t i = 0; i < NcAdj<Nc>; ++i) {
-    r[i] = SQRT2 * generator.normal(0.0, 1.0);
+    r[i] = generator.normal(0.0, 1.0);
   }
 }
 
