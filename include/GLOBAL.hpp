@@ -467,17 +467,13 @@ constexpr KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, Nd> oneSpinor() {
 // 5 = trace
 inline int KLFT_VERBOSITY = 0;
 
-inline void setVerbosity(int v) {
-  KLFT_VERBOSITY = v;
-}
+inline void setVerbosity(int v) { KLFT_VERBOSITY = v; }
 
 // variable that enables tuning
 // 0 = no tuning
 // 1 = tuning enabled
 inline int KLFT_TUNING = 0;
 
-inline void setTuning(int t) {
-  KLFT_TUNING = t;
-}
+inline void setTuning(int t) { KLFT_TUNING = t; }
 
 }  // namespace klft

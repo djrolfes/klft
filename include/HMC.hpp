@@ -6,6 +6,7 @@
 #include "FermionParams.hpp"
 #include "GLOBAL.hpp"
 #include "GaugeMonomial.hpp"
+#include "Gauge_Util.hpp"
 #include "HMC_Params.hpp"
 #include "HamiltonianField.hpp"
 #include "Integrator.hpp"
@@ -92,6 +93,8 @@ class HMC {
       monomials[i]->heatbath(hamiltonian_field);
     }
     integrator->integrate(params.tau, false);
+    Kokkos::fence();
+    restoreSUN<DGaugeFieldType>(hamiltonian_field.gauge_field);
     delta_H = 0.0;
     for (int i = 0; i < monomials.size(); ++i) {
       monomials[i]->accept(hamiltonian_field);
@@ -122,6 +125,7 @@ class HMC {
       real_t delta_H_revers = 0;
       flip_sign<DAdjFieldType>(hamiltonian_field.adjoint_field);
       integrator->integrate(params.tau, false);
+
       for (int i = 0; i < monomials.size(); ++i) {
         monomials[i]->accept(hamiltonian_field);
         delta_H_revers += monomials[i]->get_delta_H();

@@ -254,4 +254,33 @@ auto stapleField(const typename DGaugeFieldType::type &g_in)
   Kokkos::fence();
 }
 
+template <typename DGaugeFieldType>
+struct restoreSUNFunctor {
+  static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
+  constexpr static size_t rank =
+      DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank;
+  constexpr static size_t Nc = DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc;
+
+  using GaugeField = typename DGaugeFieldType::type;
+
+  GaugeField gauge_field;
+  restoreSUNFunctor(GaugeField &_gauge_field) : gauge_field(_gauge_field) {}
+  template <typename... Indices>
+  KOKKOS_FORCEINLINE_FUNCTION void operator()(Indices... Idcs) const {
+    // restore the SUN matrices to the correct shape
+    for (index_t mu = 0; mu < rank; ++mu) {
+      restoreSUN(gauge_field(Idcs..., mu));
+    }
+  }
+};
+
+template <typename DGaugeFieldType>
+void restoreSUN(typename DGaugeFieldType::type &gauge_field) {
+  restoreSUNFunctor<DGaugeFieldType> restoreSUNFunctor(gauge_field);
+  tune_and_launch_for<DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank>(
+      "restoreSUN",
+      IndexArray<DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank>{0},
+      gauge_field.dimensions, restoreSUNFunctor);
+  Kokkos::fence();
+}
 }  // namespace klft

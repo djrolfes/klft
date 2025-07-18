@@ -35,6 +35,7 @@ class Monomial {
       : H_old(0.0), H_new(0.0), time_scale(_time_scale) {}
 
   virtual MonomialType get_monomial_type() { return monomial_type; }
+  virtual ~Monomial() = default;
   virtual void heatbath(HamiltonianField<DGaugeFieldType, DAdjFieldType> h) = 0;
   virtual void accept(HamiltonianField<DGaugeFieldType, DAdjFieldType> h) = 0;
   virtual void print() = 0;
@@ -62,9 +63,11 @@ class KineticMonomial : public Monomial<DGaugeFieldType, DAdjFieldType> {
         KLFT_MONOMIAL_KINETIC;
   }
   void heatbath(HamiltonianField<DGaugeFieldType, DAdjFieldType> h) override {
+    // print_SUNAdj(h.adjoint_field(0, 0, 0, 0, 0), "heatbath step Kin");
     Monomial<DGaugeFieldType, DAdjFieldType>::H_old = h.kinetic_energy();
   }
   void accept(HamiltonianField<DGaugeFieldType, DAdjFieldType> h) override {
+    // print_SUNAdj(h.adjoint_field(0, 0, 0, 0, 0), "accept step Kin");
     // print_SUNAdj(h.adjoint_field(0, 0, 0, 0, 0),
     //              " SUNAdj accept step Momentum Monomial");
     Monomial<DGaugeFieldType, DAdjFieldType>::H_new = h.kinetic_energy();
