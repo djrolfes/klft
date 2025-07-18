@@ -61,13 +61,18 @@ struct GaugeObservableParams {
   // boolean flag to indicate if the measurements are to be flushed
   bool write_to_file;
 
+  //
+  size_t flush;  // interval to flush measurements to file, 0 to flush at the
+                 // end of the simulation
+
   // constructor to initialize the parameters
   // by default nothing is measured
   GaugeObservableParams()
       : measurement_interval(0),
         measure_plaquette(false),
         measure_wilson_loop_temporal(false),
-        measure_wilson_loop_mu_nu(false) {}
+        measure_wilson_loop_mu_nu(false),
+        flush(25) {}
 };
 
 // define a function to measure the gauge observables
@@ -222,21 +227,21 @@ inline void flushAllGaugeObservables(const GaugeObservableParams& params,
     return;
   }
   // flush plaquette measurements
-  if (params.plaquette_filename != "") {
+  if (params.measure_plaquette && params.plaquette_filename != "") {
     std::ofstream file(output_directory + params.plaquette_filename,
                        std::ios::app);
     flushPlaquette(file, params, HEADER);
     file.close();
   }
   // flush temporal Wilson loop measurements
-  if (params.W_temp_filename != "") {
+  if (params.measure_wilson_loop_temporal && params.W_temp_filename != "") {
     std::ofstream file(output_directory + params.W_temp_filename,
                        std::ios::app);
     flushWilsonLoopTemporal(file, params, HEADER);
     file.close();
   }
   // flush mu-nu Wilson loop measurements
-  if (params.W_mu_nu_filename != "") {
+  if (params.measure_wilson_loop_mu_nu && params.W_mu_nu_filename != "") {
     std::ofstream file(output_directory + params.W_mu_nu_filename,
                        std::ios::app);
     flushWilsonLoopMuNu(file, params, HEADER);

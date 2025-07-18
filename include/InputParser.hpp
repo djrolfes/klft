@@ -103,6 +103,8 @@ inline int parseInputFile(const std::string& filename,
       // whether to write to file
       gaugeObservableParams.write_to_file = gp["write_to_file"].as<bool>(false);
 
+      // flush interval
+      gaugeObservableParams.flush = gp["flush"].as<size_t>(25);
       // ...
       // add more parameters above this line as needed
     } else {
@@ -254,6 +256,7 @@ inline int parseInputFile(const std::string& filename,
       simParams.log_interval = mp["log_interval"].as<size_t>(0);
       simParams.log_filename = mp["log_filename"].as<std::string>("");
       simParams.write_to_file = mp["write_to_file"].as<bool>(false);
+      simParams.flush = mp["flush"].as<size_t>(25);
 
       simParams.log_delta_H = mp["log_delta_H"].as<bool>(false);
       simParams.log_acceptance = mp["log_acceptance"].as<bool>(false);

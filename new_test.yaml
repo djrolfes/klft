@@ -40,6 +40,7 @@ GaugeObservableParams:
   measure_plaquette: true
   measure_wilson_loop_temporal: false
   measure_wilson_loop_mu_nu: false
+  flush: 5
 
   W_temp_L_T_pairs:
     - [2, 3]
@@ -63,6 +64,7 @@ SimulationLoggingParams:
   log_interval: 1
   log_delta_H: true
   log_acceptance: true
+  flush: 5
   
   log_filename: "simulation_log.txt"
   write_to_file: true

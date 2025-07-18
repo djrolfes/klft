@@ -9,6 +9,8 @@ struct SimulationLoggingParams {
   size_t log_interval;       // interval between logs
   std::string log_filename;  // filename for the log
   bool write_to_file;        // whether to write logs to file
+  size_t flush;  // interval to flush logs to file ,0 to flush at the end of the
+                 // simulation
 
   // define flags for the different types of logs
   bool log_delta_H;
@@ -26,6 +28,7 @@ struct SimulationLoggingParams {
   // constructor to initialize the parameters
   SimulationLoggingParams()
       : log_interval(0),
+        flush(25),
         write_to_file(false),
         log_delta_H(false),
         log_acceptance(false),
@@ -139,6 +142,14 @@ inline void flushSimulationLogs(const SimulationLoggingParams& params,
 
   // close the file
   file.close();
+}
+inline void clearSimulationLogs(SimulationLoggingParams& params) {
+  // clear the logs
+  params.log_steps.clear();
+  params.delta_H.clear();
+  params.acceptance.clear();
+  params.accept.clear();
+  params.time.clear();
 }
 
 }  // namespace klft

@@ -367,6 +367,16 @@ int HMC_execute(const std::string& input_file,
     // measure the gauge observables
     measureGaugeObservables<4, 2>(g_in, gaugeObsParams, step);
     addLogData(simLogParams, step, hmc.delta_H, acc_rate, accept, time);
+    if (simLogParams.flush != 0 && step % simLogParams.flush == 0) {
+      flushSimulationLogs(simLogParams, output_directory,
+                          step == simLogParams.flush);
+      clearSimulationLogs(simLogParams);
+    }
+    if (gaugeObsParams.flush != 0 && step % gaugeObsParams.flush == 0) {
+      flushAllGaugeObservables(gaugeObsParams, output_directory,
+                               step == simLogParams.flush);
+      clearAllGaugeObservables(gaugeObsParams);
+    }
     // TODO:make flushAllGaugeObservables append the Observables to the
     // files
     // -> don't lose all progress when the simulation is interupted if (step
@@ -379,8 +389,13 @@ int HMC_execute(const std::string& input_file,
     // }
   }
   // flush the measurements to the files
-  flushAllGaugeObservables(gaugeObsParams, output_directory);
-  flushSimulationLogs(simLogParams, output_directory);
+  if (simLogParams.flush == 0) {
+    flushSimulationLogs(simLogParams, output_directory);
+  }
+  if (gaugeObsParams.flush == 0) {
+    flushAllGaugeObservables(gaugeObsParams, output_directory);
+  }
+
   printf("Total Acceptance rate: %f, Didn't Accept %f Configs", acc_rate,
          acc_sum);
   return 0;
