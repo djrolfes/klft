@@ -44,7 +44,8 @@ class Solver {
   SpinorFieldType x;  // Solution to DiracOP*x=b
   DiracOperator<Derived, DSpinorFieldType, DGaugeFieldType> dirac_op;
   Solver(
-      const SpinorFieldType& b, SpinorFieldType& x,
+      const SpinorFieldType& b,
+      SpinorFieldType& x,
       const DiracOperator<Derived, DSpinorFieldType, DGaugeFieldType>& dirac_op)
       : b(b), x(x), dirac_op(dirac_op) {}
 
@@ -70,7 +71,8 @@ class CGSolver : public Solver<Derived, DSpinorFieldType, DGaugeFieldType> {
   constexpr static size_t RepDim =
       DeviceFermionFieldTypeTraits<DSpinorFieldType>::RepDim;
   CGSolver() = delete;
-  CGSolver(const SpinorFieldType& b, SpinorFieldType& x,
+  CGSolver(const SpinorFieldType& b,
+           SpinorFieldType& x,
            DiracOperator<Derived, DSpinorFieldType, DGaugeFieldType>& dirac_op)
       : Solver<Derived, DSpinorFieldType, DGaugeFieldType>(b, x, dirac_op) {}
 
@@ -102,7 +104,7 @@ class CGSolver : public Solver<Derived, DSpinorFieldType, DGaugeFieldType> {
 
       rk_norm = spinor_norm<rank, Nc, RepDim>(rk);
       num_iter++;
-      if (KLFT_VERBOSITY > 1) {
+      if (KLFT_VERBOSITY > 2) {
         printf("CG Iteration %d: rk_norm = %.15f\n", num_iter, rk_norm);
         if (KLFT_VERBOSITY > 3) {
           printf("Norm of (b - A*x) %.15f\n",
