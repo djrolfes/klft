@@ -389,15 +389,15 @@ int HMC_execute(const std::string& input_file,
     // }
   }
   // flush the measurements to the files
-  if (simLogParams.flush == 0) {
-    flushSimulationLogs(simLogParams, output_directory);
-  }
-  if (gaugeObsParams.flush == 0) {
-    flushAllGaugeObservables(gaugeObsParams, output_directory);
-  }
+  // if flush is set to 0, we flush with the  header at the end of the
+  // simulation
 
-  printf("Total Acceptance rate: %f, Didn't Accept %f Configs", acc_rate,
-         acc_sum);
+  flushSimulationLogs(simLogParams, output_directory, simLogParams.flush == 0);
+
+  flushAllGaugeObservables(gaugeObsParams, output_directory,
+                           gaugeObsParams.flush == 0);
+
+  printf("Total Acceptance rate: %f, Accept %f Configs", acc_rate, acc_sum);
   return 0;
   // return 1;
 }
