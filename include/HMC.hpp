@@ -43,8 +43,10 @@ class HMC {
 
   HMC(const Integrator_Params params_,
       HamiltonianField<DGaugeFieldType, DAdjFieldType>& hamiltonian_field_,
-      std::shared_ptr<Integrator> integrator_, RNG rng_,
-      std::uniform_real_distribution<real_t> dist_, std::mt19937 mt_)
+      std::shared_ptr<Integrator> integrator_,
+      RNG rng_,
+      std::uniform_real_distribution<real_t> dist_,
+      std::mt19937 mt_)
       : params(params_),
         rng(rng_),
         dist(dist_),
@@ -70,7 +72,9 @@ class HMC {
 
                   DeviceFermionFieldTypeTraits<DSpinorFieldType>::RepDim>&
           params_,
-      const real_t& tol_, RNG& rng, const unsigned int _time_scale) {
+      const real_t& tol_,
+      RNG& rng,
+      const unsigned int _time_scale) {
     monomials.emplace_back(
         std::make_unique<
             FermionMonomial<DiracOperator, Solver, RNG, DSpinorFieldType,
@@ -99,7 +103,7 @@ class HMC {
     for (int i = 0; i < monomials.size(); ++i) {
       monomials[i]->accept(hamiltonian_field);
       delta_H += monomials[i]->get_delta_H();
-      if (KLFT_VERBOSITY > 2) {
+      if (KLFT_VERBOSITY > 1) {
         monomials[i]->print();
       }
 
@@ -118,10 +122,10 @@ class HMC {
                                 0.1);
       Kokkos::deep_copy(gauge_save.field, hamiltonian_field.gauge_field.field);
       Kokkos::fence();
-      for (int i = 0; i < monomials.size(); ++i) {
-        monomials[i]->reset();
-        monomials[i]->heatbath(hamiltonian_field);
-      }
+      // for (int i = 0; i < monomials.size(); ++i) {
+      //   monomials[i]->reset();
+      //   monomials[i]->heatbath(hamiltonian_field);
+      // }
       real_t delta_H_revers = 0;
       flip_sign<DAdjFieldType>(hamiltonian_field.adjoint_field);
       integrator->integrate(params.tau, false);
@@ -134,7 +138,7 @@ class HMC {
           monomials[i]->print();
         }
       }
-      Kokkos::printf("Deltadelta_H_ges %.20f \n", delta_H + delta_H_revers);
+      Kokkos::printf("Deltadelta_H_ges %.20f \n", delta_H_revers);
       Kokkos::deep_copy(hamiltonian_field.gauge_field.field, gauge_save.field);
     }
     if (!accept) {

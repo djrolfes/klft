@@ -28,13 +28,16 @@ struct HamiltonianField {
 
   HamiltonianField() = delete;
 
-  HamiltonianField(GaugeField &_gauge_field, AdjointField &_adjoint_field)
+  HamiltonianField(GaugeField& _gauge_field, AdjointField& _adjoint_field)
       : gauge_field(_gauge_field), adjoint_field(_adjoint_field) {}
 
   // Rank-4 version
-  KOKKOS_INLINE_FUNCTION void operator()(EKin, index_t i0, index_t i1,
-                                         index_t i2, index_t i3,
-                                         real_t &rtn) const {
+  KOKKOS_INLINE_FUNCTION void operator()(EKin,
+                                         index_t i0,
+                                         index_t i1,
+                                         index_t i2,
+                                         index_t i3,
+                                         real_t& rtn) const {
     real_t tmp = 0.0;
     for (index_t mu = 0; mu < 4; ++mu) {
       tmp += 0.5 * norm2<Nc>(adjoint_field(i0, i1, i2, i3, mu));
@@ -43,8 +46,11 @@ struct HamiltonianField {
   }
 
   // Rank-3 version
-  KOKKOS_INLINE_FUNCTION void operator()(EKin, index_t i0, index_t i1,
-                                         index_t i2, real_t &rtn) const {
+  KOKKOS_INLINE_FUNCTION void operator()(EKin,
+                                         index_t i0,
+                                         index_t i1,
+                                         index_t i2,
+                                         real_t& rtn) const {
     real_t tmp = 0.0;
     for (index_t mu = 0; mu < 3; ++mu) {
       tmp += 0.5 * norm2<Nc>(adjoint_field(i0, i1, i2, mu));
@@ -53,8 +59,10 @@ struct HamiltonianField {
   }
 
   // Rank-2 version
-  KOKKOS_INLINE_FUNCTION void operator()(EKin, index_t i0, index_t i1,
-                                         real_t &rtn) const {
+  KOKKOS_INLINE_FUNCTION void operator()(EKin,
+                                         index_t i0,
+                                         index_t i1,
+                                         real_t& rtn) const {
     real_t tmp = 0.0;
     for (index_t mu = 0; mu < 2; ++mu) {
       tmp += 0.5 * norm2<Nc>(adjoint_field(i0, i1, mu));
@@ -67,11 +75,12 @@ struct HamiltonianField {
     auto rp = Kokkos::MDRangePolicy<EKin, Kokkos::Rank<rank>>(
         IndexArray<rank>{0}, adjoint_field.dimensions);
     Kokkos::parallel_reduce("kinetic_energy", rp, *this, kinetic_energy);
+    Kokkos::fence();
     return kinetic_energy;
   }
 
   template <class RNG>
-  void randomize_momentum(RNG &rng) {
+  void randomize_momentum(RNG& rng) {
     randomize_field<DAdjFieldType, RNG>(adjoint_field, rng);
   }
 };

@@ -12,7 +12,8 @@ class Integrator : public std::enable_shared_from_this<Integrator> {
   Integrator() = delete;
   virtual ~Integrator() = default;
 
-  Integrator(const size_t n_steps_, const bool outermost_,
+  Integrator(const size_t n_steps_,
+             const bool outermost_,
              std::shared_ptr<Integrator> nested_,
              std::shared_ptr<UpdatePosition> update_q_,
              std::shared_ptr<UpdateMomentum> update_p_)
@@ -37,7 +38,8 @@ class LeapFrog : public Integrator {  // <UpdatePosition, UpdateMomentum> {
  public:
   LeapFrog() = delete;
 
-  LeapFrog(const size_t n_steps_, const bool outermost_,
+  LeapFrog(const size_t n_steps_,
+           const bool outermost_,
            std::shared_ptr<Integrator> nested_,
            std::shared_ptr<UpdatePosition> update_q_,
            std::shared_ptr<UpdateMomentum> update_p_)
@@ -48,7 +50,8 @@ class LeapFrog : public Integrator {  // <UpdatePosition, UpdateMomentum> {
   void halfstep(const real_t tau) const override {
     const real_t eps = tau / n_steps;
     update_p->update(eps * 0.5);
-    if (nested) nested->halfstep(eps);
+    if (nested)
+      nested->halfstep(eps);
   }
 
   void integrate(const real_t tau, const bool last_step) const override {
@@ -73,8 +76,10 @@ class LeapFrog : public Integrator {  // <UpdatePosition, UpdateMomentum> {
     } else {
       update_q->update(eps);
     }
-    if (!last_step && !outermost) update_p->update(eps);
-    if (outermost) halfstep(tau);
+    if (!last_step && !outermost)
+      update_p->update(eps);
+    if (outermost)
+      halfstep(tau);
   }
 
 };  // class LeapFrog

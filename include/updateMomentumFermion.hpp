@@ -6,8 +6,11 @@
 #include "UpdateMomentum.hpp"
 namespace klft {
 
-template <typename DFermionFieldType, typename DGaugeFieldType,
-          typename DAdjFieldType, class Derived, class Solver>
+template <typename DFermionFieldType,
+          typename DGaugeFieldType,
+          typename DAdjFieldType,
+          class Derived,
+          class Solver>
 class UpdateMomentumFermion : public UpdateMomentum {
   static_assert(isDeviceFermionFieldType<DFermionFieldType>::value);
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
@@ -46,7 +49,8 @@ class UpdateMomentumFermion : public UpdateMomentum {
   UpdateMomentumFermion() = delete;
   ~UpdateMomentumFermion() = default;
 
-  UpdateMomentumFermion(FermionField& phi_, GaugeFieldType& gauge_field_,
+  UpdateMomentumFermion(FermionField& phi_,
+                        GaugeFieldType& gauge_field_,
                         AdjFieldType& adjoint_field_,
                         const diracParams<rank, RepDim>& params_,
                         const real_t& tol_)
@@ -81,26 +85,28 @@ class UpdateMomentumFermion : public UpdateMomentum {
     // Update the momentum of the fermion field
 #pragma unroll
     for (size_t mu = 0; mu < rank; ++mu) {
+      // X = chi , Y = chi_alt
       auto xm = shift_index_minus_bc<rank, size_t>(
-          Kokkos::Array<size_t, rank>{Idcs...}, mu, 1, 3, -1,
+          Kokkos::Array<size_t, rank>{Idcs...}, mu, 1, 0, -1,
           this->params.dimensions);
       auto xp = shift_index_plus_bc<rank, size_t>(
-          Kokkos::Array<size_t, rank>{Idcs...}, mu, 1, 3, -1,
+          Kokkos::Array<size_t, rank>{Idcs...}, mu, 1, 0, -1,
           this->params.dimensions);
-      auto first_term =
-          (xp.second * -this->params.kappa) *
-          ((this->params.gamma_id - this->params.gammas[mu]) *
-           (this->gauge_field(Idcs..., mu) * this->chi_alt(xp.first)));
-      auto second_term =
-          (xp.second * this->params.kappa) *
-          ((this->params.gamma_id + this->params.gammas[mu]) *
-           (conj(this->gauge_field(Idcs..., mu)) * this->chi_alt(Idcs...)));
-      // The first multiplication makes the force matrix
-      auto total_term =
-          conj(chi(Idcs...)) * (this->params.gamma5 * first_term) +
-          conj(chi(xp.first)) * (this->params.gamma5 * second_term);
 
-      auto derv = 2 * this->eps * total_term;
+      auto Xplus = xp.second * this->chi(xp.first);
+      auto temp1 = gauge_field(Idcs..., mu) * Xplus;
+      auto temp2 = (this->params.gamma_id - this->params.gammas[mu]) * temp1;
+      temp1 = this->params.kappa * temp2;
+      auto first_term = temp1 * (conj(this->chi_alt(Idcs...)));
+
+      auto Yplus = xp.second * (this->chi_alt(xp.first));
+      auto temp3 = conj(Yplus) * conj(this->gauge_field(Idcs..., mu));
+      auto temp4 = temp3 * (this->params.gamma_id + this->params.gammas[mu]);
+      temp3 = this->params.kappa * temp4;
+      auto second_term = this->chi(Idcs...) * temp3;
+
+      auto derv = -1 * first_term + second_term;
+
       // if (Kokkos::Array<size_t, rank>{Idcs...} ==
       //     Kokkos::Array<size_t, rank>{0, 0, 0, 0}) {
       //   print_SUN(traceLessAntiHermitian(derv), "SUN Force Matrix ");
@@ -109,8 +115,9 @@ class UpdateMomentumFermion : public UpdateMomentum {
       // }
 
       // Taking the Real part is handled by the traceT
-      momentum(Idcs..., mu) -= traceT(traceLessAntiHermitian(
-          derv));  // in leap frog therese the minus sign here
+      momentum(Idcs..., mu) -=
+          eps * traceT(traceLessAntiHermitian(
+                    derv));  // in leap frog therese the minus sign here
     }
   }
 
@@ -130,7 +137,7 @@ class UpdateMomentumFermion : public UpdateMomentum {
 
     solver.solve(x0, this->tol);
     this->chi = solver.x;
-    this->chi_alt = D.applyDdagger(this->chi);
+    this->chi_alt = D.applyD(this->chi);
     // print_spinor_int(solver.x(0, 0, 0, 0),
     //                  "solver.x after solve (should be the same as chi)");
     // print_spinor_int(this->chi(0, 0, 0, 0), "chi after solve");

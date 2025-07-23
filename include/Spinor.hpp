@@ -41,6 +41,23 @@ KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, Nd> operator*(
   }
   return res;
 }
+template <size_t Nc, size_t Nd>
+KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, Nd> operator*(
+    const Spinor<Nc, Nd>& spinor,
+    const SUN<Nc>& U) {
+  Spinor<Nc, Nd> res;
+
+#pragma unroll
+  for (size_t j = 0; j < Nc; ++j)
+#pragma unroll
+    for (size_t i = 0; i < Nc; ++i)
+#pragma unroll
+      for (size_t k = 0; k < Nd; ++k)
+        res[i][k] += spinor[j][k] * U[j][i];
+
+  return res;
+}
+
 // *= makes no sense f spinor gauge link
 
 template <size_t Nc, size_t Nd>
@@ -182,6 +199,26 @@ KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, Nd> operator*(
 #pragma unroll
       for (size_t k = 0; k < Nd; k++) {
         val += matrix(j, k) * spinor[i][k];
+      }
+      c[i][j] = val;
+    }
+  }
+  return c;
+}
+
+template <size_t Nc, size_t Nd>
+KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, Nd> operator*(
+    const Spinor<Nc, Nd>& spinor,
+    const GammaMat<Nd>& matrix) {
+  Spinor<Nc, Nd> c;
+#pragma unroll
+  for (size_t i = 0; i < Nc; ++i) {
+#pragma unroll
+    for (size_t j = 0; j < Nd; ++j) {
+      complex_t val = 0.0;
+#pragma unroll
+      for (size_t k = 0; k < Nd; ++k) {
+        val += spinor[i][k] * matrix(k, j);  // spinor * gamma
       }
       c[i][j] = val;
     }

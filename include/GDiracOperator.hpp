@@ -133,19 +133,24 @@ class WilsonDiracOperator
 #pragma unroll
     for (size_t mu = 0; mu < rank; ++mu) {
       auto xm = shift_index_minus_bc<rank, size_t>(
-          Kokkos::Array<size_t, rank>{Idcs...}, mu, 1, 3, -1,
+          Kokkos::Array<size_t, rank>{Idcs...}, mu, 1, 0, -1,
           this->params.dimensions);
       auto xp = shift_index_plus_bc<rank, size_t>(
-          Kokkos::Array<size_t, rank>{Idcs...}, mu, 1, 3, -1,
+          Kokkos::Array<size_t, rank>{Idcs...}, mu, 1, 0, -1,
           this->params.dimensions);
 
-      temp += (this->params.gamma_id - this->params.gammas[mu]) * xp.second *
-              (this->g_in(Idcs..., mu) * this->s_in(xp.first));
-      temp += (this->params.gamma_id + this->params.gammas[mu]) * xm.second *
-              (conj(this->g_in(xm.first, mu)) * this->s_in(xm.first));
+      auto XPlus = this->s_in(xp.first);
+      auto temp1 = this->g_in(Idcs..., mu) * XPlus;
+      auto temp2 = (this->params.gamma_id - this->params.gammas[mu]) * temp1;
+
+      auto Xminus = this->s_in(xm.first);
+      auto temp3 = conj(this->g_in(xm.first, mu)) * Xminus;
+      auto temp4 = (this->params.gamma_id + this->params.gammas[mu]) * temp3;
+      temp += ((this->params.kappa * xp.second) * temp2 +
+               (this->params.kappa * xm.second) * temp4);
     }
 
-    this->s_out(Idcs...) = this->s_in(Idcs...) - this->params.kappa * temp;
+    this->s_out(Idcs...) = this->s_in(Idcs...) - temp;
   }
 
   template <typename... Indices>
@@ -155,19 +160,22 @@ class WilsonDiracOperator
 #pragma unroll
     for (size_t mu = 0; mu < rank; ++mu) {
       auto xm = shift_index_minus_bc<rank, size_t>(
-          Kokkos::Array<size_t, rank>{Idcs...}, mu, 1, 3, -1,
+          Kokkos::Array<size_t, rank>{Idcs...}, mu, 1, 0, -1,
           this->params.dimensions);
       auto xp = shift_index_plus_bc<rank, size_t>(
-          Kokkos::Array<size_t, rank>{Idcs...}, mu, 1, 3, -1,
+          Kokkos::Array<size_t, rank>{Idcs...}, mu, 1, 0, -1,
           this->params.dimensions);
-      // For the Ddagger operator only the signs of the gammas should change
-      temp += (this->params.gamma_id + this->params.gammas[mu]) * xp.second *
-              (this->g_in(Idcs..., mu) * this->s_in(xp.first));
-      temp += (this->params.gamma_id - this->params.gammas[mu]) * xm.second *
-              (conj(this->g_in(xm.first, mu)) * this->s_in(xm.first));
-    }
+      auto XPlus = this->s_in(xp.first);
+      auto temp1 = this->g_in(Idcs..., mu) * XPlus;
+      auto temp2 = (this->params.gamma_id + this->params.gammas[mu]) * temp1;
 
-    this->s_out(Idcs...) = this->s_in(Idcs...) - this->params.kappa * temp;
+      auto Xminus = this->s_in(xm.first);
+      auto temp3 = conj(this->g_in(xm.first, mu)) * Xminus;
+      auto temp4 = (this->params.gamma_id - this->params.gammas[mu]) * temp3;
+      temp += (this->params.kappa * xp.second) * temp2 +
+              (this->params.kappa * xm.second) * temp4;
+    }
+    this->s_out(Idcs...) = this->s_in(Idcs...) - temp;
   }
 };
 // // Deduction guide
@@ -203,10 +211,10 @@ class HWilsonDiracOperator
 #pragma unroll
     for (size_t mu = 0; mu < rank; ++mu) {
       auto xm = shift_index_minus_bc<rank, size_t>(
-          Kokkos::Array<size_t, rank>{Idcs...}, mu, 1, 3, -1,
+          Kokkos::Array<size_t, rank>{Idcs...}, mu, 1, 0, -1,
           this->params.dimensions);
       auto xp = shift_index_plus_bc<rank, size_t>(
-          Kokkos::Array<size_t, rank>{Idcs...}, mu, 1, 3, -1,
+          Kokkos::Array<size_t, rank>{Idcs...}, mu, 1, 0, -1,
           this->params.dimensions);
 
       temp += (this->params.gamma_id - this->params.gammas[mu]) * xp.second *

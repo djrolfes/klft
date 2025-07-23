@@ -50,14 +50,31 @@ int main(int argc, char* argv[]) {
     printf("Generating Random Gauge Config\n");
     deviceGaugeField<4, 3> gauge(L0, L1, L2, L3, random_pool, 1);
     printf("Instantiate DiracOperator...\n");
-    HWilsonDiracOperator<DeviceSpinorFieldType<4, 3, 4>,
-                         DeviceGaugeFieldType<4, 3>>
+    WilsonDiracOperator<DeviceSpinorFieldType<4, 3, 4>,
+                        DeviceGaugeFieldType<4, 3>>
         D(gauge, params);
     printf("Apply DiracOperator...\n");
-
+    // tune_and_launch_for<4>(
+    //     "Gauge Trafo", IndexArray<4>{0, 0, 0, 0}, IndexArray<4>{L0, L1, L2,
+    //     L3}, KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t
+    //     i2,
+    //                   const index_t i3) {
+    //       // Transform spinor u, and Mu
+    //       v(i0, i1, i2, i3) = gamma5 * v(i0, i1, i2, i3);
+    //     });
     D.applyD_inplace(u, Mu);
     Kokkos::fence();
-    D.applyD_inplace(v, Mv);
+    D.applyDdagger_inplace(v, Mv);
+    Kokkos::fence();
+    // tune_and_launch_for<4>(
+    //     "Gauge Trafo", IndexArray<4>{0, 0, 0, 0}, IndexArray<4>{L0, L1, L2,
+    //     L3}, KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t
+    //     i2,
+    //                   const index_t i3) {
+    //       // Transform spinor u, and Mu
+    //       Mv(i0, i1, i2, i3) = gamma5 * Mv(i0, i1, i2, i3);
+    //       v(i0, i1, i2, i3) = gamma5 * v(i0, i1, i2, i3);
+    //     });
     // deviceSpinorField<3, 4> Mu = apply_D<4, 3, 4>(u, gauge, gammas, -0.5);
     // deviceSpinorField<3, 4> Mv = apply_D<4, 3, 4>(v, gauge, gammas, -0.5);
 
@@ -146,13 +163,13 @@ int main(int argc, char* argv[]) {
     printf("Generating Random Gauge Config\n");
     deviceGaugeField<4, 2> gauge_SU2(L0, L1, L2, L3, random_pool, 1);
     printf("Instantiate DiracOperator...\n");
-    HWilsonDiracOperator<DeviceSpinorFieldType<4, 2, 4>,
-                         DeviceGaugeFieldType<4, 2>>
+    WilsonDiracOperator<DeviceSpinorFieldType<4, 2, 4>,
+                        DeviceGaugeFieldType<4, 2>>
         D_SU2(gauge_SU2, params);
     printf("Apply DiracOperator...\n");
 
     deviceSpinorField<2, 4> Mu_SU2 = D_SU2.applyD(u_SU2);
-    deviceSpinorField<2, 4> Mv_SU2 = D_SU2.applyD(v_SU2);
+    deviceSpinorField<2, 4> Mv_SU2 = D_SU2.applyDdagger(v_SU2);
     // deviceSpinorField<3, 4> Mu = apply_D<4, 3, 4>(u, gauge, gammas, -0.5);
     // deviceSpinorField<3, 4> Mv = apply_D<4, 3, 4>(v, gauge, gammas, -0.5);
 
@@ -245,13 +262,13 @@ int main(int argc, char* argv[]) {
     printf("Generating Random Gauge Config\n");
     deviceGaugeField<4, 1> gauge_U1(L0, L1, L2, L3, random_pool, 1);
     printf("Instantiate DiracOperator...\n");
-    HWilsonDiracOperator<DeviceSpinorFieldType<4, 1, 4>,
-                         DeviceGaugeFieldType<4, 1>>
+    WilsonDiracOperator<DeviceSpinorFieldType<4, 1, 4>,
+                        DeviceGaugeFieldType<4, 1>>
         D_U1(gauge_U1, params);
     printf("Apply DiracOperator...\n");
 
-    deviceSpinorField<1, 4> Mu_U1 = D_U1.applyDdagger(u_U1);
-    deviceSpinorField<1, 4> Mv_U1 = D_U1.applyD(v_U1);
+    deviceSpinorField<1, 4> Mu_U1 = D_U1.applyD(u_U1);
+    deviceSpinorField<1, 4> Mv_U1 = D_U1.applyDdagger(v_U1);
     // deviceSpinorField<3, 4> Mu = apply_D<4, 3, 4>(u, gauge, gammas, -0.5);
     // deviceSpinorField<3, 4> Mv = apply_D<4, 3, 4>(v, gauge, gammas, -0.5);
 
