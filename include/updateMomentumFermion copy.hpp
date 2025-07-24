@@ -97,27 +97,18 @@ class UpdateMomentumFermion : public UpdateMomentum {
       auto temp1 = gauge_field(Idcs..., mu) * Xplus;
       auto temp2 = (this->params.gamma_id - this->params.gammas[mu]) * temp1;
       temp1 = this->params.kappa * temp2;
-      auto first_term = temp1 * (conj(this->chi_alt(Idcs...)));
+      auto first_term =
+          temp1 * (this->params.gamma5 * conj(this->chi_alt(Idcs...)));
 
-      auto Yplus = xp.second * (this->chi_alt(xp.first));
+      auto Yplus = xp.second * (this->params.gamma5 * this->chi_alt(xp.first));
       auto temp3 = conj(Yplus) * conj(this->gauge_field(Idcs..., mu));
       auto temp4 = temp3 * (this->params.gamma_id + this->params.gammas[mu]);
       temp3 = this->params.kappa * temp4;
       auto second_term = this->chi(Idcs...) * temp3;
 
-      auto deriv = -1 * first_term + second_term;
+      auto temp5 = *this->chi(Idcs...)
 
-      // temp1 = conj(Xplus) * conj(this->gauge_field(Idcs..., mu));
-      // temp2 = temp1 * (this->params.gamma_id - this->params.gammas[mu]);
-      // temp1 = this->params.kappa * temp2;
-      // auto first_term_adj = (this->chi_alt(Idcs...)) * temp1;
-
-      // temp3 = this->gauge_field(Idcs..., mu) * Yplus;
-      // temp4 = (this->params.gamma_id + this->params.gammas[mu]) * temp3;
-      // temp3 = this->params.kappa * temp4;
-      // auto second_term_adj = temp3 * conj(this->chi(Idcs...));
-
-      // deriv += first_term_adj + -1 * second_term_adj;
+                        auto derv = -1 * first_term + second_term;
 
       // if (Kokkos::Array<size_t, rank>{Idcs...} ==
       //     Kokkos::Array<size_t, rank>{0, 0, 0, 0}) {
@@ -128,10 +119,8 @@ class UpdateMomentumFermion : public UpdateMomentum {
 
       // Taking the Real part is handled by the traceT
       momentum(Idcs..., mu) -=
-          2 * eps *
-          traceT(traceLessAntiHermitian(
-
-              deriv));  // in leap frog therese the minus sign here
+          eps * traceT(traceLessAntiHermitian(
+                    derv));  // in leap frog therese the minus sign here
     }
   }
 
@@ -140,7 +129,6 @@ class UpdateMomentumFermion : public UpdateMomentum {
 
     IndexArray<rank> start;
     Derived D(gauge_field, this->params);
-    Derived D1(gauge_field, this->params);
     FermionField x(this->params.dimensions, complex_t(0.0, 0.0));
     FermionField x0(this->params.dimensions, complex_t(0.0, 0.0));
     // print_spinor_int(this->phi(0, 0, 0, 0),
@@ -150,9 +138,9 @@ class UpdateMomentumFermion : public UpdateMomentum {
       printf("Solving insde updateMomentumFermion:");
     }
 
-    solver.template solve<Tags::TagMdagger>(x0, this->tol);
+    solver.solve(x0, this->tol);
     this->chi = solver.x;
-    this->chi_alt = D1.template apply<Tags::TagD>(this->chi);
+    this->chi_alt = D.applyD(this->chi);
     // print_spinor_int(solver.x(0, 0, 0, 0),
     //                  "solver.x after solve (should be the same as chi)");
     // print_spinor_int(this->chi(0, 0, 0, 0), "chi after solve");

@@ -55,7 +55,7 @@ int main(int argc, char* argv[]) {
         D(gauge, params);
     printf("Apply DiracOperator...\n");
 
-    deviceSpinorField Mu = D.applyD(u);
+    deviceSpinorField Mu = D.template apply<Tags::TagD>(u);
     deviceGaugeField<4, 3> gaugeTrafo(L0, L1, L2, L3, random_pool, 1);
     tune_and_launch_for<4>(
         "Gauge Trafo", IndexArray<4>{0, 0, 0, 0}, IndexArray<4>{L0, L1, L2, L3},
@@ -71,7 +71,7 @@ int main(int argc, char* argv[]) {
           // Transform spinor u, and Mu
         });
 
-    deviceSpinorField Mv1 = D.applyD(u);
+    deviceSpinorField Mv1 = D.template apply<Tags::TagD>(u);
     // deviceSpinorField<3, 4> Mu = apply_D<4, 3, 4>(u, gauge, gammas, -0.5);
     // deviceSpinorField<3, 4> Mv = apply_D<4, 3, 4>(v, gauge, gammas, -0.5);
     print_spinor(Mv1(0, 0, 0, 0), "Mv1");

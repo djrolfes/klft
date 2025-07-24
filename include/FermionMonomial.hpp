@@ -81,11 +81,11 @@ class FermionMonomial : public Monomial<DGaugeFieldType, DAdjFieldType> {
       printf("Solving inside Fermion Monomial accept:");
     }
 
-    solver.solve(x0, this->tol);
+    solver.template solve<Tags::TagMdagger>(x0, this->tol);
     const FermionField chi = solver.x;
     // print_spinor_int(this->phi(0, 0, 0, 0), "Phi field in acceot step");
     Monomial<DGaugeFieldType, DAdjFieldType>::H_new =
-        spinor_dot_product<rank, Nc, RepDim>(this->phi, chi).real();
+        spinor_dot_product<rank, Nc, RepDim>(chi, this->phi).real();
     // print_SUNAdj(h.adjoint_field(0, 0, 0, 0, 0),
     //              "SUNAdj at accept Monomial Fermion");
   }

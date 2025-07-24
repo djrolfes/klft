@@ -16,15 +16,22 @@
 // along with KLFT.  If not, see <http://www.gnu.org/licenses/>.
 //
 //******************************************************************************/
+
 #pragma once
+#include "DiracOPTypeHelper.hpp"
 #include "FieldTypeHelper.hpp"
 #include "GDiracOperator.hpp"
 #include "GLOBAL.hpp"
 #include "SpinorFieldLinAlg.hpp"
+
 namespace klft {
 
-template <typename Derived, typename DSpinorFieldType, typename DGaugeFieldType>
+template <typename ConcreteSolver, typename DiracOperator>
 class Solver {
+  using DSpinorFieldType =
+      typename DiracOpFieldTypeTraits<DiracOperator>::DSpinorFieldType;
+  using DGaugeFieldType =
+      typename DiracOpFieldTypeTraits<DiracOperator>::DGaugeFieldType;
   // template argument deduction and safety
   static_assert(isDeviceFermionFieldType<DSpinorFieldType>::value);
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
@@ -42,14 +49,15 @@ class Solver {
   using GaugeFieldType = typename DGaugeFieldType::type;
   const SpinorFieldType b;
   SpinorFieldType x;  // Solution to DiracOP*x=b
-  DiracOperator<Derived, DSpinorFieldType, DGaugeFieldType> dirac_op;
-  Solver(
-      const SpinorFieldType& b,
-      SpinorFieldType& x,
-      const DiracOperator<Derived, DSpinorFieldType, DGaugeFieldType>& dirac_op)
+  DiracOperator dirac_op;
+  Solver(const SpinorFieldType& b,
+         SpinorFieldType& x,
+         const DiracOperator& dirac_op)
       : b(b), x(x), dirac_op(dirac_op) {}
-
-  virtual void solve(const SpinorFieldType& x0, const real_t& tol) = 0;
+  template <typename Tag>
+  void solve(const SpinorFieldType& x0, const real_t& tol) {
+    static_cast<ConcreteSolver&>(this)->template solve<Tag>(x0, tol);
+  }
 };
 // // Deduction guide for Solver
 // template <typename Operator, typename SpinorType>
@@ -59,8 +67,13 @@ class Solver {
 //               SpinorType::Nc,
 //               SpinorType::RepDim>;
 
-template <typename Derived, typename DSpinorFieldType, typename DGaugeFieldType>
-class CGSolver : public Solver<Derived, DSpinorFieldType, DGaugeFieldType> {
+template <typename DiracOperator>
+class CGSolver : public Solver<CGSolver<DiracOperator>, DiracOperator> {
+  using DSpinorFieldType =
+      typename DiracOpFieldTypeTraits<DiracOperator>::DSpinorFieldType;
+  using DGaugeFieldType =
+      typename DiracOpFieldTypeTraits<DiracOperator>::DGaugeFieldType;
+
  public:
   using SpinorFieldType = typename DSpinorFieldType::type;
   using GaugeFieldType = typename DGaugeFieldType::type;
@@ -73,25 +86,23 @@ class CGSolver : public Solver<Derived, DSpinorFieldType, DGaugeFieldType> {
   CGSolver() = delete;
   CGSolver(const SpinorFieldType& b,
            SpinorFieldType& x,
-           DiracOperator<Derived, DSpinorFieldType, DGaugeFieldType>& dirac_op)
-      : Solver<Derived, DSpinorFieldType, DGaugeFieldType>(b, x, dirac_op) {}
-
-  void solve(const SpinorFieldType& x0, const real_t& tol) override {
+           DiracOperator& dirac_op)
+      : Solver<CGSolver<DiracOperator>, DiracOperator>(b, x, dirac_op) {}
+  template <typename Tag>
+  void solve(const SpinorFieldType& x0, const real_t& tol) {
     SpinorFieldType xk(this->dirac_op.params.dimensions, complex_t(0.0, 0.0));
     Kokkos::deep_copy(xk.field, x0.field);  // x_0
 
     SpinorFieldType rk = spinor_sub_mul<rank, Nc, RepDim>(
-        this->b,
-        this->dirac_op.applyDdagger(this->dirac_op.applyD(
-            xk)),  // check if this is the right vector to apply dirac_op
-        1.0);      // r_0
+        this->b, this->dirac_op.template apply<Tag>(xk), 1.0);
+
     SpinorFieldType pk(this->dirac_op.params.dimensions, complex_t(0.0, 0.0));
     Kokkos::deep_copy(pk.field, rk.field);  // p_0                        // d_0
     real_t rk_norm = spinor_norm<rank, Nc, RepDim>(rk);  //\delta_0
     int num_iter = 0;
     while (rk_norm > tol) {
       const SpinorFieldType apk =
-          this->dirac_op.applyDdagger(this->dirac_op.applyD(pk));  // z = Ad_k
+          this->dirac_op.template apply<Tag>(pk);  // z = Ad_k
       const complex_t rkrk = spinor_dot_product<rank, Nc, RepDim>(rk, rk);
       const complex_t alpha = (rkrk / spinor_dot_product<rank, Nc, RepDim>(
                                           pk, apk));  // Always real
@@ -109,20 +120,17 @@ class CGSolver : public Solver<Derived, DSpinorFieldType, DGaugeFieldType> {
         if (KLFT_VERBOSITY > 3) {
           printf("Norm of (b - A*x) %.15f\n",
                  spinor_norm<rank, Nc, RepDim>(spinor_sub_mul<rank, Nc, RepDim>(
-                     this->b,
-                     this->dirac_op.applyDdagger(this->dirac_op.applyD(xk)),
-                     1.0)));
+                     this->b, this->dirac_op.template apply<Tag>(xk), 1.0)));
         }
       }
     }
     const real_t ex_res =
         spinor_norm<rank, Nc, RepDim>(spinor_sub_mul<rank, Nc, RepDim>(
-            this->b, this->dirac_op.applyDdagger(this->dirac_op.applyD(xk)),
-            1.0));
+            this->b, this->dirac_op.template apply<Tag>(xk), 1.0));
 
-    if (Kokkos::abs(ex_res / spinor_norm<rank, Nc, RepDim>(xk)) > tol) {
+    if (Kokkos::abs(ex_res) > tol) {
       printf("Roundoff Error, relaunching CG solver with new initial guess\n");
-      this->solve(xk, tol);
+      this->template solve<Tag>(xk, tol);
     } else {
       if (KLFT_VERBOSITY > 1) {
         printf("CG solver converged in %d iterations\n", num_iter);
@@ -131,4 +139,7 @@ class CGSolver : public Solver<Derived, DSpinorFieldType, DGaugeFieldType> {
     }
   }
 };
+// After CGSolver class definition
+// template <typename D, typename S>
+// CGSolver(S, S, D) -> CGSolver<D, S, typename D::DGaugeFieldType::type>;
 }  // namespace klft

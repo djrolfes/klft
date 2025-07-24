@@ -26,7 +26,17 @@
 #include "GammaMatrix.hpp"
 #include "IndexHelper.hpp"
 #include "Spinor.hpp"
+
 namespace klft {
+// Base Class for Single Dirac Operator
+namespace Tags {
+struct TagD {};
+struct TagDdagger {};
+// applys Composid Operator Mdagger= DDdagger*s_in
+struct TagM {};
+// applys Composid Operator Mdagger= DdaggerD*s_in
+struct TagMdagger {};
+}  // namespace Tags
 
 template <typename _Derived,
           typename DSpinorFieldType,
@@ -49,49 +59,62 @@ class DiracOperator {
   using GaugeFieldType = typename DGaugeFieldType::type;
 
  public:
-  struct TagD {};
-  struct TagDdagger {};
   ~DiracOperator() = default;
 
-  SpinorFieldType applyD(const SpinorFieldType& s_in) {
+  SpinorFieldType apply(Tags::TagD, const SpinorFieldType& s_in) {
     // Initialize the input field
     this->s_in = s_in;
     // Initialize the output field
     this->s_out = SpinorFieldType(params.dimensions, complex_t(0.0, 0.0));
     // Apply the operator
-    tune_and_launch_for<rank, TagD>(typeid(Derived).name(), IndexArray<rank>{},
-                                    params.dimensions,
-                                    static_cast<_Derived&>(*this));
+    tune_and_launch_for<rank, Tags::TagD>(typeid(Derived).name(),
+                                          IndexArray<rank>{}, params.dimensions,
+                                          static_cast<_Derived&>(*this));
     Kokkos::fence();
     return s_out;
   }
-  SpinorFieldType applyDdagger(const SpinorFieldType& s_in) {
+
+  // keep specilized apply functions for convience
+
+  SpinorFieldType apply(Tags::TagDdagger, const SpinorFieldType& s_in) {
     this->s_in = s_in;
     // Initialize the output field
     this->s_out = SpinorFieldType(params.dimensions, complex_t(0.0, 0.0));
     // Apply the operator
-    tune_and_launch_for<rank, TagDdagger>(typeid(Derived).name(),
-                                          IndexArray<rank>{}, params.dimensions,
-                                          static_cast<_Derived&>(*this));
+    tune_and_launch_for<rank, Tags::TagDdagger>(
+        typeid(Derived).name(), IndexArray<rank>{}, params.dimensions,
+        static_cast<_Derived&>(*this));
     Kokkos::fence();
     return s_out;
   }
   void applyD_inplace(const SpinorFieldType& s_in, SpinorFieldType& s_out) {
     this->s_in = s_in;
     this->s_out = s_out;
-    tune_and_launch_for<rank, TagD>(typeid(Derived).name(), IndexArray<rank>{},
-                                    params.dimensions,
-                                    static_cast<_Derived&>(*this));
+    tune_and_launch_for<rank, Tags::TagD>(typeid(Derived).name(),
+                                          IndexArray<rank>{}, params.dimensions,
+                                          static_cast<_Derived&>(*this));
     Kokkos::fence();
   }
   void applyDdagger_inplace(const SpinorFieldType& s_in,
                             SpinorFieldType& s_out) {
     this->s_in = s_in;
     this->s_out = s_out;
-    tune_and_launch_for<rank, TagDdagger>(typeid(Derived).name(),
-                                          IndexArray<rank>{}, params.dimensions,
-                                          static_cast<_Derived&>(*this));
+    tune_and_launch_for<rank, Tags::TagDdagger>(
+        typeid(Derived).name(), IndexArray<rank>{}, params.dimensions,
+        static_cast<_Derived&>(*this));
     Kokkos::fence();
+  }
+  // applys Composid Operator M= DDdagger*s_in
+
+  SpinorFieldType apply(Tags::TagM, const SpinorFieldType& s_in) {
+    SpinorFieldType temp = this->apply(Tags::TagDdagger{}, s_in);
+    return this->apply(Tags::TagD{}, temp);
+  }
+
+  // applys Composid Operator Mdagger= DdaggerD*s_in
+  SpinorFieldType apply(Tags::TagMdagger, const SpinorFieldType& s_in) {
+    SpinorFieldType temp = this->apply(Tags::TagD{}, s_in);
+    return this->apply(Tags::TagDdagger{}, temp);
   }
   SpinorFieldType s_in;
   SpinorFieldType s_out;
@@ -101,6 +124,12 @@ class DiracOperator {
   DiracOperator(const GaugeFieldType& g_in,
                 const diracParams<rank, RepDim>& params)
       : g_in(g_in), params(params) {}
+  template <typename Tag>
+  KOKKOS_FORCEINLINE_FUNCTION SpinorFieldType
+  apply(const SpinorFieldType& s_in) {
+    // Apply the operator
+    return this->apply(Tag{}, s_in);
+  }
 
  protected:
   DiracOperator() = default;
@@ -127,7 +156,7 @@ class WilsonDiracOperator
                     DGaugeFieldType>;
   using Base::Base;
   template <typename... Indices>
-  KOKKOS_FORCEINLINE_FUNCTION void operator()(typename Base::TagD,
+  KOKKOS_FORCEINLINE_FUNCTION void operator()(typename Tags::TagD,
                                               const Indices... Idcs) const {
     Spinor<Nc, RepDim> temp;
 #pragma unroll
@@ -140,12 +169,12 @@ class WilsonDiracOperator
           this->params.dimensions);
 
       auto XPlus = this->s_in(xp.first);
-      auto temp1 = this->g_in(Idcs..., mu) * XPlus;
-      auto temp2 = (this->params.gamma_id - this->params.gammas[mu]) * temp1;
+      auto temp1 = (this->params.gamma_id - this->params.gammas[mu]) * XPlus;
+      auto temp2 = this->g_in(Idcs..., mu) * temp1;
 
       auto Xminus = this->s_in(xm.first);
-      auto temp3 = conj(this->g_in(xm.first, mu)) * Xminus;
-      auto temp4 = (this->params.gamma_id + this->params.gammas[mu]) * temp3;
+      auto temp3 = (this->params.gamma_id + this->params.gammas[mu]) * Xminus;
+      auto temp4 = conj(this->g_in(xm.first, mu)) * temp3;
       temp += ((this->params.kappa * xp.second) * temp2 +
                (this->params.kappa * xm.second) * temp4);
     }
@@ -154,7 +183,7 @@ class WilsonDiracOperator
   }
 
   template <typename... Indices>
-  KOKKOS_FORCEINLINE_FUNCTION void operator()(typename Base::TagDdagger,
+  KOKKOS_FORCEINLINE_FUNCTION void operator()(typename Tags::TagDdagger,
                                               const Indices... Idcs) const {
     Spinor<Nc, RepDim> temp;
 #pragma unroll
@@ -166,12 +195,12 @@ class WilsonDiracOperator
           Kokkos::Array<size_t, rank>{Idcs...}, mu, 1, 0, -1,
           this->params.dimensions);
       auto XPlus = this->s_in(xp.first);
-      auto temp1 = this->g_in(Idcs..., mu) * XPlus;
-      auto temp2 = (this->params.gamma_id + this->params.gammas[mu]) * temp1;
+      auto temp1 = (this->params.gamma_id + this->params.gammas[mu]) * XPlus;
+      auto temp2 = this->g_in(Idcs..., mu) * temp1;
 
       auto Xminus = this->s_in(xm.first);
-      auto temp3 = conj(this->g_in(xm.first, mu)) * Xminus;
-      auto temp4 = (this->params.gamma_id - this->params.gammas[mu]) * temp3;
+      auto temp3 = (this->params.gamma_id - this->params.gammas[mu]) * Xminus;
+      auto temp4 = conj(this->g_in(xm.first, mu)) * temp3;
       temp += (this->params.kappa * xp.second) * temp2 +
               (this->params.kappa * xm.second) * temp4;
     }
@@ -205,7 +234,7 @@ class HWilsonDiracOperator
                     DGaugeFieldType>;
   using Base::Base;
   template <typename... Indices>
-  KOKKOS_FORCEINLINE_FUNCTION void operator()(typename Base::TagD,
+  KOKKOS_FORCEINLINE_FUNCTION void operator()(typename Tags::TagD,
                                               const Indices... Idcs) const {
     Spinor<Nc, RepDim> temp;
 #pragma unroll
@@ -229,7 +258,7 @@ class HWilsonDiracOperator
 
   // only for testing porpose, not the real Ddagger operator
   template <typename... Indices>
-  KOKKOS_FORCEINLINE_FUNCTION void operator()(typename Base::TagDdagger,
+  KOKKOS_FORCEINLINE_FUNCTION void operator()(typename Tags::TagDdagger,
                                               const Indices... Idcs) const {
     operator()(typename Base::TagD(), Idcs...);
   }

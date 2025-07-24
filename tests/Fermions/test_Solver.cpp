@@ -61,7 +61,7 @@ int main(int argc, char* argv[]) {
     printf("Apply dirac Operator...\n");
     // print_spinor(u(0, 0, 0, 0));
     timer.reset();
-    auto test = D.applyDdagger(D.applyD(u));
+    auto test = D.template apply<Tags::TagMdagger>(u);
     auto diracTime1 = std::min(diracTime, timer.seconds());
     printf("QQ^\\dagger Kernel Time:     %11.4e s\n", diracTime1);
     // print_spinor(test(0, 0, 0, 0), "Spinor to solve before solving");
@@ -71,7 +71,7 @@ int main(int argc, char* argv[]) {
     auto eps = 1e-13;
     timer.reset();
 
-    solver.solve(x0, eps);
+    solver.template solve<Tags::TagMdagger>(x0, eps);
     auto diracTime2 = std::min(diracTime, timer.seconds());
     // print_spinor(test(0, 0, 0, 0), "Spinor to solve after solving");
     printf("Solver Kernel Time:     %11.4e s\n", diracTime2);
