@@ -45,30 +45,34 @@ template <size_t Nd, size_t Nc> struct devicePTBCGaugeField {
   using deviceDefectParams = defectParams<Nd>;
   deviceDefectParams dParams;
 
-  // copy constructor from a given devicePTBCGaugeField
-  devicePTBCGaugeField(const devicePTBCGaugeField<Nd, Nc> &dPTBCGaugeField)
-      : dimensions(dPTBCGaugeField.dimensions) {
-    Kokkos::realloc(Kokkos::WithoutInitializing, field, dimensions[0],
-                    dimensions[1], dimensions[2], dimensions[3]);
-    Kokkos::deep_copy(field, dPTBCGaugeField.field);
-    do_init_defect(defectField, dPTBCGaugeField.dParams);
-  }
+  // // copy constructor from a given devicePTBCGaugeField
+  // devicePTBCGaugeField(const devicePTBCGaugeField<Nd, Nc> &dPTBCGaugeField)
+  //     : dimensions(dPTBCGaugeField.dimensions) {
+  //   Kokkos::realloc(Kokkos::WithoutInitializing, field, dimensions[0],
+  //                   dimensions[1], dimensions[2], dimensions[3]);
+  //   Kokkos::deep_copy(field, dPTBCGaugeField.field);
+  //   do_init_defect(defectField, dPTBCGaugeField.dParams);
+  // }
 
   // 'copy' constructor from a given deviceGaugeField
-  devicePTBCGaugeField(const deviceGaugeField<Nd, Nc> &dGaugeField)
-      : dimensions(dGaugeField.dimensions) {
-    Kokkos::realloc(Kokkos::WithoutInitializing, field, dimensions[0],
-                    dimensions[1], dimensions[2], dimensions[3]);
-    Kokkos::deep_copy(field, dGaugeField.field);
-  }
+  // devicePTBCGaugeField(const deviceGaugeField<Nd, Nc> &dGaugeField)
+  //     : dimensions(dGaugeField.dimensions) {
+  //   Kokkos::realloc(Kokkos::WithoutInitializing, field, dimensions[0],
+  //                   dimensions[1], dimensions[2], dimensions[3]);
+  //   Kokkos::deep_copy(field, dGaugeField.field);
+  // }
 
   // 'copy' constructor from a given GaugeField
   devicePTBCGaugeField(const GaugeField<Nd, Nc> &dGaugeField)
-      : dimensions(dGaugeField.extend(0), dGaugeField.extend(1),
-                   dGaugeField.extend(2), dGaugeField.extend(3)) {
+      : dimensions(static_cast<index_t>(dGaugeField.extend(0)),
+                   static_cast<index_t>(dGaugeField.extend(1)),
+                   static_cast<index_t>(dGaugeField.extend(2)),
+                   static_cast<index_t>(dGaugeField.extend(3))) {
     Kokkos::realloc(Kokkos::WithoutInitializing, field, dimensions[0],
                     dimensions[1], dimensions[2], dimensions[3]);
+    Kokkos::fence();
     Kokkos::deep_copy(field, dGaugeField);
+    Kokkos::fence();
   }
 
   // should defect_length and cr be encompassed in a defect struct?
@@ -277,7 +281,7 @@ template <size_t Nd, size_t Nc> struct devicePTBCGaugeField {
   staple(const indexType i0, const indexType i1, const indexType i2,
          const indexType i3, const index_t mu) const {
     // this only works if Nd == 4
-    assert(Nd == 4);
+    static_assert(Nd == 4);
     // temporary SUN matrix to store the staple
     SUN<Nc> temp = zeroSUN<Nc>();
     // get the x + mu indices
@@ -347,22 +351,22 @@ template <size_t Nd, size_t Nc> struct devicePTBCGaugeField3D {
   using deviceDefectParams = defectParams<Nd>;
   deviceDefectParams dParams;
 
-  // copy constructor from a given devicePTBCGaugeField
-  devicePTBCGaugeField3D(const devicePTBCGaugeField<Nd, Nc> &dPTBCGaugeField)
-      : dimensions(dPTBCGaugeField.dimensions) {
-    Kokkos::realloc(Kokkos::WithoutInitializing, field, dimensions[0],
-                    dimensions[1], dimensions[2]);
-    Kokkos::deep_copy(field, dPTBCGaugeField.field);
-    do_init_defect(defectField, dPTBCGaugeField.dParams);
-  }
-
-  // 'copy' constructor from a given deviceGaugeField
-  devicePTBCGaugeField3D(const deviceGaugeField<Nd, Nc> &dGaugeField)
-      : dimensions(dGaugeField.dimensions) {
-    Kokkos::realloc(Kokkos::WithoutInitializing, field, dimensions[0],
-                    dimensions[1], dimensions[2]);
-    Kokkos::deep_copy(field, dGaugeField.field);
-  }
+  // // copy constructor from a given devicePTBCGaugeField
+  // devicePTBCGaugeField3D(const devicePTBCGaugeField<Nd, Nc> &dPTBCGaugeField)
+  //     : dimensions(dPTBCGaugeField.dimensions) {
+  //   Kokkos::realloc(Kokkos::WithoutInitializing, field, dimensions[0],
+  //                   dimensions[1], dimensions[2]);
+  //   Kokkos::deep_copy(field, dPTBCGaugeField.field);
+  //   do_init_defect(defectField, dPTBCGaugeField.dParams);
+  // }
+  //
+  // // 'copy' constructor from a given deviceGaugeField
+  // devicePTBCGaugeField3D(const deviceGaugeField<Nd, Nc> &dGaugeField)
+  //     : dimensions(dGaugeField.dimensions) {
+  //   Kokkos::realloc(Kokkos::WithoutInitializing, field, dimensions[0],
+  //                   dimensions[1], dimensions[2]);
+  //   Kokkos::deep_copy(field, dGaugeField.field);
+  // }
 
   // should defect_length and cr be encompassed in a defect struct?
   devicePTBCGaugeField3D(const index_t L0, const index_t L1, const index_t L2,
@@ -374,11 +378,14 @@ template <size_t Nd, size_t Nc> struct devicePTBCGaugeField3D {
 
   // 'copy' constructor from a given GaugeField
   devicePTBCGaugeField3D(const GaugeField3D<Nd, Nc> &dGaugeField)
-      : dimensions(dGaugeField.extend(0), dGaugeField.extend(1),
-                   dGaugeField.extend(2)) {
+      : dimensions(static_cast<index_t>(dGaugeField.extend(0)),
+                   static_cast<index_t>(dGaugeField.extend(1)),
+                   static_cast<index_t>(dGaugeField.extend(2))) {
     Kokkos::realloc(Kokkos::WithoutInitializing, field, dimensions[0],
                     dimensions[1], dimensions[2]);
+    Kokkos::fence();
     Kokkos::deep_copy(field, dGaugeField);
+    Kokkos::fence();
   }
 
   // initialize all links to a given SUN matrix
@@ -648,10 +655,13 @@ template <size_t Nd, size_t Nc> struct devicePTBCGaugeField2D {
   // 'copy' constructor from a given GaugeField
   devicePTBCGaugeField2D(const GaugeField2D<Nd, Nc> &dGaugeField)
       : dimensions(
-            IndexArray<Nd>{dGaugeField.extend(0), dGaugeField.extend(1)}) {
+            IndexArray<Nd>{static_cast<index_t>(dGaugeField.extend(0)),
+                           static_cast<index_t>(dGaugeField.extend(1))}) {
     Kokkos::realloc(Kokkos::WithoutInitializing, field, dimensions[0],
                     dimensions[1]);
+    Kokkos::fence();
     Kokkos::deep_copy(field, dGaugeField);
+    Kokkos::fence();
   }
 
   // should defect_length and cr be encompassed in a defect struct?
