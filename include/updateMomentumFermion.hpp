@@ -97,9 +97,10 @@ class UpdateMomentumFermion : public UpdateMomentum {
       auto temp1 = gauge_field(Idcs..., mu) * Xplus;
       auto temp2 = (this->params.gamma_id - this->params.gammas[mu]) * temp1;
       temp1 = this->params.kappa * temp2;
-      auto first_term = temp1 * (conj(this->chi_alt(Idcs...)));
+      auto first_term =
+          temp1 * (this->params.gamma5 * conj(this->chi_alt(Idcs...)));
 
-      auto Yplus = xp.second * (this->chi_alt(xp.first));
+      auto Yplus = xp.second * (this->params.gamma5 * this->chi_alt(xp.first));
       auto temp3 = conj(Yplus) * conj(this->gauge_field(Idcs..., mu));
       auto temp4 = temp3 * (this->params.gamma_id + this->params.gammas[mu]);
       temp3 = this->params.kappa * temp4;

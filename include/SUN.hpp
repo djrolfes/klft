@@ -196,25 +196,28 @@ KOKKOS_FORCEINLINE_FUNCTION SUN<1> traceLessAntiHermitian(const SUN<1>& a) {
 template <size_t Nc>
 KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> traceLessAntiHermitian(const SUN<Nc>& a) {
   SUN<Nc> res;
-  complex_t trace = 0.0;
+  complex_t tra = 0.0;
+  res = (a - conj(a)) * 0.5;
+  tra = trace(res);
+  tra /= static_cast<real_t>(Nc);
 
+// #pragma unroll
+//   for (size_t i = 0; i < Nc; ++i) {
+// #pragma unroll
+//     for (size_t j = 0; j < Nc; ++j) {
+//       res[i][j] = 0.5 * (a[i][j] - conj(a[j][i]));
+//     }
+//   }
+
+// #pragma unroll
+//   for (size_t i = 0; i < Nc; ++i) {
+//     trace += res[i][i];
+//   }
+
+//   complex_t tr_avg = trace / static_cast<real_t>(Nc);
 #pragma unroll
   for (size_t i = 0; i < Nc; ++i) {
-#pragma unroll
-    for (size_t j = 0; j < Nc; ++j) {
-      res[i][j] = 0.5 * (a[i][j] - conj(a[j][i]));
-    }
-  }
-
-#pragma unroll
-  for (size_t i = 0; i < Nc; ++i) {
-    trace += res[i][i];
-  }
-
-  complex_t tr_avg = trace / static_cast<real_t>(Nc);
-#pragma unroll
-  for (size_t i = 0; i < Nc; ++i) {
-    res[i][i] -= tr_avg;
+    res[i][i] -= tra;
   }
 
   return res;

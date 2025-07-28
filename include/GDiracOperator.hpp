@@ -260,7 +260,7 @@ class HWilsonDiracOperator
   template <typename... Indices>
   KOKKOS_FORCEINLINE_FUNCTION void operator()(typename Tags::TagDdagger,
                                               const Indices... Idcs) const {
-    operator()(typename Base::TagD(), Idcs...);
+    operator()(typename Tags::TagD(), Idcs...);
   }
 };
 // // Deduction guide
