@@ -50,6 +50,10 @@ GaugeObservableParams:
 
   write_to_file: false
 
+PTBCParams:
+  defect_size: 2
+  defect_values: [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]
+
 SimulationLoggingParams:
   log_interval: 1
   log_delta_H: true

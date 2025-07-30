@@ -25,6 +25,7 @@
 #include "GaugeObservable.hpp"
 #include "HMC_Params.hpp"
 #include "Metropolis_Params.hpp"
+#include "PTBC.hpp"
 #include "SimulationLogging.hpp"
 #include <yaml-cpp/yaml.h>
 
@@ -133,6 +134,41 @@ inline bool parseInputFile(const std::string &filename,
     return true;
   } catch (const YAML::Exception &e) {
     printf("(GaugeObservableParams) Error parsing input file: %s\n", e.what());
+    return false;
+  }
+}
+
+// get GaugeObservableParams from input file
+inline bool parseInputFile(const std::string &filename,
+                           PTBCParams &ptbcParams) {
+  try {
+    YAML::Node config = YAML::LoadFile(filename);
+
+    // Parse GaugeObservableParams
+    if (config["PTBCParams"]) {
+      const auto &pp = config["PTBCParams"];
+      ptbcParams.defect_size = pp["defect_size"].as<index_t>(1);
+      if (pp["defect_values"]) {
+        auto defect_node = pp["defect_values"];
+        // Set n_sims based on the number of values
+        ptbcParams.n_sims = defect_node.size();
+        // Resize and read values into std::vector
+        ptbcParams.defects.resize(ptbcParams.n_sims);
+        for (size_t i = 0; i < defect_node.size(); ++i) {
+          ptbcParams.defects[i] = defect_node[i].as<real_t>();
+        }
+      } else {
+        // Default: single defect value
+        ptbcParams.n_sims = 1;
+        ptbcParams.defects = {1.0}; // will this error without resizing?
+      } // ...
+    } else {
+      printf("Error: PTBCParams not found in input file\n");
+      return false;
+    }
+    return true;
+  } catch (const YAML::Exception &e) {
+    printf("(PTBCParams) Error parsing input file: %s\n", e.what());
     return false;
   }
 }

@@ -1,25 +1,40 @@
+#include "PTBC.hpp"
 #include "GLOBAL.hpp"
+#include "GaugeObservable.hpp"
+#include "InputParser.hpp"
+#include "SimulationLogging.hpp"
 #include <mpi.h>
 
-int main(int argc, char **argv) {
-  // Initialize MPI
-  MPI_Init(&argc, &argv);
-  // Initialize Kokkos
-  Kokkos::initialize(argc, argv);
+using RNGType = Kokkos::Random_XorShift64_Pool<Kokkos::DefaultExecutionSpace>;
 
-  std::string input_file;
-  int ret = 1; // parse_args(argc, argv, input_file);
-  if (ret < 0) {
-    MPI_Finalize();
-    return ret;
+namespace klft {
+int PTBC_execute(const std::string &input_file) {
+
+  int rank, size;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_size(MPI_COMM_WORLD, &size);
+  printf("Rank %d of %d\n", rank, size);
+
+  PTBCParams ptbcParams;
+  HMCParams hmcParams;
+  GaugeObservableParams gaugeObsParams;
+  SimulationLoggingParams simLogParams;
+  if (!parseInputFile(input_file, gaugeObsParams)) {
+    printf("Error parsing input file\n");
+    return -1;
+  }
+  if (!parseInputFile(input_file, hmcParams)) {
+    printf("Error parsing input file\n");
+    return -1;
+  }
+  if (!parseInputFile(input_file, simLogParams)) {
+    printf("Error parsing input file\n");
+    return -1;
   }
 
-  // Execute HMC
-  int result = 2; // HMC_execute(input_file);
-
+  PTBC test = PTBC(PTBCParams(HMCParams(), 10, 5), rank);
   // Finalize Kokkos and MPI
-  Kokkos::finalize();
-  MPI_Finalize();
 
-  return result;
+  return 0;
 }
+} // namespace klft

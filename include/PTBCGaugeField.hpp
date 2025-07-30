@@ -245,6 +245,11 @@ template <size_t Nd, size_t Nc> struct devicePTBCGaugeField {
     set_defect(tmp);
   }
 
+  real_t get_defect() const {
+    // return the defect value
+    return dParams.defect_value;
+  }
+
   // define accessors for the field
   template <typename indexType> // why do we template indexType here, when it is
                                 // defined in GLOBAL.hpp?
@@ -538,6 +543,11 @@ template <size_t Nd, size_t Nc> struct devicePTBCGaugeField3D {
     set_defect(tmp);
   }
 
+  real_t get_defect() const {
+    // return the defect value
+    return dParams.defect_value;
+  }
+
   // define accessors for the field
   template <typename indexType> // why do we template indexType here, when it is
                                 // defined in GLOBAL.hpp?
@@ -817,6 +827,11 @@ template <size_t Nd, size_t Nc> struct devicePTBCGaugeField2D {
     set_defect(real_t(1.0));
     dParams.defect_position = new_position;
     set_defect(tmp);
+  }
+
+  real_t get_defect() const {
+    // return the defect value
+    return dParams.defect_value;
   }
 
   // define accessors for the field
