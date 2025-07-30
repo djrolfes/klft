@@ -1,4 +1,5 @@
 #pragma once
+#include "FieldTypeHelper.hpp"
 #include "GLOBAL.hpp"
 #include "GaugePlaquette.hpp"
 #include "HamiltonianField.hpp"
@@ -32,13 +33,17 @@ public:
   void heatbath(HamiltonianField<DGaugeFieldType, DAdjFieldType> h) override {
     Monomial<DGaugeFieldType, DAdjFieldType>::H_old =
         -(beta / static_cast<real_t>(Nc)) *
-        GaugePlaquette<rank, Nc>(h.gauge_field, false);
+        GaugePlaquette<rank, Nc,
+                       DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Kind>(
+            h.gauge_field, false);
   }
 
   void accept(HamiltonianField<DGaugeFieldType, DAdjFieldType> h) override {
     Monomial<DGaugeFieldType, DAdjFieldType>::H_new =
         -(beta / static_cast<real_t>(Nc)) *
-        GaugePlaquette<rank, Nc>(h.gauge_field, false);
+        GaugePlaquette<rank, Nc,
+                       DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Kind>(
+            h.gauge_field, false);
   }
 };
 

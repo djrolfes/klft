@@ -17,10 +17,10 @@ protected:
   explicit UpdatePosition(int tag) {}
 };
 
-template <size_t rank, size_t Nc>
+template <size_t rank, size_t Nc, GaugeFieldKind k = GaugeFieldKind::Standard>
 class UpdatePositionGauge : public UpdatePosition {
 public:
-  using GaugeFieldType = typename DeviceGaugeFieldType<rank, Nc>::type;
+  using GaugeFieldType = typename DeviceGaugeFieldType<rank, Nc, k>::type;
   using AdjFieldType = typename DeviceAdjFieldType<rank, Nc>::type;
   GaugeFieldType gauge_field;
   AdjFieldType adjoint_field;

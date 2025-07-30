@@ -32,11 +32,12 @@ namespace klft {
 // for SU(N) gauge group
 
 // first define the necessary functor
-template <size_t rank, size_t Nc> struct GaugePlaq {
+template <size_t rank, size_t Nc, GaugeFieldKind k = GaugeFieldKind::Standard>
+struct GaugePlaq {
   // this kernel is defined for rank = Nd
   constexpr static const size_t Nd = rank;
   // define the gauge field type
-  using GaugeFieldType = typename DeviceGaugeFieldType<rank, Nc>::type;
+  using GaugeFieldType = typename DeviceGaugeFieldType<rank, Nc, k>::type;
   const GaugeFieldType g_in;
   // define the field type
   using FieldType = typename DeviceFieldType<rank>::type;
@@ -91,9 +92,10 @@ template <size_t rank, size_t Nc> struct GaugePlaq {
   }
 };
 
-template <size_t rank, size_t Nc>
-real_t GaugePlaquette(const typename DeviceGaugeFieldType<rank, Nc>::type &g_in,
-                      const bool normalize = true) {
+template <size_t rank, size_t Nc, GaugeFieldKind k = GaugeFieldKind::Standard>
+real_t
+GaugePlaquette(const typename DeviceGaugeFieldType<rank, Nc, k>::type &g_in,
+               const bool normalize = true) {
   // this kernel is defined for rank = Nd
   constexpr static const size_t Nd = rank;
   // final return variable
@@ -115,7 +117,7 @@ real_t GaugePlaquette(const typename DeviceGaugeFieldType<rank, Nc>::type &g_in,
   FieldType plaq_per_site(end, complex_t(0.0, 0.0));
 
   // define the functor
-  GaugePlaq<rank, Nc> gaugePlaquette(g_in, plaq_per_site, end);
+  GaugePlaq<rank, Nc, k> gaugePlaquette(g_in, plaq_per_site, end);
 
   // tune and launch the kernel
   tune_and_launch_for<rank>("GaugePlaquette_GaugeField", start, end,
