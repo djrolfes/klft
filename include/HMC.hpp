@@ -31,7 +31,7 @@ public:
   std::vector<std::unique_ptr<Monomial<DGaugeFieldType, DAdjFieldType>>>
       monomials;
   std::shared_ptr<Integrator> integrator;
-  RNG rng;
+  RNG &rng;
   std::mt19937 mt;
   std::uniform_real_distribution<real_t> dist;
   real_t delta_H;
@@ -41,7 +41,7 @@ public:
 
   HMC(const HMCParams &params_,
       HamiltonianField<DGaugeFieldType, DAdjFieldType> &hamiltonian_field_,
-      std::shared_ptr<Integrator> integrator_, RNG rng_,
+      std::shared_ptr<Integrator> integrator_, RNG &rng_,
       std::uniform_real_distribution<real_t> dist_, std::mt19937 mt_)
       : params(params_), rng(rng_), dist(dist_), mt(mt_),
         hamiltonian_field(hamiltonian_field_),
@@ -85,9 +85,10 @@ public:
     for (int i = 0; i < monomials.size(); ++i) {
       monomials[i]->accept(hamiltonian_field);
       real_t dH = monomials[i]->get_delta_H();
-      DEBUG_LOG("dh " << i << ": " << dH);
+      // printf("Monomial %d: delta_H = %f\n", i, dH);
       delta_H += dH;
     }
+    // printf("delta_H = %f\n", delta_H);
 
     bool accept = true;
     if (delta_H > 0.0) {

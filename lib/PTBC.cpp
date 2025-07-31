@@ -10,25 +10,6 @@ using RNGType = Kokkos::Random_XorShift64_Pool<Kokkos::DefaultExecutionSpace>;
 
 namespace klft {
 
-// Helper macro to reduce repetition
-#define INSTANTIATE_PREPARE_HFIELD(ND, NC)                                     \
-  template HamiltonianField<                                                   \
-      DeviceGaugeFieldType<ND, NC, GaugeFieldKind::PTBC>,                      \
-      DeviceAdjFieldType<ND, NC>>                                              \
-  prepareHamiltonianField_PTBC<                                                \
-      DeviceGaugeFieldType<ND, NC, GaugeFieldKind::PTBC>,                      \
-      DeviceAdjFieldType<ND, NC>, RNGType>(PTBCParams &, RNGType &);
-
-// All combinations you care about
-INSTANTIATE_PREPARE_HFIELD(2, 1)
-INSTANTIATE_PREPARE_HFIELD(2, 2)
-INSTANTIATE_PREPARE_HFIELD(3, 1)
-INSTANTIATE_PREPARE_HFIELD(3, 2)
-INSTANTIATE_PREPARE_HFIELD(4, 1)
-INSTANTIATE_PREPARE_HFIELD(4, 2)
-
-#undef INSTANTIATE_PREPARE_HFIELD
-
 int PTBC_execute(const std::string &input_file) {
   index_t rank, size;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -48,6 +29,13 @@ int PTBC_execute(const std::string &input_file) {
     return -1;
   }
 
+  if (ptbcParams.defects.size() != size) {
+    printf("Error: Number of defects (%zu) does not match size (%d)\n",
+           ptbcParams.defects.size(), size);
+    return -1;
+  }
+  ptbcParams.defect_value = ptbcParams.defects[rank];
+
   ptbcParams.hmc_params = hmcParams;
   size_t Nd = hmcParams.Ndims;
   size_t Nc = hmcParams.Nc;
@@ -55,55 +43,190 @@ int PTBC_execute(const std::string &input_file) {
   std::mt19937 mt(hmcParams.seed);
   std::uniform_real_distribution<real_t> dist(0.0, 1.0);
 
-  bool correct_NdNcCombination = false;
-  using DGaugeFieldType = DeviceGaugeFieldType<2, 2, GaugeFieldKind::PTBC>;
-  using DAdjFieldType = DeviceAdjFieldType<2, 2>;
-#define FIELDTYPES(ND, NC)                                                     \
-  if (Nd == ND && Nc == NC) {                                                  \
-    using DGaugeFieldType =                                                    \
-        DeviceGaugeFieldType<ND, NC, GaugeFieldKind::PTBC>;                    \
-    using DAdjFieldType = DeviceAdjFieldType<ND, NC>;                          \
-    correct_NdNcCombination = true;                                            \
-  }
-  FIELDTYPES(2, 1)
-  FIELDTYPES(2, 2)
-  FIELDTYPES(3, 1)
-  FIELDTYPES(3, 2)
-  FIELDTYPES(4, 1)
-  FIELDTYPES(4, 2)
-
-  HamiltonianField<DGaugeFieldType, DAdjFieldType> hamiltonian_field =
-      prepareHamiltonianField_PTBC<DGaugeFieldType, DAdjFieldType>(ptbcParams,
-                                                                   rng);
-  PTBC<DGaugeFieldType, DAdjFieldType, RNGType> ptbc(
-      ptbcParams, rank, hamiltonian_field, rng, dist, mt);
-
-  Kokkos::Timer timer;
-  bool accept;
-  real_t acc_sum{0.0};
-  real_t acc_rate{0.0};
-  // hmc loop
-  for (size_t step = 0; step < hmcParams.nsteps; ++step) {
-    timer.reset();
-
-    // perform hmc_step
-    accept = ptbc.step();
-
-    const real_t time = timer.seconds();
-    acc_sum += static_cast<real_t>(accept);
-    acc_rate = acc_sum / static_cast<real_t>(step + 1);
-
-    if (KLFT_VERBOSITY > 0) {
-      printf("Step: %ld, accepted: %ld, Acceptance rate: %f, Time: %f\n", step,
-             static_cast<size_t>(accept), acc_rate, time);
+  if (hmcParams.coldStart) {
+    if (hmcParams.Ndims == 4) {
+      // case U(1)
+      if (hmcParams.Nc == 1) {
+        using DGaugeFieldType =
+            DeviceGaugeFieldType<4, 1, GaugeFieldKind::PTBC>;
+        using DAdjFieldType = DeviceAdjFieldType<4, 1>;
+        run_PTBC<DGaugeFieldType, DAdjFieldType>(ptbcParams, rng, dist, mt);
+      }
+      // case SU(2)
+      else if (hmcParams.Nc == 2) {
+        using DGaugeFieldType =
+            DeviceGaugeFieldType<4, 2, GaugeFieldKind::PTBC>;
+        using DAdjFieldType = DeviceAdjFieldType<4, 2>;
+        run_PTBC<DGaugeFieldType, DAdjFieldType>(ptbcParams, rng, dist, mt);
+      }
+      // case SU(ptbcParams, rng, dist, mt)
+      // else if (hmcParams.Nc == 3) {
+      //   using DGaugeFieldType = DeviceGaugeFieldType<4,
+      //   GaugeFieldKind::PTBC>; using DAdjFieldType = DeviceAdjFieldType<4,
+      //   3>; run_PTBC<DGaugeFieldType, DAdjFieldType>(
+      // ptbcParams, rng, dist, mt);
+      // }
+      // case SU(N)
+      else {
+        printf("Error: Unsupported gauge group\n");
+        return -1;
+      }
     }
-    // measure the gauge observables
-    // ptbc.measure(gaugeObsParams, step);
-    ptbc.measure(simLogParams, step, acc_rate, accept, time);
+    // case 3D
+    else if (hmcParams.Ndims == 3) {
+      // case U(1)
+      if (hmcParams.Nc == 1) {
+        using DGaugeFieldType =
+            DeviceGaugeFieldType<3, 1, GaugeFieldKind::PTBC>;
+        using DAdjFieldType = DeviceAdjFieldType<3, 1>;
+        run_PTBC<DGaugeFieldType, DAdjFieldType>(ptbcParams, rng, dist, mt);
+      }
+      // case SU(2)
+      else if (hmcParams.Nc == 2) {
+        using DGaugeFieldType =
+            DeviceGaugeFieldType<3, 2, GaugeFieldKind::PTBC>;
+        using DAdjFieldType = DeviceAdjFieldType<3, 2>;
+        run_PTBC<DGaugeFieldType, DAdjFieldType>(ptbcParams, rng, dist, mt);
+      }
+      // case SU(3)
+      // else if (hmcParams.Nc == 3) {
+      //   using DGaugeFieldType = DeviceGaugeFieldType<3, 3,
+      //   GaugeFieldKind::PTBC>; using DAdjFieldType = DeviceAdjFieldType<3,
+      //   3>; run_PTBC<DGaugeFieldType, DAdjFieldType>(
+      // ptbcParams, rng, dist, mt);
+      // }
+      // case SU(N)
+      else {
+        printf("Error: Unsupported gauge group\n");
+        return -1;
+      }
+    }
+    // case 2D
+    else if (hmcParams.Ndims == 2) {
+      // case U(1)
+      if (hmcParams.Nc == 1) {
+        using DGaugeFieldType =
+            DeviceGaugeFieldType<2, 1, GaugeFieldKind::PTBC>;
+        using DAdjFieldType = DeviceAdjFieldType<2, 1>;
+        run_PTBC<DGaugeFieldType, DAdjFieldType>(ptbcParams, rng, dist, mt);
+      }
+      // case SU(2)
+      else if (hmcParams.Nc == 2) {
+        using DGaugeFieldType =
+            DeviceGaugeFieldType<2, 2, GaugeFieldKind::PTBC>;
+        using DAdjFieldType = DeviceAdjFieldType<2, 2>;
+        run_PTBC<DGaugeFieldType, DAdjFieldType>(ptbcParams, rng, dist, mt);
+      }
+      // case SU(3)
+      // else if (hmcParams.Nc == 3) {
+      //   using DGaugeFieldType = DeviceGaugeFieldType<2, 3,
+      //   GaugeFieldKind::PTBC>; using DAdjFieldType = DeviceAdjFieldType<2,
+      //   3>; run_PTBC<DGaugeFieldType, DAdjFieldType>(
+      // ptbcParams, rng, dist, mt);
+      // }
+      // case SU(N)
+      else {
+        printf("Error: Unsupported gauge group\n");
+        return -1;
+      }
+    }
+  } else {
+    if (hmcParams.Ndims == 4) {
+      // case U(1)
+      if (hmcParams.Nc == 1) {
+        using DGaugeFieldType =
+            DeviceGaugeFieldType<4, 1, GaugeFieldKind::PTBC>;
+        using DAdjFieldType = DeviceAdjFieldType<4, 1>;
+        run_PTBC<DGaugeFieldType, DAdjFieldType>(ptbcParams, rng, dist, mt);
+      }
+      // case SU(2)
+      else if (hmcParams.Nc == 2) {
+        using DGaugeFieldType =
+            DeviceGaugeFieldType<4, 2, GaugeFieldKind::PTBC>;
+        using DAdjFieldType = DeviceAdjFieldType<4, 2>;
+        run_PTBC<DGaugeFieldType, DAdjFieldType>(ptbcParams, rng, dist, mt);
+      }
+      // case SU(3)
+      // else if (hmcParams.Nc == 3) {
+      //   using DGaugeFieldType = DeviceGaugeFieldType<4, 3,
+      //   GaugeFieldKind::PTBC>; using DAdjFieldType = DeviceAdjFieldType<4,
+      //   3>; run_PTBC<DGaugeFieldType, DAdjFieldType>(
+      // ptbcParams, rng, dist, mt);
+      // }
+      // case SU(N)
+      else {
+        printf("Error: Unsupported gauge group\n");
+        return -1;
+      }
+    }
+    // case 3D
+    else if (hmcParams.Ndims == 3) {
+      // case U(1)
+      if (hmcParams.Nc == 1) {
+        using DGaugeFieldType =
+            DeviceGaugeFieldType<3, 1, GaugeFieldKind::PTBC>;
+        using DAdjFieldType = DeviceAdjFieldType<3, 1>;
+        run_PTBC<DGaugeFieldType, DAdjFieldType>(ptbcParams, rng, dist, mt);
+      }
+      // case SU(2)
+      else if (hmcParams.Nc == 2) {
+        using DGaugeFieldType =
+            DeviceGaugeFieldType<3, 2, GaugeFieldKind::PTBC>;
+        using DAdjFieldType = DeviceAdjFieldType<3, 2>;
+        run_PTBC<DGaugeFieldType, DAdjFieldType>(ptbcParams, rng, dist, mt);
+      }
+      // case SU(3)
+      // else if (hmcParams.Nc == 3) {
+      //   using DGaugeFieldType = DeviceGaugeFieldType<3, 3,
+      //   GaugeFieldKind::PTBC>; using DAdjFieldType = DeviceAdjFieldType<3,
+      //   3>; run_PTBC<DGaugeFieldType, DAdjFieldType>(
+      // ptbcParams, rng, dist, mt);
+      // }
+      // case SU(N)
+      else {
+        printf("Error: Unsupported gauge group\n");
+        return -1;
+      }
+    }
+    // case 2D
+    else if (hmcParams.Ndims == 2) {
+      // case U(1)
+      if (hmcParams.Nc == 1) {
+        using DGaugeFieldType =
+            DeviceGaugeFieldType<2, 1, GaugeFieldKind::PTBC>;
+        using DAdjFieldType = DeviceAdjFieldType<2, 1>;
+        run_PTBC<DGaugeFieldType, DAdjFieldType>(ptbcParams, rng, dist, mt);
+      }
+      // case SU(2)
+      else if (hmcParams.Nc == 2) {
+        using DGaugeFieldType =
+            DeviceGaugeFieldType<2, 2, GaugeFieldKind::PTBC>;
+        using DAdjFieldType = DeviceAdjFieldType<2, 2>;
+        run_PTBC<DGaugeFieldType, DAdjFieldType>(ptbcParams, rng, dist, mt);
+      }
+      // case SU(3)
+      // else if (hmcParams.Nc == 3) {
+      //   using DGaugeFieldType = DeviceGaugeFieldType<2, 3,
+      //   GaugeFieldKind::PTBC>; using DAdjFieldType = DeviceAdjFieldType<2,
+      //   3>; run_PTBC<DGaugeFieldType, DAdjFieldType>(
+      // ptbcParams, rng, dist, mt);
+      // }
+      // case SU(N)
+      else {
+        printf("Error: Unsupported gauge group\n");
+        return -1;
+      }
+    }
   }
-  // flushAllGaugeObservables(gaugeObsParams);
-  flushSimulationLogs(simLogParams);
-
+  // if tuning is enabled, write the cache file
+  // if (KLFT_TUNING) {
+  //   const char *cache_file = std::getenv("KLFT_CACHE_FILE");
+  //   if (cache_file) {
+  //     writeTuneCache(cache_file);
+  //   } else {
+  //     printf("KLFT_CACHE_FILE not set\n");
+  //   }
+  // }
   return 0;
 }
 } // namespace klft

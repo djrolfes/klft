@@ -65,7 +65,7 @@ struct HamiltonianField {
   HamiltonianField() = delete;
 
   HamiltonianField(GaugeField g, AdjointField a)
-      : gauge_field((g)), adjoint_field((a)) {}
+      : gauge_field(g), adjoint_field(a) {}
 
   real_t kinetic_energy() {
     real_t kinetic_energy = 0.0;

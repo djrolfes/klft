@@ -1,6 +1,7 @@
 #pragma once
 #include "FieldTypeHelper.hpp"
 #include "GLOBAL.hpp"
+#include "SUN.hpp"
 
 namespace klft {
 
@@ -37,21 +38,35 @@ public:
   KOKKOS_FORCEINLINE_FUNCTION void operator()(const Indices... Idcs) const {
 #pragma unroll
     for (index_t mu = 0; mu < rank; ++mu) {
-      gauge_field(Idcs..., mu) =
-          expoSUN(eps * adjoint_field(Idcs..., mu)) * gauge_field(Idcs..., mu);
+      gauge_field.set(Idcs..., mu,
+                      expoSUN(eps * adjoint_field(Idcs..., mu)) *
+                          gauge_field(Idcs..., mu));
     }
   }
 
   void update(const real_t step_size) override {
     eps = step_size;
+
+    // if constexpr (rank == 4) {
+    //   printf("[DEBUG] Before update: gauge_field(0,0,0,0,0) = (%f, %f)\n",
+    //          gauge_field.field(0, 0, 0, 0, 0)[0][0].real(),
+    //          gauge_field.field(0, 0, 0, 0, 0)[0][0].imag());
+    // }
+
     IndexArray<rank> start;
     for (size_t i = 0; i < rank; ++i) {
       start[i] = 0;
     }
-    // launch the kernel
+
+    // Launch kernel
     tune_and_launch_for<rank>("UpdatePositionGauge", start,
                               gauge_field.dimensions, *this);
+
     Kokkos::fence();
+
+    // printf("[DEBUG] After update: gauge_field(0,0,0,0,0) = (%f, %f)\n",
+    //        gauge_field.field(0, 0, 0, 0, 0)[0][0].real(),
+    //        gauge_field.field(0, 0, 0, 0, 0)[0][0].imag());
   }
 };
 } // namespace klft

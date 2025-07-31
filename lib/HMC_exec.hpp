@@ -20,7 +20,7 @@ template <typename DGaugeFieldType, typename DAdjFieldType, class RNG>
 int run_HMC(typename DGaugeFieldType::type g_in,
             typename DAdjFieldType::type a_in, const HMCParams &hmcparams,
             GaugeObservableParams &gaugeObsParams,
-            SimulationLoggingParams &simLogParams, const RNG &rng) {
+            SimulationLoggingParams &simLogParams, RNG &rng) {
   // initiate and execute the HMC with the given parameters
   printf("Executing HMC ...");
   hmcparams.print();
@@ -128,7 +128,7 @@ int run_HMC(typename DGaugeFieldType::type g_in,
   run_HMC<DeviceGaugeFieldType<R, N>, DeviceAdjFieldType<R, N>, RNGType>(      \
       typename DeviceGaugeFieldType<R, N>::type,                               \
       typename DeviceAdjFieldType<R, N>::type, const HMCParams &,              \
-      GaugeObservableParams &, SimulationLoggingParams &, const RNGType &)
+      GaugeObservableParams &, SimulationLoggingParams &, RNGType &)
 
 INSTANTIATE_HMC(4, 1);
 INSTANTIATE_HMC(4, 2);

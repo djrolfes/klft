@@ -210,6 +210,13 @@ template <size_t Nd, size_t Nc> struct deviceGaugeField {
     return field(site[0], site[1], site[2], site[3], mu);
   }
 
+  template <typename indexType>
+  KOKKOS_FORCEINLINE_FUNCTION void
+  set(const indexType i, const indexType j, const indexType k,
+      const indexType l, const index_t mu, const SUN<Nc> &value) const {
+    field(i, j, k, l, mu) = value; // raw write
+  }
+
   // template <index_t mu> void openBC() {
   //   const IndexArray<3> start{0, 0, 0};
   //   std::vector<index_t> end_dims_no_mu;
@@ -475,6 +482,13 @@ template <size_t Nd, size_t Nc> struct deviceGaugeField3D {
     return field(site[0], site[1], site[2], mu);
   }
 
+  template <typename indexType>
+  KOKKOS_FORCEINLINE_FUNCTION void set(const indexType i, const indexType j,
+                                       const indexType k, const index_t mu,
+                                       const SUN<Nc> &value) const {
+    field(i, j, k, mu) = value; // raw write
+  }
+
   // template <index_t mu> void openBC() {
   //   const IndexArray<2> start{0, 0};
   //   std::vector<index_t> end_dims_no_mu;
@@ -728,6 +742,12 @@ template <size_t Nd, size_t Nc> struct deviceGaugeField2D {
   KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> &
   operator()(const Kokkos::Array<indexType, 2> site, const index_t mu) {
     return field(site[0], site[1], mu);
+  }
+  template <typename indexType>
+  KOKKOS_FORCEINLINE_FUNCTION void set(const indexType i, const indexType j,
+                                       const index_t mu,
+                                       const SUN<Nc> &value) const {
+    field(i, j, mu) = value; // raw write
   }
 
   // template <index_t mu> void openBC() {
