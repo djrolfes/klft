@@ -128,7 +128,7 @@ Gauge Monomial: # Monomial for Pure Gauge [Must be used]
   level: 0      # Level to identifiy it with the Integrator 
   beta: 2.12    # inverse coupling constant
 
-Fermion Monomial: # Monomial for Fermions (2 mass degenerate Flavours)
+Fermion Monomial: # Monomial for Fermions (2 mass degenerate Flavours) [For now only in 4D]
   level: 1  # Level to identifiy it with the Integrator  
   fermion: "HWilson" # Typ of Fermion(operator) [HWilson]
   solver: "CG" # "Solver for Matrix Inversion" [CG]
