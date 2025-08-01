@@ -50,8 +50,8 @@ int main(int argc, char* argv[]) {
     printf("Generating Random Gauge Config\n");
     deviceGaugeField<4, 3> gauge(L0, L1, L2, L3, random_pool, 1);
     printf("Instantiate DiracOperator...\n");
-    WilsonDiracOperator<DeviceSpinorFieldType<4, 3, 4>,
-                        DeviceGaugeFieldType<4, 3>>
+    DiracOperator<WilsonDiracOperator, DeviceSpinorFieldType<4, 3, 4>,
+                  DeviceGaugeFieldType<4, 3>>
         D(gauge, params);
     printf("Apply DiracOperator...\n");
     // tune_and_launch_for<4>(
@@ -62,9 +62,9 @@ int main(int argc, char* argv[]) {
     //       // Transform spinor u, and Mu
     //       v(i0, i1, i2, i3) = gamma5 * v(i0, i1, i2, i3);
     //     });
-    D.applyD_inplace(u, Mu);
+    D.apply<Tags::TagD>(u, Mu);
     Kokkos::fence();
-    D.applyDdagger_inplace(v, Mv);
+    D.apply<Tags::TagDdagger>(v, Mv);
     Kokkos::fence();
     // tune_and_launch_for<4>(
     //     "Gauge Trafo", IndexArray<4>{0, 0, 0, 0}, IndexArray<4>{L0, L1, L2,
@@ -121,7 +121,7 @@ int main(int argc, char* argv[]) {
           Mu(i0, i1, i2, i3) =
               gaugeTrafo(i0, i1, i2, i3, 1) * Mu(i0, i1, i2, i3);
         });
-    deviceSpinorField Mu_trafo = D.template apply<Tags::TagD>(u);
+    deviceSpinorField Mu_trafo = D.apply<Tags::TagD>(u);
     tune_and_launch_for<4>(
         "Subtract Spinors", IndexArray<4>{0, 0, 0, 0},
         IndexArray<4>{L0, L1, L2, L3},
@@ -163,14 +163,13 @@ int main(int argc, char* argv[]) {
     printf("Generating Random Gauge Config\n");
     deviceGaugeField<4, 2> gauge_SU2(L0, L1, L2, L3, random_pool, 1);
     printf("Instantiate DiracOperator...\n");
-    WilsonDiracOperator<DeviceSpinorFieldType<4, 2, 4>,
-                        DeviceGaugeFieldType<4, 2>>
+    DiracOperator<WilsonDiracOperator, DeviceSpinorFieldType<4, 2, 4>,
+                  DeviceGaugeFieldType<4, 2>>
         D_SU2(gauge_SU2, params);
     printf("Apply DiracOperator...\n");
 
-    deviceSpinorField<2, 4> Mu_SU2 = D_SU2.template apply<Tags::TagD>(u_SU2);
-    deviceSpinorField<2, 4> Mv_SU2 =
-        D_SU2.template apply<Tags::TagDdagger>(v_SU2);
+    deviceSpinorField<2, 4> Mu_SU2 = D_SU2.apply<Tags::TagD>(u_SU2);
+    deviceSpinorField<2, 4> Mv_SU2 = D_SU2.apply<Tags::TagDdagger>(v_SU2);
     // deviceSpinorField<3, 4> Mu = apply_D<4, 3, 4>(u, gauge, gammas, -0.5);
     // deviceSpinorField<3, 4> Mv = apply_D<4, 3, 4>(v, gauge, gammas, -0.5);
 
@@ -220,7 +219,7 @@ int main(int argc, char* argv[]) {
           Mu_SU2(i0, i1, i2, i3) =
               gaugeTrafo_SU2(i0, i1, i2, i3, 1) * Mu_SU2(i0, i1, i2, i3);
         });
-    deviceSpinorField Mu_trafo_SU2 = D_SU2.template apply<Tags::TagD>(u_SU2);
+    deviceSpinorField Mu_trafo_SU2 = D_SU2.apply<Tags::TagD>(u_SU2);
     tune_and_launch_for<4>(
         "Subtract Spinors", IndexArray<4>{0, 0, 0, 0},
         IndexArray<4>{L0, L1, L2, L3},
@@ -263,13 +262,13 @@ int main(int argc, char* argv[]) {
     printf("Generating Random Gauge Config\n");
     deviceGaugeField<4, 1> gauge_U1(L0, L1, L2, L3, random_pool, 1);
     printf("Instantiate DiracOperator...\n");
-    WilsonDiracOperator<DeviceSpinorFieldType<4, 1, 4>,
-                        DeviceGaugeFieldType<4, 1>>
+    DiracOperator<WilsonDiracOperator, DeviceSpinorFieldType<4, 1, 4>,
+                  DeviceGaugeFieldType<4, 1>>
         D_U1(gauge_U1, params);
     printf("Apply DiracOperator...\n");
 
-    deviceSpinorField<1, 4> Mu_U1 = D_U1.template apply<Tags::TagD>(u_U1);
-    deviceSpinorField<1, 4> Mv_U1 = D_U1.template apply<Tags::TagDdagger>(v_U1);
+    deviceSpinorField<1, 4> Mu_U1 = D_U1.apply<Tags::TagD>(u_U1);
+    deviceSpinorField<1, 4> Mv_U1 = D_U1.apply<Tags::TagDdagger>(v_U1);
     // deviceSpinorField<3, 4> Mu = apply_D<4, 3, 4>(u, gauge, gammas, -0.5);
     // deviceSpinorField<3, 4> Mv = apply_D<4, 3, 4>(v, gauge, gammas, -0.5);
 
@@ -323,7 +322,7 @@ int main(int argc, char* argv[]) {
         });
     printf("Spinor after Gauge Trafo:\n");
     // print_spinor(u_U1(0, 0, 0, 0));
-    deviceSpinorField<1, 4> Mu_trafo_U1 = D_U1.template apply<Tags::TagD>(u_U1);
+    deviceSpinorField<1, 4> Mu_trafo_U1 = D_U1.apply<Tags::TagD>(u_U1);
     tune_and_launch_for<4>(
         "Subtract Spinors", IndexArray<4>{0, 0, 0, 0},
         IndexArray<4>{L0, L1, L2, L3},

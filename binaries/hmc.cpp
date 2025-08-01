@@ -2,6 +2,7 @@
 #include <getopt.h>
 
 #include <filesystem>
+
 #include "klft.hpp"  // or wherever HMC_execute is declared
 using namespace klft;
 
@@ -15,9 +16,7 @@ using RNGType = Kokkos::Random_XorShift64_Pool<Kokkos::DefaultExecutionSpace>;
 #define HLINE \
   "====================================================================\n"
 
-int parse_args(int argc,
-               char** argv,
-               std::string& input_file,
+int parse_args(int argc, char** argv, std::string& input_file,
                std::string& output_directory) {
   // Defaults
   input_file = "../../../new_test.yaml";
@@ -83,7 +82,7 @@ int main(int argc, char* argv[]) {
   std::string output_directory;
   rc = parse_args(argc, argv, input_file, output_directory);
   if (rc == 0) {
-    rc = HMC_execute(input_file, output_directory);
+    rc = build_and_run_HMC(input_file, output_directory);
   } else if (rc == -2) {
     // Don't return error code when called with "-h"
     rc = 0;

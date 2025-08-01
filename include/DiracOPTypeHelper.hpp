@@ -3,12 +3,11 @@
 namespace klft {
 template <typename T>
 struct DiracOpFieldTypeTraits;
-template <typename _Derived,
-          typename _DSpinorFieldType,
-          typename _DGaugeFieldType>
+template <template <typename, typename> class _Derived,
+          typename _DSpinorFieldType, typename _DGaugeFieldType>
 struct DiracOpFieldTypeTraits<
     DiracOperator<_Derived, _DSpinorFieldType, _DGaugeFieldType>> {
-  using Derived = _Derived;
+  using Derived = _Derived<_DSpinorFieldType, _DGaugeFieldType>;
   using DSpinorFieldType = _DSpinorFieldType;
   using DGaugeFieldType = _DGaugeFieldType;
 };

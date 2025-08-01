@@ -1,7 +1,7 @@
 #pragma once
+#include "AdjointSUN.hpp"
 #include "FieldTypeHelper.hpp"
 #include "GLOBAL.hpp"
-
 namespace klft {
 
 class UpdatePosition : public std::enable_shared_from_this<UpdatePosition> {

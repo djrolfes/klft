@@ -36,7 +36,6 @@ class GaugeMonomial : public Monomial<DGaugeFieldType, DAdjFieldType> {
   }
 
   void accept(HamiltonianField<DGaugeFieldType, DAdjFieldType> h) override {
-    // print_SUN(h.gauge_field(0, 0, 0, 0, 0), "SUN in Gauge accept");
     Monomial<DGaugeFieldType, DAdjFieldType>::H_new =
         -(beta / static_cast<real_t>(Nc)) *
         GaugePlaquette<rank, Nc>(h.gauge_field, false);

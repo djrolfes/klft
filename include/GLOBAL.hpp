@@ -116,7 +116,12 @@ using Spinor = Kokkos::Array<Kokkos::Array<complex_t, Nd>, Nc>;
 template <size_t Nc, size_t RepDim>
 using SpinorField = Kokkos::View<Spinor<Nc, RepDim>****,
                                  Kokkos::MemoryTraits<Kokkos::Restrict>>;
-
+template <size_t Nc, size_t RepDim>
+using SpinorField3D =
+    Kokkos::View<Spinor<Nc, RepDim>***, Kokkos::MemoryTraits<Kokkos::Restrict>>;
+template <size_t Nc, size_t RepDim>
+using SpinorField2D =
+    Kokkos::View<Spinor<Nc, RepDim>**, Kokkos::MemoryTraits<Kokkos::Restrict>>;
 // define adjoint groups of gauge fields
 template <size_t Nc>
 using sun = Kokkos::Array<real_t, std::max<size_t>(Nc* Nc - 1, 1)>;
@@ -234,6 +239,13 @@ template <size_t Nc, size_t RepDim>
 using constSpinorField =
     Kokkos::View<const Spinor<Nc, RepDim>****,
                  Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
+template <size_t Nc, size_t RepDim>
+using constSpinorField3D =
+    Kokkos::View<const Spinor<Nc, RepDim>***,
+                 Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
+using constSpinorField2D =
+    Kokkos::View<const Spinor<Nc, RepDim>**,
+                 Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
 
 template <size_t Nd, size_t Nc>
 using constGaugeField =
@@ -320,6 +332,12 @@ using constLinkScalarField2D =
 template <size_t Nc, size_t RepDim>
 using constSpinorField = Kokkos::View<const Spinor<Nc, RepDim>****,
                                       Kokkos::MemoryTraits<Kokkos::Restrict>>;
+template <size_t Nc, size_t RepDim>
+using constSpinorField3D = Kokkos::View<const Spinor<Nc, RepDim>***,
+                                        Kokkos::MemoryTraits<Kokkos::Restrict>>;
+template <size_t Nc, size_t RepDim>
+using constSpinorField2D = Kokkos::View<const Spinor<Nc, RepDim>**,
+                                        Kokkos::MemoryTraits<Kokkos::Restrict>>;
 
 template <size_t Nd, size_t Nc>
 using constGaugeField = Kokkos::View<const SUN<Nc>**** [Nd],

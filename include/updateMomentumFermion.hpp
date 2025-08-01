@@ -1,4 +1,5 @@
 #pragma once
+#include "DiracOPTypeHelper.hpp"
 #include "FermionParams.hpp"
 #include "GDiracOperator.hpp"
 #include "IndexHelper.hpp"
@@ -6,33 +7,35 @@
 #include "UpdateMomentum.hpp"
 namespace klft {
 
-template <typename DFermionFieldType,
-          typename DGaugeFieldType,
+template <typename DSpinorFieldType, typename DGaugeFieldType,
           typename DAdjFieldType,
-          class Derived,
-          class Solver>
+          template <template <typename, typename> class DiracOpT, typename,
+                    typename> class _Solver,
+          template <typename, typename> class DiracOpT>
 class UpdateMomentumFermion : public UpdateMomentum {
-  static_assert(isDeviceFermionFieldType<DFermionFieldType>::value);
+  static_assert(isDeviceFermionFieldType<DSpinorFieldType>::value);
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
   static_assert(isDeviceAdjFieldType<DAdjFieldType>::value);
   constexpr static size_t rank =
       DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank;
   constexpr static size_t Nc = DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc;
   constexpr static size_t RepDim =
-      DeviceFermionFieldTypeTraits<DFermionFieldType>::RepDim;
+      DeviceFermionFieldTypeTraits<DSpinorFieldType>::RepDim;
   static_assert(rank == DeviceAdjFieldTypeTraits<DAdjFieldType>::Rank &&
                     rank ==
-                        DeviceFermionFieldTypeTraits<DFermionFieldType>::Rank &&
+                        DeviceFermionFieldTypeTraits<DSpinorFieldType>::Rank &&
                     Nc == DeviceAdjFieldTypeTraits<DAdjFieldType>::Nc &&
-                    Nc == DeviceFermionFieldTypeTraits<DFermionFieldType>::Nc,
+                    Nc == DeviceFermionFieldTypeTraits<DSpinorFieldType>::Nc,
                 "Rank and Nc must match between gauge, adjoint, and fermion "
                 "field types.");
+  using DiracOp = DiracOperator<DiracOpT, DSpinorFieldType, DGaugeFieldType>;
+  using Solver = _Solver<DiracOpT, DSpinorFieldType, DGaugeFieldType>;
 
  public:
   // Define Tags for different Operators
   struct HWilsonDiracOperatorTag {};
 
-  using FermionField = typename DFermionFieldType::type;
+  using FermionField = typename DSpinorFieldType::type;
   using GaugeFieldType = typename DeviceGaugeFieldType<rank, Nc>::type;
   using AdjFieldType = typename DeviceAdjFieldType<rank, Nc>::type;
   GaugeFieldType gauge_field;
@@ -49,8 +52,7 @@ class UpdateMomentumFermion : public UpdateMomentum {
   UpdateMomentumFermion() = delete;
   ~UpdateMomentumFermion() = default;
 
-  UpdateMomentumFermion(FermionField& phi_,
-                        GaugeFieldType& gauge_field_,
+  UpdateMomentumFermion(FermionField& phi_, GaugeFieldType& gauge_field_,
                         AdjFieldType& adjoint_field_,
                         const diracParams<rank, RepDim>& params_,
                         const real_t& tol_)
@@ -108,25 +110,6 @@ class UpdateMomentumFermion : public UpdateMomentum {
 
       auto deriv = -1 * first_term + second_term;
 
-      // temp1 = conj(Xplus) * conj(this->gauge_field(Idcs..., mu));
-      // temp2 = temp1 * (this->params.gamma_id - this->params.gammas[mu]);
-      // temp1 = this->params.kappa * temp2;
-      // auto first_term_adj = (this->chi_alt(Idcs...)) * temp1;
-
-      // temp3 = this->gauge_field(Idcs..., mu) * Yplus;
-      // temp4 = (this->params.gamma_id + this->params.gammas[mu]) * temp3;
-      // temp3 = this->params.kappa * temp4;
-      // auto second_term_adj = temp3 * conj(this->chi(Idcs...));
-
-      // deriv += first_term_adj + -1 * second_term_adj;
-
-      // if (Kokkos::Array<size_t, rank>{Idcs...} ==
-      //     Kokkos::Array<size_t, rank>{0, 0, 0, 0}) {
-      //   print_SUN(traceLessAntiHermitian(derv), "SUN Force Matrix ");
-      //   print_SUNAdj(traceT(traceLessAntiHermitian(derv)), "Adj Force
-      //   MAtrix");
-      // }
-
       // Taking the Real part is handled by the traceT
       momentum(Idcs..., mu) -=
           2 * eps *
@@ -140,36 +123,28 @@ class UpdateMomentumFermion : public UpdateMomentum {
     eps = step_size;
 
     IndexArray<rank> start;
-    Derived D(gauge_field, this->params);
-    Derived D1(gauge_field, this->params);
+    DiracOp D(gauge_field, this->params);
+    DiracOp D1(gauge_field, this->params);
     FermionField x(this->params.dimensions, complex_t(0.0, 0.0));
     FermionField x0(this->params.dimensions, complex_t(0.0, 0.0));
-    // print_spinor_int(this->phi(0, 0, 0, 0),
-    //                  "Spinor s_in(0,0,0,0) in update Momentum Fermion");
+
     Solver solver(this->phi, x, D);
     if (KLFT_VERBOSITY > 4) {
       printf("Solving insde updateMomentumFermion:");
     }
 
-    solver.template solve<Tags::TagMdagger>(x0, this->tol);
+    solver.template solve<Tags::TagDdaggerD>(x0, this->tol);
     this->chi = solver.x;
     this->chi_alt = D1.template apply<Tags::TagD>(this->chi);
-    // print_spinor_int(solver.x(0, 0, 0, 0),
-    //                  "solver.x after solve (should be the same as chi)");
-    // print_spinor_int(this->chi(0, 0, 0, 0), "chi after solve");
-    // print_SUN(gauge_field(0, 0, 0, 0, 0), "In GaugeField in
-    // Fermionmomentum");
+
     for (size_t i = 0; i < rank; ++i) {
       start[i] = 0;
     }
-    // auto before = this->momentum(0, 0, 0, 0, 0);
 
     // launch the kernel
     tune_and_launch_for<rank, HWilsonDiracOperatorTag>(
         "UpdateMomentumFermion", start, gauge_field.dimensions, *this);
     Kokkos::fence();
-    // print_SUNAdj(this->momentum(0, 0, 0, 0, 0), "SUNAdj after update
-    // Fermion");
   }
 };
 

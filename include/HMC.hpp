@@ -43,10 +43,8 @@ class HMC {
 
   HMC(const Integrator_Params params_,
       HamiltonianField<DGaugeFieldType, DAdjFieldType>& hamiltonian_field_,
-      std::shared_ptr<Integrator> integrator_,
-      RNG rng_,
-      std::uniform_real_distribution<real_t> dist_,
-      std::mt19937 mt_)
+      std::shared_ptr<Integrator> integrator_, RNG rng_,
+      std::uniform_real_distribution<real_t> dist_, std::mt19937 mt_)
       : params(params_),
         rng(rng_),
         dist(dist_),
@@ -65,20 +63,20 @@ class HMC {
         std::make_unique<KineticMonomial<DGaugeFieldType, DAdjFieldType>>(
             _time_scale));
   }
-  template <typename DiracOperator, typename Solver, typename DSpinorFieldType>
+  template <template <template <typename, typename> class DiracOpT, typename,
+                      typename> class _Solver,
+            template <typename, typename> class DiracOpT,
+            typename DSpinorFieldType>
   void add_fermion_monomial(
       typename DSpinorFieldType::type& spinorField,
       diracParams<DeviceFermionFieldTypeTraits<DSpinorFieldType>::Rank,
 
                   DeviceFermionFieldTypeTraits<DSpinorFieldType>::RepDim>&
           params_,
-      const real_t& tol_,
-      RNG& rng,
-      const unsigned int _time_scale) {
+      const real_t& tol_, RNG& rng, const unsigned int _time_scale) {
     monomials.emplace_back(
-        std::make_unique<
-            FermionMonomial<DiracOperator, Solver, RNG, DSpinorFieldType,
-                            DGaugeFieldType, DAdjFieldType>>(
+        std::make_unique<FermionMonomial<RNG, DSpinorFieldType, DGaugeFieldType,
+                                         DAdjFieldType, _Solver, DiracOpT>>(
             spinorField, params_, tol_, rng, _time_scale));
   }
 
