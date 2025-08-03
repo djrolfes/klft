@@ -1,28 +1,9 @@
-//******************************************************************************/
-//
-// This file is part of the Kokkos Lattice Field Theory (KLFT) library.
-//
-// KLFT is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// KLFT is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with KLFT.  If not, see <http://www.gnu.org/licenses/>.
-//
-//******************************************************************************/
-
-// this file performs metropolis for gauge fields
-// for different dimensions and gauge groups
 
 #include <getopt.h>
+
 #include <filesystem>
-#include "klft.hpp"
+
+#include "klft.hpp"  // or wherever HMC_execute is declared
 using namespace klft;
 
 // we are hard coding the RNG now to use Kokkos::Random_XorShift64_Pool
@@ -35,9 +16,7 @@ using RNGType = Kokkos::Random_XorShift64_Pool<Kokkos::DefaultExecutionSpace>;
 #define HLINE \
   "====================================================================\n"
 
-int parse_args(int argc,
-               char** argv,
-               std::string& input_file,
+int parse_args(int argc, char** argv, std::string& input_file,
                std::string& output_directory) {
   // Defaults
   input_file = "../../../new_test.yaml";
@@ -57,7 +36,7 @@ int parse_args(int argc,
 
   static struct option long_options[] = {
       {"filename", required_argument, NULL, 'f'},
-      {"output", optional_argument, NULL, 'o'},
+      {"output", required_argument, NULL, 'o'},
       {"help", no_argument, NULL, 'h'},
       {NULL, 0, NULL, 0}};
 
@@ -94,7 +73,7 @@ int parse_args(int argc,
 
 int main(int argc, char* argv[]) {
   printf(HLINE);
-  printf("Metropolis for SU(N) gauge fields\n");
+  printf("HMC for SU(N) gauge fields\n");
   printf(HLINE);
 
   Kokkos::initialize(argc, argv);
@@ -103,7 +82,7 @@ int main(int argc, char* argv[]) {
   std::string output_directory;
   rc = parse_args(argc, argv, input_file, output_directory);
   if (rc == 0) {
-    rc = Metropolis(input_file, output_directory);
+    rc = build_and_run_HMC(input_file, output_directory);
   } else if (rc == -2) {
     // Don't return error code when called with "-h"
     rc = 0;

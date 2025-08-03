@@ -54,7 +54,7 @@ binaries/metropolis
      Hint: use --kokkos-help to see command line options provided by Kokkos.
 ```
 
-### Example input.yaml
+### Example input.yaml for Metropolis
 
 ```yaml
 # input.yaml
@@ -95,7 +95,84 @@ GaugeObservableParams:
   W_mu_nu_filename: "W_mu_nu.out"      # filename to output the planar Wilson loop
   write_to_file: true                  # write the measurements to file
 ```
+### Example input.yaml for HMC
 
+```yaml 
+HMCParams:
+  Ndims: 4    # number of dimensions [2,3,4]
+  Nd: 4       # number of link dimensions (this must be strictly same as Ndims)
+  Nc: 2       # number of colors (defines SU(Nc)) [1,2] (SU(3) is still WiP)
+  L0: 8       # lattice extent in 0 direction
+  L1: 8       # lattice extent in 1 direction
+  L2: 8       # lattice extent in 2 direction
+  L3: 8       # lattice extent in 3 direction
+  seed: 1234  # random seed
+  coldStart: false # start with GaugeFIeld set to 1
+  rngDelta: 1 # step size for the Metropolis algorithm
+
+
+# .
+Integrator: # parameters to configure the Integrator, Level 0 is the innermost level of the Integrator, i.e that is executed most frequently
+  tau: 1    # time for md trajectory
+  nSteps: 1000 # Number of md trajectory 
+  Monomials: # Monomial types 
+    - Type: "Leapfrog"  # Integrator to be used for this Level [Leapfrog]
+      level: 0          # Level for this Monomial used for matching the specific Monomial (see below)
+      steps: 100        # Integration steps for specific Monomial
+    - Type: "Leapfrog"
+      level: 1
+      steps: 20
+
+
+Gauge Monomial: # Monomial for Pure Gauge [Must be used] 
+  level: 0      # Level to identifiy it with the Integrator 
+  beta: 2.12    # inverse coupling constant
+
+Fermion Monomial: # Monomial for Fermions (2 mass degenerate Flavours) [For now only in 4D]
+  level: 1  # Level to identifiy it with the Integrator  
+  fermion: "HWilson" # Typ of Fermion(operator) [HWilson]
+  solver: "CG" # "Solver for Matrix Inversion" [CG]
+  RepDim: 4 # Spinor Representation
+  kappa: 0.15  # hopping parameter
+  tol: 1e-10 # Solver tolerance
+
+GaugeObservableParams:
+  measurement_interval: 5
+  measure_plaquette: true
+  measure_wilson_loop_temporal: false
+  measure_wilson_loop_mu_nu: false
+  flush: 5 # Number of md trajectories before saving to disk
+
+  W_temp_L_T_pairs:
+    - [2, 3]
+    - [3, 4]
+
+  W_mu_nu_pairs:
+    - [0, 1]
+    - [1, 2]
+
+  W_Lmu_Lnu_pairs:
+    - [2, 2]
+    - [3, 3]
+
+  plaquette_filename: "plaquette_output20.txt"
+  W_temp_filename: "wilson_temp_output20.txt"
+  W_mu_nu_filename: "wilson_mu_nu_output20.txt"
+
+  write_to_file: true
+
+SimulationLoggingParams: 
+  log_interval: 1  # interval for logging
+  log_delta_H: true # Log S_old - S_new
+  log_acceptance: true # Log acceptance Rate
+  flush: 5 # Number of md trajectories before saving to disk
+  
+  log_filename: "simulation_log.txt"
+  write_to_file: true
+
+
+
+```
 # Environment variables
 
 ### KLFT_VERBOSITY

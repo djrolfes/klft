@@ -26,6 +26,7 @@
 #pragma once
 #include <fstream>
 #include <iostream>
+
 #include "GLOBAL.hpp"
 
 // define how many times the kernel is run to tune
@@ -80,8 +81,7 @@ inline TuningHashTable<2> tuning_hash_table_2D;
 // }
 
 template <size_t rank, class WorkTag = void, class FunctorType>
-void tune_and_launch_for(std::string functor_id,
-                         const IndexArray<rank>& start,
+void tune_and_launch_for(std::string functor_id, const IndexArray<rank>& start,
                          const IndexArray<rank>& end,
                          const FunctorType& functor) {
   // WhatEver<WorkTag>();

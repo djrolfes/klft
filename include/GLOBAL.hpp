@@ -46,8 +46,59 @@ template <size_t rank>
 using IndexArray = Kokkos::Array<index_t, rank>;
 
 // define groups for gauge fields
+template <typename T>
+struct Wrapper {
+  T data;
+
+  // Implicit conversion to T&
+  KOKKOS_INLINE_FUNCTION
+  operator T&() { return data; }
+
+  KOKKOS_INLINE_FUNCTION
+  operator const T&() const { return data; }
+
+  // Optional: pointer-style access (if T is a View or Array)
+  KOKKOS_INLINE_FUNCTION
+  auto operator->() { return &data; }
+
+  KOKKOS_INLINE_FUNCTION
+  auto operator->() const { return &data; }
+
+  // Add custom operations
+  // KOKKOS_INLINE_FUNCTION
+  // Wrapper operator+(const Wrapper& other) const {
+  //     Wrapper result;
+  //     result.data = this->data + other.data; // requires T supports +
+  //     return result;
+  // }
+
+  // operator[] forwarding
+  template <typename Index>
+  KOKKOS_INLINE_FUNCTION auto& operator[](Index i) {
+    return data[i];
+  }
+
+  template <typename Index>
+  KOKKOS_INLINE_FUNCTION const auto& operator[](Index i) const {
+    return data[i];
+  }
+
+  // Optional: operator() forwarding (for Views)
+  template <typename... Indices>
+  KOKKOS_INLINE_FUNCTION auto operator()(Indices... indices)
+      -> decltype(data(indices...)) {
+    return data(indices...);
+  }
+
+  template <typename... Indices>
+  KOKKOS_INLINE_FUNCTION auto operator()(Indices... indices) const
+      -> decltype(data(indices...)) {
+    return data(indices...);
+  }
+};
+
 template <size_t Nc>
-using SUN = Kokkos::Array<Kokkos::Array<complex_t, Nc>, Nc>;
+using SUN = Wrapper<Kokkos::Array<Kokkos::Array<complex_t, Nc>, Nc>>;
 
 // define Spinor Type
 // info correct dispatch is only guaranteed for    Nd != Nc ! -> Conflicts with
@@ -65,7 +116,51 @@ using Spinor = Kokkos::Array<Kokkos::Array<complex_t, Nd>, Nc>;
 template <size_t Nc, size_t RepDim>
 using SpinorField = Kokkos::View<Spinor<Nc, RepDim>****,
                                  Kokkos::MemoryTraits<Kokkos::Restrict>>;
+template <size_t Nc, size_t RepDim>
+using SpinorField3D =
+    Kokkos::View<Spinor<Nc, RepDim>***, Kokkos::MemoryTraits<Kokkos::Restrict>>;
+template <size_t Nc, size_t RepDim>
+using SpinorField2D =
+    Kokkos::View<Spinor<Nc, RepDim>**, Kokkos::MemoryTraits<Kokkos::Restrict>>;
+// define adjoint groups of gauge fields
+template <size_t Nc>
+using sun = Kokkos::Array<real_t, std::max<size_t>(Nc* Nc - 1, 1)>;
 
+// define adjoint groups
+template <size_t Nc>
+constexpr size_t NcAdj = (Nc * Nc > 1) ? Nc * Nc - 1 : 1;
+
+template <size_t Nc>
+struct SUNAdj {
+  Kokkos::Array<real_t, NcAdj<Nc>> data;
+
+  KOKKOS_INLINE_FUNCTION
+  auto operator->() { return &data; }
+
+  KOKKOS_INLINE_FUNCTION
+  auto operator->() const { return &data; }
+
+  // operator[] forwarding
+  template <typename Index>
+  KOKKOS_INLINE_FUNCTION auto& operator[](Index i) {
+    return data[i];
+  }
+
+  template <typename Index>
+  KOKKOS_INLINE_FUNCTION const auto& operator[](Index i) const {
+    return data[i];
+  }
+};
+// template <size_t Nc> using SUNAdj = Wrapper<Kokkos::Array<real_t,
+// NcAdj<Nc>>>;
+
+// define field view types
+// by default all views are 4D
+// some dimensions are set to 1 for lower dimensions
+// I'm still not sure if this is the best way to do it
+// Nd here is templated, but for a 4D gauge field,
+// shouldn't Nd always be 4?
+// Nc is the number of colors
 template <size_t Nd, size_t Nc>
 using GaugeField =
     Kokkos::View<SUN<Nc>**** [Nd], Kokkos::MemoryTraits<Kokkos::Restrict>>;
@@ -77,6 +172,18 @@ using GaugeField3D =
 template <size_t Nd, size_t Nc>
 using GaugeField2D =
     Kokkos::View<SUN<Nc>** [Nd], Kokkos::MemoryTraits<Kokkos::Restrict>>;
+
+template <size_t Nd, size_t Nc>
+using SUNAdjField =
+    Kokkos::View<SUNAdj<Nc>**** [Nd], Kokkos::MemoryTraits<Kokkos::Restrict>>;
+
+template <size_t Nd, size_t Nc>
+using SUNAdjField3D =
+    Kokkos::View<SUNAdj<Nc>*** [Nd], Kokkos::MemoryTraits<Kokkos::Restrict>>;
+
+template <size_t Nd, size_t Nc>
+using SUNAdjField2D =
+    Kokkos::View<SUNAdj<Nc>** [Nd], Kokkos::MemoryTraits<Kokkos::Restrict>>;
 
 template <size_t Nc>
 using SUNField =
@@ -132,6 +239,13 @@ template <size_t Nc, size_t RepDim>
 using constSpinorField =
     Kokkos::View<const Spinor<Nc, RepDim>****,
                  Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
+template <size_t Nc, size_t RepDim>
+using constSpinorField3D =
+    Kokkos::View<const Spinor<Nc, RepDim>***,
+                 Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
+using constSpinorField2D =
+    Kokkos::View<const Spinor<Nc, RepDim>**,
+                 Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
 
 template <size_t Nd, size_t Nc>
 using constGaugeField =
@@ -146,6 +260,21 @@ using constGaugeField3D =
 template <size_t Nd, size_t Nc>
 using constGaugeField2D =
     Kokkos::View<const SUN<Nc>** [Nd],
+                 Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
+
+template <size_t Nd, size_t Nc>
+using constSUNAdjField =
+    Kokkos::View<const SUNAdj<Nc>**** [Nd],
+                 Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
+
+template <size_t Nd, size_t Nc>
+using constSUNAdjField3D =
+    Kokkos::View<const SUNAdj<Nc>**** [Nd],
+                 Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
+
+template <size_t Nd, size_t Nc>
+using constSUNAdjField2D =
+    Kokkos::View<const SUNAdj<Nc>**** [Nd],
                  Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
 
 template <size_t Nc>
@@ -200,10 +329,15 @@ using constLinkScalarField2D =
                  Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
 
 #else
-
 template <size_t Nc, size_t RepDim>
 using constSpinorField = Kokkos::View<const Spinor<Nc, RepDim>****,
                                       Kokkos::MemoryTraits<Kokkos::Restrict>>;
+template <size_t Nc, size_t RepDim>
+using constSpinorField3D = Kokkos::View<const Spinor<Nc, RepDim>***,
+                                        Kokkos::MemoryTraits<Kokkos::Restrict>>;
+template <size_t Nc, size_t RepDim>
+using constSpinorField2D = Kokkos::View<const Spinor<Nc, RepDim>**,
+                                        Kokkos::MemoryTraits<Kokkos::Restrict>>;
 
 template <size_t Nd, size_t Nc>
 using constGaugeField = Kokkos::View<const SUN<Nc>**** [Nd],
@@ -216,6 +350,18 @@ using constGaugeField3D =
 template <size_t Nd, size_t Nc>
 using constGaugeField2D =
     Kokkos::View<const SUN<Nc>** [Nd], Kokkos::MemoryTraits<Kokkos::Restrict>>;
+
+template <size_t Nd, size_t Nc>
+using constSUNAdjField = Kokkos::View<const SUNAdj<Nc>**** [Nd],
+                                      Kokkos::MemoryTraits<Kokkos::Restrict>>;
+
+template <size_t Nd, size_t Nc>
+using constSUNAdjField3D = Kokkos::View<const SUNAdj<Nc>**** [Nd],
+                                        Kokkos::MemoryTraits<Kokkos::Restrict>>;
+
+template <size_t Nd, size_t Nc>
+using constSUNAdjField2D = Kokkos::View<const SUNAdj<Nc>**** [Nd],
+                                        Kokkos::MemoryTraits<Kokkos::Restrict>>;
 
 template <size_t Nc>
 using constSUNField =
@@ -303,7 +449,6 @@ constexpr KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, Nd> zeroSpinor() {
   }
   return zero;
 }
-
 // define a global identity field generator
 // for the color x color matrix
 template <size_t Nc>
@@ -340,17 +485,13 @@ constexpr KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, Nd> oneSpinor() {
 // 5 = trace
 inline int KLFT_VERBOSITY = 0;
 
-inline void setVerbosity(int v) {
-  KLFT_VERBOSITY = v;
-}
+inline void setVerbosity(int v) { KLFT_VERBOSITY = v; }
 
 // variable that enables tuning
 // 0 = no tuning
 // 1 = tuning enabled
 inline int KLFT_TUNING = 0;
 
-inline void setTuning(int t) {
-  KLFT_TUNING = t;
-}
+inline void setTuning(int t) { KLFT_TUNING = t; }
 
 }  // namespace klft

@@ -23,6 +23,8 @@
 // dimensionality from Nd, you can not use the definitions here
 
 #pragma once
+
+#include "AdjointField.hpp"
 #include "Field.hpp"
 #include "GaugeField.hpp"
 #include "PTBCGaugeField.hpp"
@@ -31,53 +33,139 @@
 #include "SpinorField.hpp"
 
 namespace klft {
+// define GaugeFieldKinds
+enum class GaugeFieldKind { Standard, PTBC };
 
-// define a function to get the gauge field type based on the rank
-template <size_t rank, size_t Nc>
+enum class SpinorFieldKind { Standard, Staggered };
+// define a function to get the gauge field type based on the rank,
+// with the default Field being the default GaugeField
+template <size_t rank, size_t Nc, GaugeFieldKind k = GaugeFieldKind::Standard>
 struct DeviceGaugeFieldType;
 
 // now define the specializations
 template <size_t Nc>
-struct DeviceGaugeFieldType<2, Nc> {
+struct DeviceGaugeFieldType<2, Nc, GaugeFieldKind::Standard> {
   using type = deviceGaugeField2D<2, Nc>;
 };
 
 template <size_t Nc>
-struct DeviceGaugeFieldType<3, Nc> {
+struct DeviceGaugeFieldType<3, Nc, GaugeFieldKind::Standard> {
   using type = deviceGaugeField3D<3, Nc>;
 };
 
 template <size_t Nc>
-struct DeviceGaugeFieldType<4, Nc> {
+struct DeviceGaugeFieldType<4, Nc, GaugeFieldKind::Standard> {
   using type = deviceGaugeField<4, Nc>;
 };
+
 // now do the same for the SpinorField field types
-template <size_t rank, size_t Nc, size_t RepDim>
+template <size_t rank, size_t Nc, size_t RepDim,
+          SpinorFieldKind k = SpinorFieldKind::Standard>
 struct DeviceSpinorFieldType;
 
 template <size_t Nc>
-struct DeviceSpinorFieldType<4, Nc, 4> {
+struct DeviceSpinorFieldType<4, Nc, 4, SpinorFieldKind::Standard> {
   using type = deviceSpinorField<Nc, 4>;
+};
+template <size_t Nc>
+struct DeviceSpinorFieldType<3, Nc, 4, SpinorFieldKind::Standard> {
+  using type = deviceSpinorField3D<Nc, 4>;
+};
+template <size_t Nc>
+struct DeviceSpinorFieldType<2, Nc, 4, SpinorFieldKind::Standard> {
+  using type = deviceSpinorField2D<Nc, 4>;
 };
 
 // now do the same for the PTBC gauge field types
-template <size_t rank, size_t Nc>
-struct DevicePTBCGaugeFieldType;
-
 template <size_t Nc>
-struct DevicePTBCGaugeFieldType<4, Nc> {
+struct DeviceGaugeFieldType<4, Nc, GaugeFieldKind::PTBC> {
   using type = devicePTBCGaugeField<4, Nc>;
 };
 
 template <size_t Nc>
-struct DevicePTBCGaugeFieldType<3, Nc> {
+struct DeviceGaugeFieldType<3, Nc, GaugeFieldKind::PTBC> {
   using type = devicePTBCGaugeField3D<3, Nc>;
 };
 
 template <size_t Nc>
-struct DevicePTBCGaugeFieldType<2, Nc> {
+struct DeviceGaugeFieldType<2, Nc, GaugeFieldKind::PTBC> {
   using type = devicePTBCGaugeField2D<2, Nc>;
 };
+
+// define Traits to extract the rank, Nc and GaugeFieldKind at a later point
+template <typename T>
+struct DeviceGaugeFieldTypeTraits;
+
+template <size_t _rank, size_t _Nc, GaugeFieldKind _k>
+struct DeviceGaugeFieldTypeTraits<DeviceGaugeFieldType<_rank, _Nc, _k>> {
+  static constexpr size_t Rank = _rank;
+  static constexpr size_t Nc = _Nc;
+  static constexpr GaugeFieldKind Kind = _k;
+};
+
+// compile time check for the appropriate types
+template <typename T>
+struct isDeviceGaugeFieldType : std::false_type {};
+
+template <typename T>
+struct isDeviceFermionFieldType : std::false_type {};
+
+template <size_t rank, size_t Nc, GaugeFieldKind k>
+struct isDeviceGaugeFieldType<DeviceGaugeFieldType<rank, Nc, k>>
+    : std::true_type {};
+
+template <size_t rank, size_t Nc, size_t RepDim, SpinorFieldKind k>
+struct isDeviceFermionFieldType<DeviceSpinorFieldType<rank, Nc, RepDim, k>>
+    : std::true_type {};
+
+template <typename T>
+struct DeviceFermionFieldTypeTraits;
+
+template <size_t _rank, size_t _Nc, size_t _RepDim, SpinorFieldKind _k>
+struct DeviceFermionFieldTypeTraits<
+    DeviceSpinorFieldType<_rank, _Nc, _RepDim, _k>> {
+  static constexpr size_t Rank = _rank;
+  static constexpr size_t Nc = _Nc;
+  static constexpr size_t RepDim = _RepDim;
+  static constexpr SpinorFieldKind Kind = _k;
+};
+
+// define a function to get the gauge field type based on the rank,
+// with the default Field being the default GaugeField
+template <size_t rank, size_t Nc>
+struct DeviceAdjFieldType;
+
+template <size_t Nc>
+struct DeviceAdjFieldType<4, Nc> {
+  using type = deviceAdjointField<4, Nc>;
+};
+
+template <size_t Nc>
+struct DeviceAdjFieldType<3, Nc> {
+  using type = deviceAdjointField3D<3, Nc>;
+};
+
+template <size_t Nc>
+struct DeviceAdjFieldType<2, Nc> {
+  using type = deviceAdjointField2D<2, Nc>;
+};
+
+// define Traits to extract the rank, Nc and GaugeFieldKind at a later point
+template <typename T>
+struct DeviceAdjFieldTypeTraits;
+
+template <size_t _rank, size_t _Nc>
+struct DeviceAdjFieldTypeTraits<DeviceAdjFieldType<_rank, _Nc>> {
+  static constexpr size_t Rank = _rank;
+  static constexpr size_t Nc = _Nc;
+};
+
+// compile time check for the appropriate types
+template <typename T>
+struct isDeviceAdjFieldType : std::false_type {};
+
+template <size_t rank, size_t Nc>
+struct isDeviceAdjFieldType<DeviceAdjFieldType<rank, Nc>> : std::true_type {};
 
 // define the same thing for SUN fields
 template <size_t rank, size_t Nc>
@@ -135,6 +223,29 @@ template <>
 struct DeviceScalarFieldType<4> {
   using type = deviceScalarField;
 };
+
+// Type selector
+template <size_t Nd, size_t Nc>
+struct ConstGaugeFieldSelector;
+
+template <size_t Nc>
+struct ConstGaugeFieldSelector<4, Nc> {
+  using type = constGaugeField<4, Nc>;
+};
+
+template <size_t Nc>
+struct ConstGaugeFieldSelector<3, Nc> {
+  using type = constGaugeField3D<3, Nc>;
+};
+
+template <size_t Nc>
+struct ConstGaugeFieldSelector<2, Nc> {
+  using type = constGaugeField2D<2, Nc>;
+};
+
+// Type alias for convenience
+template <size_t Nd, size_t Nc>
+using ConstGaugeFieldType = typename ConstGaugeFieldSelector<Nd, Nc>::type;
 
 // add the same for scalar fields here when needed
 }  // namespace klft

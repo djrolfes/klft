@@ -57,7 +57,7 @@ int main(int argc, char const* argv[]) {
          get_gamma0() * get_gamma1() * get_gamma2() * get_gamma3() * id);
   printf(HLINE);
   printf("Finished\n");
-  auto idx = IndexArray<4>{0, 3, 3, 0};
+  auto idx = IndexArray<4>{0, 3, 3, 1};
   auto dim = IndexArray<4>{4, 4, 4, 4};
   auto idx_new = shift_index_minus_bc(idx, 0, 1, 3, -1, dim);
   printf("Shifted index: ");
