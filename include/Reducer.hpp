@@ -1,5 +1,6 @@
+#pragma once
+#include "GLOBAL.hpp"
 
-#include "Global.hpp"
 namespace klft {
 namespace Reducer {
 template <class ScalarType, size_t N>

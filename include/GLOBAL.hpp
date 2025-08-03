@@ -243,6 +243,8 @@ template <size_t Nc, size_t RepDim>
 using constSpinorField3D =
     Kokkos::View<const Spinor<Nc, RepDim>***,
                  Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
+
+template <size_t Nc, size_t RepDim>
 using constSpinorField2D =
     Kokkos::View<const Spinor<Nc, RepDim>**,
                  Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
