@@ -31,12 +31,13 @@
 #include "SUNField.hpp"
 #include "ScalarField.hpp"
 #include "SpinorField.hpp"
+#include "SpinorPointSource.hpp"
 
 namespace klft {
 // define GaugeFieldKinds
 enum class GaugeFieldKind { Standard, PTBC };
 
-enum class SpinorFieldKind { Standard, Staggered };
+enum class SpinorFieldKind { Standard, Staggered, PointSource };
 // define a function to get the gauge field type based on the rank,
 // with the default Field being the default GaugeField
 template <size_t rank, size_t Nc, GaugeFieldKind k = GaugeFieldKind::Standard>
@@ -66,6 +67,10 @@ struct DeviceSpinorFieldType;
 template <size_t Nc>
 struct DeviceSpinorFieldType<4, Nc, 4, SpinorFieldKind::Standard> {
   using type = deviceSpinorField<Nc, 4>;
+};
+template <size_t Nc>
+struct DeviceSpinorFieldType<4, Nc, 4, SpinorFieldKind::PointSource> {
+  using type = deviceSpinorPointSource<Nc, 4>;
 };
 template <size_t Nc>
 struct DeviceSpinorFieldType<3, Nc, 4, SpinorFieldKind::Standard> {

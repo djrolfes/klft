@@ -64,5 +64,7 @@ int main(int argc, char const* argv[]) {
   printf("(%zu, %zu, %zu, %zu) with sign %f\n", idx_new.first[0],
          idx_new.first[1], idx_new.first[2], idx_new.first[3], idx_new.second);
   printf(HLINE);
+  printf("Making delta Spinor");
+  print_spinor(deltaSpinor<3, 4>(1));
   return 0;
 }
