@@ -47,8 +47,12 @@ see the [Kokkos documentation](https://kokkos.org/kokkos-core-wiki/get-started/c
 ```bash
 binaries/metropolis
   -f <file_name> --filename <file_name>
-     Name of the input file.
-     Default: input.yaml
+    Name of the input file.
+    Default: input.yaml
+  -o <file_name> --output <file_name>\n
+    Path to the output folder.\n
+    Hint: if the folder does not exist, it will be created.\n
+    Default: .\n   
   -h, --help
      Prints this message.
      Hint: use --kokkos-help to see command line options provided by Kokkos.

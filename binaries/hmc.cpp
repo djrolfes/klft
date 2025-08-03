@@ -19,7 +19,7 @@ using RNGType = Kokkos::Random_XorShift64_Pool<Kokkos::DefaultExecutionSpace>;
 int parse_args(int argc, char** argv, std::string& input_file,
                std::string& output_directory) {
   // Defaults
-  input_file = "../../../new_test.yaml";
+  input_file = "../../../input.yaml";
   output_directory = "./";
   const std::string help_string =
       "  -f <file_name> --filename <file_name>\n"
