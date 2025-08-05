@@ -20,11 +20,11 @@ int PTBC_execute(const std::string &input_file) {
   HMCParams hmcParams;
   GaugeObservableParams gaugeObsParams;
   SimulationLoggingParams simLogParams;
-  bool inputFilesCorrectly = (parseInputFile(input_file, gaugeObsParams) &&
-                              parseInputFile(input_file, hmcParams) &&
-                              parseInputFile(input_file, simLogParams) &&
-                              parseInputFile(input_file, ptbcParams));
-  if (!inputFilesCorrectly) {
+  bool inputFileParsedCorrectly = (parseInputFile(input_file, gaugeObsParams) &&
+                                   parseInputFile(input_file, hmcParams) &&
+                                   parseInputFile(input_file, simLogParams) &&
+                                   parseInputFile(input_file, ptbcParams));
+  if (!inputFileParsedCorrectly) {
     printf("Error parsing input file\n");
     return -1;
   }

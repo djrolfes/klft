@@ -55,6 +55,57 @@ using index_t = int;
 // define index_arrays
 template <size_t rank> using IndexArray = Kokkos::Array<index_t, rank>;
 
+// maybe these should be somewhere else
+//  element‐wise addition
+template <size_t rank>
+KOKKOS_INLINE_FUNCTION IndexArray<rank> operator+(IndexArray<rank> const &a,
+                                                  IndexArray<rank> const &b) {
+  IndexArray<rank> c;
+  for (size_t i = 0; i < rank; ++i)
+    c[i] = a[i] + b[i];
+  return c;
+}
+
+// element‐wise subtraction
+template <size_t rank>
+KOKKOS_INLINE_FUNCTION IndexArray<rank> operator-(IndexArray<rank> const &a,
+                                                  IndexArray<rank> const &b) {
+  IndexArray<rank> c;
+  for (size_t i = 0; i < rank; ++i)
+    c[i] = a[i] - b[i];
+  return c;
+}
+
+// element‐wise modulo (array % array)
+template <size_t rank>
+KOKKOS_INLINE_FUNCTION IndexArray<rank> operator%(IndexArray<rank> const &a,
+                                                  IndexArray<rank> const &b) {
+  IndexArray<rank> c;
+  for (size_t i = 0; i < rank; ++i)
+    c[i] = a[i] % b[i];
+  return c;
+}
+
+// optionally: array % scalar
+template <size_t rank>
+KOKKOS_INLINE_FUNCTION IndexArray<rank> operator%(IndexArray<rank> const &a,
+                                                  index_t m) {
+  IndexArray<rank> c;
+  for (size_t i = 0; i < rank; ++i)
+    c[i] = a[i] % m;
+  return c;
+}
+
+// and scalar % array
+template <size_t rank>
+KOKKOS_INLINE_FUNCTION IndexArray<rank> operator%(index_t m,
+                                                  IndexArray<rank> const &a) {
+  IndexArray<rank> c;
+  for (size_t i = 0; i < rank; ++i)
+    c[i] = m % a[i];
+  return c;
+}
+
 // define groups for gauge fields
 template <typename T> struct Wrapper {
   T data;
