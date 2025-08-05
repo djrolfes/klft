@@ -611,15 +611,14 @@ template <size_t Nd, size_t Nc> struct devicePTBCGaugeField3D {
   // Sets the defect value
   template <typename indexType> void set_defect(real_t cr) {
     this->dParams.defect_value = cr;
+    auto position = &this->dParams.defect_position;
     tune_and_launch_for<Nd - 1>(
         "set_defect", IndexArray<Nd - 1>{0},
         IndexArray<Nd - 1>{this->dParams.defect_length,
                            this->dParams.defect_length},
         KOKKOS_LAMBDA(const indexType i1, const indexType i2) {
-          const indexType i1_shift =
-              (i1 + this->dParams.defect_position[0]) % dimensions[1];
-          const indexType i2_shift =
-              (i2 + this->dParams.defect_position[1]) % dimensions[2];
+          const indexType i1_shift = (i1 + position[0]) % dimensions[1];
+          const indexType i2_shift = (i2 + position[1]) % dimensions[2];
           defectField(0, i1_shift, i2_shift, 0) = cr;
         });
     Kokkos::fence();
@@ -917,12 +916,12 @@ template <size_t Nd, size_t Nc> struct devicePTBCGaugeField2D {
   // Sets the defect value
   template <typename indexType> void set_defect(real_t cr) {
     this->dParams.defect_value = cr;
+    auto position = &this->dParams.defect_position;
     tune_and_launch_for<Nd - 1>(
         "set_defect", IndexArray<Nd - 1>{0},
         IndexArray<Nd - 1>{this->dParams.defect_length},
         KOKKOS_LAMBDA(const indexType i1) {
-          const indexType i1_shift =
-              (i1 + this->dParams.defect_position[0]) % dimensions[1];
+          const indexType i1_shift = (i1 + position[0]) % dimensions[1];
           defectField(0, i1_shift, 0) = cr;
         });
     Kokkos::fence();

@@ -114,10 +114,6 @@ public:
 
   int step() { return hmc.hmc_step(); }
 
-  real_t swap_rank(index_t rank) {
-    // return the rank of the partner device for the given rank
-  }
-
   real_t swap_partner(index_t partner_rank) {
     // swaps the Defect with the partner rank and returns the partial Delta_S
     previous_index = current_index;
@@ -150,8 +146,6 @@ public:
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
     index_t partner_rank;
-    index_t partner_index;
-    real_t partner_defect_value;
     bool accept = false;
     real_t Delta_S{0};
     int swap_start{0};
@@ -215,6 +209,7 @@ public:
       MPI_Bcast(params.defects.data(), params.defects.size(), MPI_REAL, 0,
                 MPI_COMM_WORLD);
     }
+    return 0;
   }
 
   real_t getPlaquetteAroundDefect() {
@@ -358,8 +353,6 @@ int run_PTBC(PTBCParams ptbc_params, RNG &rng,
 
     bool accept = ptbc.step();
 
-    // maybe HMC Gauge Obeservables here
-    //
     bool ptbc_accept = ptbc.swap();
 
     // Gauge observables
