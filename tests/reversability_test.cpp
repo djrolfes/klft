@@ -125,7 +125,6 @@ int main(int argc, char *argv[]) {
 
     HField hamiltonian_field = HField(dev_g_SU2_4D, dev_a_SU2_4D);
     // after the move, the gauge and adjoint fields are no longer valid
-    const auto &dimensions = hamiltonian_field.gauge_field.dimensions;
 
     Update_Q update_q(hamiltonian_field.gauge_field,
                       hamiltonian_field.adjoint_field);

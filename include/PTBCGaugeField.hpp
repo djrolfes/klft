@@ -238,7 +238,12 @@ template <size_t Nd, size_t Nc> struct devicePTBCGaugeField {
     this->dParams.defect_value = cr;
     auto dimensions_local = this->dimensions;
     auto defect_position_local = this->dParams.defect_position;
+    // DEBUG_MPI_PRINT("Setting defect at position (%d, %d, %d) with value %f",
+    //                 defect_position_local[0], defect_position_local[1],
+    //                 defect_position_local[2], cr);
+    // DEBUG_MPI_PRINT("Defect length: %d", this->dParams.defect_length);
     auto defectField_local = this->defectField;
+
     tune_and_launch_for<Nd - 1>(
         "set_defect", IndexArray<Nd - 1>{0},
         IndexArray<Nd - 1>{this->dParams.defect_length,
@@ -307,47 +312,8 @@ template <size_t Nd, size_t Nc> struct devicePTBCGaugeField {
   KOKKOS_FORCEINLINE_FUNCTION void
   set(const indexType i, const indexType j, const indexType k,
       const indexType l, const index_t mu, const SUN<Nc> &value) const {
-    field(i, j, k, l, mu) = restoreSUN(value); // raw write
+    field(i, j, k, l, mu) = (value); // raw write
   }
-  // T get_plaquette_around_defect(PTBCDefect<T, Ndim> defect, bool Normalize =
-  // true) {
-  //   //determine the plaquette of links of the defect as well as two lattice
-  //   spacings away int x_min {-3}, x_max {1}; int y_min {-2}, y_max
-  //   {static_cast<int>(defect.defect_length) + 2}; //is this too much area
-  //   covered? int z_min {-2}, z_max {static_cast<int>(defect.defect_length) +
-  //   2}; int t_min {-2}, t_max {static_cast<int>(defect.defect_length) + 2};
-  //   if (x_max - x_min > this->get_max_dim(0)){x_min = 0; x_max =
-  //   this->get_max_dim(0);} if (y_max - y_min > this->get_max_dim(1)){y_min =
-  //   0; y_max = this->get_max_dim(1);} if (z_max - z_min >
-  //   this->get_max_dim(2)){z_min = 0; z_max = this->get_max_dim(2);} if (t_max
-  //   - t_min > this->get_max_dim(3)){t_min = 0; t_max = this->get_max_dim(3);}
-  //
-  //   //Kokkos::printf("gauge_depression: %f\n",
-  //   static_cast<double>(defect.gauge_depression));
-  //
-  //   //auto BulkPolicy =
-  //   Kokkos::MDRangePolicy<plaq_s,Kokkos::Rank<5>>({0,0,0,0,0},{1,this->get_max_dim(1),this->get_max_dim(2),this->get_max_dim(3),Ndim});
-  //   using PolicyType = Kokkos::MDRangePolicy<plaq_s, Kokkos::Rank<5>, int>;
-  //   PolicyType BulkPolicy({x_min, y_min, z_min, t_min, 0},
-  //               {x_max, y_max, z_max, t_max, Ndim});
-  //
-  //   T plaq = 0.0;
-  //   Kokkos::parallel_reduce("plaquette", BulkPolicy, KOKKOS_LAMBDA(const
-  //   typename GaugeField<T,Group,Ndim,Nc>::plaq_s,
-  //           const int &x, const int &y, const int &z, const int &t, const int
-  //           &mu, T &plaq_i) {
-  //     int x_index = mod(x, this->get_max_dim(0));
-  //     int y_index = mod(y, this->get_max_dim(1));
-  //     int z_index = mod(z, this->get_max_dim(2));
-  //     int t_index = mod(t, this->get_max_dim(3));
-  //     plaq_i += this->get_single_plaquette(x_index, y_index, z_index,
-  //     t_index, mu, defect);
-  //   }
-  //   , plaq);
-  //   if(Normalize) plaq /=
-  //   ((x_max-x_min)*(y_max-y_min)*(z_max-z_min)*(t_max-t_min))*((Ndim-1)*Ndim/2)*Nc;
-  //   return plaq;
-  // }
 
   template <typename indexType>
   KOKKOS_FORCEINLINE_FUNCTION SUN<Nc>
@@ -611,15 +577,19 @@ template <size_t Nd, size_t Nc> struct devicePTBCGaugeField3D {
   // Sets the defect value
   template <typename indexType> void set_defect(real_t cr) {
     this->dParams.defect_value = cr;
-    auto position = &this->dParams.defect_position;
+    auto dimensions_local = this->dimensions;
+    auto defect_position_local = this->dParams.defect_position;
+    auto defectField_local = this->defectField;
     tune_and_launch_for<Nd - 1>(
         "set_defect", IndexArray<Nd - 1>{0},
         IndexArray<Nd - 1>{this->dParams.defect_length,
                            this->dParams.defect_length},
         KOKKOS_LAMBDA(const indexType i1, const indexType i2) {
-          const indexType i1_shift = (i1 + position[0]) % dimensions[1];
-          const indexType i2_shift = (i2 + position[1]) % dimensions[2];
-          defectField(0, i1_shift, i2_shift, 0) = cr;
+          const indexType i1_shift =
+              (i1 + defect_position_local[0]) % dimensions_local[1];
+          const indexType i2_shift =
+              (i2 + defect_position_local[1]) % dimensions_local[2];
+          defectField_local(0, i1_shift, i2_shift, 0) = cr;
         });
     Kokkos::fence();
   }
@@ -916,13 +886,16 @@ template <size_t Nd, size_t Nc> struct devicePTBCGaugeField2D {
   // Sets the defect value
   template <typename indexType> void set_defect(real_t cr) {
     this->dParams.defect_value = cr;
-    auto position = &this->dParams.defect_position;
+    auto dimensions_local = this->dimensions;
+    auto defect_position_local = this->dParams.defect_position;
+    auto defectField_local = this->defectField;
     tune_and_launch_for<Nd - 1>(
         "set_defect", IndexArray<Nd - 1>{0},
         IndexArray<Nd - 1>{this->dParams.defect_length},
         KOKKOS_LAMBDA(const indexType i1) {
-          const indexType i1_shift = (i1 + position[0]) % dimensions[1];
-          defectField(0, i1_shift, 0) = cr;
+          const indexType i1_shift =
+              (i1 + defect_position_local[0]) % dimensions_local[1];
+          defectField_local(0, i1_shift, 0) = cr;
         });
     Kokkos::fence();
   }

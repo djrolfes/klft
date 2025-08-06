@@ -90,7 +90,7 @@ struct HMCParams {
       printf("L2: %d\n", L2);
       printf("L3: %d\n", L3);
       printf("tau: %.3f\n", tau);
-      printf("coldStart: %B\n", coldStart);
+      printf("coldStart: %d\n", static_cast<int>(coldStart));
       printf("rngDelta: %.3f\n", rngDelta);
       printf("seed: %d\n", seed);
       printf("nsteps: %d\n", nsteps);

@@ -38,6 +38,26 @@
   } while (0)
 #endif
 
+#ifdef DEBUG_MPI
+#include <mpi.h>
+#include <stdio.h>
+
+#define DEBUG_MPI_PRINT(...)                                                   \
+  do {                                                                         \
+    int _rank;                                                                 \
+    MPI_Comm_rank(MPI_COMM_WORLD, &_rank);                                     \
+    fprintf(stderr, "[Rank %d] %s:%d (%s): ", _rank, __FILE__, __LINE__,       \
+            __func__);                                                         \
+    fprintf(stderr, __VA_ARGS__);                                              \
+    fprintf(stderr, "\n");                                                     \
+    fflush(stderr);                                                            \
+  } while (0)
+#else
+#define DEBUG_MPI_PRINT(...)                                                   \
+  do {                                                                         \
+  } while (0)
+#endif
+
 namespace klft {
 
 // define the global types

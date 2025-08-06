@@ -7,7 +7,6 @@ template <typename DGaugeFieldType> struct UnitarityCheckFunctor {
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
   constexpr static size_t rank =
       DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank;
-  constexpr static size_t Nc = DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc;
 
   using Field = typename DGaugeFieldType::type;
   Field field;
@@ -51,7 +50,6 @@ real_t unitarity_check(const typename DGaugeFieldType::type &field) {
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
   constexpr static size_t rank =
       DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank;
-  constexpr static size_t Nc = DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc;
 
   // initialize the local sum
   real_t defect_max = 0.0;
@@ -72,7 +70,6 @@ void unitarity_restore(const typename DGaugeFieldType::type &field) {
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
   constexpr static size_t rank =
       DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank;
-  constexpr static size_t Nc = DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc;
 
   if (KLFT_VERBOSITY > 5) {
     Kokkos::printf("Restoring Unitarity of GaugeField.\n");

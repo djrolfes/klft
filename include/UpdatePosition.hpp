@@ -40,7 +40,10 @@ public:
     for (index_t mu = 0; mu < rank; ++mu) {
       gauge_field.set(Idcs..., mu,
                       expoSUN(eps * adjoint_field(Idcs..., mu)) *
-                          gauge_field(Idcs..., mu));
+                          gauge_field.field(Idcs..., mu));
+      // gauge_field(Idcs..., mu) =
+      //     expoSUN(eps * adjoint_field(Idcs..., mu)) * gauge_field(Idcs...,
+      //     mu);
     }
   }
 

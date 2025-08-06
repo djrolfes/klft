@@ -10,6 +10,7 @@
 #include <memory>
 #include <mpi.h>
 #include <random>
+#include <sstream>
 #include <variant>
 
 using RNGType = Kokkos::Random_XorShift64_Pool<Kokkos::DefaultExecutionSpace>;
@@ -56,7 +57,6 @@ public:
 
   const index_t initial_index;
   index_t current_index;
-  index_t previous_index;
 
   typedef enum {
     TAG_DELTAS = 0,
@@ -71,12 +71,12 @@ public:
        HamiltonianField<DGaugeFieldType, DAdjFieldType> &hamiltonian_field_,
        std::shared_ptr<Integrator> integrator, RNG &rng_,
        std::uniform_real_distribution<real_t> dist_, std::mt19937 mt_)
-      : initial_index(initial_index_), current_index(initial_index_),
-        params(params_), rng(rng_), dist(dist_), mt(mt_),
-        hamiltonian_field(hamiltonian_field_),
+      : initial_index(initial_index_), params(params_), rng(rng_), dist(dist_),
+        mt(mt_), hamiltonian_field(hamiltonian_field_),
         hmc(params_.hmc_params, hamiltonian_field_, integrator, rng_, dist_,
             mt_) {
     device_id = Kokkos::device_id(); // default device id
+    current_index = initial_index_;
 
     // host only fallback
     if (device_id == -1) {
@@ -112,35 +112,69 @@ public:
     addLogData(simLogParams, step, hmc.delta_H, acc_rate, accept, time);
   }
 
-  int step() { return hmc.hmc_step(); }
+  int step() {
+    auto rtn = hmc.hmc_step();
+    return rtn;
+  }
 
   real_t swap_partner(index_t partner_rank) {
     // swaps the Defect with the partner rank and returns the partial Delta_S
-    previous_index = current_index;
-    MPI_Sendrecv(&current_index, 1, MPI_INT, partner_rank, TAG_INDEX,
-                 &current_index, 1, MPI_INT, partner_rank, TAG_INDEX,
-                 MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    // MPI_Sendrecv(&current_index, 1, MPI_INT, partner_rank, TAG_INDEX,
+    //              &current_index, 1, MPI_INT, partner_rank, TAG_INDEX,
+    //              MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
-    real_t S_ss = -params.hmc_params.beta / 3 * getPlaquetteAroundDefect();
+    // DEBUG_MPI_PRINT("Swapping defect from index %d to %d", previous_index,
+    //                 current_index);
+
+    auto plaq = getPlaquetteAroundDefect();
+    // DEBUG_MPI_PRINT("Plaquette around defect ss: %f", plaq);
+    real_t S_ss = -(params.hmc_params.beta / static_cast<real_t>(Nc)) * plaq;
+    // DEBUG_MPI_PRINT("S_ss = %f", S_ss);
     // now do the index/defect swapping
     hamiltonian_field.gauge_field.template set_defect<index_t>(
-        params.defects[current_index]); // set the defect value of the current
+        params.defects[partner_rank]); // set the defect value of the current
     //
-    real_t S_sr = -params.hmc_params.beta / 3 * getPlaquetteAroundDefect();
+    plaq = getPlaquetteAroundDefect();
+    // DEBUG_MPI_PRINT("Plaquette around defect sr: %f", plaq);
+    real_t S_sr = -(params.hmc_params.beta / static_cast<real_t>(Nc)) * plaq;
+    // DEBUG_MPI_PRINT("S_sr = %f", S_sr);
     return S_sr - S_ss; // return the partial Delta_S
   }
 
   void reverse_swap(bool accept) {
     if (!accept) {
-      current_index = previous_index;
       hamiltonian_field.gauge_field.template set_defect<index_t>(
           params.defects[current_index]); // set the defect value of the current
     }
   }
 
+  void checkForNANs() {
+    if constexpr (Nd == 4) {
+#ifdef DEBUG_MPI
+      // Create a host mirror and copy data from device to host
+      auto host_field = Kokkos::create_mirror_view_and_copy(
+          Kokkos::HostSpace(), hamiltonian_field.gauge_field.field);
+      auto dimensions = hamiltonian_field.gauge_field.dimensions;
+
+      for (index_t i = 0; i < dimensions[0]; ++i)
+        for (index_t j = 0; j < dimensions[1]; ++j)
+          for (index_t k = 0; k < dimensions[2]; ++k)
+            for (index_t l = 0; l < dimensions[3]; ++l)
+              for (index_t mu = 0; mu < Nd; ++mu) {
+                auto link = host_field(i, j, k, l, mu);
+                for (index_t c1 = 0; c1 < Nc; ++c1)
+                  for (index_t c2 = 0; c2 < Nc; ++c2) {
+                    if (std::isnan(Kokkos::real(link[c1][c2]))) {
+                      DEBUG_MPI_PRINT("NaN at (%d,%d,%d,%d,mu=%d)", i, j, k, l,
+                                      mu);
+                    }
+                  }
+              }
+#endif
+    }
+  }
+
   int swap() {
-    // check if this PTBC instance is the first within the swap order, otherwise
-    // wait for the previous one to contact it
     index_t rank, size;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -151,64 +185,106 @@ public:
     int swap_start{0};
     index_t swap_rank{0};
 
+    // Rank 0 determines swap_start and broadcasts
     if (rank == 0) {
-      swap_start = int(dist(mt) * (size + 1));
-      MPI_Bcast(&swap_start, 1, MPI_INT, TAG_SWAPSTART, MPI_COMM_WORLD);
-    } else {
-      MPI_Bcast(&swap_start, 1, MPI_INT, TAG_SWAPSTART, MPI_COMM_WORLD);
+      swap_start = int(dist(mt) * (size));
+      // DEBUG_MPI_PRINT("Rank 0 broadcasting swap_start = %d", swap_start);
     }
+
+    MPI_Bcast(&swap_start, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    // DEBUG_MPI_PRINT("Received broadcast swap_start = %d", swap_start);
+
     for (index_t i = 0; i < size; ++i) {
       swap_rank = (swap_start + i) % size;
       partner_rank = (swap_rank + 1) % size;
+
+      // DEBUG_MPI_PRINT("Iteration %d: swap_rank=%d, partner_rank=%d", i,
+      // swap_rank, partner_rank);
+
+      // SWAP RANK sends its Delta_S
       if (rank == swap_rank) {
-        Delta_S = swap_partner(partner_rank);
-        MPI_Send(&Delta_S, 1, MPI_REAL, 0, TAG_DELTAS, MPI_COMM_WORLD);
-        MPI_Send(&current_index, 1, MPI_INT, 0, TAG_INDEX, MPI_COMM_WORLD);
-      }
-      if (rank == partner_rank) {
-        Delta_S = swap_partner(swap_rank);
-        MPI_Send(&Delta_S, 1, MPI_REAL, 0, TAG_DELTAS, MPI_COMM_WORLD);
-        MPI_Send(&current_index, 1, MPI_INT, 0, TAG_INDEX, MPI_COMM_WORLD);
+        real_t temp = swap_partner(partner_rank);
+        // DEBUG_MPI_PRINT("Sending Delta_S_swap=%f to rank 0 (TAG_DELTAS)",
+        // temp);
+        MPI_Send(&temp, 1, MPI_DOUBLE, 0, TAG_DELTAS, MPI_COMM_WORLD);
       }
 
+      // PARTNER RANK sends its Delta_S
+      if (rank == partner_rank) {
+        real_t temp = swap_partner(swap_rank);
+        // DEBUG_MPI_PRINT("Sending Delta_S_partner=%f to rank 0 (TAG_DELTAS)",
+        //                 temp);
+        MPI_Send(&temp, 1, MPI_DOUBLE, 0, TAG_DELTAS, MPI_COMM_WORLD);
+      }
+
+      // RANK 0 gathers both values
       if (rank == 0) {
-        // gather the Delta_S values from all ranks
         real_t Delta_S_partner1, Delta_S_partner2;
-        MPI_Recv(&Delta_S_partner1, 1, MPI_REAL, swap_rank, TAG_DELTAS,
+        MPI_Recv(&Delta_S_partner1, 1, MPI_DOUBLE, swap_rank, TAG_DELTAS,
                  MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        MPI_Recv(&Delta_S_partner2, 1, MPI_REAL, partner_rank, TAG_DELTAS,
+        // DEBUG_MPI_PRINT("Received Delta_S_swap=%f from swap_rank=%d",
+        //                 Delta_S_partner1, swap_rank);
+
+        MPI_Recv(&Delta_S_partner2, 1, MPI_DOUBLE, partner_rank, TAG_DELTAS,
                  MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        // DEBUG_MPI_PRINT("Received Delta_S_partner=%f from partner_rank=%d",
+        //                 Delta_S_partner2, partner_rank);
+
         Delta_S = Delta_S_partner1 + Delta_S_partner2;
-        accept = true; // accept the swap if Delta_S < 0
+
+        // Decide accept/reject
+        accept = true;
         if (Delta_S > 0) {
           if (dist(mt) > Kokkos::exp(-Delta_S)) {
-            accept = false; // reject the swap
+            accept = false;
           }
         }
+        // DEBUG_MPI_PRINT("Total Delta_S = %f, accept = %d", Delta_S, accept);
+
         MPI_Send(&accept, 1, MPI_C_BOOL, swap_rank, TAG_ACCEPT, MPI_COMM_WORLD);
         MPI_Send(&accept, 1, MPI_C_BOOL, partner_rank, TAG_ACCEPT,
                  MPI_COMM_WORLD);
+        // DEBUG_MPI_PRINT("Sent accept=%d to swap_rank=%d and partner_rank=%d",
+        //                 accept, swap_rank, partner_rank);
       }
 
+      // Swap ranks receive accept flag
       if (rank == swap_rank || rank == partner_rank) {
-        // receive the accept value from rank 0
-        MPI_Recv(&accept, 1, MPI_C_BOOL, 0, 0, MPI_COMM_WORLD,
+        // DEBUG_MPI_PRINT("Waiting to receive accept from rank 0");
+        MPI_Recv(&accept, 1, MPI_C_BOOL, 0, TAG_ACCEPT, MPI_COMM_WORLD,
                  MPI_STATUS_IGNORE);
-        reverse_swap(accept); // reverse the swap if not accepted
+        // DEBUG_MPI_PRINT("Received accept=%d from rank 0", accept);
+
+        reverse_swap(accept);
+        // DEBUG_MPI_PRINT("Reverse swap executed with accept=%d", accept);
       }
 
+      // Rank 0 performs the swap if accepted
       if (rank == 0 && accept) {
-        index_t swap_index, swap_partner_index;
-        MPI_Recv(&swap_index, 1, MPI_INT, swap_rank, TAG_INDEX, MPI_COMM_WORLD,
-                 MPI_STATUS_IGNORE);
-        MPI_Recv(&swap_partner_index, 1, MPI_INT, partner_rank, TAG_INDEX,
-                 MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        std::swap(params.defects[swap_index],
-                  params.defects[swap_partner_index]);
+
+        // DEBUG_MPI_PRINT("Swapping params.defects[%d] <-> params.defects[%d]",
+        //                 swap_rank, partner_rank);
+        std::swap(params.defects[swap_rank], params.defects[partner_rank]);
       }
-      MPI_Bcast(params.defects.data(), params.defects.size(), MPI_REAL, 0,
+
+      MPI_Barrier(MPI_COMM_WORLD); // synchronize all ranks after each swap
+      MPI_Bcast(params.defects.data(), params.defects.size(), MPI_DOUBLE, 0,
                 MPI_COMM_WORLD);
+      if (rank == 0) {
+        std::ostringstream oss;
+        oss << "Defects after broadcast: [";
+        for (size_t i = 0; i < params.defects.size(); ++i) {
+          oss << params.defects[i];
+          if (i + 1 < params.defects.size())
+            oss << ", ";
+        }
+        oss << "]";
+        DEBUG_MPI_PRINT("%s", oss.str().c_str());
+      }
+      MPI_Barrier(MPI_COMM_WORLD); // synchronize all ranks after each swap
     }
+
+    // DEBUG_MPI_PRINT("Exiting swap() function");
     return 0;
   }
 
@@ -216,9 +292,11 @@ public:
     // calculate the plaquette around the defect
     // this is a placeholder function, implement the actual plaquette
     // calculation
-    return GaugePlaquette<Nd, Nc, GaugeFieldKind::PTBC>(
-        hamiltonian_field
-            .gauge_field); // TODO: implement only calculating around the defect
+    auto plaq = GaugePlaquette<Nd, Nc, GaugeFieldKind::PTBC>(
+        this->hamiltonian_field.gauge_field,
+        false); // TODO: implement only calculating around the defect
+
+    return plaq;
   }
 
 private:
@@ -351,9 +429,13 @@ int run_PTBC(PTBCParams ptbc_params, RNG &rng,
   for (size_t step = 0; step < hmc_params.nsteps; ++step) {
     timer.reset();
 
-    bool accept = ptbc.step();
+    // DEBUG_MPI_PRINT("Enter ptbc(hmc) step: %zu", step);
 
-    bool ptbc_accept = ptbc.swap();
+    int accept = ptbc.step();
+    MPI_Barrier(MPI_COMM_WORLD); // synchronize all ranks after step
+    DEBUG_MPI_PRINT("HMC Step %zu: accept = %d", step, accept);
+
+    int ptbc_accept = ptbc.swap();
 
     // Gauge observables
 
@@ -372,11 +454,11 @@ int run_PTBC(PTBCParams ptbc_params, RNG &rng,
                         DeviceAdjFieldType<ND, NC>, RNG>(                      \
       PTBCParams, RNG &, std::uniform_real_distribution<real_t>,               \
       std::mt19937);
-INITIALIZE_PTBCPREPARE(2, 1, RNGType)
-INITIALIZE_PTBCPREPARE(2, 2, RNGType)
-// INITIALIZE_PTBCPREPARE(2, 3, RNGType)
-INITIALIZE_PTBCPREPARE(3, 1, RNGType)
-INITIALIZE_PTBCPREPARE(3, 2, RNGType)
+// INITIALIZE_PTBCPREPARE(2, 1, RNGType)
+// INITIALIZE_PTBCPREPARE(2, 2, RNGType)
+// // INITIALIZE_PTBCPREPARE(2, 3, RNGType)
+// INITIALIZE_PTBCPREPARE(3, 1, RNGType)
+// INITIALIZE_PTBCPREPARE(3, 2, RNGType)
 // INITIALIZE_PTBCPREPARE(3, 3, RNGType)
 INITIALIZE_PTBCPREPARE(4, 1, RNGType)
 INITIALIZE_PTBCPREPARE(4, 2, RNGType)

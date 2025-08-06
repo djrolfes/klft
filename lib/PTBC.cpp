@@ -34,11 +34,9 @@ int PTBC_execute(const std::string &input_file) {
            ptbcParams.defects.size(), size);
     return -1;
   }
-  ptbcParams.defect_value = ptbcParams.defects[rank];
+  ptbcParams.defect_value = ptbcParams.defects[(rank)];
 
   ptbcParams.hmc_params = hmcParams;
-  size_t Nd = hmcParams.Ndims;
-  size_t Nc = hmcParams.Nc;
   RNGType rng(hmcParams.seed + rank);
   std::mt19937 mt(hmcParams.seed);
   std::uniform_real_distribution<real_t> dist(0.0, 1.0);
