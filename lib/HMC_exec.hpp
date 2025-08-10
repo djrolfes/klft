@@ -3,6 +3,7 @@
 #include <memory>
 
 #include "../include/HMC.hpp"
+#include "FermionObservable.hpp"
 #include "FermionParams.hpp"
 #include "FieldTypeHelper.hpp"
 #include "GLOBAL.hpp"
@@ -16,9 +17,11 @@ using RNGType = Kokkos::Random_XorShift64_Pool<Kokkos::DefaultExecutionSpace>;
 namespace klft {
 
 template <typename HMCType>
-int run_HMC(HMCType& hmc, const Integrator_Params& integratorParams,
+int run_HMC(HMCType& hmc,
+            const Integrator_Params& integratorParams,
             GaugeObservableParams& gaugeObsParams,
             SimulationLoggingParams& simLogParams,
+            FermionObservableParams& fermionObsParams,
             const std::string& output_directory) {
   // initiate and execute the HMC with the given parameters
   printf("Executing HMC ...");
@@ -71,6 +74,11 @@ int run_HMC(HMCType& hmc, const Integrator_Params& integratorParams,
     measureGaugeObservables<rank, Nc>(hmc.hamiltonian_field.gauge_field,
                                       gaugeObsParams, step);
     addLogData(simLogParams, step, hmc.delta_H, acc_rate, accept, time);
+    // For now fix fermion measurment stuff:
+    measureFermionObservables<DeviceSpinorFieldType<rank, Nc, 4>,
+                              DeviceGaugeFieldType<rank, Nc>, CGSolver,
+                              HWilsonDiracOperator>(
+        hmc.hamiltonian_field.gauge_field, fermionObsParams, step);
     if (simLogParams.flush != 0 && step % simLogParams.flush == 0) {
       flushSimulationLogs(simLogParams, output_directory,
                           step == simLogParams.flush);
@@ -81,6 +89,12 @@ int run_HMC(HMCType& hmc, const Integrator_Params& integratorParams,
                                step == simLogParams.flush);
       clearAllGaugeObservables(gaugeObsParams);
     }
+    if (fermionObsParams.flush != 0 && step % fermionObsParams.flush == 0) {
+      flushAllFermionObservables(fermionObsParams, output_directory,
+                                 step == simLogParams.flush);
+      clearAllFermionObservables(fermionObsParams);
+    }
+
     // TODO:make flushAllGaugeObservables append the Observables to the
     // files
     // -> don't lose all progress when the simulation is interupted if (step
@@ -100,6 +114,8 @@ int run_HMC(HMCType& hmc, const Integrator_Params& integratorParams,
 
   flushAllGaugeObservables(gaugeObsParams, output_directory,
                            gaugeObsParams.flush == 0);
+  flushAllFermionObservables(fermionObsParams, output_directory,
+                             fermionObsParams.flush == 0);
 
   printf("Total Acceptance rate: %f, Accept %f Configs", acc_rate, acc_sum);
   return 0;

@@ -12,7 +12,6 @@ HMCParams:
   rngDelta: 1
 # Level 0 is the innermost level of the Integrator, i.e that is executed most frequently.
 Integrator:
-
   tau: 1
   nSteps: 1000
   Monomials:
@@ -57,6 +56,14 @@ GaugeObservableParams:
   W_temp_filename: "wilson_temp_output20.txt"
   W_mu_nu_filename: "wilson_mu_nu_output20.txt"
 
+  write_to_file: true
+FermionObservableParams:
+  pion_correlator_filename: "pion_correlator_output.txt"
+  measurement_interval: 5
+  measure_pion_correlator: true
+  tol: 1e-10
+  kappa: 0.15
+  RepDim: 4
   write_to_file: true
 
 SimulationLoggingParams:

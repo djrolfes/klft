@@ -105,6 +105,11 @@ using SUN = Wrapper<Kokkos::Array<Kokkos::Array<complex_t, Nc>, Nc>>;
 // SUN.hpp version Maybe via class to make it safe
 template <size_t Nc, size_t Nd>
 using Spinor = Kokkos::Array<Kokkos::Array<complex_t, Nd>, Nc>;
+// Indexing via linear index int idx = color*Nd +dirac;
+// first index sink index, second source index
+template <size_t Nc, size_t RepDim>
+using PropagatorMatrix =
+    Kokkos::Array<Kokkos::Array<complex_t, RepDim * Nc>, RepDim * Nc>;
 
 // define field view types
 // by default all views are 4D
@@ -164,6 +169,9 @@ struct SUNAdj {
 template <size_t Nd, size_t Nc>
 using GaugeField =
     Kokkos::View<SUN<Nc>**** [Nd], Kokkos::MemoryTraits<Kokkos::Restrict>>;
+template <size_t Nc, size_t RepDim>
+using Propagator = Kokkos::View<PropagatorMatrix<Nc, RepDim>****,
+                                Kokkos::MemoryTraits<Kokkos::Restrict>>;
 
 template <size_t Nd, size_t Nc>
 using GaugeField3D =
@@ -487,13 +495,17 @@ constexpr KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, Nd> oneSpinor() {
 // 5 = trace
 inline int KLFT_VERBOSITY = 0;
 
-inline void setVerbosity(int v) { KLFT_VERBOSITY = v; }
+inline void setVerbosity(int v) {
+  KLFT_VERBOSITY = v;
+}
 
 // variable that enables tuning
 // 0 = no tuning
 // 1 = tuning enabled
 inline int KLFT_TUNING = 0;
 
-inline void setTuning(int t) { KLFT_TUNING = t; }
+inline void setTuning(int t) {
+  KLFT_TUNING = t;
+}
 
 }  // namespace klft

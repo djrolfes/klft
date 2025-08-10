@@ -17,7 +17,8 @@ struct SpinorDotProduct {
   FieldType dot_product_per_site;
 
   const IndexArray<rank> dimensions;
-  SpinorDotProduct(const SpinorFieldType& a, const SpinorFieldType& b,
+  SpinorDotProduct(const SpinorFieldType& a,
+                   const SpinorFieldType& b,
                    FieldType& dot_product_per_site,
                    const IndexArray<rank>& dimensions)
       : a(a),
@@ -75,7 +76,8 @@ struct SpinorNorm {
   FieldType norm_per_site;
   const IndexArray<rank> dimensions;
 
-  SpinorNorm(const SpinorFieldType& a, FieldType& norm_per_site,
+  SpinorNorm(const SpinorFieldType& a,
+             FieldType& norm_per_site,
              const IndexArray<rank>& dimensions)
       : a(a), norm_per_site(norm_per_site), dimensions(dimensions) {}
 
@@ -125,8 +127,10 @@ struct SpinorAddMul {
   const complex_t alpha;
   SpinorFieldType c;
   const IndexArray<rank> dimensions;
-  SpinorAddMul(const SpinorFieldType& a, const SpinorFieldType& b,
-               SpinorFieldType& c, const complex_t& alpha,
+  SpinorAddMul(const SpinorFieldType& a,
+               const SpinorFieldType& b,
+               SpinorFieldType& c,
+               const complex_t& alpha,
                const IndexArray<rank>& dimensions)
       : a(a), b(b), c(c), alpha(alpha), dimensions(dimensions) {}
   template <typename... Indices>
@@ -135,11 +139,12 @@ struct SpinorAddMul {
   }
 };
 template <size_t rank, size_t Nc, size_t RepDim>
-typename DeviceSpinorFieldType<rank, Nc,
-                               RepDim>::type KOKKOS_FORCEINLINE_FUNCTION
-spinor_add_mul(const typename DeviceSpinorFieldType<rank, Nc, RepDim>::type& a,
-               const typename DeviceSpinorFieldType<rank, Nc, RepDim>::type& b,
-               const complex_t& alpha) {
+typename DeviceSpinorFieldType<rank, Nc, RepDim>::type
+    KOKKOS_FORCEINLINE_FUNCTION
+    spinor_add_mul(
+        const typename DeviceSpinorFieldType<rank, Nc, RepDim>::type& a,
+        const typename DeviceSpinorFieldType<rank, Nc, RepDim>::type& b,
+        const complex_t& alpha) {
   assert(a.dimensions == b.dimensions);
   static_assert(
       Kokkos::SpaceAccessibility<
@@ -163,6 +168,34 @@ spinor_add_mul(const typename DeviceSpinorFieldType<rank, Nc, RepDim>::type& a,
   tune_and_launch_for<rank>("SpinorField_add", start, end, add);
   Kokkos::fence();
   return c;
+}
+template <size_t rank, size_t Nc, size_t RepDim>
+KOKKOS_FORCEINLINE_FUNCTION void spinor_add_mul_inplace(
+    const typename DeviceSpinorFieldType<rank, Nc, RepDim>::type& a,
+    const typename DeviceSpinorFieldType<rank, Nc, RepDim>::type& b,
+    const complex_t& alpha,
+    typename DeviceSpinorFieldType<rank, Nc, RepDim>::type& c) {
+  assert(a.dimensions == b.dimensions);
+  static_assert(
+      Kokkos::SpaceAccessibility<
+          typename decltype(a.field)::execution_space,
+          typename decltype(b.field)::memory_space>::accessible,
+      "Execution space of A cannot access memory space of B");  // allow only
+                                                                // device-device
+                                                                // or host-host
+                                                                // interaction
+  IndexArray<rank> start;
+  IndexArray<rank> end;
+  for (index_t i = 0; i < rank; ++i) {
+    start[i] = 0;
+    end[i] = a.dimensions[i];
+  }
+  using SpinorFieldType =
+      typename DeviceSpinorFieldType<rank, Nc, RepDim>::type;
+  SpinorAddMul<rank, Nc, RepDim> add(a, b, c, alpha, end);
+
+  tune_and_launch_for<rank>("SpinorField_add", start, end, add);
+  Kokkos::fence();
 }
 template <size_t rank, size_t Nc, size_t RepDim>
 typename DeviceSpinorFieldType<rank, Nc, RepDim>::type spinor_sub_mul(

@@ -26,10 +26,12 @@
 
 namespace klft {
 
-template <template <template <typename, typename> class DiracOpT, typename,
+template <template <template <typename, typename> class DiracOpT,
+                    typename,
                     typename> class _Derived,
           template <typename, typename> class DiracOpT,
-          typename DSpinorFieldType, typename DGaugeFieldType>
+          typename DSpinorFieldType,
+          typename DGaugeFieldType>
 class Solver {
   // using DSpinorFieldType =
   //     typename DiracOpFieldTypeTraits<DiracOperator>::DSpinorFieldType;
@@ -62,6 +64,7 @@ class Solver {
   DiracOp dirac_op;
   Solver(const SpinorFieldType& b, SpinorFieldType& x, const DiracOp& dirac_op)
       : b(b), x(x), dirac_op(dirac_op) {}
+
   template <typename Tag>
   void solve(const SpinorFieldType& x0, const real_t& tol) {
     static_cast<Derived*>(this)->template solve_int<Tag>(x0, tol);
@@ -76,7 +79,8 @@ class Solver {
 //               SpinorType::RepDim>;
 
 template <template <typename, typename> class DiracOpT,
-          typename DSpinorFieldType, typename DGaugeFieldType>
+          typename DSpinorFieldType,
+          typename DGaugeFieldType>
 class CGSolver
     : public Solver<CGSolver, DiracOpT, DSpinorFieldType, DGaugeFieldType> {
   // using DSpinorFieldType =

@@ -28,6 +28,7 @@
 #include "Field.hpp"
 #include "GaugeField.hpp"
 #include "PTBCGaugeField.hpp"
+#include "Propagator.hpp"
 #include "SUNField.hpp"
 #include "ScalarField.hpp"
 #include "SpinorField.hpp"
@@ -59,8 +60,18 @@ struct DeviceGaugeFieldType<4, Nc, GaugeFieldKind::Standard> {
   using type = deviceGaugeField<4, Nc>;
 };
 
+template <size_t rank, size_t Nc, size_t RepDim>
+struct DevicePropagator;
+
+template <size_t Nc, size_t RepDim>
+struct DevicePropagator<4, Nc, RepDim> {
+  using type = devicePropagator<Nc, RepDim>;
+};
+
 // now do the same for the SpinorField field types
-template <size_t rank, size_t Nc, size_t RepDim,
+template <size_t rank,
+          size_t Nc,
+          size_t RepDim,
           SpinorFieldKind k = SpinorFieldKind::Standard>
 struct DeviceSpinorFieldType;
 
@@ -77,8 +88,17 @@ struct DeviceSpinorFieldType<3, Nc, 4, SpinorFieldKind::Standard> {
   using type = deviceSpinorField3D<Nc, 4>;
 };
 template <size_t Nc>
+struct DeviceSpinorFieldType<3, Nc, 4, SpinorFieldKind::PointSource> {
+  using type = deviceSpinorPointSource3D<Nc, 4>;
+};
+
+template <size_t Nc>
 struct DeviceSpinorFieldType<2, Nc, 4, SpinorFieldKind::Standard> {
   using type = deviceSpinorField2D<Nc, 4>;
+};
+template <size_t Nc>
+struct DeviceSpinorFieldType<2, Nc, 4, SpinorFieldKind::PointSource> {
+  using type = deviceSpinorPointSource2D<Nc, 4>;
 };
 
 // now do the same for the PTBC gauge field types
@@ -247,7 +267,15 @@ template <size_t Nc>
 struct ConstGaugeFieldSelector<2, Nc> {
   using type = constGaugeField2D<2, Nc>;
 };
-
+template <typename T, SpinorFieldKind NewKind>
+struct WithSpinorFieldKind {
+  static_assert(isDeviceFermionFieldType<T>::value);
+  using type =
+      typename DeviceSpinorFieldType<DeviceFermionFieldTypeTraits<T>::Rank,
+                                     DeviceFermionFieldTypeTraits<T>::Nc,
+                                     DeviceFermionFieldTypeTraits<T>::RepDim,
+                                     NewKind>::type;
+};
 // Type alias for convenience
 template <size_t Nd, size_t Nc>
 using ConstGaugeFieldType = typename ConstGaugeFieldSelector<Nd, Nc>::type;

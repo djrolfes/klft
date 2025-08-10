@@ -1,6 +1,7 @@
 #pragma once
 #include <yaml-cpp/yaml.h>
 
+#include "FermionObservable.hpp"
 #include "FermionParams.hpp"
 #include "GaugeObservable.hpp"
 #include "HMC_Params.hpp"
@@ -116,6 +117,36 @@ inline int parseInputFile(const std::string& filename,
     printf("(GaugeObservableParams) Error parsing input file: %s\n", e.what());
     return false;
   }
+}
+inline int parseInputFile(const std::string& filename,
+                          FermionObservableParams& fobs) {
+  try {
+    YAML::Node config = YAML::LoadFile(filename);
+    if (config["FermionObservableParams"]) {
+      const auto& mp = config["FermionObservableParams"];
+      fobs.measurement_interval = mp["measurement_interval"].as<size_t>(0);
+
+      fobs.measure_pion_correlator =
+          mp["measure_pion_correlator"].as<bool>(false);
+      fobs.pion_correlator_filename =
+          mp["pion_correlator_filename"].as<std::string>("");
+      fobs.tol = mp["tol"].as<real_t>(10e-8);
+      fobs.flush = mp["flush"].as<size_t>(25);
+      fobs.write_to_file = mp["write_to_file"].as<bool>(false);
+      fobs.kappa = mp["kappa"].as<real_t>(0.15);
+      fobs.RepDim = mp["RepDim"].as<size_t>(4);
+      fobs.write_to_file = mp["write_to_file"].as<bool>(false);
+    } else {
+      printf("Info: No Fermionic Measurments are done!\n");
+      return false;
+    }
+
+  } catch (const YAML::Exception& e) {
+    printf("(FermionObservableParams) Error parsing input file: %s\n",
+           e.what());
+    return false;
+  }
+  return true;
 }
 
 inline bool parseInputFile(const std::string& filename, HMCParams& hmcParams) {

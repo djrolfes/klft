@@ -18,6 +18,8 @@ int main(int argc, char* argv[]) {
     constexpr int N = 12671;
     Kokkos::View<int[2][N]> a("label");
     Reducer::ArrayType<int, 2> array;
+    array.array[0] = 100;
+    printf("Before reduction: %d, %d \n ", array.array[0], array.array[1]);
     tune_and_launch_for<2>(
         "init_label",
         IndexArray<2>{
@@ -35,7 +37,7 @@ int main(int argc, char* argv[]) {
           upd.array[ndx] += a(i0, i1);
         },
         Kokkos::Sum<Reducer::ArrayType<int, 2>>(array));
-    printf("Result: %ld, %ld \n ", array.array[0], array.array[1]);
+    printf("Result: %d, %d \n ", array.array[0], array.array[1]);
     printf("Expected Results : %d, %d \n", int((N * N + N) / 2),
            int((4 * N * N + 2 * N) / 2) - int((N * N + N) / 2));
   }

@@ -4,6 +4,7 @@
 #include "../include/InputParser.hpp"
 #include "../include/klft.hpp"
 #include "AdjointSUN.hpp"
+#include "FermionObservable.hpp"
 #include "FermionParams.hpp"
 #include "FieldTypeHelper.hpp"
 #include "GaugeObservable.hpp"
@@ -18,14 +19,17 @@ using RNGType = Kokkos::Random_XorShift64_Pool<Kokkos::DefaultExecutionSpace>;
 namespace klft {
 
 // Still need to add check for different Dirac Operators
-template <typename DGaugeFieldType, typename DAdjFieldType,
+template <typename DGaugeFieldType,
+          typename DAdjFieldType,
           typename DSpinorFieldType>
 std::shared_ptr<Integrator> createIntegrator(
-    typename DGaugeFieldType::type& g_in, typename DAdjFieldType::type& a_in,
+    typename DGaugeFieldType::type& g_in,
+    typename DAdjFieldType::type& a_in,
     typename DSpinorFieldType::type& s_in,
     const Integrator_Params& integratorParams,
     const GaugeMonomial_Params& gaugeMonomialParams,
-    const FermionMonomial_Params& fermionParams, const int& resParsef) {
+    const FermionMonomial_Params& fermionParams,
+    const int& resParsef) {
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
   static_assert(isDeviceAdjFieldType<DAdjFieldType>::value);
   constexpr static size_t rank =
@@ -236,6 +240,12 @@ int build_and_run_HMC(const std::string& input_file,
     printf("Error parsing input file\n");
     return -1;
   }
+  FermionObservableParams fObs;
+  if (!parseInputFile(input_file, fObs)) {
+    printf("Error parsing inputfile\n");
+    return -1;
+  }
+
   if (!parseSanityChecks(integratorParams, gaugeMonomialParams, fermionParams,
                          resParsef)) {
     printf("Error in sanity checks\n");
@@ -296,7 +306,7 @@ int build_and_run_HMC(const std::string& input_file,
                                                      fermionParams.tol, rng, 0);
         }
 
-        run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams,
+        run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams, fObs,
                 output_directory);
       } else if (hmcParams.Nc == 2) {
         using DGaugeFieldType = DeviceGaugeFieldType<4, 2>;
@@ -331,7 +341,7 @@ int build_and_run_HMC(const std::string& input_file,
                                                      fermionParams.tol, rng, 0);
         }
 
-        run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams,
+        run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams, fObs,
                 output_directory);
       } else if (hmcParams.Nc == 3) {
         printf("Error: SU(3) isn't supported yet");
@@ -372,7 +382,8 @@ int build_and_run_HMC(const std::string& input_file,
         //                                              0);
         // }
 
-        // run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams,
+        // run_HMC(hmc, integratorParams, gaugeObsParams,
+        // simLogParams,fObs,fObs,
         //         output_directory);
       }
     } else if (hmcParams.Ndims == 3) {
@@ -407,7 +418,7 @@ int build_and_run_HMC(const std::string& input_file,
         hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
         hmc.add_kinetic_monomial(0);
 
-        run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams,
+        run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams, fObs,
                 output_directory);
       } else if (hmcParams.Nc == 2) {
         if (resParsef > 0) {
@@ -437,7 +448,7 @@ int build_and_run_HMC(const std::string& input_file,
         hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
         hmc.add_kinetic_monomial(0);
 
-        run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams,
+        run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams, fObs,
                 output_directory);
       } else if (hmcParams.Nc == 3) {
         printf("Error: SU(3) isn't supported yet");
@@ -473,7 +484,7 @@ int build_and_run_HMC(const std::string& input_file,
         // mt); hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
         // hmc.add_kinetic_monomial(0);
 
-        // run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams,
+        // run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams,fObs,
         //         output_directory);
       }
     } else if (hmcParams.Ndims == 2) {
@@ -507,7 +518,7 @@ int build_and_run_HMC(const std::string& input_file,
         hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
         hmc.add_kinetic_monomial(0);
 
-        run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams,
+        run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams, fObs,
                 output_directory);
       } else if (hmcParams.Nc == 2) {
         if (resParsef > 0) {
@@ -536,7 +547,7 @@ int build_and_run_HMC(const std::string& input_file,
         hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
         hmc.add_kinetic_monomial(0);
 
-        run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams,
+        run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams, fObs,
                 output_directory);
       } else if (hmcParams.Nc == 3) {
         printf("Error: SU(3) isn't supported yet");
@@ -571,7 +582,7 @@ int build_and_run_HMC(const std::string& input_file,
         // mt); hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
         // hmc.add_kinetic_monomial(0);
 
-        // run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams,
+        // run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams,fObs,
         //         output_directory);
       }
     }
@@ -610,7 +621,7 @@ int build_and_run_HMC(const std::string& input_file,
                                                      fermionParams.tol, rng, 0);
         }
 
-        run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams,
+        run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams, fObs,
                 output_directory);
       } else if (hmcParams.Nc == 2) {
         using DGaugeFieldType = DeviceGaugeFieldType<4, 2>;
@@ -645,7 +656,7 @@ int build_and_run_HMC(const std::string& input_file,
                                                      fermionParams.tol, rng, 0);
         }
 
-        run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams,
+        run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams, fObs,
                 output_directory);
       } else if (hmcParams.Nc == 3) {
         printf("Error: SU(3) isn't supported yet");
@@ -686,7 +697,7 @@ int build_and_run_HMC(const std::string& input_file,
         //                                              0);
         // }
 
-        // run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams,
+        // run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams,fObs,
         //         output_directory);
       }
     } else if (hmcParams.Ndims == 3) {
@@ -721,7 +732,7 @@ int build_and_run_HMC(const std::string& input_file,
         hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
         hmc.add_kinetic_monomial(0);
 
-        run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams,
+        run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams, fObs,
                 output_directory);
       } else if (hmcParams.Nc == 2) {
         if (resParsef > 0) {
@@ -751,7 +762,7 @@ int build_and_run_HMC(const std::string& input_file,
         hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
         hmc.add_kinetic_monomial(0);
 
-        run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams,
+        run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams, fObs,
                 output_directory);
       } else if (hmcParams.Nc == 3) {
         printf("Error: SU(3) isn't supported yet");
@@ -787,7 +798,7 @@ int build_and_run_HMC(const std::string& input_file,
         // mt); hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
         // hmc.add_kinetic_monomial(0);
 
-        // run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams,
+        // run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams,fObs,
         //         output_directory);
       }
     } else if (hmcParams.Ndims == 2) {
@@ -821,7 +832,7 @@ int build_and_run_HMC(const std::string& input_file,
         hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
         hmc.add_kinetic_monomial(0);
 
-        run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams,
+        run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams, fObs,
                 output_directory);
       } else if (hmcParams.Nc == 2) {
         if (resParsef > 0) {
@@ -850,7 +861,7 @@ int build_and_run_HMC(const std::string& input_file,
         hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
         hmc.add_kinetic_monomial(0);
 
-        run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams,
+        run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams, fObs,
                 output_directory);
       } else if (hmcParams.Nc == 3) {
         // printf("Error: SU(3) isn't supported yet");
@@ -886,7 +897,7 @@ int build_and_run_HMC(const std::string& input_file,
         // mt); hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
         // hmc.add_kinetic_monomial(0);
 
-        // run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams,
+        // run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams,fObs,
         //         output_directory);
       }
     }
