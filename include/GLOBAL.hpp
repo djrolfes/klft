@@ -26,6 +26,8 @@
 #pragma once
 #include <Kokkos_Core.hpp>
 #include <Kokkos_Random.hpp>
+#include <mpi.h>
+#include <type_traits>
 #ifdef ENABLE_DEBUG
 #include <iostream>
 #define DEBUG_LOG(msg)                                                         \
@@ -67,10 +69,11 @@ namespace klft {
 // be precision agnostic, everything has to be templated with given precision
 // let's start like this and worry about mixed precision later
 using real_t = double;
-using complex_t = Kokkos::complex<real_t>;
 
 // use int for the index type
 using index_t = int;
+
+using complex_t = Kokkos::complex<real_t>;
 
 // define index_arrays
 template <size_t rank> using IndexArray = Kokkos::Array<index_t, rank>;
@@ -478,6 +481,77 @@ constexpr KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> identitySUN() {
   }
   return id;
 }
+
+// --- real_t ---
+template <typename T> inline MPI_Datatype mpi_real_type() {
+  using base_t = std::remove_cv_t<std::remove_reference_t<T>>;
+  if constexpr (std::is_same_v<base_t, double>)
+    return MPI_DOUBLE;
+  else if constexpr (std::is_same_v<base_t, float>)
+    return MPI_FLOAT;
+  else if constexpr (std::is_same_v<base_t, long double>)
+    return MPI_LONG_DOUBLE;
+  else {
+    static_assert(!sizeof(base_t), "Unsupported real_t for MPI");
+    return MPI_DATATYPE_NULL;
+  }
+}
+
+// --- index_t ---
+template <typename T> inline MPI_Datatype mpi_index_type() {
+  using base_t = std::remove_cv_t<std::remove_reference_t<T>>;
+  if constexpr (std::is_same_v<base_t, int>)
+    return MPI_INT;
+  else if constexpr (std::is_same_v<base_t, long>)
+    return MPI_LONG;
+  else if constexpr (std::is_same_v<base_t, long long>)
+    return MPI_LONG_LONG;
+  else if constexpr (std::is_same_v<base_t, short>)
+    return MPI_SHORT;
+  else {
+    static_assert(!sizeof(base_t), "Unsupported index_t for MPI");
+    return MPI_DATATYPE_NULL;
+  }
+}
+
+// --- size_t ---
+template <typename T> inline MPI_Datatype mpi_size_type() {
+  using base_t = std::remove_cv_t<std::remove_reference_t<T>>;
+  if constexpr (std::is_same_v<base_t, unsigned int>)
+    return MPI_UNSIGNED;
+  else if constexpr (std::is_same_v<base_t, unsigned long>)
+    return MPI_UNSIGNED_LONG;
+  else if constexpr (std::is_same_v<base_t, unsigned long long>)
+    return MPI_UNSIGNED_LONG_LONG;
+  else {
+    static_assert(!sizeof(base_t), "Unsupported size_t for MPI");
+    return MPI_DATATYPE_NULL;
+  }
+}
+
+// --- complex_t ---
+template <typename T> inline MPI_Datatype mpi_complex_type() {
+  using base_t = std::remove_cv_t<std::remove_reference_t<T>>;
+  if constexpr (std::is_same_v<base_t, std::complex<float>> ||
+                std::is_same_v<base_t, Kokkos::complex<float>>) {
+    return MPI_CXX_FLOAT_COMPLEX;
+  } else if constexpr (std::is_same_v<base_t, std::complex<double>> ||
+                       std::is_same_v<base_t, Kokkos::complex<double>>) {
+    return MPI_CXX_DOUBLE_COMPLEX;
+  } else if constexpr (std::is_same_v<base_t, std::complex<long double>> ||
+                       std::is_same_v<base_t, Kokkos::complex<long double>>) {
+    return MPI_CXX_LONG_DOUBLE_COMPLEX;
+  } else {
+    static_assert(!sizeof(base_t), "Unsupported complex_t for MPI");
+    return MPI_DATATYPE_NULL;
+  }
+}
+
+// Concrete instantiations for your typedefs:
+inline MPI_Datatype mpi_real_t() { return mpi_real_type<real_t>(); }
+inline MPI_Datatype mpi_index_t() { return mpi_index_type<index_t>(); }
+inline MPI_Datatype mpi_size_t() { return mpi_size_type<size_t>(); }
+inline MPI_Datatype mpi_complex_t() { return mpi_complex_type<complex_t>(); }
 
 // global verbosity level
 // 0 = silent
