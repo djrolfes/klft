@@ -174,15 +174,15 @@ public:
   }
 
   int swap() {
-    index_t rank, size;
+    int rank, size;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
-    index_t partner_rank;
+    int partner_rank;
     bool accept = false;
     real_t Delta_S{0};
     int swap_start{0};
-    index_t swap_rank{0};
+    int swap_rank{0};
 
     // Rank 0 determines swap_start and broadcasts
     if (rank == 0) {
@@ -205,7 +205,7 @@ public:
         real_t temp = swap_partner(partner_rank);
         // DEBUG_MPI_PRINT("Sending Delta_S_swap=%f to rank 0 (TAG_DELTAS)",
         // temp);
-        MPI_Send(&temp, 1, MPI_DOUBLE, 0, TAG_DELTAS, MPI_COMM_WORLD);
+        MPI_Send(&temp, 1, mpi_real_t(), 0, TAG_DELTAS, MPI_COMM_WORLD);
       }
 
       // PARTNER RANK sends its Delta_S
@@ -213,18 +213,18 @@ public:
         real_t temp = swap_partner(swap_rank);
         // DEBUG_MPI_PRINT("Sending Delta_S_partner=%f to rank 0 (TAG_DELTAS)",
         //                 temp);
-        MPI_Send(&temp, 1, MPI_DOUBLE, 0, TAG_DELTAS, MPI_COMM_WORLD);
+        MPI_Send(&temp, 1, mpi_real_t(), 0, TAG_DELTAS, MPI_COMM_WORLD);
       }
 
       // RANK 0 gathers both values
       if (rank == 0) {
         real_t Delta_S_partner1, Delta_S_partner2;
-        MPI_Recv(&Delta_S_partner1, 1, MPI_DOUBLE, swap_rank, TAG_DELTAS,
+        MPI_Recv(&Delta_S_partner1, 1, mpi_real_t(), swap_rank, TAG_DELTAS,
                  MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         // DEBUG_MPI_PRINT("Received Delta_S_swap=%f from swap_rank=%d",
         //                 Delta_S_partner1, swap_rank);
 
-        MPI_Recv(&Delta_S_partner2, 1, MPI_DOUBLE, partner_rank, TAG_DELTAS,
+        MPI_Recv(&Delta_S_partner2, 1, mpi_real_t(), partner_rank, TAG_DELTAS,
                  MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         // DEBUG_MPI_PRINT("Received Delta_S_partner=%f from partner_rank=%d",
         //                 Delta_S_partner2, partner_rank);
@@ -267,7 +267,7 @@ public:
       }
 
       MPI_Barrier(MPI_COMM_WORLD); // synchronize all ranks after each swap
-      MPI_Bcast(params.defects.data(), params.defects.size(), MPI_DOUBLE, 0,
+      MPI_Bcast(params.defects.data(), params.defects.size(), mpi_real_t(), 0,
                 MPI_COMM_WORLD);
       if (rank == 0) {
         std::ostringstream oss;
