@@ -10,7 +10,8 @@ using RNGType = Kokkos::Random_XorShift64_Pool<Kokkos::DefaultExecutionSpace>;
 
 namespace klft {
 
-int PTBC_execute(const std::string &input_file) {
+int PTBC_execute(const std::string &input_file,
+                 const std::string &output_directory) {
   index_t rank, size;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &size);

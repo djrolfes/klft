@@ -128,7 +128,7 @@ int run_HMC(typename DGaugeFieldType::type g_in,
   run_HMC<DeviceGaugeFieldType<R, N>, DeviceAdjFieldType<R, N>, RNGType>(      \
       typename DeviceGaugeFieldType<R, N>::type,                               \
       typename DeviceAdjFieldType<R, N>::type, const HMCParams &,              \
-      GaugeObservableParams &, SimulationLoggingParams &, RNGType &)
+      GaugeObservableParams &, SimulationLoggingParams &, RNGType &);
 
 INSTANTIATE_HMC(4, 1);
 INSTANTIATE_HMC(4, 2);

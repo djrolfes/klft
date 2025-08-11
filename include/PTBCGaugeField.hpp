@@ -710,6 +710,7 @@ template <size_t Nd, size_t Nc> struct devicePTBCGaugeField2D {
   devicePTBCGaugeField2D() = delete;
 
   GaugeField2D<Nd, Nc> field;
+  constGaugeField2D<Nd, Nc> cfield;
   const IndexArray<Nd> dimensions;
   LinkScalarField2D<Nd> defectField;
   using deviceDefectParams = defectParams<Nd>;

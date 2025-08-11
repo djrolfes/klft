@@ -11,7 +11,6 @@
 #include <mpi.h>
 #include <random>
 #include <sstream>
-#include <variant>
 
 using RNGType = Kokkos::Random_XorShift64_Pool<Kokkos::DefaultExecutionSpace>;
 

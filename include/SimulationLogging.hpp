@@ -1,6 +1,7 @@
 #pragma once
-#include "GLOBAL.hpp"
 #include <fstream>
+
+#include "GLOBAL.hpp"
 
 namespace klft {
 // define a struct to hold parameters related to the simulation logging
@@ -8,6 +9,8 @@ struct SimulationLoggingParams {
   size_t log_interval;      // interval between logs
   std::string log_filename; // filename for the log
   bool write_to_file;       // whether to write logs to file
+  size_t flush; // interval to flush logs to file ,0 to flush at the end of the
+                // simulation
 
   // define flags for the different types of logs
   bool log_delta_H;
@@ -24,7 +27,7 @@ struct SimulationLoggingParams {
 
   // constructor to initialize the parameters
   SimulationLoggingParams()
-      : log_interval(0), write_to_file(false), log_delta_H(false),
+      : log_interval(0), flush(25), write_to_file(false), log_delta_H(false),
         log_acceptance(false), log_accept(false), log_time(false) {}
 };
 
@@ -40,35 +43,35 @@ addLogData(SimulationLoggingParams &params, const size_t step,
     return;
   }
 
-  if (KLFT_VERBOSITY > 0) {
+  if (KLFT_VERBOSITY > 1) {
     printf("Logging Simulation Data\n");
     printf("step: %zu\n", step);
   }
 
   if (params.log_delta_H) {
     params.delta_H.push_back(_delta_H);
-    if (KLFT_VERBOSITY > 0) {
+    if (KLFT_VERBOSITY > 1) {
       printf("delta_H: %11.6f\n", _delta_H);
     }
   }
 
   if (params.log_acceptance) {
     params.acceptance.push_back(_acceptance);
-    if (KLFT_VERBOSITY > 0) {
+    if (KLFT_VERBOSITY > 1) {
       printf("acceptance: %11.6f\n", _acceptance);
     }
   }
 
   if (params.log_accept) {
     params.accept.push_back(_accept);
-    if (KLFT_VERBOSITY > 0) {
+    if (KLFT_VERBOSITY > 1) {
       printf("accept: %s\n", params.accept.back() ? "true" : "false");
     }
   }
 
   if (params.log_time) {
     params.time.push_back(_time);
-    if (KLFT_VERBOSITY > 0) {
+    if (KLFT_VERBOSITY > 1) {
       printf("time: %11.6f\n", _time);
     }
   }
@@ -131,6 +134,14 @@ inline void flushSimulationLogs(const SimulationLoggingParams &params,
 
   // close the file
   file.close();
+}
+inline void clearSimulationLogs(SimulationLoggingParams &params) {
+  // clear the logs
+  params.log_steps.clear();
+  params.delta_H.clear();
+  params.acceptance.clear();
+  params.accept.clear();
+  params.time.clear();
 }
 
 } // namespace klft

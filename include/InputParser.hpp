@@ -33,6 +33,7 @@ namespace klft {
 
 // get MetropolisParams from input file
 inline bool parseInputFile(const std::string &filename,
+                           const std::string &output_directory,
                            MetropolisParams &metropolisParams) {
   try {
     YAML::Node config = YAML::LoadFile(filename);
@@ -69,8 +70,9 @@ inline bool parseInputFile(const std::string &filename,
 }
 
 // get GaugeObservableParams from input file
-inline bool parseInputFile(const std::string &filename,
-                           GaugeObservableParams &gaugeObservableParams) {
+inline int parseInputFile(const std::string &filename,
+                          const std::string &output_directory,
+                          GaugeObservableParams &gaugeObservableParams) {
   try {
     YAML::Node config = YAML::LoadFile(filename);
 
@@ -116,15 +118,17 @@ inline bool parseInputFile(const std::string &filename,
 
       // filenames for the measurements
       gaugeObservableParams.plaquette_filename =
-          gp["plaquette_filename"].as<std::string>("");
+          output_directory + gp["plaquette_filename"].as<std::string>("");
       gaugeObservableParams.W_temp_filename =
-          gp["W_temp_filename"].as<std::string>("");
+          output_directory + gp["W_temp_filename"].as<std::string>("");
       gaugeObservableParams.W_mu_nu_filename =
-          gp["W_mu_nu_filename"].as<std::string>("");
+          output_directory + gp["W_mu_nu_filename"].as<std::string>("");
 
       // whether to write to file
       gaugeObservableParams.write_to_file = gp["write_to_file"].as<bool>(false);
 
+      // flush interval
+      gaugeObservableParams.flush = gp["flush"].as<size_t>(25);
       // ...
       // add more parameters above this line as needed
     } else {
@@ -140,6 +144,7 @@ inline bool parseInputFile(const std::string &filename,
 
 // get GaugeObservableParams from input file
 inline bool parseInputFile(const std::string &filename,
+                           const std::string &output_directory,
                            PTBCParams &ptbcParams) {
   try {
     YAML::Node config = YAML::LoadFile(filename);
@@ -174,7 +179,9 @@ inline bool parseInputFile(const std::string &filename,
 }
 
 // get HMCParams from input file
-inline bool parseInputFile(const std::string &filename, HMCParams &hmcParams) {
+inline bool parseInputFile(const std::string &filename,
+                           const std::string &output_directory,
+                           HMCParams &hmcParams) {
   try {
     YAML::Node config = YAML::LoadFile(filename);
 
@@ -212,8 +219,9 @@ inline bool parseInputFile(const std::string &filename, HMCParams &hmcParams) {
 }
 
 // get SimulationLoggingParams from input file
-inline bool parseInputFile(const std::string &filename,
-                           SimulationLoggingParams &simParams) {
+inline int parseInputFile(const std::string &filename,
+                          const std::string &output_directory,
+                          SimulationLoggingParams &simParams) {
   try {
     YAML::Node config = YAML::LoadFile(filename);
 
@@ -222,8 +230,10 @@ inline bool parseInputFile(const std::string &filename,
       const auto &mp = config["SimulationLoggingParams"];
       // general parameters
       simParams.log_interval = mp["log_interval"].as<size_t>(0);
-      simParams.log_filename = mp["log_filename"].as<std::string>("");
+      simParams.log_filename =
+          output_directory + mp["log_filename"].as<std::string>("");
       simParams.write_to_file = mp["write_to_file"].as<bool>(false);
+      simParams.flush = mp["flush"].as<size_t>(25);
 
       simParams.log_delta_H = mp["log_delta_H"].as<bool>(false);
       simParams.log_acceptance = mp["log_acceptance"].as<bool>(false);
