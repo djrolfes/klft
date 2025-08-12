@@ -21,10 +21,11 @@ int PTBC_execute(const std::string &input_file,
   HMCParams hmcParams;
   GaugeObservableParams gaugeObsParams;
   SimulationLoggingParams simLogParams;
-  bool inputFileParsedCorrectly = (parseInputFile(input_file, gaugeObsParams) &&
-                                   parseInputFile(input_file, hmcParams) &&
-                                   parseInputFile(input_file, simLogParams) &&
-                                   parseInputFile(input_file, ptbcParams));
+  bool inputFileParsedCorrectly =
+      (parseInputFile(input_file, output_directory, gaugeObsParams) &&
+       parseInputFile(input_file, output_directory, hmcParams) &&
+       parseInputFile(input_file, output_directory, simLogParams) &&
+       parseInputFile(input_file, output_directory, ptbcParams));
   if (!inputFileParsedCorrectly) {
     printf("Error parsing input file\n");
     return -1;
@@ -38,6 +39,8 @@ int PTBC_execute(const std::string &input_file,
   ptbcParams.defect_value = ptbcParams.defects[(rank)];
 
   ptbcParams.hmc_params = hmcParams;
+  ptbcParams.gaugeObsParams = gaugeObsParams;
+  ptbcParams.simLogParams = simLogParams;
   RNGType rng(hmcParams.seed + rank);
   std::mt19937 mt(hmcParams.seed);
   std::uniform_real_distribution<real_t> dist(0.0, 1.0);

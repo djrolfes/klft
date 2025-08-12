@@ -22,7 +22,9 @@ struct PTBCParams {
   std::vector<real_t> defects; // a vector that hold the different defect values
   index_t defect_size;         // size of the defect on the lattice
   HMCParams hmc_params;        // HMC parameters´
-  real_t defect_value;         // value of the defect
+  GaugeObservableParams gaugeObsParams;
+  SimulationLoggingParams simLogParams;
+  real_t defect_value; // value of the defect
 };
 
 template <typename DGaugeFieldType, typename DAdjFieldType, class RNG>
@@ -99,10 +101,38 @@ public:
     return params.defects[current_index];
   }
 
-  void measure(GaugeObservableParams &gaugeObsParams, index_t step) {
+  void measure(GaugeObservableParams &gaugeObsParams, size_t step) {
     // measure the gauge observables
-    measureGaugeObservables<Nd, Nc>(hamiltonian_field.gauge_field,
-                                    gaugeObsParams, step);
+    int rank, size;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+    int compute_rank{0};
+    int dummy_rank{0};
+
+    if (rank == 0 || getDefectValue() >= 0.99999) {
+      // only the computing rank or the defect rank measures the observables
+      MPI_Reduce(
+          &rank, &compute_rank, 1, MPI_INT, MPI_SUM, 0,
+          MPI_COMM_WORLD); // sum the ranks to get the computing rank in rank 0
+      if (getDefectValue() >= 0.99999) {
+        // if the defect value is close to 1, we measure the observables
+        // for the PTBC case
+        if (KLFT_VERBOSITY > 1) {
+          printf("Measuring PTBC observables at step %zu\n", step);
+        }
+        measureGaugeObservablesPTBC<Nd, Nc>(hamiltonian_field.gauge_field,
+                                            gaugeObsParams, step, 0, true);
+      } else {
+
+        measureGaugeObservablesPTBC<Nd, Nc>(hamiltonian_field.gauge_field,
+                                            gaugeObsParams, step, compute_rank,
+                                            false);
+      }
+    } else {
+      MPI_Reduce(&dummy_rank, &compute_rank, 1, MPI_INT, MPI_SUM, 0,
+                 MPI_COMM_WORLD);
+      return; // skip measurement for other ranks
+    }
   }
 
   void measure(SimulationLoggingParams &simLogParams, index_t step,
@@ -211,7 +241,8 @@ public:
       // PARTNER RANK sends its Delta_S
       if (rank == partner_rank) {
         real_t temp = swap_partner(swap_rank);
-        // DEBUG_MPI_PRINT("Sending Delta_S_partner=%f to rank 0 (TAG_DELTAS)",
+        // DEBUG_MPI_PRINT("Sending Delta_S_partner=%f to rank 0
+        // (TAG_DELTAS)",
         //                 temp);
         MPI_Send(&temp, 1, mpi_real_t(), 0, TAG_DELTAS, MPI_COMM_WORLD);
       }
@@ -238,12 +269,14 @@ public:
             accept = false;
           }
         }
-        // DEBUG_MPI_PRINT("Total Delta_S = %f, accept = %d", Delta_S, accept);
+        // DEBUG_MPI_PRINT("Total Delta_S = %f, accept = %d", Delta_S,
+        // accept);
 
         MPI_Send(&accept, 1, MPI_C_BOOL, swap_rank, TAG_ACCEPT, MPI_COMM_WORLD);
         MPI_Send(&accept, 1, MPI_C_BOOL, partner_rank, TAG_ACCEPT,
                  MPI_COMM_WORLD);
-        // DEBUG_MPI_PRINT("Sent accept=%d to swap_rank=%d and partner_rank=%d",
+        // DEBUG_MPI_PRINT("Sent accept=%d to swap_rank=%d and
+        // partner_rank=%d",
         //                 accept, swap_rank, partner_rank);
       }
 
@@ -261,7 +294,8 @@ public:
       // Rank 0 performs the swap if accepted
       if (rank == 0 && accept) {
 
-        // DEBUG_MPI_PRINT("Swapping params.defects[%d] <-> params.defects[%d]",
+        // DEBUG_MPI_PRINT("Swapping params.defects[%d] <->
+        // params.defects[%d]",
         //                 swap_rank, partner_rank);
         std::swap(params.defects[swap_rank], params.defects[partner_rank]);
       }
@@ -299,8 +333,8 @@ public:
   }
 
 private:
-  index_t device_id;
-  index_t partner_device_id;
+  int device_id;
+  int partner_device_id;
 };
 
 // below: Functions used to dispatch the PTBC algorithm
@@ -404,8 +438,8 @@ int run_PTBC(PTBCParams ptbc_params, RNG &rng,
                     hamiltonian_field.adjoint_field);
   Update_P update_p(hamiltonian_field.gauge_field,
                     hamiltonian_field.adjoint_field, hmc_params.beta);
-  // the integrate might need to be passed into the run_HMC as an argument as it
-  // contains a large amount of design decisions
+  // the integrate might need to be passed into the run_HMC as an argument as
+  // it contains a large amount of design decisions
   std::shared_ptr<LeapFrog> leap_frog =
       std::make_shared<LeapFrog>(hmc_params.nstepsGauge, true, nullptr,
                                  std::make_shared<Update_Q>(update_q),
@@ -437,12 +471,20 @@ int run_PTBC(PTBCParams ptbc_params, RNG &rng,
     int ptbc_accept = ptbc.swap();
 
     // Gauge observables
+    ptbc.measure(ptbc_params.gaugeObsParams, step);
 
     // PTBC swap/accept
 
     const real_t time = timer.seconds();
     acc_sum += static_cast<real_t>(accept);
     acc_rate = acc_sum / static_cast<real_t>(step + 1);
+    if (rank == 0) {
+      Kokkos::printf("Step: %zu, accepted: %d, Acceptance rate: %f, Time: %f\n",
+                     step, accept, acc_rate, time);
+    }
+  }
+  if (rank == 0) {
+    flushAllGaugeObservables(ptbc_params.gaugeObsParams);
   }
 
   return 0;

@@ -29,6 +29,7 @@ public:
   unsigned int time_scale;
 
   Monomial() : H_old(0.0), H_new(0.0), time_scale(0) {}
+  virtual ~Monomial() = default;
 
   Monomial(unsigned int _time_scale)
       : H_old(0.0), H_new(0.0), time_scale(_time_scale) {}

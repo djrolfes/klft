@@ -1,6 +1,5 @@
 #include "HMC_exec.hpp"
 #include "../include/InputParser.hpp"
-#include "../include/klft.hpp"
 #include "AdjointSUN.hpp"
 #include "FieldTypeHelper.hpp"
 #include "GaugeObservable.hpp"
@@ -36,15 +35,15 @@ int HMC_execute(const std::string &input_file,
   HMCParams hmcParams;
   GaugeObservableParams gaugeObsParams;
   SimulationLoggingParams simLogParams;
-  if (!parseInputFile(input_file, gaugeObsParams)) {
+  if (!parseInputFile(input_file, output_directory, gaugeObsParams)) {
     printf("Error parsing input file\n");
     return -1;
   }
-  if (!parseInputFile(input_file, hmcParams)) {
+  if (!parseInputFile(input_file, output_directory, hmcParams)) {
     printf("Error parsing input file\n");
     return -1;
   }
-  if (!parseInputFile(input_file, simLogParams)) {
+  if (!parseInputFile(input_file, output_directory, simLogParams)) {
     printf("Error parsing input file\n");
     return -1;
   }
@@ -71,7 +70,7 @@ int HMC_execute(const std::string &input_file,
         run_HMC<DGaugeFieldType, DAdjFieldType>(
             typename DGaugeFieldType::type(dev_g_U1_4D),
             typename DAdjFieldType::type(dev_a_U1_4D), hmcParams,
-            gaugeObsParams, simLogParams, rng, output_directory);
+            gaugeObsParams, simLogParams, rng);
       }
       // case SU(2)
       else if (hmcParams.Nc == 2) {
@@ -86,7 +85,7 @@ int HMC_execute(const std::string &input_file,
         run_HMC<DGaugeFieldType, DAdjFieldType>(
             typename DGaugeFieldType::type(dev_g_SU2_4D),
             typename DAdjFieldType::type(dev_a_SU2_4D), hmcParams,
-            gaugeObsParams, simLogParams, rng, output_directory);
+            gaugeObsParams, simLogParams, rng);
       }
       // case SU(3)
       // else if (hmcParams.Nc == 3) {
@@ -103,7 +102,7 @@ int HMC_execute(const std::string &input_file,
       //   run_HMC<DGaugeFieldType, DAdjFieldType>(
       //       typename DGaugeFieldType::type(dev_g_SU3_4D),
       //       typename DAdjFieldType::type(dev_a_SU3_4D),
-      //       hmcParams, gaugeObsParams, simLogParams, rng, output_directory);
+      //       hmcParams, gaugeObsParams, simLogParams, rng );
       // }
       // case SU(N)
       else {
@@ -124,7 +123,7 @@ int HMC_execute(const std::string &input_file,
         run_HMC<DGaugeFieldType, DAdjFieldType>(
             typename DGaugeFieldType::type(dev_g_U1_3D),
             typename DAdjFieldType::type(dev_a_U1_3D), hmcParams,
-            gaugeObsParams, simLogParams, rng, output_directory);
+            gaugeObsParams, simLogParams, rng);
       }
       // case SU(2)
       else if (hmcParams.Nc == 2) {
@@ -137,7 +136,7 @@ int HMC_execute(const std::string &input_file,
         run_HMC<DGaugeFieldType, DAdjFieldType>(
             typename DGaugeFieldType::type(dev_g_SU2_3D),
             typename DAdjFieldType::type(dev_a_SU2_3D), hmcParams,
-            gaugeObsParams, simLogParams, rng, output_directory);
+            gaugeObsParams, simLogParams, rng);
       }
       // case SU(3)
       // else if (hmcParams.Nc == 3) {
@@ -153,7 +152,7 @@ int HMC_execute(const std::string &input_file,
       //   run_HMC<DGaugeFieldType, DAdjFieldType>(
       //       typename DGaugeFieldType::type(dev_g_SU3_3D),
       //       typename DAdjFieldType::type(dev_a_SU3_3D),
-      //       hmcParams, gaugeObsParams, simLogParams, rng, output_directory);
+      //       hmcParams, gaugeObsParams, simLogParams, rng );
       // }
       // case SU(N)
       else {
@@ -174,7 +173,7 @@ int HMC_execute(const std::string &input_file,
         run_HMC<DGaugeFieldType, DAdjFieldType>(
             typename DGaugeFieldType::type(dev_g_U1_2D),
             typename DAdjFieldType::type(dev_a_U1_2D), hmcParams,
-            gaugeObsParams, simLogParams, rng, output_directory);
+            gaugeObsParams, simLogParams, rng);
       }
       // case SU(2)
       else if (hmcParams.Nc == 2) {
@@ -187,7 +186,7 @@ int HMC_execute(const std::string &input_file,
         run_HMC<DGaugeFieldType, DAdjFieldType>(
             typename DGaugeFieldType::type(dev_g_SU2_2D),
             typename DAdjFieldType::type(dev_a_SU2_2D), hmcParams,
-            gaugeObsParams, simLogParams, rng, output_directory);
+            gaugeObsParams, simLogParams, rng);
       }
       // case SU(3)
       // else if (hmcParams.Nc == 3) {
@@ -201,7 +200,7 @@ int HMC_execute(const std::string &input_file,
       //   run_HMC<DGaugeFieldType, DAdjFieldType>(
       //       typename DGaugeFieldType::type(dev_g_SU3_2D),
       //       typename DAdjFieldType::type(dev_a_SU3_2D),
-      //       hmcParams, gaugeObsParams, simLogParams, rng, output_directory);
+      //       hmcParams, gaugeObsParams, simLogParams, rng );
       // }
       // case SU(N)
       else {
@@ -224,7 +223,7 @@ int HMC_execute(const std::string &input_file,
         run_HMC<DGaugeFieldType, DAdjFieldType>(
             typename DGaugeFieldType::type(dev_g_U1_4D),
             typename DAdjFieldType::type(dev_a_U1_4D), hmcParams,
-            gaugeObsParams, simLogParams, rng, output_directory);
+            gaugeObsParams, simLogParams, rng);
       }
       // case SU(2)
       else if (hmcParams.Nc == 2) {
@@ -239,7 +238,7 @@ int HMC_execute(const std::string &input_file,
         run_HMC<DGaugeFieldType, DAdjFieldType>(
             typename DGaugeFieldType::type(dev_g_SU2_4D),
             typename DAdjFieldType::type(dev_a_SU2_4D), hmcParams,
-            gaugeObsParams, simLogParams, rng, output_directory);
+            gaugeObsParams, simLogParams, rng);
       }
       // case SU(3)
       // else if (hmcParams.Nc == 3) {
@@ -256,7 +255,7 @@ int HMC_execute(const std::string &input_file,
       //   run_HMC<DGaugeFieldType, DAdjFieldType>(
       //       typename DGaugeFieldType::type(dev_g_SU3_4D),
       //       typename DAdjFieldType::type(dev_a_SU3_4D),
-      //       hmcParams, gaugeObsParams, simLogParams, rng, output_directory);
+      //       hmcParams, gaugeObsParams, simLogParams, rng );
       // }
       // case SU(N)
       else {
@@ -277,7 +276,7 @@ int HMC_execute(const std::string &input_file,
         run_HMC<DGaugeFieldType, DAdjFieldType>(
             typename DGaugeFieldType::type(dev_g_U1_3D),
             typename DAdjFieldType::type(dev_a_U1_3D), hmcParams,
-            gaugeObsParams, simLogParams, rng, output_directory);
+            gaugeObsParams, simLogParams, rng);
       }
       // case SU(2)
       else if (hmcParams.Nc == 2) {
@@ -290,7 +289,7 @@ int HMC_execute(const std::string &input_file,
         run_HMC<DGaugeFieldType, DAdjFieldType>(
             typename DGaugeFieldType::type(dev_g_SU2_3D),
             typename DAdjFieldType::type(dev_a_SU2_3D), hmcParams,
-            gaugeObsParams, simLogParams, rng, output_directory);
+            gaugeObsParams, simLogParams, rng);
       }
       // case SU(3)
       // else if (hmcParams.Nc == 3) {
@@ -306,7 +305,7 @@ int HMC_execute(const std::string &input_file,
       //   run_HMC<DGaugeFieldType, DAdjFieldType>(
       //       typename DGaugeFieldType::type(dev_g_SU3_3D),
       //       typename DAdjFieldType::type(dev_a_SU3_3D),
-      //       hmcParams, gaugeObsParams, simLogParams, rng, output_directory);
+      //       hmcParams, gaugeObsParams, simLogParams, rng );
       // }
       // case SU(N)
       else {
@@ -327,7 +326,7 @@ int HMC_execute(const std::string &input_file,
         run_HMC<DGaugeFieldType, DAdjFieldType>(
             typename DGaugeFieldType::type(dev_g_U1_2D),
             typename DAdjFieldType::type(dev_a_U1_2D), hmcParams,
-            gaugeObsParams, simLogParams, rng, output_directory);
+            gaugeObsParams, simLogParams, rng);
       }
       // case SU(2)
       else if (hmcParams.Nc == 2) {
@@ -340,7 +339,7 @@ int HMC_execute(const std::string &input_file,
         run_HMC<DGaugeFieldType, DAdjFieldType>(
             typename DGaugeFieldType::type(dev_g_SU2_2D),
             typename DAdjFieldType::type(dev_a_SU2_2D), hmcParams,
-            gaugeObsParams, simLogParams, rng, output_directory);
+            gaugeObsParams, simLogParams, rng);
       }
       // case SU(3)
       // else if (hmcParams.Nc == 3) {
@@ -354,7 +353,7 @@ int HMC_execute(const std::string &input_file,
       //   run_HMC<DGaugeFieldType, DAdjFieldType>(
       //       typename DGaugeFieldType::type(dev_g_SU3_2D),
       //       typename DAdjFieldType::type(dev_a_SU3_2D),
-      //       hmcParams, gaugeObsParams, simLogParams, rng, output_directory);
+      //       hmcParams, gaugeObsParams, simLogParams, rng );
       // }
       // case SU(N)
       else {
