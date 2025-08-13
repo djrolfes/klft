@@ -29,12 +29,14 @@
 #include "PTBCGaugeField.hpp"
 #include "SUNField.hpp"
 #include "ScalarField.hpp"
+#include "SpinorField.hpp"
 #include <cstddef>
 
 namespace klft {
 // define GaugeFieldKinds
 enum class GaugeFieldKind { Standard, PTBC };
 
+enum class SpinorFieldKind { Standard, Staggered };
 // define a function to get the gauge field type based on the rank,
 // with the default Field being the default GaugeField
 template <size_t rank, size_t Nc, GaugeFieldKind k = GaugeFieldKind::Standard>
@@ -54,6 +56,24 @@ struct DeviceGaugeFieldType<3, Nc, GaugeFieldKind::Standard> {
 template <size_t Nc>
 struct DeviceGaugeFieldType<4, Nc, GaugeFieldKind::Standard> {
   using type = deviceGaugeField<4, Nc>;
+};
+
+// now do the same for the SpinorField field types
+template <size_t rank, size_t Nc, size_t RepDim,
+          SpinorFieldKind k = SpinorFieldKind::Standard>
+struct DeviceSpinorFieldType;
+
+template <size_t Nc>
+struct DeviceSpinorFieldType<4, Nc, 4, SpinorFieldKind::Standard> {
+  using type = deviceSpinorField<Nc, 4>;
+};
+template <size_t Nc>
+struct DeviceSpinorFieldType<3, Nc, 4, SpinorFieldKind::Standard> {
+  using type = deviceSpinorField3D<Nc, 4>;
+};
+template <size_t Nc>
+struct DeviceSpinorFieldType<2, Nc, 4, SpinorFieldKind::Standard> {
+  using type = deviceSpinorField2D<Nc, 4>;
 };
 
 // now do the same for the PTBC gauge field types
@@ -82,11 +102,26 @@ struct DeviceGaugeFieldTypeTraits<DeviceGaugeFieldType<_rank, _Nc, _k>> {
 // compile time check for the appropriate types
 template <typename T> struct isDeviceGaugeFieldType : std::false_type {};
 
+template <typename T> struct isDeviceFermionFieldType : std::false_type {};
+
 template <size_t rank, size_t Nc, GaugeFieldKind k>
 struct isDeviceGaugeFieldType<DeviceGaugeFieldType<rank, Nc, k>>
     : std::true_type {};
 
-// define a function to get the gauge field type based on the rank,
+template <size_t rank, size_t Nc, size_t RepDim, SpinorFieldKind k>
+struct isDeviceFermionFieldType<DeviceSpinorFieldType<rank, Nc, RepDim, k>>
+    : std::true_type {};
+
+template <typename T> struct DeviceFermionFieldTypeTraits;
+
+template <size_t _rank, size_t _Nc, size_t _RepDim, SpinorFieldKind _k>
+struct DeviceFermionFieldTypeTraits<
+    DeviceSpinorFieldType<_rank, _Nc, _RepDim, _k>> {
+  static constexpr size_t Rank = _rank;
+  static constexpr size_t Nc = _Nc;
+  static constexpr size_t RepDim = _RepDim;
+  static constexpr SpinorFieldKind Kind = _k;
+}; // define a function to get the gauge field type based on the rank,
 // with the default Field being the default GaugeField
 template <size_t rank, size_t Nc> struct DeviceAdjFieldType;
 

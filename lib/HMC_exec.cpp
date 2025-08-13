@@ -1,16 +1,22 @@
 #include "HMC_exec.hpp"
-#include "../include/InputParser.hpp"
 #include "AdjointSUN.hpp"
+#include "FermionParams.hpp"
 #include "FieldTypeHelper.hpp"
 #include "GaugeObservable.hpp"
+#include "HMC.hpp"
 #include "HMC_Params.hpp"
-
+#include "InputParser.hpp"
+#include "Integrator.hpp"
+#include "SimulationLogging.hpp"
+#include "klft.hpp"
 using RNGType = Kokkos::Random_XorShift64_Pool<Kokkos::DefaultExecutionSpace>;
 
 namespace klft {
 
-int HMC_execute(const std::string &input_file,
-                const std::string &output_directory) {
+// Still need to add check for different Dirac Operators
+
+int build_and_run_HMC(const std::string &input_file,
+                      const std::string &output_directory) {
   // get verbosity from environment
   const int verbosity = std::getenv("KLFT_VERBOSITY")
                             ? std::atoi(std::getenv("KLFT_VERBOSITY"))
@@ -18,7 +24,7 @@ int HMC_execute(const std::string &input_file,
   setVerbosity(verbosity);
   // get tuning from environment
   const int tuning =
-      std::getenv("KLFT_TUNING") ? std::atoi(std::getenv("KLFT_TUNING")) : 0;
+      std::getenv("KLFT_TUNING") ? std::atoi(std::getenv("KLFT_TUNING")) : 1;
   setTuning(tuning);
   // if tuning is enbled, check if the user has set the
   // KLFT_CACHE_FILE environment variable
@@ -33,346 +39,684 @@ int HMC_execute(const std::string &input_file,
     }
   }
   HMCParams hmcParams;
-  GaugeObservableParams gaugeObsParams;
-  SimulationLoggingParams simLogParams;
-  if (!parseInputFile(input_file, output_directory, gaugeObsParams)) {
-    printf("Error parsing input file\n");
-    return -1;
-  }
+  // parse the input file for HMC parameters
   if (!parseInputFile(input_file, output_directory, hmcParams)) {
     printf("Error parsing input file\n");
     return -1;
   }
+  Integrator_Params integratorParams;
+  GaugeObservableParams gaugeObsParams;
+  if (!parseInputFile(input_file, output_directory, gaugeObsParams)) {
+    printf("Error parsing input file\n");
+    return -1;
+  }
+  if (!parseInputFile(input_file, output_directory, integratorParams)) {
+    printf("Error parsing input file\n");
+    return -1;
+  }
+  FermionMonomial_Params fermionParams;
+  auto resParsef = parseInputFile(input_file, output_directory, fermionParams);
+  if (resParsef == 0) {
+    printf("Error parsing input file\n");
+    return -1;
+  } else if (resParsef < 0) {
+    printf("Info: No Fermion Monomial detected, skipping\n");
+  }
+  GaugeMonomial_Params gaugeMonomialParams;
+  if (!parseInputFile(input_file, output_directory, gaugeMonomialParams)) {
+    printf("Error parsing input file\n");
+    return -1;
+  }
+  SimulationLoggingParams simLogParams;
   if (!parseInputFile(input_file, output_directory, simLogParams)) {
     printf("Error parsing input file\n");
     return -1;
   }
+  if (!parseSanityChecks(integratorParams, gaugeMonomialParams, fermionParams,
+                         resParsef)) {
+    printf("Error in sanity checks\n");
+    return -1;
+  }
+
+  //   FermionParams fparams;
+  //   if (!parseInputFile(input_file, fparams)) {
+  //     printf("Error parsing input file\n");
+  //     return -1;
+  //   }
   // print the parameters
   hmcParams.print();
-  // initialize RNG
-  RNGType rng(hmcParams.seed);
+  integratorParams.print();
+  //   gaugeObsParams.print();
+  if (resParsef > 0) {
+    fermionParams.print();
+  }
 
-  // initialize gauge field and run hmc
-  // based on the system parameters
-  // case 4D
+  gaugeMonomialParams.print();
+  RNGType rng(hmcParams.seed);
+  std::mt19937 mt(hmcParams.seed);
+  std::uniform_real_distribution<real_t> dist(0.0, 1.0);
+  // Start building the Fields
+
   if (hmcParams.coldStart) {
     if (hmcParams.Ndims == 4) {
-      // case U(1)
       if (hmcParams.Nc == 1) {
         using DGaugeFieldType = DeviceGaugeFieldType<4, 1>;
         using DAdjFieldType = DeviceAdjFieldType<4, 1>;
-        typename DGaugeFieldType::type dev_g_U1_4D(hmcParams.L0, hmcParams.L1,
-                                                   hmcParams.L2, hmcParams.L3,
-                                                   identitySUN<1>());
-        typename DAdjFieldType::type dev_a_U1_4D(hmcParams.L0, hmcParams.L1,
-                                                 hmcParams.L2, hmcParams.L3,
-                                                 traceT(identitySUN<1>()));
-        run_HMC<DGaugeFieldType, DAdjFieldType>(
-            typename DGaugeFieldType::type(dev_g_U1_4D),
-            typename DAdjFieldType::type(dev_a_U1_4D), hmcParams,
-            gaugeObsParams, simLogParams, rng);
-      }
-      // case SU(2)
-      else if (hmcParams.Nc == 2) {
+        using DSpinorFieldType = DeviceSpinorFieldType<4, 1, 4>;
+        typename DGaugeFieldType::type g_4_U1(hmcParams.L0, hmcParams.L1,
+                                              hmcParams.L2, hmcParams.L3,
+                                              identitySUN<1>());
+        typename DAdjFieldType::type a_4_U1(hmcParams.L0, hmcParams.L1,
+                                            hmcParams.L2, hmcParams.L3,
+                                            traceT(identitySUN<1>()));
+        typename DSpinorFieldType::type s_4_U1(hmcParams.L0, hmcParams.L1,
+                                               hmcParams.L2, hmcParams.L3, 0);
+        auto integrator =
+            createIntegrator<DGaugeFieldType, DAdjFieldType, DSpinorFieldType>(
+                g_4_U1, a_4_U1, s_4_U1, integratorParams, gaugeMonomialParams,
+                fermionParams, resParsef);
+        using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
+        HField hamiltonian_field = HField(g_4_U1, a_4_U1);
+
+        const auto &dimensions = g_4_U1.dimensions;
+
+        using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
+        HMC hmc(integratorParams, hamiltonian_field, integrator, rng, dist, mt);
+        hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
+        hmc.add_kinetic_monomial(0);
+        if (resParsef > 0) {
+          auto diracParams =
+              getDiracParams<4>(g_4_U1.dimensions, fermionParams);
+          hmc.add_fermion_monomial<CGSolver, HWilsonDiracOperator,
+                                   DSpinorFieldType>(s_4_U1, diracParams,
+                                                     fermionParams.tol, rng, 0);
+        }
+
+        run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams);
+      } else if (hmcParams.Nc == 2) {
         using DGaugeFieldType = DeviceGaugeFieldType<4, 2>;
         using DAdjFieldType = DeviceAdjFieldType<4, 2>;
-        typename DGaugeFieldType::type dev_g_SU2_4D(hmcParams.L0, hmcParams.L1,
-                                                    hmcParams.L2, hmcParams.L3,
-                                                    identitySUN<2>());
-        typename DAdjFieldType::type dev_a_SU2_4D(hmcParams.L0, hmcParams.L1,
-                                                  hmcParams.L2, hmcParams.L3,
-                                                  traceT(identitySUN<2>()));
-        run_HMC<DGaugeFieldType, DAdjFieldType>(
-            typename DGaugeFieldType::type(dev_g_SU2_4D),
-            typename DAdjFieldType::type(dev_a_SU2_4D), hmcParams,
-            gaugeObsParams, simLogParams, rng);
+        using DSpinorFieldType = DeviceSpinorFieldType<4, 2, 4>;
+        typename DGaugeFieldType::type g_4_SU2(hmcParams.L0, hmcParams.L1,
+                                               hmcParams.L2, hmcParams.L3,
+                                               identitySUN<2>());
+        typename DAdjFieldType::type a_4_SU2(hmcParams.L0, hmcParams.L1,
+                                             hmcParams.L2, hmcParams.L3,
+                                             traceT(identitySUN<2>()));
+        typename DSpinorFieldType::type s_4_SU2(hmcParams.L0, hmcParams.L1,
+                                                hmcParams.L2, hmcParams.L3, 0);
+        auto integrator =
+            createIntegrator<DGaugeFieldType, DAdjFieldType, DSpinorFieldType>(
+                g_4_SU2, a_4_SU2, s_4_SU2, integratorParams,
+                gaugeMonomialParams, fermionParams, resParsef);
+        using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
+        HField hamiltonian_field = HField(g_4_SU2, a_4_SU2);
+
+        const auto &dimensions = g_4_SU2.dimensions;
+
+        using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
+        HMC hmc(integratorParams, hamiltonian_field, integrator, rng, dist, mt);
+        hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
+        hmc.add_kinetic_monomial(0);
+        if (resParsef > 0) {
+          auto diracParams =
+              getDiracParams<4>(g_4_SU2.dimensions, fermionParams);
+          hmc.add_fermion_monomial<CGSolver, HWilsonDiracOperator,
+                                   DSpinorFieldType>(s_4_SU2, diracParams,
+                                                     fermionParams.tol, rng, 0);
+        }
+
+        run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams);
+      } else if (hmcParams.Nc == 3) {
+        printf("Error: SU(3) isn't supported yet");
+        // return 1;
+
+        // using DGaugeFieldType = DeviceGaugeFieldType<4, 3>;
+        // using DAdjFieldType = DeviceAdjFieldType<4, 3>;
+        // using DSpinorFieldType = DeviceSpinorFieldType<4, 3, 4>;
+        // typename DGaugeFieldType::type g_4_SU3(hmcParams.L0, hmcParams.L1,
+        //                                        hmcParams.L2, hmcParams.L3,
+        //                                        identitySUN<3>());
+        // typename DAdjFieldType::type a_4_SU3(hmcParams.L0, hmcParams.L1,
+        //                                      hmcParams.L2, hmcParams.L3,
+        //                                      traceT(identitySUN<3>()));
+        // typename DSpinorFieldType::type s_4_SU3(hmcParams.L0, hmcParams.L1,
+        //                                         hmcParams.L2, hmcParams.L3,
+        //                                         0);
+        // auto integrator =
+        //     createIntegrator<DGaugeFieldType, DAdjFieldType,
+        //     DSpinorFieldType>(
+        //         g_4_SU3, a_4_SU3, s_4_SU3, integratorParams,
+        //         gaugeMonomialParams, fermionParams, resParsef);
+        // using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
+        // HField hamiltonian_field = HField(g_4_SU3, a_4_SU3);
+
+        // const auto& dimensions = g_4_SU3.dimensions;
+
+        // using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
+        // HMC hmc(integratorParams, hamiltonian_field, integrator, rng, dist,
+        // mt); hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
+        // hmc.add_kinetic_monomial(0);
+        // if (resParsef > 0) {
+        //   auto diracParams =
+        //       getDiracParams<4>(g_4_SU3.dimensions, fermionParams);
+        //   hmc.add_fermion_monomial<CGSolver, HWilsonDiracOperator,
+        //                            DSpinorFieldType>(s_4_SU3, diracParams,
+        //                                              fermionParams.tol, rng,
+        //                                              0);
+        // }
+
+        // run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams
+        //         );
       }
-      // case SU(3)
-      // else if (hmcParams.Nc == 3) {
-      //   using DGaugeFieldType = DeviceGaugeFieldType<4, 3>;
-      //   using DAdjFieldType = DeviceAdjFieldType<4, 3>;
-      //   typename DGaugeFieldType::type dev_g_SU3_4D(hmcParams.L0,
-      //   hmcParams.L1,
-      //                                              hmcParams.L2,
-      //                                              hmcParams.L3,
-      //                                              identitySUN<3>());
-      //   typename DAdjFieldType::type dev_a_SU3_4D(hmcParams.L0, hmcParams.L1,
-      //                                            hmcParams.L2, hmcParams.L3,
-      //                                            traceT(identitySUN<3>()));
-      //   run_HMC<DGaugeFieldType, DAdjFieldType>(
-      //       typename DGaugeFieldType::type(dev_g_SU3_4D),
-      //       typename DAdjFieldType::type(dev_a_SU3_4D),
-      //       hmcParams, gaugeObsParams, simLogParams, rng );
-      // }
-      // case SU(N)
-      else {
-        printf("Error: Unsupported gauge group\n");
-        return -1;
-      }
-    }
-    // case 3D
-    else if (hmcParams.Ndims == 3) {
-      // case U(1)
+    } else if (hmcParams.Ndims == 3) {
       if (hmcParams.Nc == 1) {
+        if (resParsef > 0) {
+          printf("Error: Fermions are currently not supported in 3D\n");
+          return 1;
+        }
+
         using DGaugeFieldType = DeviceGaugeFieldType<3, 1>;
         using DAdjFieldType = DeviceAdjFieldType<3, 1>;
-        typename DGaugeFieldType::type dev_g_U1_3D(
-            hmcParams.L0, hmcParams.L1, hmcParams.L2, identitySUN<1>());
-        typename DAdjFieldType::type dev_a_U1_3D(
+        using DSpinorFieldType = DeviceSpinorFieldType<3, 1, 4>;
+
+        typename DGaugeFieldType::type g_3_U1(hmcParams.L0, hmcParams.L1,
+                                              hmcParams.L2, identitySUN<1>());
+        typename DAdjFieldType::type a_3_U1(
             hmcParams.L0, hmcParams.L1, hmcParams.L2, traceT(identitySUN<1>()));
-        run_HMC<DGaugeFieldType, DAdjFieldType>(
-            typename DGaugeFieldType::type(dev_g_U1_3D),
-            typename DAdjFieldType::type(dev_a_U1_3D), hmcParams,
-            gaugeObsParams, simLogParams, rng);
-      }
-      // case SU(2)
-      else if (hmcParams.Nc == 2) {
+
+        typename DSpinorFieldType::type s_3_U1(hmcParams.L0, hmcParams.L1,
+                                               hmcParams.L2, 0);
+        auto integrator =
+            createIntegrator<DGaugeFieldType, DAdjFieldType, DSpinorFieldType>(
+                g_3_U1, a_3_U1, s_3_U1, integratorParams, gaugeMonomialParams,
+                fermionParams, resParsef);
+        using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
+        HField hamiltonian_field = HField(g_3_U1, a_3_U1);
+
+        const auto &dimensions = g_3_U1.dimensions;
+
+        using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
+        HMC hmc(integratorParams, hamiltonian_field, integrator, rng, dist, mt);
+        hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
+        hmc.add_kinetic_monomial(0);
+
+        run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams);
+      } else if (hmcParams.Nc == 2) {
+        if (resParsef > 0) {
+          printf("Error: Fermions are currently not supported in 3D\n");
+          return 1;
+        }
         using DGaugeFieldType = DeviceGaugeFieldType<3, 2>;
         using DAdjFieldType = DeviceAdjFieldType<3, 2>;
-        typename DGaugeFieldType::type dev_g_SU2_3D(
-            hmcParams.L0, hmcParams.L1, hmcParams.L2, identitySUN<2>());
-        typename DAdjFieldType::type dev_a_SU2_3D(
+        using DSpinorFieldType = DeviceSpinorFieldType<3, 2, 4>;
+        typename DGaugeFieldType::type g_3_SU2(hmcParams.L0, hmcParams.L1,
+                                               hmcParams.L2, identitySUN<2>());
+        typename DAdjFieldType::type a_3_SU2(
             hmcParams.L0, hmcParams.L1, hmcParams.L2, traceT(identitySUN<2>()));
-        run_HMC<DGaugeFieldType, DAdjFieldType>(
-            typename DGaugeFieldType::type(dev_g_SU2_3D),
-            typename DAdjFieldType::type(dev_a_SU2_3D), hmcParams,
-            gaugeObsParams, simLogParams, rng);
+        typename DSpinorFieldType::type s_3_SU2(hmcParams.L0, hmcParams.L1,
+                                                hmcParams.L2, 0);
+        auto integrator =
+            createIntegrator<DGaugeFieldType, DAdjFieldType, DSpinorFieldType>(
+                g_3_SU2, a_3_SU2, s_3_SU2, integratorParams,
+                gaugeMonomialParams, fermionParams, resParsef);
+        using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
+        HField hamiltonian_field = HField(g_3_SU2, a_3_SU2);
+
+        const auto &dimensions = g_3_SU2.dimensions;
+
+        using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
+        HMC hmc(integratorParams, hamiltonian_field, integrator, rng, dist, mt);
+        hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
+        hmc.add_kinetic_monomial(0);
+
+        run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams);
+      } else if (hmcParams.Nc == 3) {
+        printf("Error: SU(3) isn't supported yet");
+        return 1;
+
+        // if (resParsef > 0) {
+        //   printf("Error: Fermions are currently not supported in 3D\n");
+        //   return 1;
+        // }
+        // using DGaugeFieldType = DeviceGaugeFieldType<3, 3>;
+        // using DAdjFieldType = DeviceAdjFieldType<3, 3>;
+        // using DSpinorFieldType = DeviceSpinorFieldType<4, 3, 4>;
+        // typename DGaugeFieldType::type g_3_SU3(hmcParams.L0, hmcParams.L1,
+        //                                        hmcParams.L2,
+        //                                        identitySUN<3>());
+        // typename DAdjFieldType::type a_3_SU3(
+        //     hmcParams.L0, hmcParams.L1, hmcParams.L2,
+        //     traceT(identitySUN<3>()));
+        // typename DSpinorFieldType::type s_3_SU3(hmcParams.L0, hmcParams.L1,
+        //                                         hmcParams.L2, 1, 0);
+        // auto integrator =
+        //     createIntegrator<DGaugeFieldType, DAdjFieldType,
+        //     DSpinorFieldType>(
+        //         g_3_SU3, a_3_SU3, s_3_SU3, integratorParams,
+        //         gaugeMonomialParams, fermionParams, resParsef);
+        // using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
+        // HField hamiltonian_field = HField(g_3_SU3, a_3_SU3);
+
+        // const auto& dimensions = g_3_SU3.dimensions;
+
+        // using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
+        // HMC hmc(integratorParams, hamiltonian_field, integrator, rng, dist,
+        // mt); hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
+        // hmc.add_kinetic_monomial(0);
+
+        // run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams
+        //         );
       }
-      // case SU(3)
-      // else if (hmcParams.Nc == 3) {
-      //   using DGaugeFieldType = DeviceGaugeFieldType<3, 3>;
-      //   using DAdjFieldType = DeviceAdjFieldType<3, 3>;
-      //   typename DGaugeFieldType::type dev_g_SU3_3D(hmcParams.L0,
-      //   hmcParams.L1,
-      //                                              hmcParams.L2,
-      //                                              identitySUN<3>());
-      //   typename DAdjFieldType::type dev_a_SU3_3D(hmcParams.L0, hmcParams.L1,
-      //                                            hmcParams.L2,
-      //                                            traceT(identitySUN<3>()));
-      //   run_HMC<DGaugeFieldType, DAdjFieldType>(
-      //       typename DGaugeFieldType::type(dev_g_SU3_3D),
-      //       typename DAdjFieldType::type(dev_a_SU3_3D),
-      //       hmcParams, gaugeObsParams, simLogParams, rng );
-      // }
-      // case SU(N)
-      else {
-        printf("Error: Unsupported gauge group\n");
-        return -1;
-      }
-    }
-    // case 2D
-    else if (hmcParams.Ndims == 2) {
-      // case U(1)
+    } else if (hmcParams.Ndims == 2) {
       if (hmcParams.Nc == 1) {
+        if (resParsef > 0) {
+          printf("Error: Fermions are currently not supported in 2D\n");
+          return 1;
+        }
+
         using DGaugeFieldType = DeviceGaugeFieldType<2, 1>;
         using DAdjFieldType = DeviceAdjFieldType<2, 1>;
-        typename DGaugeFieldType::type dev_g_U1_2D(hmcParams.L0, hmcParams.L1,
-                                                   identitySUN<1>());
-        typename DAdjFieldType::type dev_a_U1_2D(hmcParams.L0, hmcParams.L1,
-                                                 traceT(identitySUN<1>()));
-        run_HMC<DGaugeFieldType, DAdjFieldType>(
-            typename DGaugeFieldType::type(dev_g_U1_2D),
-            typename DAdjFieldType::type(dev_a_U1_2D), hmcParams,
-            gaugeObsParams, simLogParams, rng);
-      }
-      // case SU(2)
-      else if (hmcParams.Nc == 2) {
+        using DSpinorFieldType = DeviceSpinorFieldType<2, 1, 4>;
+
+        typename DGaugeFieldType::type g_2_U1(hmcParams.L0, hmcParams.L1,
+                                              identitySUN<1>());
+        typename DAdjFieldType::type a_2_U1(hmcParams.L0, hmcParams.L1,
+                                            traceT(identitySUN<1>()));
+        // Leave 4D Spinorfield such that the createIntegrator stil works
+        typename DSpinorFieldType::type s_2_U1(hmcParams.L0, hmcParams.L1, 0);
+        auto integrator =
+            createIntegrator<DGaugeFieldType, DAdjFieldType, DSpinorFieldType>(
+                g_2_U1, a_2_U1, s_2_U1, integratorParams, gaugeMonomialParams,
+                fermionParams, resParsef);
+        using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
+        HField hamiltonian_field = HField(g_2_U1, a_2_U1);
+
+        const auto &dimensions = g_2_U1.dimensions;
+
+        using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
+        HMC hmc(integratorParams, hamiltonian_field, integrator, rng, dist, mt);
+        hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
+        hmc.add_kinetic_monomial(0);
+
+        run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams);
+      } else if (hmcParams.Nc == 2) {
+        if (resParsef > 0) {
+          printf("Error: Fermions are currently not supported in 3D\n");
+          return 1;
+        }
         using DGaugeFieldType = DeviceGaugeFieldType<2, 2>;
         using DAdjFieldType = DeviceAdjFieldType<2, 2>;
-        typename DGaugeFieldType::type dev_g_SU2_2D(hmcParams.L0, hmcParams.L1,
-                                                    identitySUN<2>());
-        typename DAdjFieldType::type dev_a_SU2_2D(hmcParams.L0, hmcParams.L1,
-                                                  traceT(identitySUN<2>()));
-        run_HMC<DGaugeFieldType, DAdjFieldType>(
-            typename DGaugeFieldType::type(dev_g_SU2_2D),
-            typename DAdjFieldType::type(dev_a_SU2_2D), hmcParams,
-            gaugeObsParams, simLogParams, rng);
-      }
-      // case SU(3)
-      // else if (hmcParams.Nc == 3) {
-      //   using DGaugeFieldType = DeviceGaugeFieldType<2, 3>;
-      //   using DAdjFieldType = DeviceAdjFieldType<2, 3>;
-      //   typename DGaugeFieldType::type dev_g_SU3_2D(hmcParams.L0,
-      //   hmcParams.L1,
-      //                                              identitySUN<3>());
-      //   typename DAdjFieldType::type dev_a_SU3_2D(hmcParams.L0, hmcParams.L1,
-      //                                            traceT(identitySUN<3>()));
-      //   run_HMC<DGaugeFieldType, DAdjFieldType>(
-      //       typename DGaugeFieldType::type(dev_g_SU3_2D),
-      //       typename DAdjFieldType::type(dev_a_SU3_2D),
-      //       hmcParams, gaugeObsParams, simLogParams, rng );
-      // }
-      // case SU(N)
-      else {
-        printf("Error: Unsupported gauge group\n");
-        return -1;
+        using DSpinorFieldType = DeviceSpinorFieldType<2, 2, 4>;
+        typename DGaugeFieldType::type g_2_SU2(hmcParams.L0, hmcParams.L1,
+                                               identitySUN<2>());
+        typename DAdjFieldType::type a_2_SU2(hmcParams.L0, hmcParams.L1,
+                                             traceT(identitySUN<2>()));
+        typename DSpinorFieldType::type s_2_SU2(hmcParams.L0, hmcParams.L1, 0);
+        auto integrator =
+            createIntegrator<DGaugeFieldType, DAdjFieldType, DSpinorFieldType>(
+                g_2_SU2, a_2_SU2, s_2_SU2, integratorParams,
+                gaugeMonomialParams, fermionParams, resParsef);
+        using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
+        HField hamiltonian_field = HField(g_2_SU2, a_2_SU2);
+
+        const auto &dimensions = g_2_SU2.dimensions;
+
+        using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
+        HMC hmc(integratorParams, hamiltonian_field, integrator, rng, dist, mt);
+        hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
+        hmc.add_kinetic_monomial(0);
+
+        run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams);
+      } else if (hmcParams.Nc == 3) {
+        printf("Error: SU(3) isn't supported yet");
+        return 1;
+
+        // if (resParsef > 0) {
+        //   printf("Error: Fermions are currently not supported in 3D\n");
+        //   return 1;
+        // }
+        // using DGaugeFieldType = DeviceGaugeFieldType<2, 3>;
+        // using DAdjFieldType = DeviceAdjFieldType<2, 3>;
+        // using DSpinorFieldType = DeviceSpinorFieldType<4, 3, 4>;
+        // typename DGaugeFieldType::type g_2_SU3(hmcParams.L0, hmcParams.L1,
+        //                                        identitySUN<3>());
+        // typename DAdjFieldType::type a_2_SU3(hmcParams.L0, hmcParams.L1,
+        //                                      traceT(identitySUN<3>()));
+        // typename DSpinorFieldType::type s_2_SU3(hmcParams.L0, hmcParams.L1,
+        // 1,
+        //                                         1, 0);
+        // auto integrator =
+        //     createIntegrator<DGaugeFieldType, DAdjFieldType,
+        //     DSpinorFieldType>(
+        //         g_2_SU3, a_2_SU3, s_2_SU3, integratorParams,
+        //         gaugeMonomialParams, fermionParams, resParsef);
+        // using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
+        // HField hamiltonian_field = HField(g_2_SU3, a_2_SU3);
+
+        // const auto& dimensions = g_2_SU3.dimensions;
+
+        // using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
+        // HMC hmc(integratorParams, hamiltonian_field, integrator, rng, dist,
+        // mt); hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
+        // hmc.add_kinetic_monomial(0);
+
+        // run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams
+        //         );
       }
     }
-  } else {
+  } else { // Hotstart
     if (hmcParams.Ndims == 4) {
-      // case U(1)
       if (hmcParams.Nc == 1) {
         using DGaugeFieldType = DeviceGaugeFieldType<4, 1>;
         using DAdjFieldType = DeviceAdjFieldType<4, 1>;
-        typename DGaugeFieldType::type dev_g_U1_4D(hmcParams.L0, hmcParams.L1,
-                                                   hmcParams.L2, hmcParams.L3,
-                                                   rng, hmcParams.rngDelta);
-        typename DAdjFieldType::type dev_a_U1_4D(hmcParams.L0, hmcParams.L1,
-                                                 hmcParams.L2, hmcParams.L3,
-                                                 traceT(identitySUN<1>()));
-        run_HMC<DGaugeFieldType, DAdjFieldType>(
-            typename DGaugeFieldType::type(dev_g_U1_4D),
-            typename DAdjFieldType::type(dev_a_U1_4D), hmcParams,
-            gaugeObsParams, simLogParams, rng);
-      }
-      // case SU(2)
-      else if (hmcParams.Nc == 2) {
+        using DSpinorFieldType = DeviceSpinorFieldType<4, 1, 4>;
+        typename DGaugeFieldType::type g_4_U1(hmcParams.L0, hmcParams.L1,
+                                              hmcParams.L2, hmcParams.L3, rng,
+                                              hmcParams.rngDelta);
+        typename DAdjFieldType::type a_4_U1(hmcParams.L0, hmcParams.L1,
+                                            hmcParams.L2, hmcParams.L3,
+                                            traceT(identitySUN<1>()));
+        typename DSpinorFieldType::type s_4_U1(hmcParams.L0, hmcParams.L1,
+                                               hmcParams.L2, hmcParams.L3, 0);
+        auto integrator =
+            createIntegrator<DGaugeFieldType, DAdjFieldType, DSpinorFieldType>(
+                g_4_U1, a_4_U1, s_4_U1, integratorParams, gaugeMonomialParams,
+                fermionParams, resParsef);
+        using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
+        HField hamiltonian_field = HField(g_4_U1, a_4_U1);
+
+        const auto &dimensions = g_4_U1.dimensions;
+
+        using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
+        HMC hmc(integratorParams, hamiltonian_field, integrator, rng, dist, mt);
+        hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
+        hmc.add_kinetic_monomial(0);
+        if (resParsef > 0) {
+          auto diracParams =
+              getDiracParams<4>(g_4_U1.dimensions, fermionParams);
+          hmc.add_fermion_monomial<CGSolver, HWilsonDiracOperator,
+                                   DSpinorFieldType>(s_4_U1, diracParams,
+                                                     fermionParams.tol, rng, 0);
+        }
+
+        run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams);
+      } else if (hmcParams.Nc == 2) {
         using DGaugeFieldType = DeviceGaugeFieldType<4, 2>;
         using DAdjFieldType = DeviceAdjFieldType<4, 2>;
-        typename DGaugeFieldType::type dev_g_SU2_4D(hmcParams.L0, hmcParams.L1,
-                                                    hmcParams.L2, hmcParams.L3,
-                                                    rng, hmcParams.rngDelta);
-        typename DAdjFieldType::type dev_a_SU2_4D(hmcParams.L0, hmcParams.L1,
-                                                  hmcParams.L2, hmcParams.L3,
-                                                  traceT(identitySUN<2>()));
-        run_HMC<DGaugeFieldType, DAdjFieldType>(
-            typename DGaugeFieldType::type(dev_g_SU2_4D),
-            typename DAdjFieldType::type(dev_a_SU2_4D), hmcParams,
-            gaugeObsParams, simLogParams, rng);
+        using DSpinorFieldType = DeviceSpinorFieldType<4, 2, 4>;
+        typename DGaugeFieldType::type g_4_SU2(hmcParams.L0, hmcParams.L1,
+                                               hmcParams.L2, hmcParams.L3, rng,
+                                               hmcParams.rngDelta);
+        typename DAdjFieldType::type a_4_SU2(hmcParams.L0, hmcParams.L1,
+                                             hmcParams.L2, hmcParams.L3,
+                                             traceT(identitySUN<2>()));
+        typename DSpinorFieldType::type s_4_SU2(hmcParams.L0, hmcParams.L1,
+                                                hmcParams.L2, hmcParams.L3, 0);
+        auto integrator =
+            createIntegrator<DGaugeFieldType, DAdjFieldType, DSpinorFieldType>(
+                g_4_SU2, a_4_SU2, s_4_SU2, integratorParams,
+                gaugeMonomialParams, fermionParams, resParsef);
+        using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
+        HField hamiltonian_field = HField(g_4_SU2, a_4_SU2);
+
+        const auto &dimensions = g_4_SU2.dimensions;
+
+        using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
+        HMC hmc(integratorParams, hamiltonian_field, integrator, rng, dist, mt);
+        hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
+        hmc.add_kinetic_monomial(0);
+        if (resParsef > 0) {
+          auto diracParams =
+              getDiracParams<4>(g_4_SU2.dimensions, fermionParams);
+          hmc.add_fermion_monomial<CGSolver, HWilsonDiracOperator,
+                                   DSpinorFieldType>(s_4_SU2, diracParams,
+                                                     fermionParams.tol, rng, 0);
+        }
+
+        run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams);
+      } else if (hmcParams.Nc == 3) {
+        printf("Error: SU(3) isn't supported yet");
+        return 1;
+
+        // using DGaugeFieldType = DeviceGaugeFieldType<4, 3>;
+        // using DAdjFieldType = DeviceAdjFieldType<4, 3>;
+        // using DSpinorFieldType = DeviceSpinorFieldType<4, 3, 4>;
+        // typename DGaugeFieldType::type g_4_SU3(hmcParams.L0, hmcParams.L1,
+        //                                        hmcParams.L2, hmcParams.L3,
+        //                                        rng, hmcParams.rngDelta);
+        // typename DAdjFieldType::type a_4_SU3(hmcParams.L0, hmcParams.L1,
+        //                                      hmcParams.L2, hmcParams.L3,
+        //                                      traceT(identitySUN<3>()));
+        // typename DSpinorFieldType::type s_4_SU3(hmcParams.L0, hmcParams.L1,
+        //                                         hmcParams.L2, hmcParams.L3,
+        //                                         0);
+        // auto integrator =
+        //     createIntegrator<DGaugeFieldType, DAdjFieldType,
+        //     DSpinorFieldType>(
+        //         g_4_SU3, a_4_SU3, s_4_SU3, integratorParams,
+        //         gaugeMonomialParams, fermionParams, resParsef);
+        // using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
+        // HField hamiltonian_field = HField(g_4_SU3, a_4_SU3);
+
+        // const auto& dimensions = g_4_SU3.dimensions;
+
+        // using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
+        // HMC hmc(integratorParams, hamiltonian_field, integrator, rng, dist,
+        // mt); hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
+        // hmc.add_kinetic_monomial(0);
+        // if (resParsef > 0) {
+        //   auto diracParams =
+        //       getDiracParams<4>(g_4_SU3.dimensions, fermionParams);
+        //   hmc.add_fermion_monomial<CGSolver, HWilsonDiracOperator,
+        //                            DSpinorFieldType>(s_4_SU3, diracParams,
+        //                                              fermionParams.tol, rng,
+        //                                              0);
+        // }
+
+        // run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams
+        //         );
       }
-      // case SU(3)
-      // else if (hmcParams.Nc == 3) {
-      //   using DGaugeFieldType = DeviceGaugeFieldType<4, 3>;
-      //   using DAdjFieldType = DeviceAdjFieldType<4, 3>;
-      //   typename DGaugeFieldType::type dev_g_SU3_4D(hmcParams.L0,
-      //   hmcParams.L1,
-      //                                              hmcParams.L2,
-      //                                              hmcParams.L3, rng,
-      //                                              hmcParams.rngDelta);
-      //   typename DAdjFieldType::type dev_a_SU3_4D(hmcParams.L0, hmcParams.L1,
-      //                                            hmcParams.L2, hmcParams.L3,
-      //                                            traceT(identitySUN<3>()));
-      //   run_HMC<DGaugeFieldType, DAdjFieldType>(
-      //       typename DGaugeFieldType::type(dev_g_SU3_4D),
-      //       typename DAdjFieldType::type(dev_a_SU3_4D),
-      //       hmcParams, gaugeObsParams, simLogParams, rng );
-      // }
-      // case SU(N)
-      else {
-        printf("Error: Unsupported gauge group\n");
-        return -1;
-      }
-    }
-    // case 3D
-    else if (hmcParams.Ndims == 3) {
-      // case U(1)
+    } else if (hmcParams.Ndims == 3) {
       if (hmcParams.Nc == 1) {
+        if (resParsef > 0) {
+          printf("Error: Fermions are currently not supported in 3D\n");
+          return 1;
+        }
+
         using DGaugeFieldType = DeviceGaugeFieldType<3, 1>;
         using DAdjFieldType = DeviceAdjFieldType<3, 1>;
-        typename DGaugeFieldType::type dev_g_U1_3D(
+        using DSpinorFieldType = DeviceSpinorFieldType<3, 1, 4>;
+
+        typename DGaugeFieldType::type g_3_U1(
             hmcParams.L0, hmcParams.L1, hmcParams.L2, rng, hmcParams.rngDelta);
-        typename DAdjFieldType::type dev_a_U1_3D(
+        typename DAdjFieldType::type a_3_U1(
             hmcParams.L0, hmcParams.L1, hmcParams.L2, traceT(identitySUN<1>()));
-        run_HMC<DGaugeFieldType, DAdjFieldType>(
-            typename DGaugeFieldType::type(dev_g_U1_3D),
-            typename DAdjFieldType::type(dev_a_U1_3D), hmcParams,
-            gaugeObsParams, simLogParams, rng);
-      }
-      // case SU(2)
-      else if (hmcParams.Nc == 2) {
+        // Leave 4D Spinorfield such that the createIntegrator stil works
+        typename DSpinorFieldType::type s_3_U1(hmcParams.L0, hmcParams.L1,
+                                               hmcParams.L2, 0);
+        auto integrator =
+            createIntegrator<DGaugeFieldType, DAdjFieldType, DSpinorFieldType>(
+                g_3_U1, a_3_U1, s_3_U1, integratorParams, gaugeMonomialParams,
+                fermionParams, resParsef);
+        using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
+        HField hamiltonian_field = HField(g_3_U1, a_3_U1);
+
+        const auto &dimensions = g_3_U1.dimensions;
+
+        using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
+        HMC hmc(integratorParams, hamiltonian_field, integrator, rng, dist, mt);
+        hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
+        hmc.add_kinetic_monomial(0);
+
+        run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams);
+      } else if (hmcParams.Nc == 2) {
+        if (resParsef > 0) {
+          printf("Error: Fermions are currently not supported in 3D\n");
+          return 1;
+        }
         using DGaugeFieldType = DeviceGaugeFieldType<3, 2>;
         using DAdjFieldType = DeviceAdjFieldType<3, 2>;
-        typename DGaugeFieldType::type dev_g_SU2_3D(
+        using DSpinorFieldType = DeviceSpinorFieldType<3, 2, 4>;
+        typename DGaugeFieldType::type g_3_SU2(
             hmcParams.L0, hmcParams.L1, hmcParams.L2, rng, hmcParams.rngDelta);
-        typename DAdjFieldType::type dev_a_SU2_3D(
+        typename DAdjFieldType::type a_3_SU2(
             hmcParams.L0, hmcParams.L1, hmcParams.L2, traceT(identitySUN<2>()));
-        run_HMC<DGaugeFieldType, DAdjFieldType>(
-            typename DGaugeFieldType::type(dev_g_SU2_3D),
-            typename DAdjFieldType::type(dev_a_SU2_3D), hmcParams,
-            gaugeObsParams, simLogParams, rng);
+        typename DSpinorFieldType::type s_3_SU2(hmcParams.L0, hmcParams.L1,
+                                                hmcParams.L2, 0);
+        auto integrator =
+            createIntegrator<DGaugeFieldType, DAdjFieldType, DSpinorFieldType>(
+                g_3_SU2, a_3_SU2, s_3_SU2, integratorParams,
+                gaugeMonomialParams, fermionParams, resParsef);
+        using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
+        HField hamiltonian_field = HField(g_3_SU2, a_3_SU2);
+
+        const auto &dimensions = g_3_SU2.dimensions;
+
+        using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
+        HMC hmc(integratorParams, hamiltonian_field, integrator, rng, dist, mt);
+        hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
+        hmc.add_kinetic_monomial(0);
+
+        run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams);
+      } else if (hmcParams.Nc == 3) {
+        printf("Error: SU(3) isn't supported yet");
+        return 1;
+
+        // if (resParsef > 0) {
+        //   printf("Error: Fermions are currently not supported in 3D\n");
+        //   return 1;
+        // }
+        // using DGaugeFieldType = DeviceGaugeFieldType<3, 3>;
+        // using DAdjFieldType = DeviceAdjFieldType<3, 3>;
+        // using DSpinorFieldType = DeviceSpinorFieldType<4, 3, 4>;
+        // typename DGaugeFieldType::type g_3_SU3(
+        //     hmcParams.L0, hmcParams.L1, hmcParams.L2, rng,
+        //     hmcParams.rngDelta);
+        // typename DAdjFieldType::type a_3_SU3(
+        //     hmcParams.L0, hmcParams.L1, hmcParams.L2,
+        //     traceT(identitySUN<3>()));
+        // typename DSpinorFieldType::type s_3_SU3(hmcParams.L0, hmcParams.L1,
+        //                                         hmcParams.L2, 1, 0);
+        // auto integrator =
+        //     createIntegrator<DGaugeFieldType, DAdjFieldType,
+        //     DSpinorFieldType>(
+        //         g_3_SU3, a_3_SU3, s_3_SU3, integratorParams,
+        //         gaugeMonomialParams, fermionParams, resParsef);
+        // using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
+        // HField hamiltonian_field = HField(g_3_SU3, a_3_SU3);
+
+        // const auto& dimensions = g_3_SU3.dimensions;
+
+        // using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
+        // HMC hmc(integratorParams, hamiltonian_field, integrator, rng, dist,
+        // mt); hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
+        // hmc.add_kinetic_monomial(0);
+
+        // run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams
+        //         );
       }
-      // case SU(3)
-      // else if (hmcParams.Nc == 3) {
-      //   using DGaugeFieldType = DeviceGaugeFieldType<3, 3>;
-      //   using DAdjFieldType = DeviceAdjFieldType<3, 3>;
-      //   typename DGaugeFieldType::type dev_g_SU3_3D(hmcParams.L0,
-      //   hmcParams.L1,
-      //                                              hmcParams.L2,
-      //                                              rng, hmcParams.rngDelta);
-      //   typename DAdjFieldType::type dev_a_SU3_3D(hmcParams.L0, hmcParams.L1,
-      //                                            hmcParams.L2,
-      //                                            traceT(identitySUN<3>()));
-      //   run_HMC<DGaugeFieldType, DAdjFieldType>(
-      //       typename DGaugeFieldType::type(dev_g_SU3_3D),
-      //       typename DAdjFieldType::type(dev_a_SU3_3D),
-      //       hmcParams, gaugeObsParams, simLogParams, rng );
-      // }
-      // case SU(N)
-      else {
-        printf("Error: Unsupported gauge group\n");
-        return -1;
-      }
-    }
-    // case 2D
-    else if (hmcParams.Ndims == 2) {
-      // case U(1)
+    } else if (hmcParams.Ndims == 2) {
       if (hmcParams.Nc == 1) {
+        if (resParsef > 0) {
+          printf("Error: Fermions are currently not supported in 2D\n");
+          return 1;
+        }
+
         using DGaugeFieldType = DeviceGaugeFieldType<2, 1>;
         using DAdjFieldType = DeviceAdjFieldType<2, 1>;
-        typename DGaugeFieldType::type dev_g_U1_2D(hmcParams.L0, hmcParams.L1,
-                                                   rng, hmcParams.rngDelta);
-        typename DAdjFieldType::type dev_a_U1_2D(hmcParams.L0, hmcParams.L1,
-                                                 traceT(identitySUN<1>()));
-        run_HMC<DGaugeFieldType, DAdjFieldType>(
-            typename DGaugeFieldType::type(dev_g_U1_2D),
-            typename DAdjFieldType::type(dev_a_U1_2D), hmcParams,
-            gaugeObsParams, simLogParams, rng);
-      }
-      // case SU(2)
-      else if (hmcParams.Nc == 2) {
+        using DSpinorFieldType = DeviceSpinorFieldType<2, 1, 4>;
+
+        typename DGaugeFieldType::type g_2_U1(hmcParams.L0, hmcParams.L1, rng,
+                                              hmcParams.rngDelta);
+        typename DAdjFieldType::type a_2_U1(hmcParams.L0, hmcParams.L1,
+                                            traceT(identitySUN<1>()));
+        // Leave 4D Spinorfield such that the createIntegrator stil works
+        typename DSpinorFieldType::type s_2_U1(hmcParams.L0, hmcParams.L1, 0);
+        auto integrator =
+            createIntegrator<DGaugeFieldType, DAdjFieldType, DSpinorFieldType>(
+                g_2_U1, a_2_U1, s_2_U1, integratorParams, gaugeMonomialParams,
+                fermionParams, resParsef);
+        using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
+        HField hamiltonian_field = HField(g_2_U1, a_2_U1);
+
+        const auto &dimensions = g_2_U1.dimensions;
+
+        using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
+        HMC hmc(integratorParams, hamiltonian_field, integrator, rng, dist, mt);
+        hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
+        hmc.add_kinetic_monomial(0);
+
+        run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams);
+      } else if (hmcParams.Nc == 2) {
+        if (resParsef > 0) {
+          printf("Error: Fermions are currently not supported in 2D\n");
+          return 1;
+        }
         using DGaugeFieldType = DeviceGaugeFieldType<2, 2>;
         using DAdjFieldType = DeviceAdjFieldType<2, 2>;
-        typename DGaugeFieldType::type dev_g_SU2_2D(hmcParams.L0, hmcParams.L1,
-                                                    rng, hmcParams.rngDelta);
-        typename DAdjFieldType::type dev_a_SU2_2D(hmcParams.L0, hmcParams.L1,
-                                                  traceT(identitySUN<2>()));
-        run_HMC<DGaugeFieldType, DAdjFieldType>(
-            typename DGaugeFieldType::type(dev_g_SU2_2D),
-            typename DAdjFieldType::type(dev_a_SU2_2D), hmcParams,
-            gaugeObsParams, simLogParams, rng);
+        using DSpinorFieldType = DeviceSpinorFieldType<2, 2, 4>;
+        typename DGaugeFieldType::type g_2_SU2(hmcParams.L0, hmcParams.L1, rng,
+                                               hmcParams.rngDelta);
+        typename DAdjFieldType::type a_2_SU2(hmcParams.L0, hmcParams.L1,
+                                             traceT(identitySUN<2>()));
+        typename DSpinorFieldType::type s_2_SU2(hmcParams.L0, hmcParams.L1, 0);
+        auto integrator =
+            createIntegrator<DGaugeFieldType, DAdjFieldType, DSpinorFieldType>(
+                g_2_SU2, a_2_SU2, s_2_SU2, integratorParams,
+                gaugeMonomialParams, fermionParams, resParsef);
+        using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
+        HField hamiltonian_field = HField(g_2_SU2, a_2_SU2);
+
+        const auto &dimensions = g_2_SU2.dimensions;
+
+        using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
+        HMC hmc(integratorParams, hamiltonian_field, integrator, rng, dist, mt);
+        hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
+        hmc.add_kinetic_monomial(0);
+
+        run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams);
+      } else if (hmcParams.Nc == 3) {
+        // printf("Error: SU(3) isn't supported yet");
+        // return 1;
+
+        // if (resParsef > 0) {
+        //   printf("Error: Fermions are currently not supported in 2D\n");
+        //   return 1;
+        // }
+        // using DGaugeFieldType = DeviceGaugeFieldType<2, 3>;
+        // using DAdjFieldType = DeviceAdjFieldType<2, 3>;
+        // using DSpinorFieldType = DeviceSpinorFieldType<2, 3, 4>;
+        // typename DGaugeFieldType::type g_2_SU3(hmcParams.L0, hmcParams.L1,
+        // rng,
+        //                                        hmcParams.rngDelta);
+        // typename DAdjFieldType::type a_2_SU3(hmcParams.L0, hmcParams.L1,
+        //                                      traceT(identitySUN<3>()));
+        // typename DSpinorFieldType::type s_2_SU3(hmcParams.L0, hmcParams.L1,
+        // 1,
+        //                                         1, 0);
+        // auto integrator =
+        //     createIntegrator<DGaugeFieldType, DAdjFieldType,
+        //     DSpinorFieldType>(
+        //         g_2_SU3, a_2_SU3, s_2_SU3, integratorParams,
+        //         gaugeMonomialParams, fermionParams, resParsef);
+        // using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
+        // HField hamiltonian_field = HField(g_2_SU3, a_2_SU3);
+
+        // const auto& dimensions = g_2_SU3.dimensions;
+
+        // using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
+        // HMC hmc(integratorParams, hamiltonian_field, integrator, rng, dist,
+        // mt); hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
+        // hmc.add_kinetic_monomial(0);
+
+        // run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams
+        //         );
       }
-      // case SU(3)
-      // else if (hmcParams.Nc == 3) {
-      //   using DGaugeFieldType = DeviceGaugeFieldType<2, 3>;
-      //   using DAdjFieldType = DeviceAdjFieldType<2, 3>;
-      //   typename DGaugeFieldType::type dev_g_SU3_2D(hmcParams.L0,
-      //   hmcParams.L1,
-      //                                              rng, hmcParams.rngDelta);
-      //   typename DAdjFieldType::type dev_a_SU3_2D(hmcParams.L0, hmcParams.L1,
-      //                                            traceT(identitySUN<3>()));
-      //   run_HMC<DGaugeFieldType, DAdjFieldType>(
-      //       typename DGaugeFieldType::type(dev_g_SU3_2D),
-      //       typename DAdjFieldType::type(dev_a_SU3_2D),
-      //       hmcParams, gaugeObsParams, simLogParams, rng );
-      // }
-      // case SU(N)
-      else {
-        printf("Error: Unsupported gauge group\n");
-        return -1;
-      }
-    }
-  }
-  // if tuning is enabled, write the cache file
-  if (KLFT_TUNING) {
-    const char *cache_file = std::getenv("KLFT_CACHE_FILE");
-    if (cache_file) {
-      writeTuneCache(cache_file);
-    } else {
-      printf("KLFT_CACHE_FILE not set\n");
     }
   }
 
   return 0;
+  // return 1;
 }
-
 } // namespace klft

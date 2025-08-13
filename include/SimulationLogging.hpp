@@ -13,7 +13,6 @@ struct SimulationLoggingParams {
                 // simulation
   bool flushed; // check if the logs were flushed at least once -> used to
                 // add the header line to the file
-
   // define flags for the different types of logs
   bool log_delta_H;
   bool log_acceptance;

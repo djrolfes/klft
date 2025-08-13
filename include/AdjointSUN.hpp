@@ -2,7 +2,6 @@
 #include "GLOBAL.hpp"
 #include "SUN.hpp"
 
-#define SQRT2 1.4142135623730950488
 #define SQRT3 1.7320508075688772936
 #define SQRT3INV 0.5773502691896257645
 
@@ -12,6 +11,15 @@ namespace klft {
 // template <size_t _Nc> struct SUNAdjTraits<SUNAdj<_Nc>> {
 //   static constexpr size_t Nc = _Nc;
 // };
+
+template <size_t Nc>
+KOKKOS_FORCEINLINE_FUNCTION void
+print_SUNAdj(const SUNAdj<Nc> &a, const std::string &name = "SUNAdj:") {
+  printf("%s\n", name.c_str());
+  for (size_t i = 0; i < Nc * Nc - 1; ++i) {
+    printf("    [%zu] = (% .20f)\n", i, a[i]);
+  }
+}
 
 template <size_t Nc, typename Tin>
 KOKKOS_FORCEINLINE_FUNCTION SUNAdj<Nc> operator*(const SUNAdj<Nc> &a,
@@ -88,6 +96,12 @@ KOKKOS_FORCEINLINE_FUNCTION void operator-=(SUNAdj<Nc> &a,
     a[i] -= b[i];
   }
 }
+template <size_t Nc> KOKKOS_FORCEINLINE_FUNCTION void flip_sign(SUNAdj<Nc> &a) {
+#pragma unroll
+  for (size_t i = 0; i < NcAdj<Nc>; ++i) {
+    a[i] = -1 * a[i];
+  }
+}
 
 template <size_t Nc>
 KOKKOS_FORCEINLINE_FUNCTION real_t norm2(const SUNAdj<Nc> &a) {
@@ -151,12 +165,8 @@ SUN<1> expoSUN(const SUNAdj<1> &a) {
 }
 
 KOKKOS_FORCEINLINE_FUNCTION
-SUN<2> expoSUN(const SUNAdj<2> &b) {
-  SUNAdj<2> a = b;
+SUN<2> expoSUN(const SUNAdj<2> &a) {
   const real_t alpha = Kokkos::sqrt(a[0] * a[0] + a[1] * a[1] + a[2] * a[2]);
-  // constexpr real_t tiny = real_t(100) *
-  // std::numeric_limits<real_t>::epsilon(); if (alpha < tiny)
-  //   return identitySUN<2>();
   const Kokkos::Array<real_t, 3> u = {a[0] / alpha, a[1] / alpha, a[2] / alpha};
   const real_t sin_alpha = Kokkos::sin(alpha);
   SUN<2> c;
@@ -193,7 +203,7 @@ SUN<2> expoSUN(const SUNAdj<2> &b) {
 //   }
 //   return coeffs;
 // }();
-//
+
 // // a function to generate SU(3) matrix from adjoint
 // constexpr KOKKOS_FORCEINLINE_FUNCTION SUN<3>
 // get_SU3_from_adj(const SUNAdj<3> &a) {
@@ -209,7 +219,7 @@ SUN<2> expoSUN(const SUNAdj<2> &b) {
 //   c[2][2] = complex_t(0.0, -SQRT3INV * a[7]);
 //   return c;
 // }
-//
+
 // // we also need the determinant of the SU(3) matrix
 // // returns i det(a)
 // constexpr KOKKOS_FORCEINLINE_FUNCTION real_t imag_det_SU3(const SUNAdj<3> &a)
@@ -222,7 +232,7 @@ SUN<2> expoSUN(const SUNAdj<2> &b) {
 //        2.0 * SQRT3INV * a[7] * (a[0] * a[0] + a[1] * a[1]);
 //   return d;
 // }
-//
+
 // KOKKOS_FORCEINLINE_FUNCTION
 // SUN<3> expoSUN(const SUNAdj<3> &a) {
 //   // Cayley-Hamilton expansion
@@ -242,7 +252,7 @@ SUN<2> expoSUN(const SUNAdj<2> &b) {
 //   // store a in a temporary variable
 //   // to perform the numerical stability step
 //   // a_tmp = a
-//   SUNadj<3> a_tmp = a;
+//   SUNAdj<3> a_tmp = a;
 //   // mm stores the number of times we need to
 //   // multiply by 0.5
 //   size_t mm = 0;

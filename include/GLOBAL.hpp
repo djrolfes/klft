@@ -180,8 +180,32 @@ template <typename T> struct Wrapper {
 };
 
 template <size_t Nc>
-using SUN = Kokkos::Array<Kokkos::Array<complex_t, Nc>, Nc>;
+// using SUN = Kokkos::Array<Kokkos::Array<complex_t, Nc>, Nc>;
 
+using SUN = Wrapper<Kokkos::Array<Kokkos::Array<complex_t, Nc>, Nc>>;
+
+// define Spinor Type
+// info correct dispatch is only guaranteed for    Nd != Nc ! -> Conflicts with
+// SUN.hpp version Maybe via class to make it safe
+template <size_t Nc, size_t Nd>
+using Spinor = Kokkos::Array<Kokkos::Array<complex_t, Nd>, Nc>;
+
+// define field view types
+// by default all views are 4D
+// some dimensions are set to 1 for lower dimensions
+// I'm still not sure if this is the best way to do it
+// Nd here is templated, but for a 4D gauge field,
+// shouldn't Nd always be 4?
+// Nc is the number of colors
+template <size_t Nc, size_t RepDim>
+using SpinorField = Kokkos::View<Spinor<Nc, RepDim> ****,
+                                 Kokkos::MemoryTraits<Kokkos::Restrict>>;
+template <size_t Nc, size_t RepDim>
+using SpinorField3D = Kokkos::View<Spinor<Nc, RepDim> ***,
+                                   Kokkos::MemoryTraits<Kokkos::Restrict>>;
+template <size_t Nc, size_t RepDim>
+using SpinorField2D =
+    Kokkos::View<Spinor<Nc, RepDim> **, Kokkos::MemoryTraits<Kokkos::Restrict>>;
 // define adjoint groups of gauge fields
 template <size_t Nc>
 using sun = Kokkos::Array<real_t, std::max<size_t>(Nc *Nc - 1, 1)>;
@@ -292,6 +316,18 @@ using LinkScalarField2D =
 
 // define corresponding constant fields
 #if defined(KOKKOS_ENABLE_CUDA)
+template <size_t Nc, size_t RepDim>
+using constSpinorField =
+    Kokkos::View<const Spinor<Nc, RepDim> ****,
+                 Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
+template <size_t Nc, size_t RepDim>
+using constSpinorField3D =
+    Kokkos::View<const Spinor<Nc, RepDim> ***,
+                 Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
+template <size_t Nc, size_t RepDim>
+using constSpinorField2D =
+    Kokkos::View<const Spinor<Nc, RepDim> **,
+                 Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
 
 template <size_t Nd, size_t Nc>
 using constGaugeField =
@@ -375,6 +411,15 @@ using constLinkScalarField2D =
                  Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
 
 #else
+template <size_t Nc, size_t RepDim>
+using constSpinorField = Kokkos::View<const Spinor<Nc, RepDim> ****,
+                                      Kokkos::MemoryTraits<Kokkos::Restrict>>;
+template <size_t Nc, size_t RepDim>
+using constSpinorField3D = Kokkos::View<const Spinor<Nc, RepDim> ***,
+                                        Kokkos::MemoryTraits<Kokkos::Restrict>>;
+template <size_t Nc, size_t RepDim>
+using constSpinorField2D = Kokkos::View<const Spinor<Nc, RepDim> **,
+                                        Kokkos::MemoryTraits<Kokkos::Restrict>>;
 
 template <size_t Nd, size_t Nc>
 using constGaugeField = Kokkos::View<const SUN<Nc> ****[Nd],
@@ -451,10 +496,11 @@ using constLinkScalarField2D =
 #endif
 
 // define policy as mdrange
-template <size_t rank> using Policy = Kokkos::MDRangePolicy<Kokkos::Rank<rank>>;
+template <size_t rank, class WorkTag = void>
+using Policy = Kokkos::MDRangePolicy<WorkTag, Kokkos::Rank<rank>>;
 
 // special case for 1D
-using Policy1D = Kokkos::RangePolicy<>;
+template <class WorkTag = void> using Policy1D = Kokkos::RangePolicy<WorkTag>;
 
 // define a global zero field generator
 // for the color x color matrix

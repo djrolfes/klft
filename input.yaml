@@ -1,16 +1,3 @@
-MetropolisParams:
-  Ndims: 4
-  L0: 32
-  L1: 32
-  L2: 32
-  L3: 32
-  nHits: 10
-  nSweep: 1000
-  seed: 1234
-  Nd: 4
-  Nc: 2
-  beta: 1.0
-  delta: 0.1
 
 HMCParams:
   Ndims: 4
@@ -31,21 +18,21 @@ Integrator:
   Monomials:
     - Type: "Leapfrog"
       level: 0
-      steps: 80
-    # - Type: "Leapfrog"
-    #   level: 1
-    #   steps: 20
+      steps: 100
+    - Type: "Leapfrog"
+      level: 1
+      steps: 20
 Gauge Monomial:
   level: 0
   beta: 2.12
 
-# Fermion Monomial:
-#   level: 1
-#   fermion: "HWilson"
-#   solver: "CG"
-#   RepDim: 4
-#   kappa: 0.15
-#   tol: 1e-10
+Fermion Monomial:
+  level: 1
+  fermion: "HWilson"
+  solver: "CG"
+  RepDim: 4
+  kappa: 0.15
+  tol: 1e-10
 
 GaugeObservableParams:
   measurement_interval: 5
@@ -76,23 +63,7 @@ SimulationLoggingParams:
   log_interval: 1
   log_delta_H: true
   log_acceptance: true
-  flush: 25
+  flush: 5
   
   log_filename: "simulation_log.txt"
-  write_to_file: true
-
-PTBCParams:
-  defect_length: 2
-  defect_values: [0.0, 0.143, 0.286, 0.429, 0.571, 0.714, 0.857, 1.0]
-
-
-PTBCSimulationLoggingParams:
-  log_interval: 1
-  log_delta_H_swap: true
-  log_swap_start: true
-  log_swap_accepts: true
-  log_defects: true
-  flush: 25
-  
-  log_filename: "ptbcsimulation_log.txt"
   write_to_file: true

@@ -24,8 +24,10 @@
 // in cudaspace
 
 #pragma once
-#include "GLOBAL.hpp"
 #include <fstream>
+#include <iostream>
+
+#include "GLOBAL.hpp"
 
 // define how many times the kernel is run to tune
 #ifndef STREAM_NTIMES
@@ -64,164 +66,133 @@ inline TuningHashTable<4> tuning_hash_table_4D;
 inline TuningHashTable<3> tuning_hash_table_3D;
 inline TuningHashTable<2> tuning_hash_table_2D;
 
-template <size_t rank, class FunctorType>
+// Only for debugging purposes
+// template <typename T>
+// void WhatEver(void) {
+//   if constexpr (std::is_void_v<T> == false) {
+//     T t;
+//     std::cout << "Worktag used in tune and launch" << __PRETTY_FUNCTION__
+//               << std::endl;
+
+//     return;
+//   }
+//   std::cout << "No worktag used in tune and launch" << std::endl;
+// }
+
+template <size_t rank, class WorkTag = void, class FunctorType>
 void tune_and_launch_for(std::string functor_id, const IndexArray<rank> &start,
                          const IndexArray<rank> &end,
                          const FunctorType &functor) {
-  // ignore if rank is 1
+  // WhatEver<WorkTag>();
   if constexpr (rank == 1) {
-    const auto policy = Policy1D(start[0], end[0]);
+    // unsupported rank
+    const auto policy = Policy1D<WorkTag>(start[0], end[0]);
     Kokkos::parallel_for(policy, functor);
     return;
-  } else {
-    // launch kernel if tuning is disabled
-    if (!KLFT_TUNING) {
-      const auto policy = Policy<rank>(start, end);
+  }
+  // launch kernel if tuning is disabled
+  if (!KLFT_TUNING) {
+    const auto policy = Policy<rank, WorkTag>(start, end);
+    Kokkos::parallel_for(policy, functor);
+    return;
+  }
+  // create a unique string for the kernel
+  std::string start_uid = "";
+  std::string end_uid = "";
+  for (index_t i = 0; i < rank; i++) {
+    start_uid += std::to_string(start[i]) + "_";
+    end_uid += std::to_string(end[i]) + "_";
+  }
+  const std::string functor_uid = functor_id + "_" + typeid(WorkTag).name() +
+                                  "_rank_" + std::to_string(rank) + "_start_" +
+                                  start_uid + "end_" + end_uid;
+  if constexpr (rank == 4) {
+    if (tuning_hash_table_4D.contains(functor_uid)) {
+      auto tiling = tuning_hash_table_4D.get(functor_uid);
+      if (KLFT_VERBOSITY > 2) {
+        printf("Tuning found for kernel %s, tiling: %d %d %d %d\n",
+               functor_uid.c_str(), tiling[0], tiling[1], tiling[2], tiling[3]);
+      }
+      auto policy = Policy<rank, WorkTag>(start, end, tiling);
       Kokkos::parallel_for(policy, functor);
       return;
     }
-    // create a unique string for the kernel
-    std::string start_uid = "";
-    std::string end_uid = "";
-    for (index_t i = 0; i < rank; i++) {
-      start_uid += std::to_string(start[i]) + "_";
-      end_uid += std::to_string(end[i]) + "_";
-    }
-    const std::string functor_uid = functor_id + "_rank_" +
-                                    std::to_string(rank) + "_start_" +
-                                    start_uid + "end_" + end_uid;
-    if constexpr (rank == 4) {
-      if (tuning_hash_table_4D.contains(functor_uid)) {
-        auto tiling = tuning_hash_table_4D.get(functor_uid);
-        if (KLFT_VERBOSITY > 2) {
-          printf("Tuning found for kernel %s, tiling: %d %d %d %d\n",
-                 functor_uid.c_str(), tiling[0], tiling[1], tiling[2],
-                 tiling[3]);
-        }
-        auto policy = Policy<rank>(start, end, tiling);
-        Kokkos::parallel_for(policy, functor);
-        return;
+  } else if constexpr (rank == 3) {
+    if (tuning_hash_table_3D.contains(functor_uid)) {
+      auto tiling = tuning_hash_table_3D.get(functor_uid);
+      if (KLFT_VERBOSITY > 2) {
+        printf("Tuning found for kernel %s, tiling: %d %d %d %d\n",
+               functor_uid.c_str(), tiling[0], tiling[1], tiling[2], tiling[3]);
       }
-    } else if constexpr (rank == 3) {
-      if (tuning_hash_table_3D.contains(functor_uid)) {
-        auto tiling = tuning_hash_table_3D.get(functor_uid);
-        if (KLFT_VERBOSITY > 2) {
-          printf("Tuning found for kernel %s, tiling: %d %d %d %d\n",
-                 functor_uid.c_str(), tiling[0], tiling[1], tiling[2],
-                 tiling[3]);
-        }
-        auto policy = Policy<rank>(start, end, tiling);
-        Kokkos::parallel_for(policy, functor);
-        return;
-      }
-    } else if constexpr (rank == 2) {
-      if (tuning_hash_table_2D.contains(functor_uid)) {
-        auto tiling = tuning_hash_table_2D.get(functor_uid);
-        if (KLFT_VERBOSITY > 2) {
-          printf("Tuning found for kernel %s, tiling: %d %d %d %d\n",
-                 functor_uid.c_str(), tiling[0], tiling[1], tiling[2],
-                 tiling[3]);
-        }
-        auto policy = Policy<rank>(start, end, tiling);
-        Kokkos::parallel_for(policy, functor);
-        return;
-      }
-    } else {
-      // unsupported rank
-      printf("Error: unsupported rank %zu\n", rank);
+      auto policy = Policy<rank, WorkTag>(start, end, tiling);
+      Kokkos::parallel_for(policy, functor);
       return;
     }
-    if (KLFT_VERBOSITY > 2) {
-      printf("Start tuning for kernel %s\n", functor_uid.c_str());
+  } else if constexpr (rank == 2) {
+    if (tuning_hash_table_2D.contains(functor_uid)) {
+      auto tiling = tuning_hash_table_2D.get(functor_uid);
+      if (KLFT_VERBOSITY > 2) {
+        printf("Tuning found for kernel %s, tiling: %d %d %d %d\n",
+               functor_uid.c_str(), tiling[0], tiling[1], tiling[2], tiling[3]);
+      }
+      auto policy = Policy<rank, WorkTag>(start, end, tiling);
+      Kokkos::parallel_for(policy, functor);
+      return;
     }
-    // if not tuned, tune the functor
-    const auto policy = Policy<rank>(start, end);
-    IndexArray<rank> best_tiling;
+  } else {
+    // unsupported rank
+    printf("Error: unsupported rank %zu\n", rank);
+    return;
+  }
+  if (KLFT_VERBOSITY > 2) {
+    printf("Start tuning for kernel %s\n", functor_uid.c_str());
+  }
+  // if not tuned, tune the functor
+  const auto policy = Policy<rank, WorkTag>(start, end);
+  IndexArray<rank> best_tiling;
+  for (index_t i = 0; i < rank; i++) {
+    best_tiling[i] = 1;
+  }
+  // timer for tuning
+  Kokkos::Timer timer;
+  double best_time = std::numeric_limits<double>::max();
+  // first for hostspace
+  // there is no tuning
+  if constexpr (std::is_same_v<typename Kokkos::DefaultExecutionSpace,
+                               Kokkos::DefaultHostExecutionSpace>) {
+    // for OpenMP we parallelise over the two outermost (leftmost) dimensions
+    // and so the chunk size for the innermost dimensions corresponds to the
+    // view extents
+    best_tiling[rank - 1] = end[rank - 1] - start[rank - 1];
+    best_tiling[rank - 2] = end[rank - 2] - start[rank - 2];
+  } else {
+    // for Cuda we need to tune the tiling
+    const auto max_tile = policy.max_total_tile_size() / 2;
+    IndexArray<rank> current_tiling;
+    IndexArray<rank> tile_one;
     for (index_t i = 0; i < rank; i++) {
+      current_tiling[i] = 1;
       best_tiling[i] = 1;
+      tile_one[i] = 1;
     }
-    // timer for tuning
-    Kokkos::Timer timer;
-    double best_time = std::numeric_limits<double>::max();
-    // first for hostspace
-    // there is no tuning
-    if constexpr (std::is_same_v<typename Kokkos::DefaultExecutionSpace,
-                                 Kokkos::DefaultHostExecutionSpace>) {
-      // for OpenMP we parallelise over the two outermost (leftmost) dimensions
-      // and so the chunk size for the innermost dimensions corresponds to the
-      // view extents
-      best_tiling[rank - 1] = end[rank - 1] - start[rank - 1];
-      best_tiling[rank - 2] = end[rank - 2] - start[rank - 2];
-    } else {
-      // for Cuda we need to tune the tiling
-      const auto max_tile = policy.max_total_tile_size() / 2;
-      IndexArray<rank> current_tiling;
-      IndexArray<rank> tile_one;
-      for (index_t i = 0; i < rank; i++) {
-        current_tiling[i] = 1;
-        best_tiling[i] = 1;
-        tile_one[i] = 1;
-      }
-      std::vector<index_t> fast_ind_tiles;
-      index_t fast_ind = max_tile;
-      while (fast_ind > 2) {
-        fast_ind = fast_ind / 2;
-        fast_ind_tiles.push_back(fast_ind);
-      }
-      for (auto &tile : fast_ind_tiles) {
-        current_tiling = tile_one;
-        current_tiling[0] = tile;
-        index_t second_tile = max_tile / tile;
-        while (second_tile > 1) {
-          current_tiling[1] = second_tile;
-          if (max_tile / tile / second_tile >= 4) {
-            for (index_t i : {2, 1}) {
-              current_tiling[2] = i;
-              current_tiling[3] = i;
-              auto tune_policy = Policy<rank>(start, end, current_tiling);
-              double min_time = std::numeric_limits<double>::max();
-              for (int ii = 0; ii < STREAM_NTIMES; ii++) {
-                timer.reset();
-                Kokkos::parallel_for(tune_policy, functor);
-                Kokkos::fence();
-                min_time = std::min(min_time, timer.seconds());
-              }
-              if (min_time < best_time) {
-                best_time = min_time;
-                best_tiling = current_tiling;
-              }
-              if (KLFT_VERBOSITY > 2) {
-                printf("Current Tile size: %d %d %d %d, time: %11.4e\n",
-                       current_tiling[0], current_tiling[1], current_tiling[2],
-                       current_tiling[3], min_time);
-              }
-            }
-          } else if (max_tile / tile / second_tile == 2) {
-            for (int64_t i : {2, 1}) {
-              current_tiling[2] = i;
-              current_tiling[3] = 1;
-              auto tune_policy = Policy<rank>(start, end, current_tiling);
-              double min_time = std::numeric_limits<double>::max();
-              for (int ii = 0; ii < STREAM_NTIMES; ii++) {
-                timer.reset();
-                Kokkos::parallel_for(tune_policy, functor);
-                Kokkos::fence();
-                min_time = std::min(min_time, timer.seconds());
-              }
-              if (min_time < best_time) {
-                best_time = min_time;
-                best_tiling = current_tiling;
-              }
-              if (KLFT_VERBOSITY > 2) {
-                printf("Current Tile size: %d %d %d %d, time: %11.4e\n",
-                       current_tiling[0], current_tiling[1], current_tiling[2],
-                       current_tiling[3], min_time);
-              }
-            }
-          } else {
-            current_tiling[2] = 1;
-            current_tiling[3] = 1;
-            auto tune_policy = Policy<rank>(start, end, current_tiling);
+    std::vector<index_t> fast_ind_tiles;
+    index_t fast_ind = max_tile;
+    while (fast_ind > 2) {
+      fast_ind = fast_ind / 2;
+      fast_ind_tiles.push_back(fast_ind);
+    }
+    for (auto &tile : fast_ind_tiles) {
+      current_tiling = tile_one;
+      current_tiling[0] = tile;
+      index_t second_tile = max_tile / tile;
+      while (second_tile > 1) {
+        current_tiling[1] = second_tile;
+        if (max_tile / tile / second_tile >= 4) {
+          for (index_t i : {2, 1}) {
+            current_tiling[2] = i;
+            current_tiling[3] = i;
+            auto tune_policy =
+                Policy<rank, WorkTag>(start, end, current_tiling);
             double min_time = std::numeric_limits<double>::max();
             for (int ii = 0; ii < STREAM_NTIMES; ii++) {
               timer.reset();
@@ -239,41 +210,83 @@ void tune_and_launch_for(std::string functor_id, const IndexArray<rank> &start,
                      current_tiling[3], min_time);
             }
           }
-          second_tile = second_tile / 2;
+        } else if (max_tile / tile / second_tile == 2) {
+          for (int64_t i : {2, 1}) {
+            current_tiling[2] = i;
+            current_tiling[3] = 1;
+            auto tune_policy =
+                Policy<rank, WorkTag>(start, end, current_tiling);
+            double min_time = std::numeric_limits<double>::max();
+            for (int ii = 0; ii < STREAM_NTIMES; ii++) {
+              timer.reset();
+              Kokkos::parallel_for(tune_policy, functor);
+              Kokkos::fence();
+              min_time = std::min(min_time, timer.seconds());
+            }
+            if (min_time < best_time) {
+              best_time = min_time;
+              best_tiling = current_tiling;
+            }
+            if (KLFT_VERBOSITY > 2) {
+              printf("Current Tile size: %d %d %d %d, time: %11.4e\n",
+                     current_tiling[0], current_tiling[1], current_tiling[2],
+                     current_tiling[3], min_time);
+            }
+          }
+        } else {
+          current_tiling[2] = 1;
+          current_tiling[3] = 1;
+          auto tune_policy = Policy<rank, WorkTag>(start, end, current_tiling);
+          double min_time = std::numeric_limits<double>::max();
+          for (int ii = 0; ii < STREAM_NTIMES; ii++) {
+            timer.reset();
+            Kokkos::parallel_for(tune_policy, functor);
+            Kokkos::fence();
+            min_time = std::min(min_time, timer.seconds());
+          }
+          if (min_time < best_time) {
+            best_time = min_time;
+            best_tiling = current_tiling;
+          }
+          if (KLFT_VERBOSITY > 2) {
+            printf("Current Tile size: %d %d %d %d, time: %11.4e\n",
+                   current_tiling[0], current_tiling[1], current_tiling[2],
+                   current_tiling[3], min_time);
+          }
         }
+        second_tile = second_tile / 2;
       }
     }
-    if (KLFT_VERBOSITY > 2) {
-      printf("Best Tile size: %d %d %d %d\n", best_tiling[0], best_tiling[1],
-             best_tiling[2], best_tiling[3]);
-      printf("Best Time: %11.4e s\n", best_time);
-    }
-    // store the best tiling in the hash table
-    if constexpr (rank == 4) {
-      tuning_hash_table_4D.insert(functor_uid, best_tiling);
-    } else if constexpr (rank == 3) {
-      tuning_hash_table_3D.insert(functor_uid, best_tiling);
-    } else if constexpr (rank == 2) {
-      tuning_hash_table_2D.insert(functor_uid, best_tiling);
-    }
-    if (KLFT_VERBOSITY > 3) {
-      double time_rec = std::numeric_limits<double>::max();
-      auto tune_policy = Policy<rank>(start, end);
-      for (int ii = 0; ii < STREAM_NTIMES; ii++) {
-        timer.reset();
-        Kokkos::parallel_for(tune_policy, functor);
-        Kokkos::fence();
-        time_rec = std::min(time_rec, timer.seconds());
-      }
-      printf("Time with default tile size: %11.4e s\n", time_rec);
-      printf("Speedup: %f\n", time_rec / best_time);
-    }
-    // run the kernel with the best tiling
-    auto tune_policy = Policy<rank>(start, end, best_tiling);
-    Kokkos::parallel_for(tune_policy, functor);
-    Kokkos::fence();
-    return;
   }
+  if (KLFT_VERBOSITY > 2) {
+    printf("Best Tile size: %d %d %d %d\n", best_tiling[0], best_tiling[1],
+           best_tiling[2], best_tiling[3]);
+    printf("Best Time: %11.4e s\n", best_time);
+  }
+  // store the best tiling in the hash table
+  if constexpr (rank == 4) {
+    tuning_hash_table_4D.insert(functor_uid, best_tiling);
+  } else if constexpr (rank == 3) {
+    tuning_hash_table_3D.insert(functor_uid, best_tiling);
+  } else if constexpr (rank == 2) {
+    tuning_hash_table_2D.insert(functor_uid, best_tiling);
+  }
+  if (KLFT_VERBOSITY > 3) {
+    double time_rec = std::numeric_limits<double>::max();
+    auto tune_policy = Policy<rank, WorkTag>(start, end);
+    for (int ii = 0; ii < STREAM_NTIMES; ii++) {
+      timer.reset();
+      Kokkos::parallel_for(tune_policy, functor);
+      Kokkos::fence();
+      time_rec = std::min(time_rec, timer.seconds());
+    }
+    printf("Time with default tile size: %11.4e s\n", time_rec);
+    printf("Speedup: %f\n", time_rec / best_time);
+  }
+  // run the kernel with the best tiling
+  auto tune_policy = Policy<rank, WorkTag>(start, end, best_tiling);
+  Kokkos::parallel_for(tune_policy, functor);
+  return;
 };
 
 // write tune hash table to file

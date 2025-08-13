@@ -5,9 +5,7 @@
 #include "HMC.hpp"
 #include "HMC_Params.hpp"
 #include "HamiltonianField.hpp"
-#include "Integrator.hpp"
 #include "SimulationLogging.hpp"
-#include <memory>
 #include <mpi.h>
 #include <random>
 #include <sstream>
@@ -20,12 +18,11 @@ struct PTBCParams {
   // Define parameters for the PTBC algorithm
   index_t n_sims;
   std::vector<real_t> defects; // a vector that hold the different defect values
-  index_t defect_size;         // size of the defect on the lattice
-  HMCParams hmc_params;        // HMC parameters´
+  index_t defect_length;       // size of the defect on the lattice
+  GaugeMonomial_Params hmc_params; // HMC parameters´
   PTBCSimulationLoggingParams ptbcSimLogParams;
   GaugeObservableParams gaugeObsParams;
   SimulationLoggingParams simLogParams;
-  real_t defect_value; // value of the defect
 };
 
 template <typename DGaugeFieldType, typename DAdjFieldType, class RNG>
@@ -44,20 +41,17 @@ class PTBC { // do I need the AdjFieldType here?
   using GaugeField = typename DGaugeFieldType::type;
   using AdjointField = typename DAdjFieldType::type;
   using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
-  using Update_Q = UpdatePositionGauge<Nd, Nc, GaugeFieldKind::PTBC>;
-  using Update_P = UpdateMomentumGauge<DGaugeFieldType, DAdjFieldType>;
   using HMCType = HMC<DGaugeFieldType, DAdjFieldType, RNG>;
 
 public:
-  PTBCParams params; // parameters for the PTBC algorithm
+  PTBCParams &params; // parameters for the PTBC algorithm
   HamiltonianField<DGaugeFieldType, DAdjFieldType> &hamiltonian_field;
-  HMCType hmc;
+  HMCType &hmc;
   // std::shared_ptr<LeapFrog> integrator; // TODO: make integrator agnostic
   RNG &rng;
   std::mt19937 mt;
   std::uniform_real_distribution<real_t> dist;
 
-  const index_t initial_index;
   index_t current_index;
 
   std::vector<bool> swap_accepts; // a vector that hold the last values shown if
@@ -75,16 +69,16 @@ public:
 
   PTBC() = delete; // default constructor is not allowed
 
-  PTBC(const PTBCParams &params_, const index_t initial_index_,
+  PTBC(PTBCParams &params_,
        HamiltonianField<DGaugeFieldType, DAdjFieldType> &hamiltonian_field_,
-       std::shared_ptr<Integrator> integrator, RNG &rng_,
-       std::uniform_real_distribution<real_t> dist_, std::mt19937 mt_)
-      : initial_index(initial_index_), params(params_), rng(rng_), dist(dist_),
-        mt(mt_), hamiltonian_field(hamiltonian_field_),
-        hmc(params_.hmc_params, hamiltonian_field_, integrator, rng_, dist_,
-            mt_) {
+       HMCType &hmc_, RNG &rng_, std::uniform_real_distribution<real_t> dist_,
+       std::mt19937 mt_)
+      : params(params_), rng(rng_), dist(dist_), mt(mt_),
+        hamiltonian_field(hamiltonian_field_), hmc(hmc_) {
     device_id = Kokkos::device_id(); // default device id
-    current_index = initial_index_;
+    int rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    current_index = rank;
 
     swap_accepts.resize(params.defects.size());
     swap_deltas.resize(params.defects.size());
@@ -97,13 +91,6 @@ public:
       partner_device_id =
           (device_id + 1) % Kokkos::num_devices(); // default partner device id
     }
-
-    init_hmc();
-  }
-
-  void init_hmc() {
-    hmc.add_gauge_monomial(params.hmc_params.beta, 0);
-    hmc.add_kinetic_monomial(0);
   }
 
   real_t getDefectValue() const {
@@ -368,117 +355,11 @@ private:
 
 // below: Functions used to dispatch the PTBC algorithm
 
-template <typename DGaugeFieldType, typename DAdjFieldType, class RNG>
-int run_PTBC(PTBCParams ptbc_params, RNG &rng,
-             std::uniform_real_distribution<real_t> dist, std::mt19937 mt) {
-
-  static_assert(DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Kind ==
-                GaugeFieldKind::PTBC);
-  static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
-  static_assert(isDeviceAdjFieldType<DAdjFieldType>::value);
-  constexpr static size_t Nd =
-      DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank;
-  constexpr static size_t Nc = DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc;
-
-  static_assert((Nd == DeviceAdjFieldTypeTraits<DAdjFieldType>::Rank) &&
-                (Nc == DeviceAdjFieldTypeTraits<DAdjFieldType>::Nc));
-
-  using GaugeField = typename DGaugeFieldType::type;
-  using AdjointField = typename DAdjFieldType::type;
-  using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
-  HMCParams &hmc_params = ptbc_params.hmc_params;
-
-  defectParams<Nd> dParams;
-  dParams.defect_length = ptbc_params.defect_size;
-  dParams.defect_value = ptbc_params.defect_value;
-
-  HField hamiltonian_field = HField([&]() -> HField {
-    if constexpr (Nd == 2) {
-
-      if (hmc_params.coldStart) {
-        typename DGaugeFieldType::type gauge_field(hmc_params.L0, hmc_params.L1,
-                                                   identitySUN<Nc>(), dParams);
-        typename DAdjFieldType::type adjoint_field(hmc_params.L0, hmc_params.L1,
-                                                   traceT(identitySUN<Nc>()));
-
-        return HField(gauge_field, adjoint_field);
-      } else {
-        typename DGaugeFieldType::type gauge_field(
-            hmc_params.L0, hmc_params.L1, rng, hmc_params.rngDelta, dParams);
-        typename DAdjFieldType::type adjoint_field(hmc_params.L0, hmc_params.L1,
-                                                   traceT(identitySUN<Nc>()));
-
-        return HField(gauge_field, adjoint_field);
-      }
-
-    } else if constexpr (Nd == 3) {
-
-      if (hmc_params.coldStart) {
-        typename DGaugeFieldType::type gauge_field(hmc_params.L0, hmc_params.L1,
-                                                   hmc_params.L2,
-                                                   identitySUN<Nc>(), dParams);
-        typename DAdjFieldType::type adjoint_field(hmc_params.L0, hmc_params.L1,
-                                                   hmc_params.L2,
-                                                   traceT(identitySUN<Nc>()));
-
-        return HField(gauge_field, adjoint_field);
-      } else {
-        typename DGaugeFieldType::type gauge_field(
-            hmc_params.L0, hmc_params.L1, hmc_params.L2, rng,
-            hmc_params.rngDelta, dParams);
-        typename DAdjFieldType::type adjoint_field(hmc_params.L0, hmc_params.L1,
-                                                   hmc_params.L2,
-                                                   traceT(identitySUN<Nc>()));
-
-        return HField(gauge_field, adjoint_field);
-      }
-
-    } else if constexpr (Nd == 4) {
-
-      if (hmc_params.coldStart) {
-        typename DGaugeFieldType::type gauge_field(hmc_params.L0, hmc_params.L1,
-                                                   hmc_params.L2, hmc_params.L3,
-                                                   identitySUN<Nc>(), dParams);
-        typename DAdjFieldType::type adjoint_field(hmc_params.L0, hmc_params.L1,
-                                                   hmc_params.L2, hmc_params.L3,
-                                                   traceT(identitySUN<Nc>()));
-
-        return HField(gauge_field, adjoint_field);
-      } else {
-        typename DGaugeFieldType::type gauge_field(
-            hmc_params.L0, hmc_params.L1, hmc_params.L2, hmc_params.L3, rng,
-            hmc_params.rngDelta, dParams);
-        typename DAdjFieldType::type adjoint_field(hmc_params.L0, hmc_params.L1,
-                                                   hmc_params.L2, hmc_params.L3,
-                                                   traceT(identitySUN<Nc>()));
-
-        return HField(gauge_field, adjoint_field);
-      }
-
-    } else {
-      throw std::runtime_error("Invalid Nd");
-    }
-  }());
-
-  using Update_Q = UpdatePositionGauge<Nd, Nc, GaugeFieldKind::PTBC>;
-  using Update_P = UpdateMomentumGauge<DGaugeFieldType, DAdjFieldType>;
-
-  Update_Q update_q(hamiltonian_field.gauge_field,
-                    hamiltonian_field.adjoint_field);
-  Update_P update_p(hamiltonian_field.gauge_field,
-                    hamiltonian_field.adjoint_field, hmc_params.beta);
-  // the integrate might need to be passed into the run_HMC as an argument as
-  // it contains a large amount of design decisions
-  std::shared_ptr<LeapFrog> leap_frog =
-      std::make_shared<LeapFrog>(hmc_params.nstepsGauge, true, nullptr,
-                                 std::make_shared<Update_Q>(update_q),
-                                 std::make_shared<Update_P>(update_p));
-
-  index_t initial_index{0};
-  MPI_Comm_rank(MPI_COMM_WORLD, &initial_index);
-
-  PTBC<DGaugeFieldType, DAdjFieldType, RNG> ptbc(
-      ptbc_params, initial_index, hamiltonian_field, leap_frog, rng, dist, mt);
+template <typename PTBCType>
+int run_PTBC(PTBCType ptbc, Integrator_Params &int_params,
+             GaugeObservableParams &gaugeObsParams,
+             PTBCSimulationLoggingParams &ptbcSimLogParams,
+             SimulationLoggingParams &simLogParams) {
 
   Kokkos::Timer timer;
   real_t acc_sum{0.0};
@@ -488,7 +369,7 @@ int run_PTBC(PTBCParams ptbc_params, RNG &rng,
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &size);
 
-  for (size_t step = 0; step < hmc_params.nsteps; ++step) {
+  for (size_t step = 0; step < int_params.nsteps; ++step) {
     timer.reset();
 
     // DEBUG_MPI_PRINT("Enter ptbc(hmc) step: %zu", step);
@@ -500,51 +381,51 @@ int run_PTBC(PTBCParams ptbc_params, RNG &rng,
     int ptbc_accept = ptbc.swap();
 
     // Gauge observables
-    ptbc.measure(ptbc_params.gaugeObsParams, step);
-    ptbc.measure(ptbc_params.ptbcSimLogParams, step);
+    ptbc.measure(gaugeObsParams, step);
+    ptbc.measure(ptbcSimLogParams, step);
 
     if (rank == 0) {
-      flushAllGaugeObservables(ptbc_params.gaugeObsParams, step, true);
-      flushPTBCSimulationLogs(ptbc_params.ptbcSimLogParams, step, true);
+      flushAllGaugeObservables(gaugeObsParams, step, true);
+      flushPTBCSimulationLogs(ptbcSimLogParams, step, true);
     }
     // PTBC swap/accept
 
     const real_t time = timer.seconds();
     acc_sum += static_cast<real_t>(accept);
     acc_rate = acc_sum / static_cast<real_t>(step + 1);
-    ptbc.measure(ptbc_params.simLogParams, step, acc_rate, accept, time);
+    ptbc.measure(simLogParams, step, acc_rate, accept, time);
     if (rank == 0) {
       Kokkos::printf("Step: %zu, accepted: %d, Acceptance rate: %f, Time: %f\n",
                      step, accept, acc_rate, time);
     }
-    flushSimulationLogs(ptbc_params.simLogParams, step, true);
+    flushSimulationLogs(simLogParams, step, true);
   }
 
   MPI_Barrier(MPI_COMM_WORLD); // synchronize all ranks after the loop
   if (rank == 0) {
-    forceflushAllGaugeObservables(ptbc_params.gaugeObsParams, true);
-    forceflushPTBCSimulationLogs(ptbc_params.ptbcSimLogParams, true);
+    forceflushAllGaugeObservables(gaugeObsParams, true);
+    forceflushPTBCSimulationLogs(ptbcSimLogParams, true);
   }
-  forceflushSimulationLogs(ptbc_params.simLogParams, true);
+  forceflushSimulationLogs(simLogParams, true);
 
   return 0;
 }
 
-#define INITIALIZE_PTBCPREPARE(ND, NC, RNG)                                    \
-  template int run_PTBC<DeviceGaugeFieldType<ND, NC, GaugeFieldKind::PTBC>,    \
-                        DeviceAdjFieldType<ND, NC>, RNG>(                      \
-      PTBCParams, RNG &, std::uniform_real_distribution<real_t>,               \
-      std::mt19937);
-// INITIALIZE_PTBCPREPARE(2, 1, RNGType)
-// INITIALIZE_PTBCPREPARE(2, 2, RNGType)
-// // INITIALIZE_PTBCPREPARE(2, 3, RNGType)
-// INITIALIZE_PTBCPREPARE(3, 1, RNGType)
-// INITIALIZE_PTBCPREPARE(3, 2, RNGType)
-// INITIALIZE_PTBCPREPARE(3, 3, RNGType)
-INITIALIZE_PTBCPREPARE(4, 1, RNGType)
-INITIALIZE_PTBCPREPARE(4, 2, RNGType)
-// INITIALIZE_PTBCPREPARE(4, 3, RNGType)
-#undef INITIALIZE_PTBCPREPARE
+// #define INITIALIZE_PTBCPREPARE(ND, NC, RNG)                                    \
+//   template int run_PTBC<DeviceGaugeFieldType<ND, NC, GaugeFieldKind::PTBC>,    \
+//                         DeviceAdjFieldType<ND, NC>, RNG>(                      \
+//       PTBCParams, RNG &, std::uniform_real_distribution<real_t>,               \
+//       std::mt19937);
+// // INITIALIZE_PTBCPREPARE(2, 1, RNGType)
+// // INITIALIZE_PTBCPREPARE(2, 2, RNGType)
+// // // INITIALIZE_PTBCPREPARE(2, 3, RNGType)
+// // INITIALIZE_PTBCPREPARE(3, 1, RNGType)
+// // INITIALIZE_PTBCPREPARE(3, 2, RNGType)
+// // INITIALIZE_PTBCPREPARE(3, 3, RNGType)
+// INITIALIZE_PTBCPREPARE(4, 1, RNGType)
+// INITIALIZE_PTBCPREPARE(4, 2, RNGType)
+// // INITIALIZE_PTBCPREPARE(4, 3, RNGType)
+// #undef INITIALIZE_PTBCPREPARE
 //
 
 } // namespace klft

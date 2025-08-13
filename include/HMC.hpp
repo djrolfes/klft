@@ -1,13 +1,16 @@
 #pragma once
+#include <random>
+
+#include "AdjointFieldHelper.hpp"
+#include "FermionMonomial.hpp"
+#include "FermionParams.hpp"
 #include "GLOBAL.hpp"
 #include "GaugeMonomial.hpp"
+#include "Gauge_Util.hpp"
 #include "HMC_Params.hpp"
 #include "HamiltonianField.hpp"
 #include "Integrator.hpp"
-#include "Kokkos_Core_fwd.hpp"
 #include "Monomial.hpp"
-#include <random>
-
 namespace klft {
 
 template <typename DGaugeFieldType, typename DAdjFieldType, class RNG>
@@ -26,27 +29,25 @@ public:
   using AdjFieldType = typename DAdjFieldType::type;
 
   struct randomize_momentum_s {};
-  const HMCParams &params;
+  Integrator_Params params;
   HamiltonianField<DGaugeFieldType, DAdjFieldType> &hamiltonian_field;
   std::vector<std::unique_ptr<Monomial<DGaugeFieldType, DAdjFieldType>>>
       monomials;
   std::shared_ptr<Integrator> integrator;
-  RNG &rng;
+  RNG rng;
   std::mt19937 mt;
   std::uniform_real_distribution<real_t> dist;
   real_t delta_H;
-  GaugeFieldType gauge_old;
 
   HMC() = default;
 
-  HMC(const HMCParams &params_,
+  HMC(const Integrator_Params params_,
       HamiltonianField<DGaugeFieldType, DAdjFieldType> &hamiltonian_field_,
-      std::shared_ptr<Integrator> integrator_, RNG &rng_,
+      std::shared_ptr<Integrator> integrator_, RNG rng_,
       std::uniform_real_distribution<real_t> dist_, std::mt19937 mt_)
       : params(params_), rng(rng_), dist(dist_), mt(mt_),
         hamiltonian_field(hamiltonian_field_),
-        integrator(std::move(integrator_)),
-        gauge_old(hamiltonian_field_.gauge_field) {}
+        integrator(std::move(integrator_)) {}
 
   void add_gauge_monomial(const real_t _beta, const unsigned int _time_scale) {
     monomials.emplace_back(
@@ -59,53 +60,85 @@ public:
         std::make_unique<KineticMonomial<DGaugeFieldType, DAdjFieldType>>(
             _time_scale));
   }
+  template <template <template <typename, typename> class DiracOpT, typename,
+                      typename> class _Solver,
+            template <typename, typename> class DiracOpT,
+            typename DSpinorFieldType>
+  void add_fermion_monomial(
+      typename DSpinorFieldType::type &spinorField,
+      diracParams<DeviceFermionFieldTypeTraits<DSpinorFieldType>::Rank,
 
-  void reset_gauge_field() {
-    Kokkos::deep_copy(hamiltonian_field.gauge_field.field, gauge_old.field);
-    Kokkos::DefaultExecutionSpace{}.fence();
+                  DeviceFermionFieldTypeTraits<DSpinorFieldType>::RepDim>
+          &params_,
+      const real_t &tol_, RNG &rng, const unsigned int _time_scale) {
+    monomials.emplace_back(
+        std::make_unique<FermionMonomial<RNG, DSpinorFieldType, DGaugeFieldType,
+                                         DAdjFieldType, _Solver, DiracOpT>>(
+            spinorField, params_, tol_, rng, _time_scale));
   }
 
-  bool hmc_step(const bool &reverse = false) {
+  bool hmc_step(const bool &check_Reversibility = false) {
+    Kokkos::fence();
+    hamiltonian_field.randomize_momentum(rng);
+    // print_SUNAdj(hamiltonian_field.adjoint_field(0, 0, 0, 0, 0),
+    //              "Randomized Momentum");
 
-    if (not reverse) {
-      hamiltonian_field.template randomize_momentum<RNG>(rng);
-      Kokkos::fence();
-    }
-
-    Kokkos::deep_copy(Kokkos::DefaultExecutionSpace{}, gauge_old.field,
-                      hamiltonian_field.gauge_field.field);
-    Kokkos::DefaultExecutionSpace{}.fence();
-
+    Kokkos::fence();
+    GaugeFieldType gauge_old(hamiltonian_field.gauge_field.dimensions, 0);
+    Kokkos::deep_copy(gauge_old.field, hamiltonian_field.gauge_field.field);
+    Kokkos::fence();
     for (int i = 0; i < monomials.size(); ++i) {
       monomials[i]->heatbath(hamiltonian_field);
     }
     integrator->integrate(params.tau, false);
-
+    Kokkos::fence();
+    restoreSUN<DGaugeFieldType>(hamiltonian_field.gauge_field);
     delta_H = 0.0;
     for (int i = 0; i < monomials.size(); ++i) {
       monomials[i]->accept(hamiltonian_field);
-      real_t dH = monomials[i]->get_delta_H();
-      // printf("Monomial %d: delta_H = %f\n", i, dH);
-      delta_H += dH;
-    }
-    // printf("delta_H = %f\n", delta_H);
+      delta_H += monomials[i]->get_delta_H();
+      if (KLFT_VERBOSITY > 1) {
+        monomials[i]->print();
+      }
 
+      // Kokkos::printf("delta_H_monomial: %.20f\n",
+      // monomials[i]->get_delta_H());
+    }
+    // Kokkos::printf("delta_H_ges %.20f \n", delta_H);
     bool accept = true;
     if (delta_H > 0.0) {
-      real_t rand = dist(mt);
-      real_t threshold = Kokkos::exp(-delta_H);
-      if (rand > threshold) {
+      if (dist(mt) > Kokkos::exp(-delta_H)) {
         accept = false;
       }
     }
+    if (check_Reversibility) {
+      GaugeFieldType gauge_save(hamiltonian_field.gauge_field.dimensions, 0);
+      Kokkos::deep_copy(gauge_save.field, hamiltonian_field.gauge_field.field);
+      Kokkos::fence();
+      // for (int i = 0; i < monomials.size(); ++i) {
+      //   monomials[i]->reset();
+      //   monomials[i]->heatbath(hamiltonian_field);
+      // }
+      real_t delta_H_revers = 0;
+      flip_sign<DAdjFieldType>(hamiltonian_field.adjoint_field);
+      integrator->integrate(params.tau, false);
 
+      for (int i = 0; i < monomials.size(); ++i) {
+        monomials[i]->accept(hamiltonian_field);
+        delta_H_revers += monomials[i]->get_delta_H();
+        if (KLFT_VERBOSITY > 0) {
+          printf("ReverseCheck Monomial\n");
+          monomials[i]->print();
+        }
+      }
+      Kokkos::printf("Deltadelta_H_ges %.20f \n", delta_H_revers);
+      Kokkos::deep_copy(hamiltonian_field.gauge_field.field, gauge_save.field);
+    }
     if (!accept) {
-      reset_gauge_field();
-    } else {
+      Kokkos::deep_copy(hamiltonian_field.gauge_field.field, gauge_old.field);
     }
 
     return accept;
   }
 };
-
 } // namespace klft

@@ -152,7 +152,7 @@ inline bool parseInputFile(const std::string &filename,
     // Parse GaugeObservableParams
     if (config["PTBCParams"]) {
       const auto &pp = config["PTBCParams"];
-      ptbcParams.defect_size = pp["defect_size"].as<index_t>(1);
+      ptbcParams.defect_length = pp["defect_length"].as<index_t>(1);
       if (pp["defect_values"]) {
         auto defect_node = pp["defect_values"];
         // Set n_sims based on the number of values
@@ -194,18 +194,12 @@ inline bool parseInputFile(const std::string &filename,
       hmcParams.L1 = mp["L1"].as<index_t>(32);
       hmcParams.L2 = mp["L2"].as<index_t>(32);
       hmcParams.L3 = mp["L3"].as<index_t>(32);
-      hmcParams.tau = mp["tau"].as<real_t>(1.0);
       hmcParams.seed = mp["seed"].as<index_t>(1234);
-      hmcParams.nsteps = mp["nsteps"].as<index_t>(10);
-      hmcParams.nstepsGauge = mp["nstepsGauge"].as<index_t>(20);
       hmcParams.rngDelta = mp["rngDelta"].as<double>(1.0);
       hmcParams.coldStart = mp["coldStart"].as<bool>(false);
       // parameters specific to the GaugeField
       hmcParams.Nd = mp["Nd"].as<size_t>(4);
       hmcParams.Nc = mp["Nc"].as<size_t>(2);
-      // parameters specific to the Wilson action
-      hmcParams.beta = mp["beta"].as<double>(1.0);
-      // ...
       // add more parameters above this as needed
     } else {
       printf("Error: HMCParams not found in input file\n");
@@ -214,6 +208,57 @@ inline bool parseInputFile(const std::string &filename,
     return true;
   } catch (const YAML::Exception &e) {
     printf("(HMC Params) Error parsing input file: %s\n", e.what());
+    return false;
+  }
+}
+
+inline int parseInputFile(const std::string &filename,
+                          const std::string &output_directory,
+                          GaugeMonomial_Params &gmparams) {
+  try {
+    YAML::Node config = YAML::LoadFile(filename);
+
+    // Parse HMCParams
+    if (config["Gauge Monomial"]) {
+      const auto &mp = config["Gauge Monomial"];
+      gmparams.level = mp["level"].as<index_t>(1);
+      gmparams.beta = mp["beta"].as<real_t>(1.0);
+    } else {
+      printf(
+          "Error: You have to provide a  Gauge Monomial  in the input file\n");
+      // TODO: Change back
+      // return false;
+    }
+  } catch (const YAML::Exception &e) {
+    printf("(Gauge Monomial) Error parsing input file: %s\n", e.what());
+    return false;
+  }
+  return true;
+}
+
+inline int parseInputFile(const std::string &filename,
+                          const std::string &output_directory,
+                          FermionMonomial_Params &fermionParams) {
+  try {
+    YAML::Node config = YAML::LoadFile(filename);
+
+    // Parse FermionParams
+    if (config["Fermion Monomial"]) {
+      const auto &fp = config["Fermion Monomial"];
+      fermionParams.level = fp["level"].as<index_t>(0);
+      fermionParams.fermion_type = fp["fermion"].as<std::string>("HWilson");
+      fermionParams.Solver = fp["solver"].as<std::string>("CG");
+      fermionParams.RepDim = fp["RepDim"].as<size_t>(4);
+      fermionParams.kappa = fp["kappa"].as<real_t>(0.1);
+
+      fermionParams.tol = fp["tol"].as<real_t>(1e-8);
+    } else {
+      // No Fermions
+      return -1;
+    }
+    return true;
+  } catch (const YAML::Exception &e) {
+    printf("(Fermion Params) Error parsing input file: %s\n", e.what());
     return false;
   }
 }
@@ -251,6 +296,52 @@ inline int parseInputFile(const std::string &filename,
   }
 }
 
+inline int parseInputFile(const std::string &filename,
+                          const std::string &output_directory,
+                          Integrator_Params &intParams) {
+  try {
+    YAML::Node config = YAML::LoadFile(filename);
+
+    // Parse Integrator_Params
+    if (config["Integrator"]) {
+      const auto &ip = config["Integrator"];
+
+      intParams.tau = ip["tau"] ? ip["tau"].as<real_t>() : 0.01;
+      intParams.nsteps = ip["nSteps"] ? ip["nSteps"].as<index_t>() : 10;
+
+      if (ip["Monomials"]) {
+        const auto &monomials = ip["Monomials"];
+        if (!monomials.IsSequence()) {
+          printf("Error: 'Monomials' must be a YAML sequence\n");
+          return false;
+        }
+
+        for (const auto &mon : monomials) {
+          auto mono = mon.as<Integrator_Monomial_Params>();
+          intParams.monomials.push_back(mono);
+        }
+        // Sort monomials by level (descending)
+        std::sort(intParams.monomials.begin(), intParams.monomials.end(),
+                  [](const Integrator_Monomial_Params &a,
+                     const Integrator_Monomial_Params &b) {
+                    return a.level < b.level;
+                  });
+      } else {
+        printf("Warning: No monomials found\n");
+      }
+
+    } else {
+      printf("Error: Integrator parameters not found in input file\n");
+      return false;
+    }
+
+    return true;
+  } catch (const YAML::Exception &e) {
+    printf("YAML Error:  %s\n", e.what());
+    return false;
+  }
+}
+
 // get SimulationLoggingParams from input file
 inline int parseInputFile(const std::string &filename,
                           const std::string &output_directory,
@@ -284,4 +375,70 @@ inline int parseInputFile(const std::string &filename,
   }
 }
 
+inline int parseSanityChecks(const Integrator_Params &iparams,
+                             const GaugeMonomial_Params &gmparams,
+                             const FermionMonomial_Params &fparams,
+                             const int resParsef) {
+  // Check if the integrator has at least one monomial
+  if (iparams.monomials.empty()) {
+    printf("Error: Integrator must have at least one monomial\n");
+    return false;
+  }
+
+  // Check if the gauge monomial parameters are set
+  if (gmparams.beta <= 0) {
+    printf("Error: Gauge Monomial beta must be positive\n");
+    // TODO: Change back
+    //  return false;
+  }
+  printf("resParsef: %d\n", resParsef);
+  if (!(resParsef <= 0)) {
+    if (fparams.fermion_type.empty()) {
+      printf("Error: Fermion Monomial type must be specified\n");
+      return false;
+    }
+    if (!(fparams.fermion_type == "HWilson" ||
+          fparams.fermion_type == "Wilson")) {
+      printf("Error: Unsupported Fermion Monomial type: %s\n",
+             fparams.fermion_type.c_str());
+      return false;
+    }
+    // Check for correct solver
+    if (!(fparams.Solver == "CG" && fparams.fermion_type == "HWilson")) {
+      printf("Error: Unsupported Fermion Monomial solver: %s for Fermion Type: "
+             "%s\n",
+             fparams.Solver.c_str(), fparams.fermion_type.c_str());
+      return false;
+    }
+
+    // Check if the fermion monomial parameters are set
+    if (fparams.RepDim != 4 && fparams.RepDim != 2) {
+      printf("Error: Fermion Monomial RepDim must be 2 or 4\n");
+      return false;
+    }
+    // Check if the fermion monomial parameters are set
+    // if (fparams.kappa < 0) {
+    //   printf("Error: Fermion Monomial kappa must be positive\n");
+    //   return false;
+    // }
+  }
+  return true;
+  //
+}
+
 } // namespace klft
+
+namespace YAML {
+template <> struct convert<klft::Integrator_Monomial_Params> {
+  static int decode(const Node &node, klft::Integrator_Monomial_Params &rhs) {
+    if (!node["level"]) {
+      printf("Monomial missing required field 'level'\n");
+      return false;
+    }
+    rhs.type = node["Type"] ? node["Type"].as<std::string>() : "Leapfrog";
+    rhs.level = node["level"] ? node["level"].as<klft::index_t>() : 0;
+    rhs.steps = node["steps"] ? node["steps"].as<klft::index_t>() : 20;
+    return true;
+  }
+};
+} // namespace YAML

@@ -18,16 +18,13 @@
 //
 //******************************************************************************/
 
-// this file defines metropolis parameters for simulating different fields and
-// actions
-
+// this file defines all Paramets structs used in the HMC
 #pragma once
 #include "GLOBAL.hpp"
 
 namespace klft {
 
 struct HMCParams {
-
   // general parameters
   index_t Ndims; // number of dimensions of the simulated system
   index_t L0;    // length of the first dimension
@@ -37,19 +34,13 @@ struct HMCParams {
   // hard cutoff at 4 for now, since we have not
   // implemented any 5D cases yet
   // more dimensions can and will be added when necessary
-  real_t tau;          // integration "time" for the hmc
-  real_t rngDelta;     // integration "time" for the hmc
-  index_t seed;        // seed for the random number generator
-  index_t nsteps;      // number of hmc steps
-  index_t nstepsGauge; // number of integration steps in gaugefield integration
+  real_t rngDelta; // integration "time" for the hmc
+  index_t seed;    // seed for the random number generator
   bool coldStart;
 
   // parameters specific to the GaugeField
   size_t Nd; // number of mu degrees of freedom
   size_t Nc; // number of color degrees of freedom
-
-  // parameters specific to the Wilson action
-  real_t beta; // inverse coupling constant
 
   // add more parameters above this line as needed
   // ...
@@ -63,17 +54,12 @@ struct HMCParams {
     L1 = 4;
     L2 = 4;
     L3 = 4;
-    tau = 1.0;
     seed = 1234;
-    nsteps = 10;
-    nstepsGauge = 20;
     rngDelta = 1.0;
     coldStart = false;
 
     Nd = 4;
     Nc = 2;
-
-    beta = 1.0;
 
     // set default values to newly added parameters
     // above this line
@@ -89,17 +75,94 @@ struct HMCParams {
       printf("L1: %d\n", L1);
       printf("L2: %d\n", L2);
       printf("L3: %d\n", L3);
-      printf("tau: %.3f\n", tau);
-      printf("coldStart: %d\n", static_cast<int>(coldStart));
+
+      printf("coldStart: %d", coldStart);
       printf("rngDelta: %.3f\n", rngDelta);
       printf("seed: %d\n", seed);
-      printf("nsteps: %d\n", nsteps);
-      printf("nstepsGauge: %d\n", nstepsGauge);
+
       printf("GaugeField Parameters:\n");
       printf("Nd: %zu\n", Nd);
       printf("Nc: %zu\n", Nc);
-      printf("Wilson Action Parameters:\n");
-      printf("beta: %.4f\n", beta);
+    }
+  }
+};
+
+struct GaugeMonomial_Params {
+  real_t beta;
+  index_t level; // level of integration
+  // GaugeMonomial_Params(real_t _beta = 1.0) : beta(_beta) {}
+  GaugeMonomial_Params() = default;
+  void print() const {
+    if (KLFT_VERBOSITY > 0) {
+      printf("Gauge Monomial Parameters:\n");
+      printf("  level: %d\n", level);
+      printf("  beta: %.10f\n", beta);
+    }
+  }
+};
+
+struct FermionMonomial_Params {
+  index_t level;            // level of integration
+  std::string fermion_type; // type of fermion, e.g. Wilson, Staggered
+  std::string Solver;
+  size_t RepDim;
+  real_t kappa;
+  real_t tol;
+  // FermionMonomial_Params(const std::string& _fermion_type = "HWilson",
+  //                        const std::string& _Solver = "CG", size_t _RepDim =
+  //                        4, real_t _kappa = 0.1, real_t _tol = 1e-6)
+  //     : fermion_type(_fermion_type),
+  //       Solver(_Solver),
+  //       RepDim(_RepDim),
+  //       kappa(_kappa),
+  //       tol(_tol) {}
+  FermionMonomial_Params() = default;
+  void print() const {
+    if (KLFT_VERBOSITY > 0) {
+      printf("Fermion Parameters:\n");
+      printf("  Level: %d\n", level);
+      printf("  Fermion Type: %s\n", fermion_type.c_str());
+      printf("  Solver: %s\n", Solver.c_str());
+      printf("  RepDim: %zu\n", RepDim);
+      printf("  Kappa: %.20f\n", kappa);
+      printf("  Tolerance: %.20f\n", tol);
+    }
+  }
+};
+struct Integrator_Monomial_Params {
+  // defines Kind of monomial, i.e. gauge, fermions
+  std::string
+      type;      // defines the type of integrator to use for now only Leapfrog
+  index_t level; // level of integration
+  index_t steps; // num of steps
+  // Integrator_Monomial_Params(const std::string& _Kind,
+  //                            const std::string& _type = "Leapfrog",
+  //                            index_t _level = 0, index_t _steps = 20)
+  //     : Kind(_Kind), type(_type), level(_level), steps(_steps) {}
+  Integrator_Monomial_Params() = default;
+};
+
+struct Integrator_Params {
+  real_t tau;     // integration "time" for the hmc
+  index_t nsteps; // number of hmc steps
+  std::vector<Integrator_Monomial_Params> monomials;
+
+  // Integrator_Params(real_t _tau = 1.0, index_t _nsteps = 10,
+  //                   std::vector<Integrator_Monomial_Params> _monomials,
+  //                   Integrator_Monomial_Params _fermionMonomial)
+  //     : tau(_tau), nsteps(_nsteps), monomials(_monomials) {}
+  Integrator_Params() = default;
+  void print() const {
+    if (KLFT_VERBOSITY > 0) {
+      printf("Integrator Parameters:\n");
+      printf("  tau: %.3f\n", tau);
+      printf("  nsteps: %d\n", nsteps);
+      for (auto &monomial : monomials) {
+        printf("  Monomial:\n");
+        printf("    Type: %s\n", monomial.type.c_str());
+        printf("    Level: %d\n", monomial.level);
+        printf("    Steps: %d\n", monomial.steps);
+      }
     }
   }
 };

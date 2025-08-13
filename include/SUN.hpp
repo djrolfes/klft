@@ -23,6 +23,18 @@
 #include "GLOBAL.hpp"
 
 namespace klft {
+template <size_t Nc>
+KOKKOS_FORCEINLINE_FUNCTION void
+print_SUN(const SUN<Nc> &a, const std::string &name = "SUN Matrix") {
+  printf("%s:\n", name.c_str());
+  for (size_t i = 0; i < Nc; i++) {
+    for (size_t j = 0; j < Nc; j++) {
+      double re = a[i][j].real();
+      double im = a[i][j].imag();
+      printf("[%zu,%zu] = (% .20f, % .20f i)\n", i, j, re, im);
+    }
+  }
+}
 
 template <size_t Nc>
 KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> operator*(const SUN<Nc> &a,
@@ -121,6 +133,19 @@ KOKKOS_FORCEINLINE_FUNCTION void operator*=(SUN<Nc> &a, const Tin &b) {
     }
   }
 }
+template <size_t Nc>
+KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> operator*(const complex_t &a,
+                                              const SUN<Nc> &b) {
+  SUN<Nc> c;
+#pragma unroll
+  for (size_t i = 0; i < Nc; ++i) {
+#pragma unroll
+    for (size_t j = 0; j < Nc; ++j) {
+      c[i][j] = a * b[i][j];
+    }
+  }
+  return c;
+}
 
 template <size_t Nc>
 KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> conj(const SUN<Nc> &a) {
@@ -143,6 +168,58 @@ KOKKOS_FORCEINLINE_FUNCTION complex_t trace(const SUN<Nc> &a) {
     c += a[i][i];
   }
   return c;
+}
+KOKKOS_FORCEINLINE_FUNCTION SUN<1> traceLessAntiHermitian(const SUN<1> &a) {
+  SUN<1> res;
+  res[0][0] = complex_t(0, a[0][0].imag());
+  return res;
+}
+// KOKKOS_FORCEINLINE_FUNCTION SUN<2> traceLessAntiHermitian(const SUN<2>& M) {
+//   SUN<2> A;
+//   auto v00 = M[0][0];
+//   auto v11 = M[1][1];
+
+//   auto tri = 1 / 2 * (v00.imag() + v11.imag());
+//   auto v01 = M[0][1];
+//   auto v10 = M[1][0];
+//   auto x01 = v01 - conj(v10);
+//   auto x10 = -conj(x01);
+//   A[0][0] = (v00.imag() - tri) * complex_t(0, 1);
+//   A[0][1] = 0.5 * x01;
+//   A[1][0] = 0.5 * x10;
+//   A[1][1] = (v11.imag() - tri) * complex_t(0, 1);
+
+//   return A;
+// }
+
+template <size_t Nc>
+KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> traceLessAntiHermitian(const SUN<Nc> &a) {
+  SUN<Nc> res;
+  complex_t tra = 0.0;
+  res = (a - conj(a)) * 0.5;
+  tra = trace(res);
+  tra /= static_cast<real_t>(Nc);
+
+// #pragma unroll
+//   for (size_t i = 0; i < Nc; ++i) {
+// #pragma unroll
+//     for (size_t j = 0; j < Nc; ++j) {
+//       res[i][j] = 0.5 * (a[i][j] - conj(a[j][i]));
+//     }
+//   }
+
+// #pragma unroll
+//   for (size_t i = 0; i < Nc; ++i) {
+//     trace += res[i][i];
+//   }
+
+//   complex_t tr_avg = trace / static_cast<real_t>(Nc);
+#pragma unroll
+  for (size_t i = 0; i < Nc; ++i) {
+    res[i][i] -= tra;
+  }
+
+  return res;
 }
 
 // random SUN matrix generator
@@ -332,32 +409,6 @@ void restoreSUN(SUN<3> &a) {
   a[1][0] = Kokkos::conj((a[2][1] * a[0][2]) - (a[2][2] * a[0][1]));
   a[1][1] = Kokkos::conj((a[2][2] * a[0][0]) - (a[2][0] * a[0][2]));
   a[1][2] = Kokkos::conj((a[2][0] * a[0][1]) - (a[2][1] * a[0][0]));
-}
-
-// use the Frobenius norm to measure the defect of a unitary matrix
-
-KOKKOS_FORCEINLINE_FUNCTION real_t unitary_defect(const SUN<1> &elem) {
-  return real_t(0.0); // this is not a problem for U1
-}
-
-KOKKOS_FORCEINLINE_FUNCTION real_t unitary_defect(const SUN<2> &elem) {
-  const complex_t a = elem[0][0];
-  const complex_t b = elem[0][1];
-  const complex_t c = elem[1][0];
-  const complex_t d = elem[1][1];
-
-  const real_t ret00 =
-      Kokkos::abs(a) * Kokkos::abs(a) + Kokkos::abs(b) * Kokkos::abs(b) - 1.0;
-  const real_t ret11 =
-      Kokkos::abs(c) * Kokkos::abs(c) + Kokkos::abs(d) * Kokkos::abs(d) - 1.0;
-  const complex_t ret01 = a * Kokkos::conj(c) + b * Kokkos::conj(d);
-
-  return Kokkos::sqrt(ret00 * ret00 + ret11 * ret11 +
-                      real_t(2.0) * Kokkos::abs(ret01) * Kokkos::abs(ret01));
-}
-
-KOKKOS_FORCEINLINE_FUNCTION real_t unitary_defect(const SUN<3> &elem) {
-  return real_t(0.0); // TODO: implement for SU3
 }
 
 } // namespace klft

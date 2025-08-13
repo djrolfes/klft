@@ -23,7 +23,6 @@
 #include "FieldTypeHelper.hpp"
 #include "GLOBAL.hpp"
 #include "IndexHelper.hpp"
-#include "SUN.hpp"
 #include "Tuner.hpp"
 
 namespace klft {

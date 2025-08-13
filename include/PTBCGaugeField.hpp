@@ -113,6 +113,18 @@ template <size_t Nd, size_t Nc> struct devicePTBCGaugeField {
     do_init_defect(defectField, dParam);
   }
 
+  devicePTBCGaugeField(const IndexArray<4> &dimensions, const SUN<Nc> &init)
+      : dimensions(dimensions) {
+    do_init(field, init);
+    do_init_defect(defectField);
+  }
+
+  devicePTBCGaugeField(const IndexArray<4> &dimensions, const complex_t init)
+      : dimensions(dimensions) {
+    do_init(field, init);
+    do_init_defect(defectField);
+  }
+
   void do_init(GaugeField<Nd, Nc> &V, complex_t init) {
     Kokkos::realloc(Kokkos::WithoutInitializing, V, dimensions[0],
                     dimensions[1], dimensions[2], dimensions[3]);
@@ -429,6 +441,17 @@ template <size_t Nd, size_t Nc> struct devicePTBCGaugeField3D {
     Kokkos::fence();
     Kokkos::deep_copy(field, dGaugeField);
     Kokkos::fence();
+  }
+  devicePTBCGaugeField3D(const IndexArray<3> &dimensions, const SUN<Nc> &init)
+      : dimensions(dimensions) {
+    do_init(field, init);
+    do_init_defect(defectField);
+  }
+
+  devicePTBCGaugeField3D(const IndexArray<3> &dimensions, const complex_t init)
+      : dimensions(dimensions) {
+    do_init(field, init);
+    do_init_defect(defectField);
   }
 
   // initialize all links to a given SUN matrix
@@ -751,6 +774,18 @@ template <size_t Nd, size_t Nc> struct devicePTBCGaugeField2D {
     do_init_defect(defectField, dParam);
   }
 
+  devicePTBCGaugeField2D(const IndexArray<2> &dimensions, const SUN<Nc> &init)
+      : dimensions(dimensions) {
+    do_init(field, init);
+    do_init_defect(defectField);
+  }
+
+  devicePTBCGaugeField2D(const IndexArray<2> &dimensions, const complex_t init)
+      : dimensions(dimensions) {
+    do_init(field, init);
+    do_init_defect(defectField);
+  }
+
   // initialize all links randomized with a given delta
   template <class RNG>
   devicePTBCGaugeField2D(const index_t L0, const index_t L1, RNG &rng,
@@ -890,10 +925,9 @@ template <size_t Nd, size_t Nc> struct devicePTBCGaugeField2D {
     auto dimensions_local = this->dimensions;
     auto defect_position_local = this->dParams.defect_position;
     auto defectField_local = this->defectField;
-    tune_and_launch_for<Nd - 1>(
-        "set_defect", IndexArray<Nd - 1>{0},
-        IndexArray<Nd - 1>{this->dParams.defect_length},
-        KOKKOS_LAMBDA(const indexType i1) {
+    auto policy = Policy1D<>(0, this->dParams.defect_length);
+    Kokkos::parallel_for(
+        "set_defect", policy, KOKKOS_LAMBDA(const indexType i1) {
           const indexType i1_shift =
               (i1 + defect_position_local[0]) % dimensions_local[1];
           defectField_local(0, i1_shift, 0) = cr;

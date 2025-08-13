@@ -1,3 +1,4 @@
+
 #include <getopt.h>
 
 #include <filesystem>
@@ -81,7 +82,7 @@ int main(int argc, char *argv[]) {
   std::string output_directory;
   rc = parse_args(argc, argv, input_file, output_directory);
   if (rc == 0) {
-    rc = HMC_execute(input_file, output_directory);
+    rc = build_and_run_HMC(input_file, output_directory);
   } else if (rc == -2) {
     // Don't return error code when called with "-h"
     rc = 0;

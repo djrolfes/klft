@@ -1,5 +1,4 @@
 #pragma once
-#include "FieldTypeHelper.hpp"
 #include "GLOBAL.hpp"
 #include "GaugePlaquette.hpp"
 #include "HamiltonianField.hpp"
@@ -17,6 +16,8 @@ class GaugeMonomial : public Monomial<DGaugeFieldType, DAdjFieldType> {
   constexpr static size_t Nc = DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc;
   static_assert((rank == DeviceAdjFieldTypeTraits<DAdjFieldType>::Rank) &&
                 (Nc == DeviceAdjFieldTypeTraits<DAdjFieldType>::Nc));
+  constexpr static GaugeFieldKind k =
+      DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Kind;
 
   using GaugeFieldType = typename DGaugeFieldType::type;
 
@@ -33,17 +34,16 @@ public:
   void heatbath(HamiltonianField<DGaugeFieldType, DAdjFieldType> h) override {
     Monomial<DGaugeFieldType, DAdjFieldType>::H_old =
         -(beta / static_cast<real_t>(Nc)) *
-        GaugePlaquette<rank, Nc,
-                       DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Kind>(
-            h.gauge_field, false);
+        GaugePlaquette<rank, Nc, k>(h.gauge_field, false);
   }
 
   void accept(HamiltonianField<DGaugeFieldType, DAdjFieldType> h) override {
     Monomial<DGaugeFieldType, DAdjFieldType>::H_new =
         -(beta / static_cast<real_t>(Nc)) *
-        GaugePlaquette<rank, Nc,
-                       DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Kind>(
-            h.gauge_field, false);
+        GaugePlaquette<rank, Nc, k>(h.gauge_field, false);
+  }
+  void print() override {
+    printf("Gauge Monomial:   %.20f\n", this->get_delta_H());
   }
 };
 
