@@ -195,6 +195,7 @@ void measureGaugeObservablesPTBC(
                MPI_GAUGE_OBSERVABLES_WILSON_LOOP_MU_NU_SIZE, MPI_COMM_WORLD,
                MPI_STATUS_IGNORE);
       if (WilsonLoop_meas_size > 0) {
+        WilsonLoop_meas.resize(WilsonLoop_meas_size);
         MPI_Recv(WilsonLoop_meas.data(),
                  WilsonLoop_meas_size * sizeof(Kokkos::Array<real_t, 5>),
                  MPI_BYTE, compute_rank,
@@ -215,12 +216,12 @@ void measureGaugeObservablesPTBC(
                MPI_GAUGE_OBSERVABLES_WILSON_LOOP_TEMPORAL_SIZE, MPI_COMM_WORLD,
                MPI_STATUS_IGNORE);
       if (WilsonTemp_measurements_size > 0) {
-        MPI_Recv(WilsonTemp_measurements.data(),
-                 WilsonTemp_measurements_size *
-                     sizeof(Kokkos::Array<real_t, 3>),
-                 MPI_BYTE, compute_rank,
-                 MPI_GAUGE_OBSERVABLES_WILSON_LOOP_TEMPORAL_SIZE,
-                 MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        WilsonTemp_measurements.resize(WilsonTemp_measurements_size);
+        MPI_Recv(
+            WilsonTemp_measurements.data(),
+            WilsonTemp_measurements_size * sizeof(Kokkos::Array<real_t, 3>),
+            MPI_BYTE, compute_rank, MPI_GAUGE_OBSERVABLES_WILSON_LOOP_TEMPORAL,
+            MPI_COMM_WORLD, MPI_STATUS_IGNORE);
       }
 
       if (KLFT_VERBOSITY > 1) {
