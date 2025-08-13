@@ -520,9 +520,10 @@ int run_PTBC(PTBCParams ptbc_params, RNG &rng,
     flushSimulationLogs(ptbc_params.simLogParams, step, true);
   }
 
+  MPI_Barrier(MPI_COMM_WORLD); // synchronize all ranks after the loop
   if (rank == 0) {
     forceflushAllGaugeObservables(ptbc_params.gaugeObsParams, true);
-    flushPTBCSimulationLogs(ptbc_params.ptbcSimLogParams, true);
+    forceflushPTBCSimulationLogs(ptbc_params.ptbcSimLogParams, true);
   }
   forceflushSimulationLogs(ptbc_params.simLogParams, true);
 
