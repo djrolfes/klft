@@ -1,3 +1,21 @@
+//******************************************************************************/
+//
+// This file is part of the Kokkos Lattice Field Theory (KLFT) library.
+//
+// KLFT is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// KLFT is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with KLFT.  If not, see <http://www.gnu.org/licenses/>.
+//
+//******************************************************************************/
 #pragma once
 #include <yaml-cpp/yaml.h>
 
@@ -11,6 +29,7 @@ namespace klft {
 
 // get MetropolisParams from input file
 inline int parseInputFile(const std::string& filename,
+                          const std::string& output_directory,
                           MetropolisParams& metropolisParams) {
   try {
     YAML::Node config = YAML::LoadFile(filename);
@@ -48,6 +67,7 @@ inline int parseInputFile(const std::string& filename,
 
 // get GaugeObservableParams from input file
 inline int parseInputFile(const std::string& filename,
+                          const std::string& output_directory,
                           GaugeObservableParams& gaugeObservableParams) {
   try {
     YAML::Node config = YAML::LoadFile(filename);
@@ -94,11 +114,11 @@ inline int parseInputFile(const std::string& filename,
 
       // filenames for the measurements
       gaugeObservableParams.plaquette_filename =
-          gp["plaquette_filename"].as<std::string>("");
+          output_directory + gp["plaquette_filename"].as<std::string>("");
       gaugeObservableParams.W_temp_filename =
-          gp["W_temp_filename"].as<std::string>("");
+          output_directory + gp["W_temp_filename"].as<std::string>("");
       gaugeObservableParams.W_mu_nu_filename =
-          gp["W_mu_nu_filename"].as<std::string>("");
+          output_directory + gp["W_mu_nu_filename"].as<std::string>("");
 
       // whether to write to file
       gaugeObservableParams.write_to_file = gp["write_to_file"].as<bool>(false);
@@ -118,7 +138,9 @@ inline int parseInputFile(const std::string& filename,
   }
 }
 
-inline bool parseInputFile(const std::string& filename, HMCParams& hmcParams) {
+inline bool parseInputFile(const std::string& filename,
+                           const std::string& output_directory,
+                           HMCParams& hmcParams) {
   try {
     YAML::Node config = YAML::LoadFile(filename);
 
@@ -150,6 +172,7 @@ inline bool parseInputFile(const std::string& filename, HMCParams& hmcParams) {
 }
 
 inline int parseInputFile(const std::string& filename,
+                          const std::string& output_directory,
                           GaugeMonomial_Params& gmparams) {
   try {
     YAML::Node config = YAML::LoadFile(filename);
@@ -173,6 +196,7 @@ inline int parseInputFile(const std::string& filename,
 }
 
 inline int parseInputFile(const std::string& filename,
+                          const std::string& output_directory,
                           FermionMonomial_Params& fermionParams) {
   try {
     YAML::Node config = YAML::LoadFile(filename);
@@ -199,6 +223,7 @@ inline int parseInputFile(const std::string& filename,
 }
 
 inline int parseInputFile(const std::string& filename,
+                          const std::string& output_directory,
                           Integrator_Params& intParams) {
   try {
     YAML::Node config = YAML::LoadFile(filename);
@@ -245,6 +270,7 @@ inline int parseInputFile(const std::string& filename,
 
 // get SimulationLoggingParams from input file
 inline int parseInputFile(const std::string& filename,
+                          const std::string& output_directory,
                           SimulationLoggingParams& simParams) {
   try {
     YAML::Node config = YAML::LoadFile(filename);
@@ -254,7 +280,8 @@ inline int parseInputFile(const std::string& filename,
       const auto& mp = config["SimulationLoggingParams"];
       // general parameters
       simParams.log_interval = mp["log_interval"].as<size_t>(0);
-      simParams.log_filename = mp["log_filename"].as<std::string>("");
+      simParams.log_filename =
+          output_directory + mp["log_filename"].as<std::string>("");
       simParams.write_to_file = mp["write_to_file"].as<bool>(false);
       simParams.flush = mp["flush"].as<size_t>(25);
 
@@ -285,8 +312,8 @@ inline int parseSanityChecks(const Integrator_Params& iparams,
   // Check if the gauge monomial parameters are set
   if (gmparams.beta <= 0) {
     printf("Error: Gauge Monomial beta must be positive\n");
-    // TODO: Change back
-    //  return false;
+
+    return false;
   }
   printf("resParsef: %d\n", resParsef);
   if (!(resParsef <= 0)) {
@@ -301,7 +328,8 @@ inline int parseSanityChecks(const Integrator_Params& iparams,
       return false;
     }
     // Check for correct solver
-    if (!(fparams.Solver == "CG" && fparams.fermion_type == "HWilson")) {
+    if (!(fparams.Solver == "CG" && (fparams.fermion_type == "HWilson" ||
+                                     fparams.fermion_type == "Wilson"))) {
       printf(
           "Error: Unsupported Fermion Monomial solver: %s for Fermion Type: "
           "%s\n",
@@ -315,10 +343,10 @@ inline int parseSanityChecks(const Integrator_Params& iparams,
       return false;
     }
     // Check if the fermion monomial parameters are set
-    // if (fparams.kappa < 0) {
-    //   printf("Error: Fermion Monomial kappa must be positive\n");
-    //   return false;
-    // }
+    if (fparams.kappa < 0) {
+      printf("Error: Fermion Monomial kappa must be positive\n");
+      return false;
+    }
   }
   return true;
   //

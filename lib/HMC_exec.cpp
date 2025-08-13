@@ -1,3 +1,21 @@
+//******************************************************************************/
+//
+// This file is part of the Kokkos Lattice Field Theory (KLFT) library.
+//
+// KLFT is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// KLFT is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with KLFT.  If not, see <http://www.gnu.org/licenses/>.
+//
+//******************************************************************************/
 #include "HMC_exec.hpp"
 
 #include "../include/HMC.hpp"
@@ -18,14 +36,17 @@ using RNGType = Kokkos::Random_XorShift64_Pool<Kokkos::DefaultExecutionSpace>;
 namespace klft {
 
 // Still need to add check for different Dirac Operators
-template <typename DGaugeFieldType, typename DAdjFieldType,
+template <typename DGaugeFieldType,
+          typename DAdjFieldType,
           typename DSpinorFieldType>
 std::shared_ptr<Integrator> createIntegrator(
-    typename DGaugeFieldType::type& g_in, typename DAdjFieldType::type& a_in,
+    typename DGaugeFieldType::type& g_in,
+    typename DAdjFieldType::type& a_in,
     typename DSpinorFieldType::type& s_in,
     const Integrator_Params& integratorParams,
     const GaugeMonomial_Params& gaugeMonomialParams,
-    const FermionMonomial_Params& fermionParams, const int& resParsef) {
+    const FermionMonomial_Params& fermionParams,
+    const int& resParsef) {
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
   static_assert(isDeviceAdjFieldType<DAdjFieldType>::value);
   constexpr static size_t rank =
@@ -77,10 +98,9 @@ std::shared_ptr<Integrator> createIntegrator(
           auto diracParams =
               getDiracParams<rank>(g_in.dimensions, fermionParams);
           UpdatePositionGauge<Nd, Nc> update_q(g_in, a_in);
-          UpdateMomentumFermion<DSpinorFieldType, DGaugeFieldType,
-                                DAdjFieldType,
+          UpdateMomentumWilson<DSpinorFieldType, DGaugeFieldType, DAdjFieldType,
 
-                                CGSolver, HWilsonDiracOperator>
+                               CGSolver, WilsonDiracOperator>
               update_p(s_in, g_in, a_in, diracParams, fermionParams.tol);
 
           if (monomial.type == "Leapfrog") {
@@ -89,10 +109,10 @@ std::shared_ptr<Integrator> createIntegrator(
                 monomial.level == integratorParams.monomials.back().level,
                 nullptr,
                 std::make_shared<UpdatePositionGauge<Nd, Nc>>(update_q),
-                std::make_shared<UpdateMomentumFermion<
+                std::make_shared<UpdateMomentumWilson<
                     DSpinorFieldType, DGaugeFieldType, DAdjFieldType,
 
-                    CGSolver, HWilsonDiracOperator>>(update_p));
+                    CGSolver, WilsonDiracOperator>>(update_p));
 
           } else {
             printf(
@@ -103,9 +123,9 @@ std::shared_ptr<Integrator> createIntegrator(
                 monomial.level == integratorParams.monomials.back().level,
                 nullptr,
                 std::make_shared<UpdatePositionGauge<Nd, Nc>>(update_q),
-                std::make_shared<UpdateMomentumFermion<
+                std::make_shared<UpdateMomentumWilson<
                     DSpinorFieldType, DGaugeFieldType, DAdjFieldType, CGSolver,
-                    HWilsonDiracOperator>>(update_p));
+                    WilsonDiracOperator>>(update_p));
           }
         } else {
           printf("Error: Fermion RepDim must be 4\n");
@@ -145,8 +165,8 @@ std::shared_ptr<Integrator> createIntegrator(
         auto diracParams = getDiracParams<rank>(g_in.dimensions, fermionParams);
 
         UpdatePositionGauge<Nd, Nc> update_q(g_in, a_in);
-        UpdateMomentumFermion<DSpinorFieldType, DGaugeFieldType, DAdjFieldType,
-                              CGSolver, HWilsonDiracOperator>
+        UpdateMomentumWilson<DSpinorFieldType, DGaugeFieldType, DAdjFieldType,
+                             CGSolver, WilsonDiracOperator>
             update_p(s_in, g_in, a_in, diracParams, fermionParams.tol);
 
         if (monomial.type == "Leapfrog") {
@@ -155,18 +175,18 @@ std::shared_ptr<Integrator> createIntegrator(
               monomial.level == integratorParams.monomials.back().level,
               nested_integrator,
               std::make_shared<UpdatePositionGauge<Nd, Nc>>(update_q),
-              std::make_shared<UpdateMomentumFermion<
+              std::make_shared<UpdateMomentumWilson<
                   DSpinorFieldType, DGaugeFieldType, DAdjFieldType, CGSolver,
-                  HWilsonDiracOperator>>(update_p));
+                  WilsonDiracOperator>>(update_p));
         } else {
           integrator = std::make_shared<LeapFrog>(
               monomial.steps,
               monomial.level == integratorParams.monomials.back().level,
               nested_integrator,
               std::make_shared<UpdatePositionGauge<Nd, Nc>>(update_q),
-              std::make_shared<UpdateMomentumFermion<
+              std::make_shared<UpdateMomentumWilson<
                   DSpinorFieldType, DGaugeFieldType, DAdjFieldType, CGSolver,
-                  HWilsonDiracOperator>>(update_p));
+                  WilsonDiracOperator>>(update_p));
         }
       } else {
         printf("Error: Fermion RepDim must be 4\n");
@@ -204,22 +224,22 @@ int build_and_run_HMC(const std::string& input_file,
   }
   HMCParams hmcParams;
   // parse the input file for HMC parameters
-  if (!parseInputFile(input_file, hmcParams)) {
+  if (!parseInputFile(input_file, output_directory, hmcParams)) {
     printf("Error parsing input file\n");
     return -1;
   }
   Integrator_Params integratorParams;
   GaugeObservableParams gaugeObsParams;
-  if (!parseInputFile(input_file, gaugeObsParams)) {
+  if (!parseInputFile(input_file, output_directory, gaugeObsParams)) {
     printf("Error parsing input file\n");
     return -1;
   }
-  if (!parseInputFile(input_file, integratorParams)) {
+  if (!parseInputFile(input_file, output_directory, integratorParams)) {
     printf("Error parsing input file\n");
     return -1;
   }
   FermionMonomial_Params fermionParams;
-  auto resParsef = parseInputFile(input_file, fermionParams);
+  auto resParsef = parseInputFile(input_file, output_directory, fermionParams);
   if (resParsef == 0) {
     printf("Error parsing input file\n");
     return -1;
@@ -227,12 +247,12 @@ int build_and_run_HMC(const std::string& input_file,
     printf("Info: No Fermion Monomial detected, skipping\n");
   }
   GaugeMonomial_Params gaugeMonomialParams;
-  if (!parseInputFile(input_file, gaugeMonomialParams)) {
+  if (!parseInputFile(input_file, output_directory, gaugeMonomialParams)) {
     printf("Error parsing input file\n");
     return -1;
   }
   SimulationLoggingParams simLogParams;
-  if (!parseInputFile(input_file, simLogParams)) {
+  if (!parseInputFile(input_file, output_directory, simLogParams)) {
     printf("Error parsing input file\n");
     return -1;
   }
@@ -242,11 +262,6 @@ int build_and_run_HMC(const std::string& input_file,
     return -1;
   }
 
-  //   FermionParams fparams;
-  //   if (!parseInputFile(input_file, fparams)) {
-  //     printf("Error parsing input file\n");
-  //     return -1;
-  //   }
   // print the parameters
   hmcParams.print();
   integratorParams.print();
@@ -291,13 +306,12 @@ int build_and_run_HMC(const std::string& input_file,
         if (resParsef > 0) {
           auto diracParams =
               getDiracParams<4>(g_4_U1.dimensions, fermionParams);
-          hmc.add_fermion_monomial<CGSolver, HWilsonDiracOperator,
+          hmc.add_fermion_monomial<CGSolver, WilsonDiracOperator,
                                    DSpinorFieldType>(s_4_U1, diracParams,
                                                      fermionParams.tol, rng, 0);
         }
 
-        run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams,
-                output_directory);
+        run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams);
       } else if (hmcParams.Nc == 2) {
         using DGaugeFieldType = DeviceGaugeFieldType<4, 2>;
         using DAdjFieldType = DeviceAdjFieldType<4, 2>;
@@ -326,13 +340,12 @@ int build_and_run_HMC(const std::string& input_file,
         if (resParsef > 0) {
           auto diracParams =
               getDiracParams<4>(g_4_SU2.dimensions, fermionParams);
-          hmc.add_fermion_monomial<CGSolver, HWilsonDiracOperator,
+          hmc.add_fermion_monomial<CGSolver, WilsonDiracOperator,
                                    DSpinorFieldType>(s_4_SU2, diracParams,
                                                      fermionParams.tol, rng, 0);
         }
 
-        run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams,
-                output_directory);
+        run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams);
       } else if (hmcParams.Nc == 3) {
         printf("Error: SU(3) isn't supported yet");
         // return 1;
@@ -366,14 +379,13 @@ int build_and_run_HMC(const std::string& input_file,
         // if (resParsef > 0) {
         //   auto diracParams =
         //       getDiracParams<4>(g_4_SU3.dimensions, fermionParams);
-        //   hmc.add_fermion_monomial<CGSolver, HWilsonDiracOperator,
+        //   hmc.add_fermion_monomial<CGSolver, WilsonDiracOperator,
         //                            DSpinorFieldType>(s_4_SU3, diracParams,
         //                                              fermionParams.tol, rng,
         //                                              0);
         // }
 
-        // run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams,
-        //         output_directory);
+        // run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams);
       }
     } else if (hmcParams.Ndims == 3) {
       if (hmcParams.Nc == 1) {
@@ -407,8 +419,7 @@ int build_and_run_HMC(const std::string& input_file,
         hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
         hmc.add_kinetic_monomial(0);
 
-        run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams,
-                output_directory);
+        run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams);
       } else if (hmcParams.Nc == 2) {
         if (resParsef > 0) {
           printf("Error: Fermions are currently not supported in 3D\n");
@@ -437,8 +448,7 @@ int build_and_run_HMC(const std::string& input_file,
         hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
         hmc.add_kinetic_monomial(0);
 
-        run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams,
-                output_directory);
+        run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams);
       } else if (hmcParams.Nc == 3) {
         printf("Error: SU(3) isn't supported yet");
         return 1;
@@ -473,8 +483,7 @@ int build_and_run_HMC(const std::string& input_file,
         // mt); hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
         // hmc.add_kinetic_monomial(0);
 
-        // run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams,
-        //         output_directory);
+        // run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams);
       }
     } else if (hmcParams.Ndims == 2) {
       if (hmcParams.Nc == 1) {
@@ -507,8 +516,7 @@ int build_and_run_HMC(const std::string& input_file,
         hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
         hmc.add_kinetic_monomial(0);
 
-        run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams,
-                output_directory);
+        run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams);
       } else if (hmcParams.Nc == 2) {
         if (resParsef > 0) {
           printf("Error: Fermions are currently not supported in 3D\n");
@@ -536,8 +544,7 @@ int build_and_run_HMC(const std::string& input_file,
         hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
         hmc.add_kinetic_monomial(0);
 
-        run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams,
-                output_directory);
+        run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams);
       } else if (hmcParams.Nc == 3) {
         printf("Error: SU(3) isn't supported yet");
         return 1;
@@ -571,8 +578,7 @@ int build_and_run_HMC(const std::string& input_file,
         // mt); hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
         // hmc.add_kinetic_monomial(0);
 
-        // run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams,
-        //         output_directory);
+        // run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams);
       }
     }
   } else {  // Hotstart
@@ -605,13 +611,12 @@ int build_and_run_HMC(const std::string& input_file,
         if (resParsef > 0) {
           auto diracParams =
               getDiracParams<4>(g_4_U1.dimensions, fermionParams);
-          hmc.add_fermion_monomial<CGSolver, HWilsonDiracOperator,
+          hmc.add_fermion_monomial<CGSolver, WilsonDiracOperator,
                                    DSpinorFieldType>(s_4_U1, diracParams,
                                                      fermionParams.tol, rng, 0);
         }
 
-        run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams,
-                output_directory);
+        run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams);
       } else if (hmcParams.Nc == 2) {
         using DGaugeFieldType = DeviceGaugeFieldType<4, 2>;
         using DAdjFieldType = DeviceAdjFieldType<4, 2>;
@@ -640,13 +645,12 @@ int build_and_run_HMC(const std::string& input_file,
         if (resParsef > 0) {
           auto diracParams =
               getDiracParams<4>(g_4_SU2.dimensions, fermionParams);
-          hmc.add_fermion_monomial<CGSolver, HWilsonDiracOperator,
+          hmc.add_fermion_monomial<CGSolver, WilsonDiracOperator,
                                    DSpinorFieldType>(s_4_SU2, diracParams,
                                                      fermionParams.tol, rng, 0);
         }
 
-        run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams,
-                output_directory);
+        run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams);
       } else if (hmcParams.Nc == 3) {
         printf("Error: SU(3) isn't supported yet");
         return 1;
@@ -680,14 +684,13 @@ int build_and_run_HMC(const std::string& input_file,
         // if (resParsef > 0) {
         //   auto diracParams =
         //       getDiracParams<4>(g_4_SU3.dimensions, fermionParams);
-        //   hmc.add_fermion_monomial<CGSolver, HWilsonDiracOperator,
+        //   hmc.add_fermion_monomial<CGSolver, WilsonDiracOperator,
         //                            DSpinorFieldType>(s_4_SU3, diracParams,
         //                                              fermionParams.tol, rng,
         //                                              0);
         // }
 
-        // run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams,
-        //         output_directory);
+        // run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams);
       }
     } else if (hmcParams.Ndims == 3) {
       if (hmcParams.Nc == 1) {
@@ -721,8 +724,7 @@ int build_and_run_HMC(const std::string& input_file,
         hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
         hmc.add_kinetic_monomial(0);
 
-        run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams,
-                output_directory);
+        run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams);
       } else if (hmcParams.Nc == 2) {
         if (resParsef > 0) {
           printf("Error: Fermions are currently not supported in 3D\n");
@@ -751,8 +753,7 @@ int build_and_run_HMC(const std::string& input_file,
         hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
         hmc.add_kinetic_monomial(0);
 
-        run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams,
-                output_directory);
+        run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams);
       } else if (hmcParams.Nc == 3) {
         printf("Error: SU(3) isn't supported yet");
         return 1;
@@ -787,8 +788,7 @@ int build_and_run_HMC(const std::string& input_file,
         // mt); hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
         // hmc.add_kinetic_monomial(0);
 
-        // run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams,
-        //         output_directory);
+        // run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams);
       }
     } else if (hmcParams.Ndims == 2) {
       if (hmcParams.Nc == 1) {
@@ -821,8 +821,7 @@ int build_and_run_HMC(const std::string& input_file,
         hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
         hmc.add_kinetic_monomial(0);
 
-        run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams,
-                output_directory);
+        run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams);
       } else if (hmcParams.Nc == 2) {
         if (resParsef > 0) {
           printf("Error: Fermions are currently not supported in 2D\n");
@@ -850,8 +849,7 @@ int build_and_run_HMC(const std::string& input_file,
         hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
         hmc.add_kinetic_monomial(0);
 
-        run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams,
-                output_directory);
+        run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams);
       } else if (hmcParams.Nc == 3) {
         // printf("Error: SU(3) isn't supported yet");
         // return 1;
@@ -886,8 +884,7 @@ int build_and_run_HMC(const std::string& input_file,
         // mt); hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
         // hmc.add_kinetic_monomial(0);
 
-        // run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams,
-        //         output_directory);
+        // run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams);
       }
     }
   }

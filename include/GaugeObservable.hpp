@@ -217,7 +217,6 @@ inline void flushWilsonLoopMuNu(std::ofstream& file,
 
 // define a global function to flush all measurements
 inline void flushAllGaugeObservables(const GaugeObservableParams& params,
-                                     const std::string& output_directory,
                                      const bool HEADER = true,
                                      const int& p = std::cout.precision()) {
   std::setprecision(p);
@@ -228,22 +227,19 @@ inline void flushAllGaugeObservables(const GaugeObservableParams& params,
   }
   // flush plaquette measurements
   if (params.measure_plaquette && params.plaquette_filename != "") {
-    std::ofstream file(output_directory + params.plaquette_filename,
-                       std::ios::app);
+    std::ofstream file(params.plaquette_filename, std::ios::app);
     flushPlaquette(file, params, HEADER);
     file.close();
   }
   // flush temporal Wilson loop measurements
   if (params.measure_wilson_loop_temporal && params.W_temp_filename != "") {
-    std::ofstream file(output_directory + params.W_temp_filename,
-                       std::ios::app);
+    std::ofstream file(params.W_temp_filename, std::ios::app);
     flushWilsonLoopTemporal(file, params, HEADER);
     file.close();
   }
   // flush mu-nu Wilson loop measurements
   if (params.measure_wilson_loop_mu_nu && params.W_mu_nu_filename != "") {
-    std::ofstream file(output_directory + params.W_mu_nu_filename,
-                       std::ios::app);
+    std::ofstream file(params.W_mu_nu_filename, std::ios::app);
     flushWilsonLoopMuNu(file, params, HEADER);
     file.close();
   }

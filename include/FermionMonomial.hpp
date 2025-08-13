@@ -1,6 +1,23 @@
-
+//******************************************************************************/
+//
+// This file is part of the Kokkos Lattice Field Theory (KLFT) library.
+//
+// KLFT is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// KLFT is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with KLFT.  If not, see <http://www.gnu.org/licenses/>.
+//
+//******************************************************************************/
 #pragma once
-#include "GDiracOperator.hpp"
+#include "DiracOperator.hpp"
 #include "GLOBAL.hpp"
 #include "Monomial.hpp"
 #include "Solver.hpp"
@@ -9,9 +26,12 @@
 #define SQRT2INV \
   0.707106781186547524400844362104849039284835937688474036588339868995366239231053519425193767163820786367506  // Oeis A010503
 namespace klft {
-template <class RNGType, typename DSpinorFieldType, typename DGaugeFieldType,
+template <class RNGType,
+          typename DSpinorFieldType,
+          typename DGaugeFieldType,
           typename DAdjFieldType,
-          template <template <typename, typename> class DiracOpT, typename,
+          template <template <typename, typename> class DiracOpT,
+                    typename,
                     typename> class _Solver,
           template <typename, typename> class DiracOpT>
 class FermionMonomial : public Monomial<DGaugeFieldType, DAdjFieldType> {
@@ -40,8 +60,11 @@ class FermionMonomial : public Monomial<DGaugeFieldType, DAdjFieldType> {
   const diracParams<rank, RepDim> params;
   const real_t tol;
   RNGType rng;
-  FermionMonomial(FermionField& _phi, const diracParams<rank, RepDim>& params_,
-                  const real_t& tol_, RNGType& RNG_, unsigned int _time_scale)
+  FermionMonomial(FermionField& _phi,
+                  const diracParams<rank, RepDim>& params_,
+                  const real_t& tol_,
+                  RNGType& RNG_,
+                  unsigned int _time_scale)
       : Monomial<DGaugeFieldType, DAdjFieldType>(_time_scale),
         phi(_phi),
         params(params_),

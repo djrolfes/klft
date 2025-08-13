@@ -187,8 +187,7 @@ template <size_t rank, size_t Nc, class RNG, class GaugeFieldType>
 int run_metropolis(GaugeFieldType& g_in,
                    const MetropolisParams& metropolisParams,
                    GaugeObservableParams& gaugeObsParams,
-                   const RNG& rng,
-                   const std::string& output_directory) {
+                   const RNG& rng) {
   // this algorithm is strictly for Nd = rank
   constexpr const size_t Nd = rank;
   // get the dimensions
@@ -224,7 +223,7 @@ int run_metropolis(GaugeFieldType& g_in,
     measureGaugeObservables<rank, Nc>(g_in, gaugeObsParams, step);
   }
   // flush the measurements to the files
-  flushAllGaugeObservables(gaugeObsParams, output_directory);
+  flushAllGaugeObservables(gaugeObsParams);
 
   return 0;
 }
@@ -235,55 +234,46 @@ int run_metropolis(GaugeFieldType& g_in,
 template int run_metropolis<2, 1>(deviceGaugeField2D<2, 1>& g_in,
                                   const MetropolisParams& metropolisParams,
                                   GaugeObservableParams& gaugeObsParams,
-                                  const RNGType& rng,
-                                  const std::string& output_directory);
+                                  const RNGType& rng);
 // 2D SU(2)
 template int run_metropolis<2, 2>(deviceGaugeField2D<2, 2>& g_in,
                                   const MetropolisParams& metropolisParams,
                                   GaugeObservableParams& gaugeObsParams,
-                                  const RNGType& rng,
-                                  const std::string& output_directory);
+                                  const RNGType& rng);
 // 2D SU(3)
 template int run_metropolis<2, 3>(deviceGaugeField2D<2, 3>& g_in,
                                   const MetropolisParams& metropolisParams,
                                   GaugeObservableParams& gaugeObsParams,
-                                  const RNGType& rng,
-                                  const std::string& output_directory);
+                                  const RNGType& rng);
 // 3D U(1)
 template int run_metropolis<3, 1>(deviceGaugeField3D<3, 1>& g_in,
                                   const MetropolisParams& metropolisParams,
                                   GaugeObservableParams& gaugeObsParams,
-                                  const RNGType& rng,
-                                  const std::string& output_directory);
+                                  const RNGType& rng);
 // 3D SU(2)
 template int run_metropolis<3, 2>(deviceGaugeField3D<3, 2>& g_in,
                                   const MetropolisParams& metropolisParams,
                                   GaugeObservableParams& gaugeObsParams,
-                                  const RNGType& rng,
-                                  const std::string& output_directory);
+                                  const RNGType& rng);
 // 3D SU(3)
 template int run_metropolis<3, 3>(deviceGaugeField3D<3, 3>& g_in,
                                   const MetropolisParams& metropolisParams,
                                   GaugeObservableParams& gaugeObsParams,
-                                  const RNGType& rng,
-                                  const std::string& output_directory);
+                                  const RNGType& rng);
 // 4D U(1)
 template int run_metropolis<4, 1>(deviceGaugeField<4, 1>& g_in,
                                   const MetropolisParams& metropolisParams,
                                   GaugeObservableParams& gaugeObsParams,
-                                  const RNGType& rng,
-                                  const std::string& output_directory);
+                                  const RNGType& rng);
 // 4D SU(2)
 template int run_metropolis<4, 2>(deviceGaugeField<4, 2>& g_in,
                                   const MetropolisParams& metropolisParams,
                                   GaugeObservableParams& gaugeObsParams,
-                                  const RNGType& rng,
-                                  const std::string& output_directory);
+                                  const RNGType& rng);
 // 4D SU(3)
 template int run_metropolis<4, 3>(deviceGaugeField<4, 3>& g_in,
                                   const MetropolisParams& metropolisParams,
                                   GaugeObservableParams& gaugeObsParams,
-                                  const RNGType& rng,
-                                  const std::string& output_directory);
+                                  const RNGType& rng);
 
 }  // namespace klft

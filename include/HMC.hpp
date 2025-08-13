@@ -1,3 +1,21 @@
+//******************************************************************************/
+//
+// This file is part of the Kokkos Lattice Field Theory (KLFT) library.
+//
+// KLFT is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// KLFT is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with KLFT.  If not, see <http://www.gnu.org/licenses/>.
+//
+//******************************************************************************/
 #pragma once
 #include <random>
 
@@ -43,8 +61,10 @@ class HMC {
 
   HMC(const Integrator_Params params_,
       HamiltonianField<DGaugeFieldType, DAdjFieldType>& hamiltonian_field_,
-      std::shared_ptr<Integrator> integrator_, RNG rng_,
-      std::uniform_real_distribution<real_t> dist_, std::mt19937 mt_)
+      std::shared_ptr<Integrator> integrator_,
+      RNG rng_,
+      std::uniform_real_distribution<real_t> dist_,
+      std::mt19937 mt_)
       : params(params_),
         rng(rng_),
         dist(dist_),
@@ -63,7 +83,8 @@ class HMC {
         std::make_unique<KineticMonomial<DGaugeFieldType, DAdjFieldType>>(
             _time_scale));
   }
-  template <template <template <typename, typename> class DiracOpT, typename,
+  template <template <template <typename, typename> class DiracOpT,
+                      typename,
                       typename> class _Solver,
             template <typename, typename> class DiracOpT,
             typename DSpinorFieldType>
@@ -73,7 +94,9 @@ class HMC {
 
                   DeviceFermionFieldTypeTraits<DSpinorFieldType>::RepDim>&
           params_,
-      const real_t& tol_, RNG& rng, const unsigned int _time_scale) {
+      const real_t& tol_,
+      RNG& rng,
+      const unsigned int _time_scale) {
     monomials.emplace_back(
         std::make_unique<FermionMonomial<RNG, DSpinorFieldType, DGaugeFieldType,
                                          DAdjFieldType, _Solver, DiracOpT>>(

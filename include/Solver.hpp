@@ -19,17 +19,19 @@
 
 #pragma once
 #include "DiracOPTypeHelper.hpp"
+#include "DiracOperator.hpp"
 #include "FieldTypeHelper.hpp"
-#include "GDiracOperator.hpp"
 #include "GLOBAL.hpp"
 #include "SpinorFieldLinAlg.hpp"
 
 namespace klft {
 
-template <template <template <typename, typename> class DiracOpT, typename,
+template <template <template <typename, typename> class DiracOpT,
+                    typename,
                     typename> class _Derived,
           template <typename, typename> class DiracOpT,
-          typename DSpinorFieldType, typename DGaugeFieldType>
+          typename DSpinorFieldType,
+          typename DGaugeFieldType>
 class Solver {
   // using DSpinorFieldType =
   //     typename DiracOpFieldTypeTraits<DiracOperator>::DSpinorFieldType;
@@ -76,7 +78,8 @@ class Solver {
 //               SpinorType::RepDim>;
 
 template <template <typename, typename> class DiracOpT,
-          typename DSpinorFieldType, typename DGaugeFieldType>
+          typename DSpinorFieldType,
+          typename DGaugeFieldType>
 class CGSolver
     : public Solver<CGSolver, DiracOpT, DSpinorFieldType, DGaugeFieldType> {
   // using DSpinorFieldType =

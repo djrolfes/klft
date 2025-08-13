@@ -1,3 +1,21 @@
+//******************************************************************************/
+//
+// This file is part of the Kokkos Lattice Field Theory (KLFT) library.
+//
+// KLFT is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// KLFT is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with KLFT.  If not, see <http://www.gnu.org/licenses/>.
+//
+//******************************************************************************/
 #pragma once
 #include "FieldTypeHelper.hpp"
 #include "GLOBAL.hpp"
@@ -17,7 +35,8 @@ struct SpinorDotProduct {
   FieldType dot_product_per_site;
 
   const IndexArray<rank> dimensions;
-  SpinorDotProduct(const SpinorFieldType& a, const SpinorFieldType& b,
+  SpinorDotProduct(const SpinorFieldType& a,
+                   const SpinorFieldType& b,
                    FieldType& dot_product_per_site,
                    const IndexArray<rank>& dimensions)
       : a(a),
@@ -75,7 +94,8 @@ struct SpinorNorm {
   FieldType norm_per_site;
   const IndexArray<rank> dimensions;
 
-  SpinorNorm(const SpinorFieldType& a, FieldType& norm_per_site,
+  SpinorNorm(const SpinorFieldType& a,
+             FieldType& norm_per_site,
              const IndexArray<rank>& dimensions)
       : a(a), norm_per_site(norm_per_site), dimensions(dimensions) {}
 
@@ -125,8 +145,10 @@ struct SpinorAddMul {
   const complex_t alpha;
   SpinorFieldType c;
   const IndexArray<rank> dimensions;
-  SpinorAddMul(const SpinorFieldType& a, const SpinorFieldType& b,
-               SpinorFieldType& c, const complex_t& alpha,
+  SpinorAddMul(const SpinorFieldType& a,
+               const SpinorFieldType& b,
+               SpinorFieldType& c,
+               const complex_t& alpha,
                const IndexArray<rank>& dimensions)
       : a(a), b(b), c(c), alpha(alpha), dimensions(dimensions) {}
   template <typename... Indices>
@@ -135,11 +157,12 @@ struct SpinorAddMul {
   }
 };
 template <size_t rank, size_t Nc, size_t RepDim>
-typename DeviceSpinorFieldType<rank, Nc,
-                               RepDim>::type KOKKOS_FORCEINLINE_FUNCTION
-spinor_add_mul(const typename DeviceSpinorFieldType<rank, Nc, RepDim>::type& a,
-               const typename DeviceSpinorFieldType<rank, Nc, RepDim>::type& b,
-               const complex_t& alpha) {
+typename DeviceSpinorFieldType<rank, Nc, RepDim>::type
+    KOKKOS_FORCEINLINE_FUNCTION
+    spinor_add_mul(
+        const typename DeviceSpinorFieldType<rank, Nc, RepDim>::type& a,
+        const typename DeviceSpinorFieldType<rank, Nc, RepDim>::type& b,
+        const complex_t& alpha) {
   assert(a.dimensions == b.dimensions);
   static_assert(
       Kokkos::SpaceAccessibility<

@@ -1,4 +1,22 @@
 
+//******************************************************************************/
+//
+// This file is part of the Kokkos Lattice Field Theory (KLFT) library.
+//
+// KLFT is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// KLFT is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with KLFT.  If not, see <http://www.gnu.org/licenses/>.
+//
+//******************************************************************************/
 #include <cstddef>
 #include <memory>
 
@@ -16,10 +34,10 @@ using RNGType = Kokkos::Random_XorShift64_Pool<Kokkos::DefaultExecutionSpace>;
 namespace klft {
 
 template <typename HMCType>
-int run_HMC(HMCType& hmc, const Integrator_Params& integratorParams,
+int run_HMC(HMCType& hmc,
+            const Integrator_Params& integratorParams,
             GaugeObservableParams& gaugeObsParams,
-            SimulationLoggingParams& simLogParams,
-            const std::string& output_directory) {
+            SimulationLoggingParams& simLogParams) {
   // initiate and execute the HMC with the given parameters
   printf("Executing HMC ...");
   // hmcparams.print();
@@ -72,13 +90,11 @@ int run_HMC(HMCType& hmc, const Integrator_Params& integratorParams,
                                       gaugeObsParams, step);
     addLogData(simLogParams, step, hmc.delta_H, acc_rate, accept, time);
     if (simLogParams.flush != 0 && step % simLogParams.flush == 0) {
-      flushSimulationLogs(simLogParams, output_directory,
-                          step == simLogParams.flush);
+      flushSimulationLogs(simLogParams, step == simLogParams.flush);
       clearSimulationLogs(simLogParams);
     }
     if (gaugeObsParams.flush != 0 && step % gaugeObsParams.flush == 0) {
-      flushAllGaugeObservables(gaugeObsParams, output_directory,
-                               step == simLogParams.flush);
+      flushAllGaugeObservables(gaugeObsParams, step == simLogParams.flush);
       clearAllGaugeObservables(gaugeObsParams);
     }
     // TODO:make flushAllGaugeObservables append the Observables to the
@@ -96,10 +112,9 @@ int run_HMC(HMCType& hmc, const Integrator_Params& integratorParams,
   // if flush is set to 0, we flush with the  header at the end of the
   // simulation
 
-  flushSimulationLogs(simLogParams, output_directory, simLogParams.flush == 0);
+  flushSimulationLogs(simLogParams, simLogParams.flush == 0);
 
-  flushAllGaugeObservables(gaugeObsParams, output_directory,
-                           gaugeObsParams.flush == 0);
+  flushAllGaugeObservables(gaugeObsParams, gaugeObsParams.flush == 0);
 
   printf("Total Acceptance rate: %f, Accept %f Configs", acc_rate, acc_sum);
   return 0;
