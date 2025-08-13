@@ -117,8 +117,8 @@ void measureGaugeObservablesPTBC(
       if (KLFT_VERBOSITY > 1) {
         printf("plaquette: %11.6f\n", Plaquette);
       }
-      MPI_Send(&Plaquette, 1, mpi_real_t(), compute_rank,
-               MPI_GAUGE_OBSERVABLES_PLAQUETTE, MPI_COMM_WORLD);
+      MPI_Send(&Plaquette, 1, mpi_real_t(), 0, MPI_GAUGE_OBSERVABLES_PLAQUETTE,
+               MPI_COMM_WORLD);
     }
     if (params.measure_wilson_loop_mu_nu) {
       if (KLFT_VERBOSITY > 1) {
@@ -194,7 +194,6 @@ void measureGaugeObservablesPTBC(
       MPI_Recv(&WilsonLoop_meas_size, 1, mpi_size_t(), compute_rank,
                MPI_GAUGE_OBSERVABLES_WILSON_LOOP_MU_NU_SIZE, MPI_COMM_WORLD,
                MPI_STATUS_IGNORE);
-      std::vector<Kokkos::Array<real_t, 5>> temp(WilsonLoop_meas_size);
       if (WilsonLoop_meas_size > 0) {
         MPI_Recv(WilsonLoop_meas.data(),
                  WilsonLoop_meas_size * sizeof(Kokkos::Array<real_t, 5>),

@@ -59,6 +59,12 @@ public:
   const index_t initial_index;
   index_t current_index;
 
+  std::vector<bool> swap_accepts; // a vector that hold the last values shown if
+                                  // a given swap was accepted
+  std::vector<real_t> swap_deltas; // a vector that holds the partial Delta_S
+                                   // values for each swap
+  int swap_start;                  // holds the rank of the last swap start
+
   typedef enum {
     TAG_DELTAS = 0,
     TAG_ACCEPT = 1,
