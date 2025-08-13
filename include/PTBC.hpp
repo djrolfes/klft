@@ -455,7 +455,7 @@ int run_PTBC(PTBCParams ptbc_params, RNG &rng,
   real_t acc_sum{0.0};
   real_t acc_rate{0.0};
 
-  index_t rank, size;
+  int rank, size;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &size);
 
@@ -473,19 +473,26 @@ int run_PTBC(PTBCParams ptbc_params, RNG &rng,
     // Gauge observables
     ptbc.measure(ptbc_params.gaugeObsParams, step);
 
+    if (rank == 0) {
+      flushAllGaugeObservables(ptbc_params.gaugeObsParams, step, true);
+    }
     // PTBC swap/accept
 
     const real_t time = timer.seconds();
     acc_sum += static_cast<real_t>(accept);
     acc_rate = acc_sum / static_cast<real_t>(step + 1);
+    ptbc.measure(ptbc_params.simLogParams, step, acc_rate, accept, time);
     if (rank == 0) {
       Kokkos::printf("Step: %zu, accepted: %d, Acceptance rate: %f, Time: %f\n",
                      step, accept, acc_rate, time);
     }
+    flushSimulationLogs(ptbc_params.simLogParams, step, true);
   }
+
   if (rank == 0) {
-    flushAllGaugeObservables(ptbc_params.gaugeObsParams);
+    forceflushAllGaugeObservables(ptbc_params.gaugeObsParams, true);
   }
+  forceflushSimulationLogs(ptbc_params.simLogParams, true);
 
   return 0;
 }

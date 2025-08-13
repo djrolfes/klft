@@ -10,9 +10,21 @@ using RNGType = Kokkos::Random_XorShift64_Pool<Kokkos::DefaultExecutionSpace>;
 
 namespace klft {
 
+std::string ranked_filename(const std::string &base_filename, int rank) {
+  auto pos = base_filename.rfind('.');
+  if (pos == std::string::npos) {
+    // No extension → just append
+    return base_filename + ".rank" + std::to_string(rank);
+  } else {
+    // Insert before extension
+    return base_filename.substr(0, pos) + ".rank" + std::to_string(rank) +
+           base_filename.substr(pos);
+  }
+}
+
 int PTBC_execute(const std::string &input_file,
                  const std::string &output_directory) {
-  index_t rank, size;
+  int rank, size;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &size);
   printf("Rank %d of %d\n", rank, size);
@@ -30,6 +42,8 @@ int PTBC_execute(const std::string &input_file,
     printf("Error parsing input file\n");
     return -1;
   }
+
+  simLogParams.log_filename = ranked_filename(simLogParams.log_filename, rank);
 
   if (ptbcParams.defects.size() != size) {
     printf("Error: Number of defects (%zu) does not match size (%d)\n",

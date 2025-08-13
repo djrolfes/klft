@@ -67,13 +67,15 @@ struct GaugeObservableParams {
   //
   size_t flush; // interval to flush measurements to file, 0 to flush at the
                 // end of the simulation
+  bool flushed; // check if the measurements were flushed at least once -> used
+                // to add the header line to the file
 
   // constructor to initialize the parameters
   // by default nothing is measured
   GaugeObservableParams()
       : measurement_interval(0), measure_plaquette(false),
         measure_wilson_loop_temporal(false), measure_wilson_loop_mu_nu(false),
-        flush(25) {}
+        flush(25), flushed(false) {}
 };
 
 typedef enum {
@@ -372,16 +374,28 @@ inline void flushWilsonLoopMuNu(std::ofstream &file,
   }
 }
 
+// function to clear all measurements
+inline void clearAllGaugeObservables(GaugeObservableParams &params) {
+  params.measurement_steps.clear();
+  params.plaquette_measurements.clear();
+  params.W_temp_measurements.clear();
+  params.W_mu_nu_measurements.clear();
+  // ...
+  // add more clear functions for other observables here
+}
+
 // define a global function to flush all measurements
-inline void flushAllGaugeObservables(const GaugeObservableParams &params,
-                                     const bool HEADER = true,
-                                     const int &p = std::cout.precision()) {
+inline void
+forceflushAllGaugeObservables(GaugeObservableParams &params,
+                              const bool clear_after_flush = false,
+                              const int &p = std::cout.precision()) {
   auto _ = std::setprecision(p);
   // check if write_to_file is enabled
   if (!params.write_to_file) {
     printf("write_to_file is not enabled\n");
     return;
   }
+  bool HEADER = !params.flushed; // write header only once
   // flush plaquette measurements
   if (params.measure_plaquette && params.plaquette_filename != "") {
     std::ofstream file(params.plaquette_filename, std::ios::app);
@@ -402,16 +416,21 @@ inline void flushAllGaugeObservables(const GaugeObservableParams &params,
   }
   // ...
   // add more flush functions for other observables here
+  if (clear_after_flush) {
+    clearAllGaugeObservables(params);
+  }
+  params.flushed = true; // set flushed to true after flushing
 }
 
-// function to clear all measurements
-inline void clearAllGaugeObservables(GaugeObservableParams &params) {
-  params.measurement_steps.clear();
-  params.plaquette_measurements.clear();
-  params.W_temp_measurements.clear();
-  params.W_mu_nu_measurements.clear();
-  // ...
-  // add more clear functions for other observables here
+// check if the current step should be flushed, if so call
+// forceflushAllGaugeObservables
+inline void flushAllGaugeObservables(GaugeObservableParams &params,
+                                     const size_t step,
+                                     const bool clear_after_flush = false,
+                                     const int &p = std::cout.precision()) {
+  if (params.flush != 0 && step % params.flush == 0) {
+    forceflushAllGaugeObservables(params, clear_after_flush, p);
+  }
 }
 
 } // namespace klft

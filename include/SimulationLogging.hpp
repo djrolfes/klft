@@ -11,6 +11,8 @@ struct SimulationLoggingParams {
   bool write_to_file;       // whether to write logs to file
   size_t flush; // interval to flush logs to file ,0 to flush at the end of the
                 // simulation
+  bool flushed; // check if the logs were flushed at least once -> used to
+                // add the header line to the file
 
   // define flags for the different types of logs
   bool log_delta_H;
@@ -27,8 +29,9 @@ struct SimulationLoggingParams {
 
   // constructor to initialize the parameters
   SimulationLoggingParams()
-      : log_interval(0), flush(25), write_to_file(false), log_delta_H(false),
-        log_acceptance(false), log_accept(false), log_time(false) {}
+      : log_interval(0), flush(25), flushed(false), write_to_file(false),
+        log_delta_H(false), log_acceptance(false), log_accept(false),
+        log_time(false) {}
 };
 
 // define a function to log simulation information
@@ -79,8 +82,17 @@ addLogData(SimulationLoggingParams &params, const size_t step,
   params.log_steps.push_back(step);
 }
 
-inline void flushSimulationLogs(const SimulationLoggingParams &params,
-                                const bool HEADER = true) {
+inline void clearSimulationLogs(SimulationLoggingParams &params) {
+  // clear the logs
+  params.log_steps.clear();
+  params.delta_H.clear();
+  params.acceptance.clear();
+  params.accept.clear();
+  params.time.clear();
+}
+
+inline void forceflushSimulationLogs(SimulationLoggingParams &params,
+                                     const bool clear_after_flush = false) {
   // check if write_to_file is enabled
   if (!params.write_to_file) {
     if (KLFT_VERBOSITY > 0) {
@@ -88,7 +100,6 @@ inline void flushSimulationLogs(const SimulationLoggingParams &params,
     }
     return;
   }
-
   // open the log file
   std::ofstream file(params.log_filename, std::ios::app);
   if (!file.is_open()) {
@@ -96,6 +107,7 @@ inline void flushSimulationLogs(const SimulationLoggingParams &params,
     return;
   }
 
+  bool HEADER = !params.flushed; // write header only once
   // write header if required
   if (HEADER) {
     file << "# step";
@@ -134,14 +146,18 @@ inline void flushSimulationLogs(const SimulationLoggingParams &params,
 
   // close the file
   file.close();
+  if (clear_after_flush) {
+    clearSimulationLogs(params); // clear the logs after flushing
+  }
+  params.flushed = true; // set flushed to true after writing
 }
-inline void clearSimulationLogs(SimulationLoggingParams &params) {
-  // clear the logs
-  params.log_steps.clear();
-  params.delta_H.clear();
-  params.acceptance.clear();
-  params.accept.clear();
-  params.time.clear();
+
+inline void flushSimulationLogs(SimulationLoggingParams &params,
+                                const size_t step,
+                                const bool clear_after_flush = false) {
+  if (params.flush != 0 && step % params.flush == 0) {
+    forceflushSimulationLogs(params, clear_after_flush);
+  }
 }
 
 } // namespace klft

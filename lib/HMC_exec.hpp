@@ -117,8 +117,8 @@ int run_HMC(typename DGaugeFieldType::type g_in,
     }
   }
   // flush the measurements to the files
-  flushAllGaugeObservables(gaugeObsParams);
-  flushSimulationLogs(simLogParams);
+  forceflushAllGaugeObservables(gaugeObsParams);
+  forceflushSimulationLogs(simLogParams);
 
   return 0;
 }

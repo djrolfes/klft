@@ -215,7 +215,7 @@ int run_metropolis(GaugeFieldType &g_in,
     measureGaugeObservables<rank, Nc>(g_in, gaugeObsParams, step);
   }
   // flush the measurements to the files
-  flushAllGaugeObservables(gaugeObsParams);
+  forceflushAllGaugeObservables(gaugeObsParams);
 
   return 0;
 }
