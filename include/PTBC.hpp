@@ -22,6 +22,7 @@ struct PTBCParams {
   std::vector<real_t> defects; // a vector that hold the different defect values
   index_t defect_size;         // size of the defect on the lattice
   HMCParams hmc_params;        // HMC parameters´
+  PTBCSimulationLoggingParams ptbcSimLogParams;
   GaugeObservableParams gaugeObsParams;
   SimulationLoggingParams simLogParams;
   real_t defect_value; // value of the defect
@@ -63,7 +64,7 @@ public:
                                   // a given swap was accepted
   std::vector<real_t> swap_deltas; // a vector that holds the partial Delta_S
                                    // values for each swap
-  int swap_start;                  // holds the rank of the last swap start
+  int _swap_start;                 // holds the rank of the last swap start
 
   typedef enum {
     TAG_DELTAS = 0,
@@ -85,6 +86,9 @@ public:
     device_id = Kokkos::device_id(); // default device id
     current_index = initial_index_;
 
+    swap_accepts.resize(params.defects.size());
+    swap_deltas.resize(params.defects.size());
+
     // host only fallback
     if (device_id == -1) {
       device_id = 0;
@@ -105,6 +109,18 @@ public:
   real_t getDefectValue() const {
     // return the defect value for the current index
     return params.defects[current_index];
+  }
+
+  void measure(PTBCSimulationLoggingParams &ptbcSimLogParams,
+               const size_t step) {
+    // measure the simulation logging observables
+    int rank, size;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+    if (rank == 0) {
+      addPTBCLogData(ptbcSimLogParams, step, _swap_start, &swap_accepts,
+                     &swap_deltas, &params.defects); // add the data to the log
+    }
   }
 
   void measure(GaugeObservableParams &gaugeObsParams, size_t step) {
@@ -321,6 +337,13 @@ public:
         DEBUG_MPI_PRINT("%s", oss.str().c_str());
       }
       MPI_Barrier(MPI_COMM_WORLD); // synchronize all ranks after each swap
+      if (rank == 0) {             // add the swap data to the logs
+        swap_accepts[swap_rank] = accept;
+        swap_deltas[swap_rank] = Delta_S;
+        _swap_start = swap_start; // store the swap start rank
+        // DEBUG_MPI_PRINT("Rank 0 updated swap_accepts[%d] = %d and
+        // swap_deltas[%d] = %f", swap_rank, accept, swap_rank, Delta_S);
+      }
     }
 
     // DEBUG_MPI_PRINT("Exiting swap() function");
@@ -478,9 +501,11 @@ int run_PTBC(PTBCParams ptbc_params, RNG &rng,
 
     // Gauge observables
     ptbc.measure(ptbc_params.gaugeObsParams, step);
+    ptbc.measure(ptbc_params.ptbcSimLogParams, step);
 
     if (rank == 0) {
       flushAllGaugeObservables(ptbc_params.gaugeObsParams, step, true);
+      flushPTBCSimulationLogs(ptbc_params.ptbcSimLogParams, step, true);
     }
     // PTBC swap/accept
 
@@ -497,6 +522,7 @@ int run_PTBC(PTBCParams ptbc_params, RNG &rng,
 
   if (rank == 0) {
     forceflushAllGaugeObservables(ptbc_params.gaugeObsParams, true);
+    flushPTBCSimulationLogs(ptbc_params.ptbcSimLogParams, true);
   }
   forceflushSimulationLogs(ptbc_params.simLogParams, true);
 

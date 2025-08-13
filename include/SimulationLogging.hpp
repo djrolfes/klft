@@ -160,4 +160,203 @@ inline void flushSimulationLogs(SimulationLoggingParams &params,
   }
 }
 
+struct PTBCSimulationLoggingParams {
+  size_t log_interval;      // interval between logs
+  std::string log_filename; // filename for the log
+  bool write_to_file;       // whether to write logs to file
+  size_t flush; // interval to flush logs to file ,0 to flush at the end of the
+                // simulation
+  bool flushed; // check if the logs were flushed at least once -> used to
+                // add the header line to the file
+
+  // define flags for the different types of logs
+  bool log_swap_start;
+  bool log_swap_accepts;
+  bool log_delta_H_swap;
+  bool log_defects;
+
+  // define vectors to hold the logs
+  std::vector<size_t> log_steps;
+  std::vector<size_t> swap_start;
+  std::vector<std::vector<real_t>> delta_H_swap;
+  std::vector<std::vector<real_t>> defects;
+  std::vector<std::vector<bool>> accepts;
+
+  // constructor to initialize the parameters
+  PTBCSimulationLoggingParams()
+      : log_interval(0), flush(25), flushed(false), write_to_file(false),
+        log_delta_H_swap(false), log_swap_start(true), log_swap_accepts(true),
+        log_defects(true) {}
+};
+
+// ---------- PTBC logging: add / flush / clear ----------
+
+inline void addPTBCLogData(PTBCSimulationLoggingParams &p, const size_t step,
+                           const size_t _swap_start = 0,
+                           const std::vector<bool> *_accepts = nullptr,
+                           const std::vector<real_t> *_delta_H_swap = nullptr,
+                           const std::vector<real_t> *_defects = nullptr) {
+  // obey interval (skip step 0, like your other logger)
+  if (p.log_interval == 0 || step % p.log_interval != 0 || step == 0)
+    return;
+
+  if (KLFT_VERBOSITY > 1) {
+    printf("Logging PTBC Data (step %zu)\n", step);
+  }
+
+  // Always push a step entry if we're logging this step
+  p.log_steps.push_back(step);
+
+  // For each enabled stream, push an entry (empty if nullptr provided)
+  if (p.log_swap_start) {
+    p.swap_start.push_back(_swap_start);
+    if (KLFT_VERBOSITY > 1)
+      printf("swap_start: %zu\n", _swap_start);
+  }
+
+  if (p.log_swap_accepts) {
+    if (_accepts)
+      p.accepts.push_back(*_accepts);
+    else
+      p.accepts.emplace_back(); // empty vector keeps indices aligned
+    if (KLFT_VERBOSITY > 1 && _accepts) {
+      printf("accepts: ");
+      for (bool b : *_accepts)
+        printf("%d ", b ? 1 : 0);
+      printf("\n");
+    }
+  }
+
+  if (p.log_delta_H_swap) {
+    if (_delta_H_swap)
+      p.delta_H_swap.push_back(*_delta_H_swap);
+    else
+      p.delta_H_swap.emplace_back();
+    if (KLFT_VERBOSITY > 1 && _delta_H_swap) {
+      printf("delta_H_swap size: %zu\n", _delta_H_swap->size());
+    }
+  }
+
+  if (p.log_defects) {
+    if (_defects)
+      p.defects.push_back(*_defects);
+    else
+      p.defects.emplace_back();
+    if (KLFT_VERBOSITY > 1 && _defects) {
+      printf("defects size: %zu\n", _defects->size());
+    }
+  }
+}
+
+inline void clearPTBCSimulationLogs(PTBCSimulationLoggingParams &p) {
+  p.log_steps.clear();
+  p.swap_start.clear();
+  p.delta_H_swap.clear();
+  p.defects.clear();
+  p.accepts.clear();
+}
+
+// helper: join vectors for writing
+template <class T>
+static inline void _write_vec(std::ostream &os, const std::vector<T> &v) {
+  os << "[";
+  for (size_t i = 0; i < v.size(); ++i) {
+    if (i)
+      os << ' ';
+    os << v[i];
+  }
+  os << "]";
+}
+
+// bool specialization (std::vector<bool> is bit-packed)
+static inline void _write_vec_bool(std::ostream &os,
+                                   const std::vector<bool> &v) {
+  os << "[";
+  for (size_t i = 0; i < v.size(); ++i) {
+    if (i)
+      os << ' ';
+    os << (v[i] ? 1 : 0);
+  }
+  os << "]";
+}
+
+inline void forceflushPTBCSimulationLogs(PTBCSimulationLoggingParams &p,
+                                         const bool clear_after_flush = false) {
+  if (!p.write_to_file) {
+    if (KLFT_VERBOSITY > 0)
+      printf("PTBC write_to_file is not enabled\n");
+    return;
+  }
+
+  std::ofstream file(p.log_filename, std::ios::app);
+  if (!file.is_open()) {
+    printf("Error: could not open PTBC log file %s\n", p.log_filename.c_str());
+    return;
+  }
+
+  const bool HEADER = !p.flushed;
+  if (HEADER) {
+    file << "# step";
+    if (p.log_swap_start)
+      file << ", swap_start";
+    if (p.log_swap_accepts)
+      file << ", accepts";
+    if (p.log_delta_H_swap)
+      file << ", delta_H_swap";
+    if (p.log_defects)
+      file << ", defects";
+    file << "\n";
+  }
+
+  // We assume you call addPTBCLogData once per step → vectors are aligned
+  const size_t n = p.log_steps.size();
+  for (size_t i = 0; i < n; ++i) {
+    file << p.log_steps[i];
+
+    if (p.log_swap_start) {
+      // Guard in case of inconsistent pushes
+      size_t val = (i < p.swap_start.size() ? p.swap_start[i] : 0);
+      file << ", " << val;
+    }
+    if (p.log_swap_accepts) {
+      if (i < p.accepts.size()) {
+        file << ", ";
+        _write_vec_bool(file, p.accepts[i]);
+      } else {
+        file << ", []";
+      }
+    }
+    if (p.log_delta_H_swap) {
+      if (i < p.delta_H_swap.size()) {
+        file << ", ";
+        _write_vec<real_t>(file, p.delta_H_swap[i]);
+      } else {
+        file << ", []";
+      }
+    }
+    if (p.log_defects) {
+      if (i < p.defects.size()) {
+        file << ", ";
+        _write_vec<real_t>(file, p.defects[i]);
+      } else {
+        file << ", []";
+      }
+    }
+    file << "\n";
+  }
+
+  file.close();
+  if (clear_after_flush)
+    clearPTBCSimulationLogs(p);
+  p.flushed = true;
+}
+
+inline void flushPTBCSimulationLogs(PTBCSimulationLoggingParams &p,
+                                    const size_t step,
+                                    const bool clear_after_flush = false) {
+  if (p.flush != 0 && step % p.flush == 0) {
+    forceflushPTBCSimulationLogs(p, clear_after_flush);
+  }
+}
+
 } // namespace klft

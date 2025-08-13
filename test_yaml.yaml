@@ -14,23 +14,23 @@ MetropolisParams:
 
 HMCParams:
   Ndims: 4
-  L0: 12
-  L1: 12
-  L2: 12
-  L3: 12
+  L0: 24
+  L1: 24
+  L2: 24
+  L3: 24
   tau: 1.0
   seed: 1234
-  nsteps: 20 
-  nstepsGauge: 100
+  nsteps: 2000 
+  nstepsGauge: 80
   Nd: 4
   Nc: 2
-  beta: 4.0
+  beta: 3.0
 
 GaugeObservableParams:
-  measurement_interval: 10
+  measurement_interval: 2
   measure_plaquette: true
-  measure_wilson_loop_temporal: false
-  measure_wilson_loop_mu_nu: false
+  measure_wilson_loop_temporal: true
+  measure_wilson_loop_mu_nu: true
 
   W_temp_L_T_pairs:
     - [2, 3]
@@ -48,16 +48,29 @@ GaugeObservableParams:
   W_temp_filename: "wilson_temp_output.txt"
   W_mu_nu_filename: "wilson_mu_nu_output.txt"
 
-  write_to_file: false
+  write_to_file: true
 
 PTBCParams:
   defect_size: 2
-  defect_values: [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]
+  defect_values: [0.0, 0.143, 0.286, 0.429, 0.571, 0.714, 0.857, 1.0]
 
 SimulationLoggingParams:
   log_interval: 1
   log_delta_H: true
   log_acceptance: true
+  flush: 25
   
   log_filename: "simulation_log.txt"
+  write_to_file: true
+
+
+PTBCSimulationLoggingParams:
+  log_interval: 1
+  log_delta_H_swap: true
+  log_swap_start: true
+  log_swap_accepts: true
+  log_defects: true
+  flush: 25
+  
+  log_filename: "ptbcsimulation_log.txt"
   write_to_file: true

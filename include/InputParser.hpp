@@ -240,13 +240,48 @@ inline int parseInputFile(const std::string &filename,
       simParams.log_accept = mp["log_accept"].as<bool>(false);
       simParams.log_time = mp["log_time"].as<bool>(false);
     } else {
-      printf("Error: HMCParams not found in input file\n");
+      printf("Error: SimulationLoggingParams not found in input file\n");
       return false;
     }
     return true;
   } catch (const YAML::Exception &e) {
-    printf("(HMC Params) Error parsing input file: %s\n", e.what());
+    printf("(SimulationLoggingParams) Error parsing input file: %s\n",
+           e.what());
     return false;
   }
 }
+
+// get SimulationLoggingParams from input file
+inline int parseInputFile(const std::string &filename,
+                          const std::string &output_directory,
+                          PTBCSimulationLoggingParams &simParams) {
+  try {
+    YAML::Node config = YAML::LoadFile(filename);
+
+    // Parse MetropolisParams
+    if (config["PTBCSimulationLoggingParams"]) {
+      const auto &mp = config["PTBCSimulationLoggingParams"];
+      // general parameters
+      simParams.log_interval = mp["log_interval"].as<size_t>(0);
+      simParams.log_filename =
+          output_directory + mp["log_filename"].as<std::string>("");
+      simParams.write_to_file = mp["write_to_file"].as<bool>(false);
+      simParams.flush = mp["flush"].as<size_t>(25);
+
+      simParams.log_swap_start = mp["log_swap_start"].as<bool>(false);
+      simParams.log_swap_accepts = mp["log_swap_accepts"].as<bool>(false);
+      simParams.log_delta_H_swap = mp["log_delta_H_swap"].as<bool>(false);
+      simParams.log_defects = mp["log_defects"].as<bool>(false);
+    } else {
+      printf("Error: PTBCSimulationLoggingParams not found in input file\n");
+      return false;
+    }
+    return true;
+  } catch (const YAML::Exception &e) {
+    printf("(PTBCSimulationLoggingParams) Error parsing input file: %s\n",
+           e.what());
+    return false;
+  }
+}
+
 } // namespace klft
