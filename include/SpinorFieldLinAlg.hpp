@@ -131,11 +131,9 @@ template <size_t rank, size_t Nc, size_t RepDim> struct SpinorAddMul {
 };
 template <size_t rank, size_t Nc, size_t RepDim>
 typename DeviceSpinorFieldType<rank, Nc, RepDim>::type
-    KOKKOS_FORCEINLINE_FUNCTION
-    spinor_add_mul(
-        const typename DeviceSpinorFieldType<rank, Nc, RepDim>::type &a,
-        const typename DeviceSpinorFieldType<rank, Nc, RepDim>::type &b,
-        const complex_t &alpha) {
+spinor_add_mul(const typename DeviceSpinorFieldType<rank, Nc, RepDim>::type &a,
+               const typename DeviceSpinorFieldType<rank, Nc, RepDim>::type &b,
+               const complex_t &alpha) {
   assert(a.dimensions == b.dimensions);
   static_assert(
       Kokkos::SpaceAccessibility<
@@ -155,7 +153,6 @@ typename DeviceSpinorFieldType<rank, Nc, RepDim>::type
       typename DeviceSpinorFieldType<rank, Nc, RepDim>::type;
   SpinorFieldType c(end, complex_t(0.0, 0.0));
   SpinorAddMul<rank, Nc, RepDim> add(a, b, c, alpha, end);
-
   tune_and_launch_for<rank>("SpinorField_add", start, end, add);
   Kokkos::fence();
   return c;
