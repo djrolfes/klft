@@ -44,7 +44,7 @@ class PTBC { // do I need the AdjFieldType here?
   using HMCType = HMC<DGaugeFieldType, DAdjFieldType, RNG>;
 
 public:
-  PTBCParams params; // parameters for the PTBC algorithm
+  PTBCParams &params; // parameters for the PTBC algorithm
   HamiltonianField<DGaugeFieldType, DAdjFieldType> &hamiltonian_field;
   HMCType &hmc;
   // std::shared_ptr<LeapFrog> integrator; // TODO: make integrator agnostic
@@ -69,7 +69,7 @@ public:
 
   PTBC() = delete; // default constructor is not allowed
 
-  PTBC(PTBCParams params_,
+  PTBC(PTBCParams &params_,
        HamiltonianField<DGaugeFieldType, DAdjFieldType> &hamiltonian_field_,
        HMCType &hmc_, RNG &rng_, std::uniform_real_distribution<real_t> dist_,
        std::mt19937 mt_)
