@@ -290,35 +290,61 @@ template <size_t Nd, size_t Nc> struct devicePTBCGaugeField {
 
   // TODO: return as deviceGaugeField
 
-  // define accessors for the field
-  template <typename indexType> // why do we template indexType here, when it is
-                                // defined in GLOBAL.hpp?
-  KOKKOS_FORCEINLINE_FUNCTION SUN<Nc>
-  operator()(const indexType i, const indexType j, const indexType k,
-             const indexType l, const index_t mu) const {
+  template <class FieldView, class DefectView> struct PTBCLinkRef {
+    FieldView field;
+    DefectView defect;
+    index_t i, j, k, l, mu;
+
+    // read: multiply by defect
+    KOKKOS_INLINE_FUNCTION
+    operator SUN<Nc>() const {
+      return field(i, j, k, l, mu) * defect(i, j, k, l, mu);
+    }
+
+    // write: raw write (no defect factor)
+    KOKKOS_INLINE_FUNCTION
+    PTBCLinkRef &operator=(const SUN<Nc> &v) {
+      field(i, j, k, l, mu) = v;
+      return *this;
+    }
+
+    // optional: compound op
+    KOKKOS_INLINE_FUNCTION
+    PTBCLinkRef &operator*=(const SUN<Nc> &rhs) {
+      field(i, j, k, l, mu) = field(i, j, k, l, mu) * rhs;
+      return *this;
+    }
+
+    // assign from another ref
+    KOKKOS_INLINE_FUNCTION
+    PTBCLinkRef &operator=(const PTBCLinkRef &rhs) {
+      return (*this = static_cast<SUN<Nc>>(rhs));
+    }
+  };
+  // READ (const): return value = field * defect
+  template <typename I>
+  KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> operator()(I i, I j, I k, I l,
+                                                 index_t mu) const {
     return field(i, j, k, l, mu) * defectField(i, j, k, l, mu);
   }
 
-  template <typename indexType>
-  KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> &
-  operator()(const indexType i, const indexType j, const indexType k,
-             const indexType l, const index_t mu) {
-    return field(i, j, k, l, mu) * defectField(i, j, k, l, mu);
+  // READ/WRITE (non-const): return proxy
+  template <typename I>
+  KOKKOS_FORCEINLINE_FUNCTION auto operator()(I i, I j, I k, I l, index_t mu) {
+    return PTBCLinkRef<decltype(field), decltype(defectField)>{
+        field, defectField, (index_t)i, (index_t)j, (index_t)k, (index_t)l, mu};
   }
 
-  // define accessors with 4D Kokkos array
-  template <typename indexType>
-  KOKKOS_FORCEINLINE_FUNCTION SUN<Nc>
-  operator()(const Kokkos::Array<indexType, 4> site, const index_t mu) const {
-    return field(site[0], site[1], site[2], site[3], mu) *
-           defectField(site[0], site[1], site[2], site[3], mu);
+  // Array overloads
+  template <typename I>
+  KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> operator()(const Kokkos::Array<I, 4> &s,
+                                                 index_t mu) const {
+    return (*this)(s[0], s[1], s[2], s[3], mu);
   }
-
-  template <typename indexType>
-  KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> &
-  operator()(const Kokkos::Array<indexType, 4> site, const index_t mu) {
-    return field(site[0], site[1], site[2], site[3], mu) *
-           defectField(site[0], site[1], site[2], site[3], mu);
+  template <typename I>
+  KOKKOS_FORCEINLINE_FUNCTION auto operator()(const Kokkos::Array<I, 4> &s,
+                                              index_t mu) {
+    return (*this)(s[0], s[1], s[2], s[3], mu);
   }
 
   template <typename indexType>
