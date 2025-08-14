@@ -249,7 +249,6 @@ auto stapleField(const typename DGaugeFieldType::type &g_in)
   Kokkos::fence();
   // return the output field
   return ConstGaugeFieldType<Nd, Nc>(g_out.field);
-  Kokkos::fence();
 }
 
 template <typename DGaugeFieldType> struct restoreSUNFunctor {

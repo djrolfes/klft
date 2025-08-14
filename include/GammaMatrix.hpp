@@ -110,7 +110,7 @@ template <size_t RepDim> struct GammaMat {
   KOKKOS_FORCEINLINE_FUNCTION
   bool operator==(const GammaMat<RepDim> &b) { return matrix == b.matrix; }
   KOKKOS_FORCEINLINE_FUNCTION
-  const bool operator==(const GammaMat<RepDim> &b) const {
+  bool operator==(const GammaMat<RepDim> &b) const {
     return matrix == b.matrix;
   }
 };
