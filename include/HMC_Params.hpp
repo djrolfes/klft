@@ -99,6 +99,10 @@ struct GaugeMonomial_Params {
       printf("  beta: %.10f\n", beta);
     }
   }
+  std::string to_string() const {
+    return "GaugeMonomial_Params{beta: " + std::to_string(beta) +
+           ", level: " + std::to_string(level) + "}";
+  }
 };
 
 struct FermionMonomial_Params {

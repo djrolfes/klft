@@ -19,10 +19,21 @@ struct PTBCParams {
   index_t n_sims;
   std::vector<real_t> defects; // a vector that hold the different defect values
   index_t defect_length;       // size of the defect on the lattice
-  GaugeMonomial_Params hmc_params; // HMC parameters´
+  GaugeMonomial_Params gauge_params; // HMC parameters´
   PTBCSimulationLoggingParams ptbcSimLogParams;
   GaugeObservableParams gaugeObsParams;
   SimulationLoggingParams simLogParams;
+
+  std::string to_string() const {
+    std::ostringstream oss;
+    oss << "PTBCParams: n_sims = " << n_sims
+        << ", defect_length = " << defect_length << ", defects = [";
+    for (const auto &defect : defects) {
+      oss << defect << " ";
+    }
+    oss << "]";
+    return oss.str();
+  }
 };
 
 template <typename DGaugeFieldType, typename DAdjFieldType, class RNG>
@@ -45,7 +56,6 @@ class PTBC { // do I need the AdjFieldType here?
 
 public:
   PTBCParams &params; // parameters for the PTBC algorithm
-  HamiltonianField<DGaugeFieldType, DAdjFieldType> &hamiltonian_field;
   HMCType &hmc;
   // std::shared_ptr<LeapFrog> integrator; // TODO: make integrator agnostic
   RNG &rng;
@@ -69,12 +79,9 @@ public:
 
   PTBC() = delete; // default constructor is not allowed
 
-  PTBC(PTBCParams &params_,
-       HamiltonianField<DGaugeFieldType, DAdjFieldType> &hamiltonian_field_,
-       HMCType &hmc_, RNG &rng_, std::uniform_real_distribution<real_t> dist_,
-       std::mt19937 mt_)
-      : params(params_), rng(rng_), dist(dist_), mt(mt_),
-        hamiltonian_field(hamiltonian_field_), hmc(hmc_) {
+  PTBC(PTBCParams &params_, HMCType &hmc_, RNG &rng_,
+       std::uniform_real_distribution<real_t> dist_, std::mt19937 mt_)
+      : params(params_), rng(rng_), dist(dist_), mt(mt_), hmc(hmc_) {
     device_id = Kokkos::device_id(); // default device id
     int rank;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -129,11 +136,11 @@ public:
         if (KLFT_VERBOSITY > 1) {
           printf("Measuring PTBC observables at step %zu\n", step);
         }
-        measureGaugeObservablesPTBC<Nd, Nc>(hamiltonian_field.gauge_field,
+        measureGaugeObservablesPTBC<Nd, Nc>(hmc.hamiltonian_field.gauge_field,
                                             gaugeObsParams, step, 0, true);
       } else {
 
-        measureGaugeObservablesPTBC<Nd, Nc>(hamiltonian_field.gauge_field,
+        measureGaugeObservablesPTBC<Nd, Nc>(hmc.hamiltonian_field.gauge_field,
                                             gaugeObsParams, step, compute_rank,
                                             false);
       }
@@ -157,31 +164,34 @@ public:
 
   real_t swap_partner(index_t partner_rank) {
     // swaps the Defect with the partner rank and returns the partial Delta_S
-    // MPI_Sendrecv(&current_index, 1, MPI_INT, partner_rank, TAG_INDEX,
-    //              &current_index, 1, MPI_INT, partner_rank, TAG_INDEX,
-    //              MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
-    // DEBUG_MPI_PRINT("Swapping defect from index %d to %d", previous_index,
-    //                 current_index);
-
+    int rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     auto plaq = getPlaquetteAroundDefect();
-    // DEBUG_MPI_PRINT("Plaquette around defect ss: %f", plaq);
-    real_t S_ss = -(params.hmc_params.beta / static_cast<real_t>(Nc)) * plaq;
-    // DEBUG_MPI_PRINT("S_ss = %f", S_ss);
+    DEBUG_MPI_PRINT(
+        "Plaquette around defect ss: %f\n\tDefect(PTBC): %f, Defect(Field): %f",
+        plaq, params.defects[rank],
+        hmc.hamiltonian_field.gauge_field.get_defect());
+    DEBUG_MPI_PRINT("beta: %f, Nc: %zu", params.gauge_params.beta, Nc);
+    real_t S_ss = -(params.gauge_params.beta / static_cast<real_t>(Nc)) * plaq;
+    DEBUG_MPI_PRINT("S_ss = %f", S_ss);
     // now do the index/defect swapping
-    hamiltonian_field.gauge_field.template set_defect<index_t>(
+    hmc.hamiltonian_field.gauge_field.template set_defect<index_t>(
         params.defects[partner_rank]); // set the defect value of the current
     //
     plaq = getPlaquetteAroundDefect();
-    // DEBUG_MPI_PRINT("Plaquette around defect sr: %f", plaq);
-    real_t S_sr = -(params.hmc_params.beta / static_cast<real_t>(Nc)) * plaq;
-    // DEBUG_MPI_PRINT("S_sr = %f", S_sr);
+    DEBUG_MPI_PRINT(
+        "Plaquette around defect sr: %f\n\tDefect(PTBC): %f, Defect(Field): %f",
+        plaq, params.defects[partner_rank],
+        hmc.hamiltonian_field.gauge_field.get_defect());
+    real_t S_sr = -(params.gauge_params.beta / static_cast<real_t>(Nc)) * plaq;
+    DEBUG_MPI_PRINT("S_sr = %f", S_sr);
     return S_sr - S_ss; // return the partial Delta_S
   }
 
   void reverse_swap(bool accept) {
     if (!accept) {
-      hamiltonian_field.gauge_field.template set_defect<index_t>(
+      hmc.hamiltonian_field.gauge_field.template set_defect<index_t>(
           params.defects[current_index]); // set the defect value of the current
     }
   }
@@ -191,8 +201,8 @@ public:
 #ifdef DEBUG_MPI
       // Create a host mirror and copy data from device to host
       auto host_field = Kokkos::create_mirror_view_and_copy(
-          Kokkos::HostSpace(), hamiltonian_field.gauge_field.field);
-      auto dimensions = hamiltonian_field.gauge_field.dimensions;
+          Kokkos::HostSpace(), hmc.hamiltonian_field.gauge_field.field);
+      auto dimensions = hmc.hamiltonian_field.gauge_field.dimensions;
 
       for (index_t i = 0; i < dimensions[0]; ++i)
         for (index_t j = 0; j < dimensions[1]; ++j)
@@ -241,6 +251,16 @@ public:
 
       // SWAP RANK sends its Delta_S
       if (rank == swap_rank) {
+
+        DEBUG_MPI_PRINT(
+            "%s, DefectLength(Field): %d", params.to_string().c_str(),
+            hmc.hamiltonian_field.gauge_field.dParams.defect_length);
+        DEBUG_MPI_PRINT("Iteration %d: swap_rank=%d, defect(PTBC)=%f , "
+                        "defect(Field)=%f \n\t "
+                        "partner_rank = % d defect(PTBC) = % f ",
+                        i, swap_rank, params.defects[swap_rank],
+                        hmc.hamiltonian_field.gauge_field.get_defect(),
+                        partner_rank, params.defects[partner_rank]);
         real_t temp = swap_partner(partner_rank);
         // DEBUG_MPI_PRINT("Sending Delta_S_swap=%f to rank 0 (TAG_DELTAS)",
         // temp);
@@ -342,7 +362,7 @@ public:
     // this is a placeholder function, implement the actual plaquette
     // calculation
     auto plaq = GaugePlaquette<Nd, Nc, GaugeFieldKind::PTBC>(
-        this->hamiltonian_field.gauge_field,
+        hmc.hamiltonian_field.gauge_field,
         false); // TODO: implement only calculating around the defect
 
     return plaq;

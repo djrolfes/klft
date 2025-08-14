@@ -303,7 +303,7 @@ template <size_t Nd, size_t Nc> struct devicePTBCGaugeField {
   KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> &
   operator()(const indexType i, const indexType j, const indexType k,
              const indexType l, const index_t mu) {
-    return field(i, j, k, l, mu);
+    return field(i, j, k, l, mu) * defectField(i, j, k, l, mu);
   }
 
   // define accessors with 4D Kokkos array
@@ -317,7 +317,8 @@ template <size_t Nd, size_t Nc> struct devicePTBCGaugeField {
   template <typename indexType>
   KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> &
   operator()(const Kokkos::Array<indexType, 4> site, const index_t mu) {
-    return field(site[0], site[1], site[2], site[3], mu);
+    return field(site[0], site[1], site[2], site[3], mu) *
+           defectField(site[0], site[1], site[2], site[3], mu);
   }
 
   template <typename indexType>

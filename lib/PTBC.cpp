@@ -86,6 +86,9 @@ int PTBC_execute(const std::string &input_file,
   ptbcParams.gaugeObsParams = gaugeObsParams;
   ptbcParams.simLogParams = simLogParams;
   ptbcParams.ptbcSimLogParams = ptbcSimLogParams;
+  ptbcParams.gauge_params = gaugeMonomialParams;
+
+  // DEBUG_MPI_PRINT("%s", gaugeMonomialParams.to_string().c_str());
   RNGType rng(hmcParams.seed + rank);
   std::mt19937 mt(hmcParams.seed);
   std::uniform_real_distribution<real_t> dist(0.0, 1.0);
@@ -128,7 +131,7 @@ int PTBC_execute(const std::string &input_file,
         }
 
         using PTBC = PTBC<DGaugeFieldType, DAdjFieldType, RNGType>;
-        PTBC ptbc(ptbcParams, hamiltonian_field, hmc, rng, dist, mt);
+        PTBC ptbc(ptbcParams, hmc, rng, dist, mt);
 
         run_PTBC(ptbc, integratorParams, gaugeObsParams, ptbcSimLogParams,
                  simLogParams);
@@ -166,7 +169,7 @@ int PTBC_execute(const std::string &input_file,
         }
 
         using PTBC = PTBC<DGaugeFieldType, DAdjFieldType, RNGType>;
-        PTBC ptbc(ptbcParams, hamiltonian_field, hmc, rng, dist, mt);
+        PTBC ptbc(ptbcParams, hmc, rng, dist, mt);
 
         run_PTBC(ptbc, integratorParams, gaugeObsParams, ptbcSimLogParams,
                  simLogParams);
@@ -211,7 +214,7 @@ int PTBC_execute(const std::string &input_file,
         // }
         //
         // using PTBC = PTBC<DGaugeFieldType, DAdjFieldType, RNGType>;
-        // PTBC ptbc(ptbcParams, hamiltonian_field, hmc, rng, dist, mt);
+        // PTBC ptbc(ptbcParams, hmc, rng, dist, mt);
         //
         // run_PTBC(ptbc, integratorParams, gaugeObsParams, ptbcSimLogParams,
         //          simLogParams);
@@ -260,7 +263,7 @@ int PTBC_execute(const std::string &input_file,
         }
 
         using PTBC = PTBC<DGaugeFieldType, DAdjFieldType, RNGType>;
-        PTBC ptbc(ptbcParams, hamiltonian_field, hmc, rng, dist, mt);
+        PTBC ptbc(ptbcParams, hmc, rng, dist, mt);
 
         run_PTBC(ptbc, integratorParams, gaugeObsParams, ptbcSimLogParams,
                  simLogParams);
@@ -297,7 +300,7 @@ int PTBC_execute(const std::string &input_file,
         }
 
         using PTBC = PTBC<DGaugeFieldType, DAdjFieldType, RNGType>;
-        PTBC ptbc(ptbcParams, hamiltonian_field, hmc, rng, dist, mt);
+        PTBC ptbc(ptbcParams, hmc, rng, dist, mt);
 
         run_PTBC(ptbc, integratorParams, gaugeObsParams, ptbcSimLogParams,
                  simLogParams);
@@ -380,7 +383,7 @@ int PTBC_execute(const std::string &input_file,
         }
 
         using PTBC = PTBC<DGaugeFieldType, DAdjFieldType, RNGType>;
-        PTBC ptbc(ptbcParams, hamiltonian_field, hmc, rng, dist, mt);
+        PTBC ptbc(ptbcParams, hmc, rng, dist, mt);
 
         run_PTBC(ptbc, integratorParams, gaugeObsParams, ptbcSimLogParams,
                  simLogParams);
@@ -415,7 +418,7 @@ int PTBC_execute(const std::string &input_file,
         }
 
         using PTBC = PTBC<DGaugeFieldType, DAdjFieldType, RNGType>;
-        PTBC ptbc(ptbcParams, hamiltonian_field, hmc, rng, dist, mt);
+        PTBC ptbc(ptbcParams, hmc, rng, dist, mt);
 
         run_PTBC(ptbc, integratorParams, gaugeObsParams, ptbcSimLogParams,
                  simLogParams);
@@ -496,7 +499,7 @@ int PTBC_execute(const std::string &input_file,
         }
 
         using PTBC = PTBC<DGaugeFieldType, DAdjFieldType, RNGType>;
-        PTBC ptbc(ptbcParams, hamiltonian_field, hmc, rng, dist, mt);
+        PTBC ptbc(ptbcParams, hmc, rng, dist, mt);
 
         run_PTBC(ptbc, integratorParams, gaugeObsParams, ptbcSimLogParams,
                  simLogParams);
@@ -533,7 +536,7 @@ int PTBC_execute(const std::string &input_file,
         }
 
         using PTBC = PTBC<DGaugeFieldType, DAdjFieldType, RNGType>;
-        PTBC ptbc(ptbcParams, hamiltonian_field, hmc, rng, dist, mt);
+        PTBC ptbc(ptbcParams, hmc, rng, dist, mt);
 
         if (KLFT_VERBOSITY > 1) {
           printf("Running PTBC with Nc = %zu, Ndims = %d, L0 = %d, L1 = %d, "
@@ -590,7 +593,7 @@ int PTBC_execute(const std::string &input_file,
         }
 
         using PTBC = PTBC<DGaugeFieldType, DAdjFieldType, RNGType>;
-        PTBC ptbc(ptbcParams, hamiltonian_field, hmc, rng, dist, mt);
+        PTBC ptbc(ptbcParams, hmc, rng, dist, mt);
 
         run_PTBC(ptbc, integratorParams, gaugeObsParams, ptbcSimLogParams,
                  simLogParams);
@@ -626,7 +629,7 @@ int PTBC_execute(const std::string &input_file,
         }
 
         using PTBC = PTBC<DGaugeFieldType, DAdjFieldType, RNGType>;
-        PTBC ptbc(ptbcParams, hamiltonian_field, hmc, rng, dist, mt);
+        PTBC ptbc(ptbcParams, hmc, rng, dist, mt);
 
         run_PTBC(ptbc, integratorParams, gaugeObsParams, ptbcSimLogParams,
                  simLogParams);
@@ -673,7 +676,7 @@ int PTBC_execute(const std::string &input_file,
         }
 
         using PTBC = PTBC<DGaugeFieldType, DAdjFieldType, RNGType>;
-        PTBC ptbc(ptbcParams, hamiltonian_field, hmc, rng, dist, mt);
+        PTBC ptbc(ptbcParams, hmc, rng, dist, mt);
 
         run_PTBC(ptbc, integratorParams, gaugeObsParams, ptbcSimLogParams,
                  simLogParams);
@@ -707,7 +710,7 @@ int PTBC_execute(const std::string &input_file,
         }
 
         using PTBC = PTBC<DGaugeFieldType, DAdjFieldType, RNGType>;
-        PTBC ptbc(ptbcParams, hamiltonian_field, hmc, rng, dist, mt);
+        PTBC ptbc(ptbcParams, hmc, rng, dist, mt);
 
         run_PTBC(ptbc, integratorParams, gaugeObsParams, ptbcSimLogParams,
                  simLogParams);
