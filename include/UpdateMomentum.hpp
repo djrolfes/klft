@@ -43,8 +43,8 @@ public:
   UpdateMomentumGauge() = delete;
   ~UpdateMomentumGauge() = default;
 
-  UpdateMomentumGauge(GaugeFieldType gauge_field_, AdjFieldType adjoint_field_,
-                      const real_t &beta_)
+  UpdateMomentumGauge(GaugeFieldType &gauge_field_,
+                      AdjFieldType &adjoint_field_, const real_t &beta_)
       : UpdateMomentum(0), gauge_field(gauge_field_),
         adjoint_field(adjoint_field_), beta(beta_), eps(0.0) {}
   // todo: Add Force as a function instead of it being incorporated into the
@@ -57,8 +57,8 @@ public:
     for (index_t mu = 0; mu < rank; ++mu) {
       adjoint_field(Idcs..., mu) -=
           this->eps *
-          ((this->beta / this->Nc) * traceT(this->gauge_field(Idcs..., mu) *
-                                            (this->staple_field(Idcs..., mu))));
+          ((this->beta / this->Nc) * (traceT(this->gauge_field(Idcs..., mu) *
+                                             this->staple_field(Idcs..., mu))));
     }
   }
 
@@ -68,6 +68,7 @@ public:
     for (size_t i = 0; i < rank; ++i) {
       start[i] = 0;
     }
+
     // launch the kernels
     staple_field = stapleField<DGaugeFieldType>(gauge_field);
     Kokkos::fence();

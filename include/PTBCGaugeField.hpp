@@ -296,6 +296,8 @@ template <size_t Nd, size_t Nc> struct devicePTBCGaugeField {
   KOKKOS_FORCEINLINE_FUNCTION SUN<Nc>
   operator()(const indexType i, const indexType j, const indexType k,
              const indexType l, const index_t mu) const {
+
+    return field(i, j, k, l, mu);
     return field(i, j, k, l, mu) * defectField(i, j, k, l, mu);
   }
 

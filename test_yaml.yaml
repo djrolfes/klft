@@ -37,7 +37,7 @@ Integrator:
     #   steps: 20
 Gauge Monomial:
   level: 0
-  beta: 2.12
+  beta: 3.12
 
 # Fermion Monomial:
 #   level: 1
@@ -48,7 +48,7 @@ Gauge Monomial:
 #   tol: 1e-10
 
 GaugeObservableParams:
-  measurement_interval: 5
+  measurement_interval: 15
   measure_plaquette: true
   measure_wilson_loop_temporal: false
   measure_wilson_loop_mu_nu: false
@@ -83,7 +83,7 @@ SimulationLoggingParams:
 
 PTBCParams:
   defect_length: 2
-  defect_values: [0.0, 0.143, 0.286, 0.429, 0.571, 0.714, 0.857, 1.0]
+  defect_values: [0.0, 0.286, 0.571, 0.714, 1.0]
 
 
 PTBCSimulationLoggingParams:

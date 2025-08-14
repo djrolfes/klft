@@ -25,6 +25,28 @@ std::string ranked_filename(const std::string &base_filename, int rank) {
 
 int PTBC_execute(const std::string &input_file,
                  const std::string &output_directory) {
+
+  const int verbosity = std::getenv("KLFT_VERBOSITY")
+                            ? std::atoi(std::getenv("KLFT_VERBOSITY"))
+                            : 0;
+  setVerbosity(verbosity);
+  // get tuning from environment
+  // const int tuning =
+  //     std::getenv("KLFT_TUNING") ? std::atoi(std::getenv("KLFT_TUNING")) : 1;
+  // setTuning(tuning);
+  // // if tuning is enbled, check if the user has set the
+  // // KLFT_CACHE_FILE environment variable
+  // if (tuning) {
+  //   const char *cache_file = std::getenv("KLFT_CACHE_FILE");
+  //   // if it exists, read the cache
+  //   if (cache_file) {
+  //     if (KLFT_VERBOSITY > 0) {
+  //       printf("Reading cache file: %s\n", cache_file);
+  //     }
+  //     readTuneCache(cache_file);
+  //   }
+  // }
+
   int rank, size;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -529,6 +551,13 @@ int PTBC_execute(const std::string &input_file,
 
         using PTBC = PTBC<DGaugeFieldType, DAdjFieldType, RNGType>;
         PTBC ptbc(ptbcParams, hamiltonian_field, hmc, rng, dist, mt);
+
+        if (KLFT_VERBOSITY > 1) {
+          printf("Running PTBC with Nc = %zu, Ndims = %d, L0 = %d, L1 = %d, "
+                 "L2 = %d, L3 = %d\n",
+                 hmcParams.Nc, hmcParams.Ndims, hmcParams.L0, hmcParams.L1,
+                 hmcParams.L2, hmcParams.L3);
+        }
 
         run_PTBC(ptbc, integratorParams, gaugeObsParams, ptbcSimLogParams,
                  simLogParams);
