@@ -171,25 +171,14 @@ public:
 
     int rank;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    auto plaq = getPlaquetteAroundDefect();
-    DEBUG_MPI_PRINT(
-        "Plaquette around defect ss: %f\n\tDefect(PTBC): %f, Defect(Field): %f",
-        plaq, params.defects[rank],
-        hmc.hamiltonian_field.gauge_field.get_defect());
-    DEBUG_MPI_PRINT("beta: %f, Nc: %zu", params.gauge_params.beta, Nc);
-    real_t S_ss = -(params.gauge_params.beta / static_cast<real_t>(Nc)) * plaq;
-    DEBUG_MPI_PRINT("S_ss = %f", S_ss);
+    real_t S_ss = getActionAroundDefect();
+    // DEBUG_MPI_PRINT("S_ss = %f", S_ss);
     // now do the index/defect swapping
     hmc.hamiltonian_field.gauge_field.template set_defect<index_t>(
         params.defects[partner_rank]); // set the defect value of the current
     //
-    plaq = getPlaquetteAroundDefect();
-    DEBUG_MPI_PRINT(
-        "Plaquette around defect sr: %f\n\tDefect(PTBC): %f, Defect(Field): %f",
-        plaq, params.defects[partner_rank],
-        hmc.hamiltonian_field.gauge_field.get_defect());
-    real_t S_sr = -(params.gauge_params.beta / static_cast<real_t>(Nc)) * plaq;
-    DEBUG_MPI_PRINT("S_sr = %f", S_sr);
+    real_t S_sr = getActionAroundDefect();
+    // DEBUG_MPI_PRINT("S_sr = %f", S_sr);
     return S_sr - S_ss; // return the partial Delta_S
   }
 
@@ -240,18 +229,13 @@ public:
     // Rank 0 determines swap_start and broadcasts
     if (rank == 0) {
       swap_start = int(dist(mt) * (size));
-      // DEBUG_MPI_PRINT("Rank 0 broadcasting swap_start = %d", swap_start);
     }
 
     MPI_Bcast(&swap_start, 1, MPI_INT, 0, MPI_COMM_WORLD);
-    // DEBUG_MPI_PRINT("Received broadcast swap_start = %d", swap_start);
 
     for (index_t i = 0; i < size; ++i) {
       swap_rank = (swap_start + i) % size;
       partner_rank = (swap_rank + 1) % size;
-
-      // DEBUG_MPI_PRINT("Iteration %d: swap_rank=%d, partner_rank=%d", i,
-      // swap_rank, partner_rank);
 
       // SWAP RANK sends its Delta_S
       if (rank == swap_rank) {
@@ -266,25 +250,14 @@ public:
                         hmc.hamiltonian_field.gauge_field.get_defect(),
                         partner_rank, params.defects[partner_rank]);
 
-        // if constexpr (Nd == 4) {
-        //   hmc.hamiltonian_field.gauge_field.check_defect_application();
-        // }
         real_t temp = swap_partner(partner_rank);
 
-        // if constexpr (Nd == 4) {
-        //   hmc.hamiltonian_field.gauge_field.check_defect_application();
-        // }
-        // DEBUG_MPI_PRINT("Sending Delta_S_swap=%f to rank 0 (TAG_DELTAS)",
-        // temp);
         MPI_Send(&temp, 1, mpi_real_t(), 0, TAG_DELTAS, MPI_COMM_WORLD);
       }
 
       // PARTNER RANK sends its Delta_S
       if (rank == partner_rank) {
         real_t temp = swap_partner(swap_rank);
-        // DEBUG_MPI_PRINT("Sending Delta_S_partner=%f to rank 0
-        // (TAG_DELTAS)",
-        //                 temp);
         MPI_Send(&temp, 1, mpi_real_t(), 0, TAG_DELTAS, MPI_COMM_WORLD);
       }
 
@@ -293,13 +266,9 @@ public:
         real_t Delta_S_partner1, Delta_S_partner2;
         MPI_Recv(&Delta_S_partner1, 1, mpi_real_t(), swap_rank, TAG_DELTAS,
                  MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        // DEBUG_MPI_PRINT("Received Delta_S_swap=%f from swap_rank=%d",
-        //                 Delta_S_partner1, swap_rank);
 
         MPI_Recv(&Delta_S_partner2, 1, mpi_real_t(), partner_rank, TAG_DELTAS,
                  MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        // DEBUG_MPI_PRINT("Received Delta_S_partner=%f from partner_rank=%d",
-        //                 Delta_S_partner2, partner_rank);
 
         Delta_S = Delta_S_partner1 + Delta_S_partner2;
 
@@ -310,34 +279,23 @@ public:
             accept = false;
           }
         }
-        // DEBUG_MPI_PRINT("Total Delta_S = %f, accept = %d", Delta_S,
-        // accept);
 
         MPI_Send(&accept, 1, MPI_C_BOOL, swap_rank, TAG_ACCEPT, MPI_COMM_WORLD);
         MPI_Send(&accept, 1, MPI_C_BOOL, partner_rank, TAG_ACCEPT,
                  MPI_COMM_WORLD);
-        // DEBUG_MPI_PRINT("Sent accept=%d to swap_rank=%d and
-        // partner_rank=%d",
-        //                 accept, swap_rank, partner_rank);
       }
 
       // Swap ranks receive accept flag
       if (rank == swap_rank || rank == partner_rank) {
-        // DEBUG_MPI_PRINT("Waiting to receive accept from rank 0");
         MPI_Recv(&accept, 1, MPI_C_BOOL, 0, TAG_ACCEPT, MPI_COMM_WORLD,
                  MPI_STATUS_IGNORE);
-        // DEBUG_MPI_PRINT("Received accept=%d from rank 0", accept);
 
         reverse_swap(accept);
-        // DEBUG_MPI_PRINT("Reverse swap executed with accept=%d", accept);
       }
 
       // Rank 0 performs the swap if accepted
       if (rank == 0 && accept) {
 
-        // DEBUG_MPI_PRINT("Swapping params.defects[%d] <->
-        // params.defects[%d]",
-        //                 swap_rank, partner_rank);
         std::swap(params.defects[swap_rank], params.defects[partner_rank]);
       }
 
@@ -361,26 +319,24 @@ public:
         swap_accepts[swap_rank] = accept;
         swap_deltas[swap_rank] = Delta_S;
         _swap_start = swap_start; // store the swap start rank
-        // DEBUG_MPI_PRINT("Rank 0 updated swap_accepts[%d] = %d and
-        // swap_deltas[%d] = %f", swap_rank, accept, swap_rank, Delta_S);
       }
     }
 
     // TODO: shift the defect by one lattice spacing in a random direction
     //
-    // DEBUG_MPI_PRINT("Exiting swap() function");
     return 0;
   }
 
-  real_t getPlaquetteAroundDefect() {
+  real_t getActionAroundDefect() {
     // calculate the plaquette around the defect
-    // this is a placeholder function, implement the actual plaquette
-    // calculation
-    auto plaq = GaugePlaquette<Nd, Nc, GaugeFieldKind::PTBC>(
-        hmc.hamiltonian_field.gauge_field,
-        false); // TODO: implement only calculating around the defect
+    // this is a placeholder function,
+    // TODO: implement the actual action around
+    // the defect
 
-    return plaq;
+    auto action = WilsonAction<DGaugeFieldType>(
+        hmc.hamiltonian_field.gauge_field, params.gauge_params.beta);
+
+    return action;
   }
 
 private:

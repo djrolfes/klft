@@ -1,6 +1,6 @@
 #pragma once
 #include "GLOBAL.hpp"
-#include "GaugePlaquette.hpp"
+#include "GaugeAction.hpp"
 #include "HamiltonianField.hpp"
 #include "Monomial.hpp"
 
@@ -33,14 +33,12 @@ public:
 
   void heatbath(HamiltonianField<DGaugeFieldType, DAdjFieldType> h) override {
     Monomial<DGaugeFieldType, DAdjFieldType>::H_old =
-        -(beta / static_cast<real_t>(Nc)) *
-        GaugePlaquette<rank, Nc, k>(h.gauge_field, false);
+        WilsonAction<DGaugeFieldType>(h.gauge_field, beta);
   }
 
   void accept(HamiltonianField<DGaugeFieldType, DAdjFieldType> h) override {
     Monomial<DGaugeFieldType, DAdjFieldType>::H_new =
-        -(beta / static_cast<real_t>(Nc)) *
-        GaugePlaquette<rank, Nc, k>(h.gauge_field, false);
+        WilsonAction<DGaugeFieldType>(h.gauge_field, beta);
   }
   void print() override {
     printf("Gauge Monomial:   %.20f\n", this->get_delta_H());
