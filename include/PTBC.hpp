@@ -231,26 +231,6 @@ public:
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
-    if (rank == 4) {
-      auto &gf = hmc.hamiltonian_field.gauge_field;
-
-      // 1) set defect = a, measure
-      gf.template set_defect<index_t>(0.571);
-      Kokkos::fence();
-      auto P_a =
-          GaugePlaquette<Nd, Nc, GaugeFieldKind::PTBC>(gf, /*normalize=*/false);
-
-      // 2) set defect = b, measure
-      gf.template set_defect<index_t>(1.0);
-      Kokkos::fence();
-      auto P_b =
-          GaugePlaquette<Nd, Nc, GaugeFieldKind::PTBC>(gf, /*normalize=*/false);
-
-      printf("P(0.571)=%.10f  P(1.0)=%.10f  Δ=%.10f\n", (double)P_a,
-             (double)P_b, (double)(P_b - P_a));
-      gf.template set_defect<index_t>(params.defects[rank]);
-    }
-
     int partner_rank;
     bool accept = false;
     real_t Delta_S{0};
