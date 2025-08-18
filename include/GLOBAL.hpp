@@ -69,6 +69,7 @@ namespace klft {
 // be precision agnostic, everything has to be templated with given precision
 // let's start like this and worry about mixed precision later
 using real_t = double;
+constexpr const real_t REAL_T_EPSILON = std::numeric_limits<real_t>::epsilon();
 
 // use int for the index type
 using index_t = int;
