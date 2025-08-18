@@ -386,6 +386,8 @@ public:
       }
     }
 
+    // TODO: shift the defect by one lattice spacing in a random direction
+    //
     // DEBUG_MPI_PRINT("Exiting swap() function");
     return 0;
   }
