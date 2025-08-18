@@ -286,14 +286,14 @@ public:
                         hmc.hamiltonian_field.gauge_field.get_defect(),
                         partner_rank, params.defects[partner_rank]);
 
-        if constexpr (Nd == 4) {
-          hmc.hamiltonian_field.gauge_field.check_defect_application();
-        }
+        // if constexpr (Nd == 4) {
+        //   hmc.hamiltonian_field.gauge_field.check_defect_application();
+        // }
         real_t temp = swap_partner(partner_rank);
 
-        if constexpr (Nd == 4) {
-          hmc.hamiltonian_field.gauge_field.check_defect_application();
-        }
+        // if constexpr (Nd == 4) {
+        //   hmc.hamiltonian_field.gauge_field.check_defect_application();
+        // }
         // DEBUG_MPI_PRINT("Sending Delta_S_swap=%f to rank 0 (TAG_DELTAS)",
         // temp);
         MPI_Send(&temp, 1, mpi_real_t(), 0, TAG_DELTAS, MPI_COMM_WORLD);

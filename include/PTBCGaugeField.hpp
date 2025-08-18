@@ -274,21 +274,22 @@ template <size_t Nd, size_t Nc> struct devicePTBCGaugeField {
     Kokkos::fence();
   }
 
-  void check_defect_application() {
-    int rank, size;
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    MPI_Comm_size(MPI_COMM_WORLD, &size);
-    // Raw field entry at site (0,0,0,0,mu=0)
-    SUN<Nc> field_value = field(0, 0, 0, 0, 0);
-
-    // Defect-applied entry via operator()
-    SUN<Nc> defect_SUN = this->operator()(0, 0, 0, 0, 0);
-
-    print_SUN<Nc>(field_value, "[Rank " + std::to_string(rank) +
-                                   "] Field value at (0,0,0,0,mu=0): ");
-    print_SUN<Nc>(defect_SUN, "[Rank " + std::to_string(rank) +
-                                  "] Defect-applied value at (0,0,0,0,mu=0): ");
-  }
+  // void check_defect_application() {
+  //   int rank, size;
+  //   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  //   MPI_Comm_size(MPI_COMM_WORLD, &size);
+  //   // Raw field entry at site (0,0,0,0,mu=0)
+  //   SUN<Nc> field_value = field(0, 0, 0, 0, 0);
+  //
+  //   // Defect-applied entry via operator()
+  //   SUN<Nc> defect_SUN = this->operator()(0, 0, 0, 0, 0);
+  //
+  //   print_SUN<Nc>(field_value, "[Rank " + std::to_string(rank) +
+  //                                  "] Field value at (0,0,0,0,mu=0): ");
+  //   print_SUN<Nc>(defect_SUN, "[Rank " + std::to_string(rank) +
+  //                                 "] Defect-applied value at (0,0,0,0,mu=0):
+  //                                 ");
+  // }
 
   void shift_defect(IndexArray<Nd - 1> new_position) {
     // set the current defect regions defect to 1.0, update the position of the
