@@ -23,7 +23,6 @@
 
 #pragma once
 #include "FieldTypeHelper.hpp"
-#include "GLOBAL.hpp"
 #include "IndexHelper.hpp"
 
 namespace klft {

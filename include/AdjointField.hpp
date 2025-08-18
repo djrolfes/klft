@@ -1,4 +1,5 @@
 #pragma once
+#include "AdjointGroup.hpp"
 #include "AdjointSUN.hpp"
 #include "GLOBAL.hpp"
 #include "Kokkos_Core.hpp"

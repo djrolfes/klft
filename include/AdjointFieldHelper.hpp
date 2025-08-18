@@ -1,4 +1,5 @@
 #pragma once
+#include "AdjointField.hpp"
 #include "FieldTypeHelper.hpp"
 #include "GLOBAL.hpp"
 namespace klft {
