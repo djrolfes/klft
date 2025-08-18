@@ -343,6 +343,14 @@ SUN<2> restoreSUN(const SUN<2> &a) {
   real_t norm = Kokkos::sqrt(
       a[0][0].real() * a[0][0].real() + a[0][0].imag() * a[0][0].imag() +
       a[0][1].real() * a[0][1].real() + a[0][1].imag() * a[0][1].imag());
+  if (norm < std::numeric_limits<real_t>::epsilon()) {
+    // If norm is too small, return identity matrix
+    c[0][0] = complex_t(1.0, 0.0);
+    c[0][1] = complex_t(0.0, 0.0);
+    c[1][0] = complex_t(0.0, 0.0);
+    c[1][1] = complex_t(1.0, 0.0);
+    return c;
+  }
   c[0][0] = a[0][0] / norm;
   c[0][1] = a[0][1] / norm;
   c[1][0] = a[1][0] / norm;
