@@ -1,6 +1,5 @@
 #pragma once
 #include "GLOBAL.hpp"
-#include "SUN.hpp"
 
 #define SQRT3 1.7320508075688772936
 #define SQRT3INV 0.5773502691896257645
