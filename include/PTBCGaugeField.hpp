@@ -368,7 +368,7 @@ template <size_t Nd, size_t Nc> struct devicePTBCGaugeField {
   KOKKOS_FORCEINLINE_FUNCTION void
   set(const indexType i, const indexType j, const indexType k,
       const indexType l, const index_t mu, const SUN<Nc> &value) const {
-    field(i, j, k, l, mu) = restoreSUN(value); // raw write
+    field(i, j, k, l, mu) = (value); // raw write
   }
 
   template <typename indexType>
