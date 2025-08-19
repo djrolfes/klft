@@ -103,8 +103,6 @@ void measureGaugeObservablesPTBC(const typename DGaugeFieldType::type &g_in,
       DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank;
   constexpr static const size_t Nc =
       DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc;
-  constexpr static const GaugeFieldKind kind =
-      DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Kind;
 
   if ((params.measurement_interval == 0) ||
       (step % params.measurement_interval != 0) || (step == 0)) {
