@@ -212,7 +212,8 @@ int run_metropolis(GaugeFieldType &g_in,
              time);
     }
     // measure the gauge observables
-    measureGaugeObservables<rank, Nc>(g_in, gaugeObsParams, step);
+    measureGaugeObservables<DeviceGaugeFieldType<rank, Nc>>(
+        g_in, gaugeObsParams, step);
   }
   // flush the measurements to the files
   forceflushAllGaugeObservables(gaugeObsParams);

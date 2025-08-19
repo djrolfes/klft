@@ -70,6 +70,7 @@ namespace klft {
 // let's start like this and worry about mixed precision later
 using real_t = double;
 constexpr const real_t REAL_T_EPSILON = std::numeric_limits<real_t>::epsilon();
+constexpr const real_t PI = Kokkos::numbers::pi_v<real_t>;
 
 // use int for the index type
 using index_t = int;

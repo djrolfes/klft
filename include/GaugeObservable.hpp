@@ -28,6 +28,7 @@
 
 #include "FieldTypeHelper.hpp"
 #include "GaugePlaquette.hpp"
+#include "TopoCharge.hpp"
 #include "WilsonLoop.hpp"
 
 namespace klft {
@@ -38,6 +39,8 @@ struct GaugeObservableParams {
   bool measure_wilson_loop_temporal; // whether to measure the temporal Wilson
                                      // loop
   bool measure_wilson_loop_mu_nu;    // whether to measure the mu-nu Wilson loop
+  bool measure_topological_charge; // whether to measure the topological charge
+
   std::vector<Kokkos::Array<index_t, 2>>
       W_temp_L_T_pairs; // pairs of (L,T) for the temporal Wilson loop
   std::vector<Kokkos::Array<index_t, 2>>
@@ -53,6 +56,8 @@ struct GaugeObservableParams {
       W_temp_measurements; // L, T and corresponding W_temp
   std::vector<std::vector<Kokkos::Array<real_t, 5>>>
       W_mu_nu_measurements; // mu, nu, Lmu, Lnu and corresponding W_mu_nu
+  std::vector<real_t> topological_charge_measurements; // measurements of the
+                                                       // topological charge
 
   // finally, some filenames where the measurements will be flushed
   std::string plaquette_filename; // filename for the plaquette measurements
@@ -60,6 +65,8 @@ struct GaugeObservableParams {
       W_temp_filename; // filename for the temporal Wilson loop measurements
   std::string
       W_mu_nu_filename; // filename for the mu-nu Wilson loop measurements
+  std::string
+      topological_charge_filename; // filename for the topological charge
 
   // boolean flag to indicate if the measurements are to be flushed
   bool write_to_file;
@@ -75,7 +82,7 @@ struct GaugeObservableParams {
   GaugeObservableParams()
       : measurement_interval(0), measure_plaquette(false),
         measure_wilson_loop_temporal(false), measure_wilson_loop_mu_nu(false),
-        flush(25), flushed(false) {}
+        measure_topological_charge(false), flush(25), flushed(false) {}
 };
 
 typedef enum {
@@ -83,15 +90,21 @@ typedef enum {
   MPI_GAUGE_OBSERVABLES_WILSON_LOOP_MU_NU = 1,
   MPI_GAUGE_OBSERVABLES_WILSON_LOOP_TEMPORAL = 2,
   MPI_GAUGE_OBSERVABLES_WILSON_LOOP_MU_NU_SIZE = 3,
-  MPI_GAUGE_OBSERVABLES_WILSON_LOOP_TEMPORAL_SIZE = 4
+  MPI_GAUGE_OBSERVABLES_WILSON_LOOP_TEMPORAL_SIZE = 4,
+  MPI_GAUGE_OBSERVABLES_TOPOLOGICAL_CHARGE = 5
 } MPI_GaugeObservableTags;
 
-template <size_t Nd, size_t Nc>
-void measureGaugeObservablesPTBC(
-    const typename DeviceGaugeFieldType<Nd, Nc, GaugeFieldKind::PTBC>::type
-        &g_in,
-    GaugeObservableParams &params, const size_t step, const int compute_rank,
-    const bool do_compute = false) {
+template <typename DGaugeFieldType>
+void measureGaugeObservablesPTBC(const typename DGaugeFieldType::type &g_in,
+                                 GaugeObservableParams &params,
+                                 const size_t step, const int compute_rank,
+                                 const bool do_compute = false) {
+  constexpr static const size_t Nd =
+      DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank;
+  constexpr static const size_t Nc =
+      DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc;
+  constexpr static const GaugeFieldKind kind =
+      DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Kind;
 
   if ((params.measurement_interval == 0) ||
       (step % params.measurement_interval != 0) || (step == 0)) {
@@ -101,6 +114,7 @@ void measureGaugeObservablesPTBC(
   int rank, size;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &size);
+  real_t TopologicalCharge;
   real_t Plaquette;
   std::vector<Kokkos::Array<real_t, 5>> WilsonLoop_meas;
   std::vector<Kokkos::Array<real_t, 3>> WilsonTemp_measurements;
@@ -111,6 +125,20 @@ void measureGaugeObservablesPTBC(
       printf("Measurement of Gauge Observables\n");
       printf("step: %zu\n", step);
     }
+
+    if constexpr (Nd == 4) {
+      if (params.measure_topological_charge && Nd == 4) {
+        // measure the topological charge if requested
+        real_t TopologicalCharge =
+            get_topological_charge<DGaugeFieldType>(g_in);
+        MPI_Send(&TopologicalCharge, 1, mpi_real_t(), 0,
+                 MPI_GAUGE_OBSERVABLES_TOPOLOGICAL_CHARGE, MPI_COMM_WORLD);
+        if (KLFT_VERBOSITY > 1) {
+          printf("topological charge: %11.6f\n", TopologicalCharge);
+        }
+      }
+    }
+
     // measure the plaquette if requested
     if (params.measure_plaquette) {
       Plaquette = GaugePlaquette<Nd, Nc, GaugeFieldKind::PTBC>(g_in);
@@ -179,12 +207,22 @@ void measureGaugeObservablesPTBC(
   if (rank == 0) {
     // only the computing rank measures the observables
     params.measurement_steps.push_back(step);
-    if (params.measure_plaquette) {
-      // send the plaquette measurement to the compute rank
-      MPI_Recv(&Plaquette, 1, mpi_real_t(), compute_rank,
-               MPI_GAUGE_OBSERVABLES_PLAQUETTE, MPI_COMM_WORLD,
-               MPI_STATUS_IGNORE);
-      params.plaquette_measurements.push_back(Plaquette);
+
+    if constexpr (Nd == 4) {
+      if (params.measure_topological_charge && Nd == 4) {
+        // measure the topological charge if requested
+        MPI_Recv(&TopologicalCharge, 1, mpi_real_t(), compute_rank,
+                 MPI_GAUGE_OBSERVABLES_TOPOLOGICAL_CHARGE, MPI_COMM_WORLD,
+                 MPI_STATUS_IGNORE);
+        params.topological_charge_measurements.push_back(TopologicalCharge);
+      }
+      if (params.measure_plaquette) {
+        // send the plaquette measurement to the compute rank
+        MPI_Recv(&Plaquette, 1, mpi_real_t(), compute_rank,
+                 MPI_GAUGE_OBSERVABLES_PLAQUETTE, MPI_COMM_WORLD,
+                 MPI_STATUS_IGNORE);
+        params.plaquette_measurements.push_back(Plaquette);
+      }
     }
 
     if (params.measure_wilson_loop_mu_nu) {
@@ -236,10 +274,15 @@ void measureGaugeObservablesPTBC(
 }
 
 // define a function to measure the gauge observables
-template <size_t rank, size_t Nc>
-void measureGaugeObservables(
-    const typename DeviceGaugeFieldType<rank, Nc>::type &g_in,
-    GaugeObservableParams &params, const size_t step) {
+template <typename DGaugeFieldType>
+void measureGaugeObservables(const typename DGaugeFieldType::type &g_in,
+                             GaugeObservableParams &params, const size_t step) {
+  constexpr static const size_t Nd =
+      DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank;
+  constexpr static const size_t Nc =
+      DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc;
+  constexpr static const GaugeFieldKind kind =
+      DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Kind;
   // check if the step is a measurement step
   if ((params.measurement_interval == 0) ||
       (step % params.measurement_interval != 0) || (step == 0)) {
@@ -250,9 +293,19 @@ void measureGaugeObservables(
     printf("Measurement of Gauge Observables\n");
     printf("step: %zu\n", step);
   }
+  if constexpr (Nd == 4) {
+    if (params.measure_topological_charge) {
+      // measure the topological charge if requested
+      real_t Q = get_topological_charge<DGaugeFieldType>(g_in);
+      params.topological_charge_measurements.push_back(Q);
+      if (KLFT_VERBOSITY > 1) {
+        printf("topological charge: %11.6f\n", Q);
+      }
+    }
+  }
   // measure the plaquette if requested
   if (params.measure_plaquette) {
-    real_t P = GaugePlaquette<rank, Nc>(g_in);
+    real_t P = GaugePlaquette<Nd, Nc>(g_in);
     params.plaquette_measurements.push_back(P);
     if (KLFT_VERBOSITY > 1) {
       printf("plaquette: %11.6f\n", P);
@@ -265,8 +318,8 @@ void measureGaugeObservables(
       printf("L, T, W_temp\n");
     }
     std::vector<Kokkos::Array<real_t, 3>> temp_measurements;
-    WilsonLoop_temporal<rank, Nc>(g_in, params.W_temp_L_T_pairs,
-                                  temp_measurements);
+    WilsonLoop_temporal<Nd, Nc>(g_in, params.W_temp_L_T_pairs,
+                                temp_measurements);
     if (KLFT_VERBOSITY > 1) {
       for (const auto &measure : temp_measurements) {
         printf("%d, %d, %11.6f\n", static_cast<index_t>(measure[0]),
@@ -285,8 +338,8 @@ void measureGaugeObservables(
     for (const auto &pair_mu_nu : params.W_mu_nu_pairs) {
       const index_t mu = pair_mu_nu[0];
       const index_t nu = pair_mu_nu[1];
-      WilsonLoop_mu_nu<rank, Nc>(g_in, mu, nu, params.W_Lmu_Lnu_pairs,
-                                 temp_measurements);
+      WilsonLoop_mu_nu<Nd, Nc>(g_in, mu, nu, params.W_Lmu_Lnu_pairs,
+                               temp_measurements);
       if (KLFT_VERBOSITY > 1) {
         for (const auto &measure : temp_measurements) {
           printf("%d, %d, %d, %d, %11.6f\n", static_cast<index_t>(measure[0]),
@@ -301,6 +354,27 @@ void measureGaugeObservables(
   // add the step to the measurement steps
   params.measurement_steps.push_back(step);
   return;
+}
+
+inline void flushTopologicalCharge(std::ofstream &file,
+                                   const GaugeObservableParams &params,
+                                   const bool HEADER = true) {
+  // check if the file is open
+  if (!file.is_open()) {
+    printf("Error: file is not open\n");
+    return;
+  }
+  // check if topological charge measurements are available
+  if (!params.measure_topological_charge) {
+    printf("Error: no topological charge measurements available\n");
+    return;
+  }
+  if (HEADER)
+    file << "# step, topological_charge\n";
+  for (size_t i = 0; i < params.measurement_steps.size(); ++i) {
+    file << params.measurement_steps[i] << ", "
+         << params.topological_charge_measurements[i] << "\n";
+  }
 }
 
 // flush the plaquette measurements to disk
@@ -377,6 +451,7 @@ inline void flushWilsonLoopMuNu(std::ofstream &file,
 // function to clear all measurements
 inline void clearAllGaugeObservables(GaugeObservableParams &params) {
   params.measurement_steps.clear();
+  params.topological_charge_measurements.clear();
   params.plaquette_measurements.clear();
   params.W_temp_measurements.clear();
   params.W_mu_nu_measurements.clear();
@@ -397,6 +472,13 @@ forceflushAllGaugeObservables(GaugeObservableParams &params,
   }
   bool HEADER = !params.flushed; // write header only once
   // flush plaquette measurements
+  if (params.measure_topological_charge &&
+      params.topological_charge_filename != "") {
+    std::ofstream file(params.topological_charge_filename, std::ios::app);
+    flushTopologicalCharge(file, params, HEADER);
+    file.close();
+  }
+
   if (params.measure_plaquette && params.plaquette_filename != "") {
     std::ofstream file(params.plaquette_filename, std::ios::app);
     flushPlaquette(file, params, HEADER);

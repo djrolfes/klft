@@ -4,6 +4,7 @@
 #include "AdjointFieldHelper.hpp"
 #include "FermionMonomial.hpp"
 #include "FermionParams.hpp"
+#include "FieldTypeHelper.hpp"
 #include "GLOBAL.hpp"
 #include "GaugeMonomial.hpp"
 #include "Gauge_Util.hpp"
@@ -19,6 +20,8 @@ public:
   // template argument deduction and safety
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
   static_assert(isDeviceAdjFieldType<DAdjFieldType>::value);
+  typedef DGaugeFieldType DeviceGaugeFieldType;
+  typedef DAdjFieldType DeviceAdjFieldType;
   constexpr static size_t rank =
       DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank;
   constexpr static size_t Nc = DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc;
@@ -141,4 +144,13 @@ public:
     return accept;
   }
 };
+
+// compile time check for the appropriate types
+template <typename T> struct isHMCClass : std::false_type {};
+
+template <size_t rank, size_t Nc, GaugeFieldKind k, class RNG>
+struct isHMCClass<
+    HMC<DeviceGaugeFieldType<rank, Nc, k>, DeviceAdjFieldType<rank, Nc>, RNG>>
+    : std::true_type {};
+
 } // namespace klft

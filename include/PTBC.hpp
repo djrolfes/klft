@@ -140,13 +140,13 @@ public:
         if (KLFT_VERBOSITY > 1) {
           printf("Measuring PTBC observables at step %zu\n", step);
         }
-        measureGaugeObservablesPTBC<Nd, Nc>(hmc.hamiltonian_field.gauge_field,
-                                            gaugeObsParams, step, 0, true);
+        measureGaugeObservablesPTBC<DGaugeFieldType>(
+            hmc.hamiltonian_field.gauge_field, gaugeObsParams, step, 0, true);
       } else {
 
-        measureGaugeObservablesPTBC<Nd, Nc>(hmc.hamiltonian_field.gauge_field,
-                                            gaugeObsParams, step, compute_rank,
-                                            false);
+        measureGaugeObservablesPTBC<DGaugeFieldType>(
+            hmc.hamiltonian_field.gauge_field, gaugeObsParams, step,
+            compute_rank, false);
       }
     } else {
       MPI_Reduce(&dummy_rank, &compute_rank, 1, MPI_INT, MPI_SUM, 0,

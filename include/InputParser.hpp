@@ -82,6 +82,9 @@ inline int parseInputFile(const std::string &filename,
       // interval between measurements
       gaugeObservableParams.measurement_interval =
           gp["measurement_interval"].as<size_t>(0);
+      // whether to measure the topological charge
+      gaugeObservableParams.measure_topological_charge =
+          gp["measure_topological_charge"].as<bool>(false);
       // whether to measure the plaquette
       gaugeObservableParams.measure_plaquette =
           gp["measure_plaquette"].as<bool>(false);
@@ -117,6 +120,9 @@ inline int parseInputFile(const std::string &filename,
       }
 
       // filenames for the measurements
+      gaugeObservableParams.topological_charge_filename =
+          output_directory +
+          gp["topological_charge_filename"].as<std::string>("");
       gaugeObservableParams.plaquette_filename =
           output_directory + gp["plaquette_filename"].as<std::string>("");
       gaugeObservableParams.W_temp_filename =

@@ -3,6 +3,7 @@
 
 #include "GLOBAL.hpp"
 #include "GaugeObservable.hpp"
+#include "HMC.hpp"
 #include "HMC_Params.hpp"
 #include "SimulationLogging.hpp"
 using RNGType = Kokkos::Random_XorShift64_Pool<Kokkos::DefaultExecutionSpace>;
@@ -15,6 +16,8 @@ int run_HMC(HMCType &hmc, const Integrator_Params &integratorParams,
             SimulationLoggingParams &simLogParams) {
   // initiate and execute the HMC with the given parameters
   printf("Executing HMC ...");
+  static_assert(isHMCClass<HMCType>::value,
+                "HMCType must be a valid HMC class");
   // hmcparams.print();
 
   // // template argument deduction and safety
@@ -109,8 +112,8 @@ int run_HMC(HMCType &hmc, const Integrator_Params &integratorParams,
     //
     // } // namespace klft
     // =======
-    measureGaugeObservables<rank, Nc>(hmc.hamiltonian_field.gauge_field,
-                                      gaugeObsParams, step);
+    measureGaugeObservables<typename HMCType::DeviceGaugeFieldType>(
+        hmc.hamiltonian_field.gauge_field, gaugeObsParams, step);
     addLogData(simLogParams, step, hmc.delta_H, acc_rate, accept, time);
     flushSimulationLogs(simLogParams, step, true);
     flushAllGaugeObservables(gaugeObsParams, step, true);
