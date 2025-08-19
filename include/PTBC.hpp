@@ -240,15 +240,15 @@ public:
       // SWAP RANK sends its Delta_S
       if (rank == swap_rank) {
 
-        DEBUG_MPI_PRINT(
-            "%s, DefectLength(Field): %d", params.to_string().c_str(),
-            hmc.hamiltonian_field.gauge_field.dParams.defect_length);
-        DEBUG_MPI_PRINT("Iteration %d: swap_rank=%d, defect(PTBC)=%f , "
-                        "defect(Field)=%f \n\t "
-                        "partner_rank = % d defect(PTBC) = % f ",
-                        i, swap_rank, params.defects[swap_rank],
-                        hmc.hamiltonian_field.gauge_field.get_defect(),
-                        partner_rank, params.defects[partner_rank]);
+        // DEBUG_MPI_PRINT(
+        //     "%s, DefectLength(Field): %d", params.to_string().c_str(),
+        //     hmc.hamiltonian_field.gauge_field.dParams.defect_length);
+        // DEBUG_MPI_PRINT("Iteration %d: swap_rank=%d, defect(PTBC)=%f , "
+        //                 "defect(Field)=%f \n\t "
+        //                 "partner_rank = % d defect(PTBC) = % f ",
+        //                 i, swap_rank, params.defects[swap_rank],
+        //                 hmc.hamiltonian_field.gauge_field.get_defect(),
+        //                 partner_rank, params.defects[partner_rank]);
 
         real_t temp = swap_partner(partner_rank);
 
@@ -312,7 +312,7 @@ public:
             oss << ", ";
         }
         oss << "]";
-        DEBUG_MPI_PRINT("%s", oss.str().c_str());
+        // DEBUG_MPI_PRINT("%s", oss.str().c_str());
       }
       MPI_Barrier(MPI_COMM_WORLD); // synchronize all ranks after each swap
       if (rank == 0) {             // add the swap data to the logs
@@ -367,7 +367,7 @@ int run_PTBC(PTBCType &ptbc, Integrator_Params &int_params,
 
     int accept = ptbc.step();
     MPI_Barrier(MPI_COMM_WORLD); // synchronize all ranks after step
-    DEBUG_MPI_PRINT("HMC Step %zu: accept = %d", step, accept);
+    // DEBUG_MPI_PRINT("HMC Step %zu: accept = %d", step, accept);
 
     int ptbc_accept = ptbc.swap();
 

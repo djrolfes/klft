@@ -27,7 +27,7 @@ HMCParams:
 Integrator:
 
   tau: 1
-  nSteps: 1000
+  nSteps: 10
   Monomials:
     - Type: "Leapfrog"
       level: 0
@@ -48,11 +48,12 @@ Gauge Monomial:
 #   tol: 1e-10
 
 GaugeObservableParams:
-  measurement_interval: 15
+  measurement_interval: 1
   measure_plaquette: true
+  measure_topological_charge: true
   measure_wilson_loop_temporal: false
   measure_wilson_loop_mu_nu: false
-  flush: 5
+  flush: 1
 
   W_temp_L_T_pairs:
     - [2, 3]
@@ -66,9 +67,10 @@ GaugeObservableParams:
     - [2, 2]
     - [3, 3]
 
-  plaquette_filename: "plaquette_output20.txt"
-  W_temp_filename: "wilson_temp_output20.txt"
-  W_mu_nu_filename: "wilson_mu_nu_output20.txt"
+  plaquette_filename: "plaquette_output.txt"
+  topological_charge_filename: "topological_charge.txt"
+  W_temp_filename: "wilson_temp_output.txt"
+  W_mu_nu_filename: "wilson_mu_nu_output.txt"
 
   write_to_file: true
 
@@ -76,7 +78,7 @@ SimulationLoggingParams:
   log_interval: 1
   log_delta_H: true
   log_acceptance: true
-  flush: 25
+  flush: 1
   
   log_filename: "simulation_log.txt"
   write_to_file: true
@@ -92,7 +94,7 @@ PTBCSimulationLoggingParams:
   log_swap_start: true
   log_swap_accepts: true
   log_defects: true
-  flush: 25
+  flush: 1
   
   log_filename: "ptbcsimulation_log.txt"
   write_to_file: true

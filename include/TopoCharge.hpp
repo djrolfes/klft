@@ -245,6 +245,7 @@ real_t get_topological_charge(const typename DGaugeFieldType::type &g_in) {
   static_assert(Nd == 4,
                 "Topological charge is only defined for 4D gauge fields.");
 
+  DEBUG_MPI_PRINT("enter get_topological_charge");
   // define the functor
   TopoCharge<DGaugeFieldType> TCharge(g_in);
   tune_and_launch_for<Nd>("Calculate topological charge", IndexArray<Nd>{0},
