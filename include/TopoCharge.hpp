@@ -61,7 +61,7 @@ template <typename DGaugeFieldType> struct TopoCharge {
       DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Kind;
   // define the gauge field type
   using GaugeFieldType = typename DGaugeFieldType::type;
-  const GaugeFieldType &g_in;
+  const GaugeFieldType g_in;
   // define the field type
   using FieldType = typename DeviceScalarFieldType<Nd>::type;
   FieldType charge_per_site;
