@@ -244,10 +244,6 @@ real_t get_topological_charge(const typename DGaugeFieldType::type &g_in) {
       DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank;
   static_assert(Nd == 4,
                 "Topological charge is only defined for 4D gauge fields.");
-  constexpr static const size_t Nc =
-      DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc;
-  constexpr static const GaugeFieldKind kind =
-      DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Kind;
 
   // define the functor
   TopoCharge<DGaugeFieldType> TCharge(g_in);

@@ -23,8 +23,6 @@ int run_HMC(HMCType &hmc, const Integrator_Params &integratorParams,
   // // template argument deduction and safety
   // static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
   // static_assert(isDeviceAdjFieldType<DAdjFieldType>::value);
-  constexpr static size_t rank = HMCType::rank;
-  constexpr static size_t Nc = HMCType::Nc;
   // static_assert((rank == DeviceAdjFieldTypeTraits<DAdjFieldType>::Rank) &&
   //               (Nc == DeviceAdjFieldTypeTraits<DAdjFieldType>::Nc));
   // constexpr const size_t Nd = rank;
