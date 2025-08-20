@@ -47,6 +47,20 @@ operator*(const Kokkos::Array<Kokkos::Array<T, N>, N> &a,
   }
   return c;
 }
+
+template <typename T, size_t N>
+KOKKOS_FORCEINLINE_FUNCTION Kokkos::Array<Kokkos::Array<T, N>, N>
+operator-(const Kokkos::Array<Kokkos::Array<T, N>, N> &a) {
+  Kokkos::Array<Kokkos::Array<T, N>, N> c;
+#pragma unroll
+  for (size_t i = 0; i < N; ++i) {
+#pragma unroll
+    for (size_t j = 0; j < N; ++j) {
+      c[i][j] = -a[i][j];
+    }
+  }
+  return c;
+}
 //
 
 template <typename DGaugeFieldType> struct TopoCharge {
@@ -108,65 +122,42 @@ template <typename DGaugeFieldType> struct TopoCharge {
   KOKKOS_FORCEINLINE_FUNCTION void
   operator()(const indexType i0, const indexType i1, const indexType i2,
              const indexType i3) const {
-
+    real_t local_charge{0.0};
     int rho;
     int sigma;
     int mu = 0;
     RealMatrix C1, C2;
-// TODO 12.05.: implement this according to 1708.00696 and think about how to
-// reuse C_munu
-#pragma unroll
-    for (int nu = mu + 1; nu < Nd; ++nu) {
-      // determine the remaining indices and then swap indeces as well as C_munu
-      // with C_rhosigma to get the whole index set
-      switch (nu) {
-      case 1:
-        rho = 2;
-        sigma = 3;
-        break;
-      case 2:
-        rho = 1;
-        sigma = 3;
-        break;
-      case 3:
-        rho = 1;
-        sigma = 2;
-        break;
-      default:
-        break;
+    Kokkos::Array<Kokkos::Array<RealMatrix, Nd>, Nd> C;
+
+    for (int mu = 0; mu < Nd; ++mu) {
+      for (int nu = mu + 1; nu < Nd; ++nu) {
+        // get the clover C_munu
+        RealMatrix C_munu = get_clover(i0, i1, i2, i3, mu, nu);
+        C[mu][nu] = C_munu;
+        C[nu][mu] = -C_munu;
       }
-
-      // now go through the different mu, nu, sigma, rho combinations. This
-      // might be an application for thread teams for more parallelization.
-      C1 = get_clover(i0, i1, i2, i3, mu, nu);
-      C2 = get_clover(i0, i1, i2, i3, rho, sigma);
-      charge_per_site(i0, i1, i2, i3) +=
-          epsilon4(mu, nu, rho, sigma) * trace(C1 * C2);
-      charge_per_site(i0, i1, i2, i3) +=
-          epsilon4(rho, sigma, mu, nu) * trace(C2 * C1);
-
-      C1 = get_clover(i0, i1, i2, i3, mu, nu);
-      C2 = get_clover(i0, i1, i2, i3, sigma, rho);
-      charge_per_site(i0, i1, i2, i3) +=
-          epsilon4(mu, nu, sigma, rho) * trace(C1 * C2);
-      charge_per_site(i0, i1, i2, i3) +=
-          epsilon4(sigma, rho, mu, nu) * trace(C2 * C1);
-
-      C1 = get_clover(i0, i1, i2, i3, nu, mu);
-      C2 = get_clover(i0, i1, i2, i3, rho, sigma);
-      charge_per_site(i0, i1, i2, i3) +=
-          epsilon4(nu, mu, rho, sigma) * trace(C1 * C2);
-      charge_per_site(i0, i1, i2, i3) +=
-          epsilon4(rho, sigma, nu, mu) * trace(C2 * C1);
-
-      C1 = get_clover(i0, i1, i2, i3, nu, mu);
-      C2 = get_clover(i0, i1, i2, i3, sigma, rho);
-      charge_per_site(i0, i1, i2, i3) +=
-          epsilon4(nu, mu, sigma, rho) * trace(C1 * C2);
-      charge_per_site(i0, i1, i2, i3) +=
-          epsilon4(sigma, rho, nu, mu) * trace(C2 * C1);
     }
-    charge_per_site(i0, i1, i2, i3) /= 16;
+
+// TODO 12.05.: implement this according to 1708.00696
+#pragma unroll
+    for (int mu = 0; mu < 4; ++mu) {
+#pragma unroll
+      for (int nu = 0; nu < 4; ++nu) {
+#pragma unroll
+        for (int rho = 0; rho < 4; ++rho) {
+#pragma unroll
+          for (int sigma = 0; sigma < 4; ++sigma) {
+            if (epsilon4(mu, nu, rho, sigma) == 0) {
+              continue;
+            }
+            local_charge +=
+                epsilon4(mu, nu, rho, sigma) * trace(C[mu][nu] * C[rho][sigma]);
+          }
+        }
+      }
+    }
+    charge_per_site(i0, i1, i2, i3) = local_charge / 24;
+    // charge_per_site(i0, i1, i2, i3) = local_charge / 16;
   }
 
   // get the imaginary parts of an SUN matrix
