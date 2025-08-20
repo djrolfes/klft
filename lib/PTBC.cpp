@@ -74,6 +74,7 @@ int PTBC_execute(const std::string &input_file,
     printf("Error parsing input file\n");
     return -1;
   }
+  gaugeObsParams.wilson_flow_params.beta = gaugeMonomialParams.beta;
 
   simLogParams.log_filename = ranked_filename(simLogParams.log_filename, rank);
 

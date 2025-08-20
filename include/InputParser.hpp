@@ -94,6 +94,8 @@ inline int parseInputFile(const std::string &filename,
       // whether to measure the mu-nu Wilson loop
       gaugeObservableParams.measure_wilson_loop_mu_nu =
           gp["measure_wilson_loop_mu_nu"].as<bool>(false);
+      gaugeObservableParams.measure_density_E =
+          gp["measure_density_E"].as<bool>(false);
 
       // pairs of (L,T) for the temporal Wilson loop
       if (gp["W_temp_L_T_pairs"]) {
@@ -119,6 +121,30 @@ inline int parseInputFile(const std::string &filename,
         }
       }
 
+      // Check whether to perform Wilson Flow
+      gaugeObservableParams.do_wilson_flow =
+          gp["do_wilson_flow"].as<bool>(false);
+
+      // Parse the WilsonFlowParams sub-node if it exists
+      if (gp["WilsonFlowParams"]) {
+        const auto &wfp_node = gp["WilsonFlowParams"];
+
+        // Populate the single wilson_flow_params object directly
+        gaugeObservableParams.wilson_flow_params.tau =
+            wfp_node["tau"].as<real_t>();
+        gaugeObservableParams.wilson_flow_params.n_steps =
+            wfp_node["nsteps"].as<index_t>();
+
+        // Recalculate eps based on parsed values
+        if (gaugeObservableParams.wilson_flow_params.n_steps > 0) {
+          gaugeObservableParams.wilson_flow_params.eps =
+              gaugeObservableParams.wilson_flow_params.tau /
+              gaugeObservableParams.wilson_flow_params.n_steps;
+        } else {
+          gaugeObservableParams.wilson_flow_params.eps =
+              0; // Avoid division by zero
+        }
+      }
       // filenames for the measurements
       gaugeObservableParams.topological_charge_filename =
           output_directory +
@@ -129,6 +155,8 @@ inline int parseInputFile(const std::string &filename,
           output_directory + gp["W_temp_filename"].as<std::string>("");
       gaugeObservableParams.W_mu_nu_filename =
           output_directory + gp["W_mu_nu_filename"].as<std::string>("");
+      gaugeObservableParams.density_E_filename =
+          output_directory + gp["density_E_filename"].as<std::string>("");
 
       // whether to write to file
       gaugeObservableParams.write_to_file = gp["write_to_file"].as<bool>(false);

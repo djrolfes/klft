@@ -53,6 +53,7 @@ GaugeObservableParams:
   measure_topological_charge: true
   measure_wilson_loop_temporal: false
   measure_wilson_loop_mu_nu: false
+  measure_density_E: true
   flush: 1
 
   W_temp_L_T_pairs:
@@ -71,6 +72,7 @@ GaugeObservableParams:
   topological_charge_filename: "topological_charge.txt"
   W_temp_filename: "wilson_temp_output.txt"
   W_mu_nu_filename: "wilson_mu_nu_output.txt"
+  density_E_filename: "density_e.txt"
 
   write_to_file: true
 

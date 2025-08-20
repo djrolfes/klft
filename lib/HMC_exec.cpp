@@ -77,6 +77,7 @@ int build_and_run_HMC(const std::string &input_file,
     printf("Error in sanity checks\n");
     return -1;
   }
+  gaugeObsParams.wilson_flow_params.beta = gaugeMonomialParams.beta;
 
   //   FermionParams fparams;
   //   if (!parseInputFile(input_file, fparams)) {

@@ -43,17 +43,17 @@ template <size_t Nd, size_t Nc> struct deviceGaugeField {
   //   Kokkos::deep_copy(field, f_in);
   // }
 
-  // deviceGaugeField(const GaugeField<Nd, Nc> &f_in)
-  //     : dimensions({static_cast<int>(f_in.extent(0)),
-  //                   static_cast<int>(f_in.extent(1)),
-  //                   static_cast<int>(f_in.extent(2)),
-  //                   static_cast<int>(f_in.extent(3))}) {
-  //   Kokkos::realloc(
-  //       Kokkos::WithoutInitializing, field, static_cast<int>(f_in.extent(0)),
-  //       static_cast<int>(f_in.extent(1)), static_cast<int>(f_in.extent(2)),
-  //       static_cast<int>(f_in.extent(3)));
-  //   Kokkos::deep_copy(field, f_in);
-  // }
+  deviceGaugeField(const GaugeField<Nd, Nc> &f_in)
+      : dimensions({static_cast<int>(f_in.extent(0)),
+                    static_cast<int>(f_in.extent(1)),
+                    static_cast<int>(f_in.extent(2)),
+                    static_cast<int>(f_in.extent(3))}) {
+    Kokkos::realloc(
+        Kokkos::WithoutInitializing, field, static_cast<int>(f_in.extent(0)),
+        static_cast<int>(f_in.extent(1)), static_cast<int>(f_in.extent(2)),
+        static_cast<int>(f_in.extent(3)));
+    Kokkos::deep_copy(field, f_in);
+  }
 
   // initialize all sites to a given value
   deviceGaugeField(const index_t L0, const index_t L1, const index_t L2,

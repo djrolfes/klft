@@ -46,7 +46,7 @@ struct GaugePlaq {
   GaugePlaq(const GaugeFieldType &g_in, FieldType &plaq_per_site,
             const IndexArray<rank> &dimensions)
       : g_in(g_in), plaq_per_site(plaq_per_site), dimensions(dimensions) {
-  } // TODO: g_in does copy construction, this needs to be changed
+  } // TODO: g_in does copy construction (does it?), this needs to be changed
 
   template <typename... Indices>
   KOKKOS_FORCEINLINE_FUNCTION void operator()(const Indices... Idcs) const {
@@ -141,68 +141,33 @@ GaugePlaquette(const typename DeviceGaugeFieldType<rank, Nc, k>::type &g_in,
   return Kokkos::real(plaq);
 }
 
-// template <size_t rank, size_t Nc, GaugeFieldKind k =
-// GaugeFieldKind::Standard> real_t GaugePlaquette(const typename
-// DeviceGaugeFieldType<rank, Nc, k>::type &g_in,
-//                IndexArray<rank> start, IndexArray<rank> slice_length,
-//                const bool normalize = true) {
-//   // this kernel is defined for rank = Nd
-//   constexpr static const size_t Nd = rank;
-//   // final return variable
-//   complex_t plaq = 0.0;
-//   // get the start and end indices
-//   // this is temporary solution
-//   // ideally, we want to have a policy factory
-//   IndexArray<rank> dimensions;
-//   for (index_t i = 0; i < rank; ++i) {
-//     dimensions[i] = g_in.dimensions[i];
-//   }
-//
-//   // temporary field for storing results per site
-//   // direct reduction is slow
-//   // this field will be summed over in the end
-//   using FieldType = typename DeviceFieldType<rank>::type;
-//   FieldType plaq_per_site(dimensions, complex_t(0.0, 0.0));
-//
-//   // define the functor
-//   GaugePlaq<rank, Nc, k> gaugePlaquette(g_in, plaq_per_site, dimensions);
-//
-//   // tune and launch the kernel
-//   tune_and_launch_for<rank>(
-//       "GaugePlaquette_GaugeField", IndexArray<rank>{0}, slice_length,
-//       KOKKOS_LAMBDA(auto... loc) {
-//         // Build global indices by (start + loc) % dims
-//         IndexArray<rank> glob;
-//         ((glob[__COUNTER__] =
-//               (start[__COUNTER__] + loc) % dimensions[__COUNTER__]),
-//          ...);
-//         // Now call your functor at the wrapped location:
-//         if constexpr (rank == 2) {
-//           gaugePlaquette(glob[0], glob[1]);
-//         } else if constexpr (rank == 3) {
-//           gaugePlaquette(glob[0], glob[1], glob[2]);
-//         } else if constexpr (rank == 4) {
-//           gaugePlaquette(glob[0], glob[1], glob[2], glob[3]);
-//         } else {
-//           return; /* unsupported rank */
-//         }
-//       });
-//   Kokkos::fence();
-//
-//   // sum over all sites
-//   plaq = plaq_per_site.sum();
-//   Kokkos::fence();
-//
-//   // normalization
-//   if (normalize) {
-//     real_t norm = 1.0;
-//     for (index_t i = 0; i < rank; ++i) {
-//       norm *= static_cast<real_t>(dimensions[i]);
-//     }
-//     norm *= static_cast<real_t>((Nd * (Nd - 1) / 2) * Nc);
-//     plaq /= norm;
-//   }
-//
-//   return Kokkos::real(plaq);
-// }
+template <typename DGaugeFieldType>
+real_t densityEAsym(const typename DGaugeFieldType::type &g_in) {
+  // calculate the density E according to (3.1) in
+  // https://arxiv.org/pdf/1006.4518
+  static_assert(isDeviceGaugeFieldType<DGaugeFieldType>(),
+                "densityEAsym requires a device gauge field type.");
+  constexpr static const size_t Nd =
+      DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank;
+  constexpr static const size_t Nc =
+      DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc;
+  constexpr static const GaugeFieldKind kind =
+      DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Kind;
+
+  using FieldType = typename DeviceFieldType<Nd>::type;
+  FieldType plaq_per_site(g_in.dimensions, complex_t(0.0, 0.0));
+  // define the functor
+  GaugePlaq<Nd, Nc, kind> gaugePlaquette(g_in, plaq_per_site, g_in.dimensions);
+  tune_and_launch_for<Nd>("Calculate densityEAsym", IndexArray<Nd>{0},
+                          g_in.dimensions, gaugePlaquette);
+  Kokkos::fence();
+
+  plaq_per_site.add_mul(-real_t(Nc), -1.0);
+
+  real_t density = 2 * Kokkos::real(plaq_per_site.avg());
+  Kokkos::fence();
+
+  return density;
+}
+
 } // namespace klft
