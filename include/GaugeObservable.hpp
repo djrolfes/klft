@@ -144,6 +144,9 @@ void measureGaugeObservablesPTBC(const typename DGaugeFieldType::type &g_in,
           printf("Performing Wilson flow...\n");
         }
         wf.flow();
+        if (KLFT_VERBOSITY > 1) {
+          printf("Wilson flow completed.\n");
+        }
       }
 
       if (params.measure_density_E) {
