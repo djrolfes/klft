@@ -189,41 +189,47 @@ template <typename DGaugeFieldType> struct TopoCharge {
   get_clover(const indexType i0, const indexType i1, const indexType i2,
              const indexType i3, index_t mu, index_t nu) const {
 
-    IndexArray<4> site1{static_cast<index_t>(i0), static_cast<index_t>(i1),
-                        static_cast<index_t>(i2), static_cast<index_t>(i3)};
-    IndexArray<4> site2{static_cast<index_t>(i0), static_cast<index_t>(i1),
-                        static_cast<index_t>(i2), static_cast<index_t>(i3)};
-    IndexArray<4> site3{static_cast<index_t>(i0), static_cast<index_t>(i1),
-                        static_cast<index_t>(i2), static_cast<index_t>(i3)};
+    SUN<Nc> P_munu = zeroSUN<Nc>();
+    const IndexArray<Nd> x{static_cast<index_t>(i0), static_cast<index_t>(i1),
+                           static_cast<index_t>(i2), static_cast<index_t>(i3)};
 
-    site2[mu] = (site2[mu] + 1) % this->dimensions[mu];
-    site3[nu] = (site3[nu] + 1) % this->dimensions[nu];
-    SUN<Nc> P = this->g_in(site1, mu) * conj(this->g_in(site2, nu)) *
-                conj(this->g_in(site3, mu)) * this->g_in(site1, nu);
+    // Helper lambda for modular arithmetic
+    auto mod = [&](index_t s, index_t dir) {
+      return (s + this->dimensions[dir]);
+    };
 
-    site2[mu] =
-        (site2[mu] - 2 + this->dimensions[mu]) % this->dimensions[mu]; // -mu
-    site3[mu] = (site3[mu] - 1 + this->dimensions[mu]) %
-                this->dimensions[mu]; // +nu,-mu
-    P += this->g_in(site1, nu) * conj(this->g_in(site3, mu)) *
-         conj(this->g_in(site2, nu)) * this->g_in(site2, mu);
+    // 1. Plaquette in (+mu, +nu) plane starting at x
+    IndexArray<Nd> x_p_mu = x;
+    x_p_mu[mu] = (x[mu] + 1) % dimensions[mu];
+    IndexArray<Nd> x_p_nu = x;
+    x_p_nu[nu] = (x[nu] + 1) % dimensions[nu];
+    P_munu += g_in(x, mu) * g_in(x_p_mu, nu) * conj(g_in(x_p_nu, mu)) *
+              conj(g_in(x, nu));
 
-    site2[mu] = (site2[mu] + 1) % this->dimensions[mu]; // -0
-    site2[nu] =
-        (site2[nu] - 1 + this->dimensions[nu]) % this->dimensions[nu]; // -nu
-    site3[mu] = (site3[mu] + 2) % this->dimensions[mu]; // +nu,+mu
-    site3[nu] = (site3[nu] - 2 + this->dimensions[nu]) %
-                this->dimensions[nu]; // -nu,+mu
-    P += conj(this->g_in(site2, nu)) * conj(this->g_in(site3, nu)) *
-         this->g_in(site3, mu) * conj(this->g_in(site1, mu));
+    // 2. Plaquette in (+mu, -nu) plane starting at x
+    IndexArray<Nd> x_m_nu = x;
+    x_m_nu[nu] = mod(x[nu] - 1, nu) % dimensions[nu];
+    IndexArray<Nd> x_p_mu_m_nu = x_p_mu;
+    x_p_mu_m_nu[nu] = mod(x_p_mu[nu] - 1, nu) % dimensions[nu];
+    P_munu += g_in(x, mu) * conj(g_in(x_p_mu_m_nu, nu)) *
+              conj(g_in(x_m_nu, mu)) * g_in(x_m_nu, nu);
 
-    site3[mu] = (site3[mu] - 2 + this->dimensions[mu]) %
-                this->dimensions[mu]; // -nu,-mu
-    site1[mu] =
-        (site1[mu] - 1 + this->dimensions[mu]) % this->dimensions[mu]; // -mu
-    P += conj(this->g_in(site1, mu)) * conj(this->g_in(site3, nu)) *
-         this->g_in(site3, mu) * this->g_in(site2, nu);
-    return imag(P);
+    // 3. Plaquette in (-mu, +nu) plane starting at x
+    IndexArray<Nd> x_m_mu = x;
+    x_m_mu[mu] = mod(x[mu] - 1, mu) % dimensions[mu];
+    IndexArray<Nd> x_m_mu_p_nu = x_m_mu;
+    x_m_mu_p_nu[nu] = (x_m_mu[nu] + 1) % dimensions[nu];
+    P_munu += conj(g_in(x_m_mu, mu)) * g_in(x_m_mu, nu) *
+              g_in(x_m_mu_p_nu, mu) * conj(g_in(x, nu));
+
+    // 4. Plaquette in (-mu, -nu) plane starting at x
+    IndexArray<Nd> x_m_mu_m_nu = x_m_mu;
+    x_m_mu_m_nu[nu] = mod(x_m_mu[nu] - 1, nu) % dimensions[nu];
+    P_munu += conj(g_in(x_m_mu, mu)) * conj(g_in(x_m_mu_m_nu, nu)) *
+              g_in(x_m_mu_m_nu, mu) * g_in(x_m_nu, nu);
+
+    // The Field Strength Tensor F_munu is related to the anti-hermitian part
+    return imag(P_munu);
   }
 };
 
