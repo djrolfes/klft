@@ -142,7 +142,7 @@ GaugePlaquette(const typename DeviceGaugeFieldType<rank, Nc, k>::type &g_in,
 }
 
 template <typename DGaugeFieldType>
-real_t densityEAsym(const typename DGaugeFieldType::type &g_in) {
+real_t densityEAsym(const typename DGaugeFieldType::type g_in) {
   // calculate the density E according to (3.1) in
   // https://arxiv.org/pdf/1006.4518
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>(),
