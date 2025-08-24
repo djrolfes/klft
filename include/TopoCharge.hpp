@@ -85,7 +85,7 @@ template <typename DGaugeFieldType> struct TopoCharge {
   // define the dimensions of the given Field
   const IndexArray<Nd> dimensions;
 
-  TopoCharge(const GaugeFieldType &g_in)
+  TopoCharge(const GaugeFieldType g_in)
       : g_in(g_in), dimensions(g_in.dimensions),
         charge_per_site(g_in.dimensions, real_t(0)) {}
 
@@ -234,7 +234,7 @@ template <typename DGaugeFieldType> struct TopoCharge {
 };
 
 template <typename DGaugeFieldType>
-real_t get_topological_charge(const typename DGaugeFieldType::type &g_in) {
+real_t get_topological_charge(const typename DGaugeFieldType::type g_in) {
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>(),
                 "get_topological_charge requires a device gauge field type.");
   constexpr static const size_t Nd =
