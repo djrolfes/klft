@@ -168,11 +168,9 @@ void measureGaugeObservablesPTBC(const typename DGaugeFieldType::type &g_in,
         // measure the topological charge if requested
         if (params.do_wilson_flow) {
           // perform the Wilson flow if requested
-          real_t TopologicalCharge =
-              get_topological_charge<DGaugeFieldType>(wf.field);
+          TopologicalCharge = get_topological_charge<DGaugeFieldType>(wf.field);
         } else {
-          real_t TopologicalCharge =
-              get_topological_charge<DGaugeFieldType>(g_in);
+          TopologicalCharge = get_topological_charge<DGaugeFieldType>(g_in);
         }
         MPI_Send(&TopologicalCharge, 1, mpi_real_t(), 0,
                  MPI_GAUGE_OBSERVABLES_TOPOLOGICAL_CHARGE, MPI_COMM_WORLD);
