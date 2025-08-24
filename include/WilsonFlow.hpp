@@ -41,19 +41,20 @@ template <typename DGaugeFieldType> struct WilsonFlow {
   // get the correct deviceGaugeFieldType
   using GaugeFieldT = typename DGaugeFieldType::type;
   GaugeFieldT field;
-  constGaugeField<rank, Nc> tmp_staple;
+  GaugeFieldT tmp_staple;
   SUNAdjField<rank, Nc> tmp_Z;
   index_t current_step{0};
 
   WilsonFlow() = delete;
 
   WilsonFlow(const GaugeFieldT &_field, WilsonFlowParams &_params)
-      : params(_params), field(_field.field) {
+      : params(_params), field(_field.field), tmp_staple(_field.field) {
     const IndexArray<rank> dims = _field.dimensions;
     Kokkos::realloc(Kokkos::WithoutInitializing, tmp_Z, dims[0], dims[1],
                     dims[2], dims[3]);
-    Kokkos::realloc(Kokkos::WithoutInitializing, tmp_staple, dims[0], dims[1],
-                    dims[2], dims[3]);
+    // Kokkos::realloc(Kokkos::WithoutInitializing, tmp_staple, dims[0],
+    // dims[1],
+    //                 dims[2], dims[3]);
 
     //            Kokkos::deep_copy(_field.field, tmp_stap);
     //            Kokkos::deep_copy(_field.field, tmp_Z);
@@ -68,8 +69,9 @@ template <typename DGaugeFieldType> struct WilsonFlow {
 #pragma unroll
       for (index_t fstep = 0; fstep < 3; ++fstep) {
         this->current_step = fstep;
-        tmp_staple = stapleField<DGaugeFieldType>(field);
+        stapleField<DGaugeFieldType>(this->field, this->tmp_staple);
         Kokkos::fence();
+
         tune_and_launch_for<rank>("Wilsonflow-flow",
                                   IndexArray<rank>{0, 0, 0, 0},
                                   field.dimensions, *this);
@@ -82,8 +84,8 @@ template <typename DGaugeFieldType> struct WilsonFlow {
   KOKKOS_INLINE_FUNCTION void stepW1(indexType i0, indexType i1, indexType i2,
                                      indexType i3, index_t mu) const {
     complex_t im(0.0, 1.0);
-    SUN<Nc> Z0_SUN =
-        tmp_staple(i0, i1, i2, i3, mu) * conj(field.field(i0, i1, i2, i3, mu));
+    SUN<Nc> Z0_SUN = tmp_staple.field(i0, i1, i2, i3, mu) *
+                     conj(field.field(i0, i1, i2, i3, mu));
     SUNAdj<Nc> Z0 = traceT(Z0_SUN) * params.eps;
     tmp_Z(i0, i1, i2, i3, mu) = Z0; // does this need to be deep copied?
     SUNAdj<Nc> tmp = (Z0 * static_cast<real_t>(1.0 / 4.0));
@@ -97,7 +99,7 @@ template <typename DGaugeFieldType> struct WilsonFlow {
                                      indexType i3, index_t mu) const {
     complex_t im(0.0, 1.0);
     SUN<Nc> Z1_SUN =
-        tmp_staple(i0, i1, i2, i3, mu) * conj(field(i0, i1, i2, i3, mu));
+        tmp_staple.field(i0, i1, i2, i3, mu) * conj(field(i0, i1, i2, i3, mu));
     SUNAdj<Nc> Z1 = traceT(Z1_SUN) * params.eps;
     SUNAdj<Nc> Z0 = tmp_Z(i0, i1, i2, i3, mu);
     Z1 = Z1 * static_cast<real_t>(8.0 / 9.0) -
@@ -112,8 +114,8 @@ template <typename DGaugeFieldType> struct WilsonFlow {
   KOKKOS_INLINE_FUNCTION void stepV(indexType i0, indexType i1, indexType i2,
                                     indexType i3, index_t mu) const {
     complex_t im(0.0, 1.0);
-    SUN<Nc> Z2_SUN =
-        tmp_staple(i0, i1, i2, i3, mu) * conj(field.field(i0, i1, i2, i3, mu));
+    SUN<Nc> Z2_SUN = tmp_staple.field(i0, i1, i2, i3, mu) *
+                     conj(field.field(i0, i1, i2, i3, mu));
     SUNAdj<Nc> Z2 = traceT(Z2_SUN) * params.eps;
     SUNAdj<Nc> Z_old = tmp_Z(i0, i1, i2, i3, mu);
     Z2 = (Z2 * static_cast<real_t>(3.0 / 2.0) - Z_old);

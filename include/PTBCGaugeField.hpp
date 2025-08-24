@@ -63,7 +63,7 @@ template <size_t Nd, size_t Nc> struct devicePTBCGaugeField {
   // }
 
   // 'copy' constructor from a given GaugeField
-  devicePTBCGaugeField(const GaugeField<Nd, Nc> &dGaugeField)
+  devicePTBCGaugeField(const GaugeField<Nd, Nc> dGaugeField)
       : dimensions({static_cast<index_t>(dGaugeField.extent(0)),
                     static_cast<index_t>(dGaugeField.extent(1)),
                     static_cast<index_t>(dGaugeField.extent(2)),
@@ -72,6 +72,7 @@ template <size_t Nd, size_t Nc> struct devicePTBCGaugeField {
                     dimensions[1], dimensions[2], dimensions[3]);
     Kokkos::fence();
     Kokkos::deep_copy(field, dGaugeField);
+    do_init_defect(defectField);
     Kokkos::fence();
   }
 
