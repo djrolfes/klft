@@ -48,6 +48,20 @@ operator*(const Kokkos::Array<Kokkos::Array<T, N>, N> &a,
   return c;
 }
 
+template <typename T, typename U, size_t N>
+KOKKOS_FORCEINLINE_FUNCTION Kokkos::Array<Kokkos::Array<T, N>, N>
+operator*(const Kokkos::Array<Kokkos::Array<T, N>, N> &a, const U &b) {
+  Kokkos::Array<Kokkos::Array<T, N>, N> c;
+#pragma unroll
+  for (size_t i = 0; i < N; ++i) {
+#pragma unroll
+    for (size_t j = 0; j < N; ++j) {
+      c[i][j] = a[i][j] * b;
+    }
+  }
+  return c;
+}
+
 template <typename T, size_t N>
 KOKKOS_FORCEINLINE_FUNCTION Kokkos::Array<Kokkos::Array<T, N>, N>
 operator-(const Kokkos::Array<Kokkos::Array<T, N>, N> &a) {
@@ -61,6 +75,7 @@ operator-(const Kokkos::Array<Kokkos::Array<T, N>, N> &a) {
   }
   return c;
 }
+
 //
 
 template <typename DGaugeFieldType> struct TopoCharge {
@@ -156,7 +171,7 @@ template <typename DGaugeFieldType> struct TopoCharge {
         }
       }
     }
-    charge_per_site(i0, i1, i2, i3) = local_charge / 24;
+    charge_per_site(i0, i1, i2, i3) = local_charge;
     // charge_per_site(i0, i1, i2, i3) = local_charge / 16;
   }
 
@@ -228,8 +243,7 @@ template <typename DGaugeFieldType> struct TopoCharge {
     P_munu += conj(g_in(x_m_mu, mu)) * conj(g_in(x_m_mu_m_nu, nu)) *
               g_in(x_m_mu_m_nu, mu) * g_in(x_m_nu, nu);
 
-    // The Field Strength Tensor F_munu is related to the anti-hermitian part
-    return imag(P_munu);
+    return imag(P_munu) * 0.25;
   }
 };
 
@@ -249,12 +263,10 @@ real_t get_topological_charge(const typename DGaugeFieldType::type g_in) {
                           g_in.dimensions, TCharge);
   Kokkos::fence();
 
-  printf("charge non normalized: %e\n", (double)TCharge.charge_per_site.sum());
-
   real_t charge = TCharge.charge_per_site.sum();
   Kokkos::fence();
   // charge /= 32 * PI * PI;
 
-  return charge / 32 * PI * PI;
+  return charge / (32 * PI * PI);
 }
 } // namespace klft
