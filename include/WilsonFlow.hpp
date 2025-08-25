@@ -14,7 +14,7 @@ struct WilsonFlowParams {
   index_t n_steps;
   // flow time step size
   real_t eps;
-  // beta TODO: do ot use the beta here
+  // beta TODO: do not use the beta here
   real_t beta;
 
   WilsonFlowParams() {

@@ -141,33 +141,4 @@ GaugePlaquette(const typename DeviceGaugeFieldType<rank, Nc, k>::type &g_in,
   return Kokkos::real(plaq);
 }
 
-template <typename DGaugeFieldType>
-real_t densityEAsym(const typename DGaugeFieldType::type g_in) {
-  // calculate the density E according to (3.1) in
-  // https://arxiv.org/pdf/1006.4518
-  static_assert(isDeviceGaugeFieldType<DGaugeFieldType>(),
-                "densityEAsym requires a device gauge field type.");
-  constexpr static const size_t Nd =
-      DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank;
-  constexpr static const size_t Nc =
-      DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc;
-  constexpr static const GaugeFieldKind kind =
-      DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Kind;
-
-  using FieldType = typename DeviceFieldType<Nd>::type;
-  FieldType plaq_per_site(g_in.dimensions, complex_t(0.0, 0.0));
-  // define the functor
-  GaugePlaq<Nd, Nc, kind> gaugePlaquette(g_in, plaq_per_site, g_in.dimensions);
-  tune_and_launch_for<Nd>("Calculate densityEAsym", IndexArray<Nd>{0},
-                          g_in.dimensions, gaugePlaquette);
-  Kokkos::fence();
-
-  plaq_per_site.add_mul(-real_t(Nc), -1.0);
-
-  real_t density = 2 * Kokkos::real(plaq_per_site.avg());
-  Kokkos::fence();
-
-  return density;
-}
-
 } // namespace klft

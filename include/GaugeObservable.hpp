@@ -26,6 +26,7 @@
 #include <iostream>
 #include <mpi.h>
 
+#include "ActionDensity.hpp"
 #include "FieldTypeHelper.hpp"
 #include "GaugePlaquette.hpp"
 #include "TopoCharge.hpp"
@@ -41,7 +42,7 @@ struct GaugeObservableParams {
                                      // loop
   bool measure_wilson_loop_mu_nu;    // whether to measure the mu-nu Wilson loop
   bool measure_topological_charge; // whether to measure the topological charge
-  bool measure_density_E;          // whether to measure the gauge density
+  bool measure_action_density;     // whether to measure the gauge density
 
   std::vector<Kokkos::Array<index_t, 2>>
       W_temp_L_T_pairs; // pairs of (L,T) for the temporal Wilson loop
@@ -61,7 +62,7 @@ struct GaugeObservableParams {
   std::vector<real_t> topological_charge_measurements; // measurements of the
                                                        // topological charge
   std::vector<real_t>
-      density_E_measurements; // measurements of the gauge density
+      action_density_measurements; // measurements of the gauge density
 
   // finally, some filenames where the measurements will be flushed
   std::string plaquette_filename; // filename for the plaquette measurements
@@ -71,7 +72,8 @@ struct GaugeObservableParams {
       W_mu_nu_filename; // filename for the mu-nu Wilson loop measurements
   std::string
       topological_charge_filename; // filename for the topological charge
-  std::string density_E_filename; // filename for the gauge density measurements
+  std::string
+      action_density_filename; // filename for the gauge density measurements
 
   // boolean flag to indicate if the measurements are to be flushed
   bool write_to_file;
@@ -90,8 +92,8 @@ struct GaugeObservableParams {
   GaugeObservableParams()
       : measurement_interval(0), measure_plaquette(false),
         measure_wilson_loop_temporal(false), measure_wilson_loop_mu_nu(false),
-        measure_topological_charge(false), measure_density_E(false), flush(25),
-        flushed(false), wilson_flow_params() {}
+        measure_topological_charge(false), measure_action_density(false),
+        flush(25), flushed(false), wilson_flow_params() {}
 };
 
 typedef enum {
@@ -101,7 +103,7 @@ typedef enum {
   MPI_GAUGE_OBSERVABLES_WILSON_LOOP_MU_NU_SIZE = 3,
   MPI_GAUGE_OBSERVABLES_WILSON_LOOP_TEMPORAL_SIZE = 4,
   MPI_GAUGE_OBSERVABLES_TOPOLOGICAL_CHARGE = 5,
-  MPI_GAUGE_OBSERVABLES_DENSITY_E = 6
+  MPI_GAUGE_OBSERVABLES_ACTION_DENSITY = 6
 } MPI_GaugeObservableTags;
 
 template <typename DGaugeFieldType>
@@ -124,7 +126,7 @@ void measureGaugeObservablesPTBC(const typename DGaugeFieldType::type &g_in,
   MPI_Comm_size(MPI_COMM_WORLD, &size);
   real_t TopologicalCharge;
   real_t Plaquette;
-  real_t Density_E;
+  real_t ActionDensity;
   std::vector<Kokkos::Array<real_t, 5>> WilsonLoop_meas;
   std::vector<Kokkos::Array<real_t, 3>> WilsonTemp_measurements;
 
@@ -149,18 +151,18 @@ void measureGaugeObservablesPTBC(const typename DGaugeFieldType::type &g_in,
         }
       }
 
-      if (params.measure_density_E) {
+      if (params.measure_action_density) {
         // measure the gauge density if requested
         if (params.do_wilson_flow) {
           // perform the Wilson flow if requested
-          Density_E = densityEAsym<DGaugeFieldType>(wf.field);
+          ActionDensity = getActionDensity<DGaugeFieldType>(wf.field);
         } else {
-          Density_E = densityEAsym<DGaugeFieldType>(g_in);
+          ActionDensity = getActionDensity<DGaugeFieldType>(g_in);
         }
-        MPI_Send(&Density_E, 1, mpi_real_t(), 0,
-                 MPI_GAUGE_OBSERVABLES_DENSITY_E, MPI_COMM_WORLD);
+        MPI_Send(&ActionDensity, 1, mpi_real_t(), 0,
+                 MPI_GAUGE_OBSERVABLES_ACTION_DENSITY, MPI_COMM_WORLD);
         if (KLFT_VERBOSITY > 1) {
-          printf("gauge density: %11.6f\n", Density_E);
+          printf("gauge density: %11.6f\n", ActionDensity);
         }
       }
 
@@ -251,12 +253,12 @@ void measureGaugeObservablesPTBC(const typename DGaugeFieldType::type &g_in,
 
     if constexpr (Nd == 4) {
 
-      if (params.measure_density_E) {
+      if (params.measure_action_density) {
         // send the gauge density measurement to the compute rank
-        MPI_Recv(&Density_E, 1, mpi_real_t(), compute_rank,
-                 MPI_GAUGE_OBSERVABLES_DENSITY_E, MPI_COMM_WORLD,
+        MPI_Recv(&ActionDensity, 1, mpi_real_t(), compute_rank,
+                 MPI_GAUGE_OBSERVABLES_ACTION_DENSITY, MPI_COMM_WORLD,
                  MPI_STATUS_IGNORE);
-        params.density_E_measurements.push_back(Density_E);
+        params.action_density_measurements.push_back(ActionDensity);
       }
 
       if (params.measure_topological_charge && Nd == 4) {
@@ -353,16 +355,16 @@ void measureGaugeObservables(const typename DGaugeFieldType::type &g_in,
       wf.flow();
     }
 
-    if (params.measure_density_E) {
+    if (params.measure_action_density) {
       // measure the gauge density if requested
       real_t Density_E;
       if (params.do_wilson_flow) {
         // perform the Wilson flow if requested
-        Density_E = densityEAsym<DGaugeFieldType>(wf.field);
+        Density_E = getActionDensity<DGaugeFieldType>(wf.field);
       } else {
-        Density_E = densityEAsym<DGaugeFieldType>(g_in);
+        Density_E = getActionDensity<DGaugeFieldType>(g_in);
       }
-      params.density_E_measurements.push_back(Density_E);
+      params.action_density_measurements.push_back(Density_E);
       if (KLFT_VERBOSITY > 1) {
         printf("gauge density: %11.6f\n", Density_E);
       }
@@ -456,16 +458,16 @@ inline void flushTopologicalCharge(std::ofstream &file,
   }
 }
 
-inline void flushDensityE(std::ofstream &file,
-                          const GaugeObservableParams &params,
-                          const bool HEADER = true) {
+inline void flushActionDensity(std::ofstream &file,
+                               const GaugeObservableParams &params,
+                               const bool HEADER = true) {
   // check if the file is open
   if (!file.is_open()) {
     printf("Error: file is not open\n");
     return;
   }
   // check if density_E measurements are available
-  if (!params.measure_density_E) {
+  if (!params.measure_action_density) {
     printf("Error: no density_E measurements available\n");
     return;
   }
@@ -473,9 +475,9 @@ inline void flushDensityE(std::ofstream &file,
     file << "# step, density_E, t^2 density_E\n";
   for (size_t i = 0; i < params.measurement_steps.size(); ++i) {
     file << params.measurement_steps[i] << ", "
-         << params.density_E_measurements[i] << ", "
-         << params.density_E_measurements[i] * params.wilson_flow_params.tau *
-                params.wilson_flow_params.tau
+         << params.action_density_measurements[i] << ", "
+         << params.action_density_measurements[i] *
+                params.wilson_flow_params.tau * params.wilson_flow_params.tau
          << "\n";
   }
 }
@@ -558,7 +560,7 @@ inline void clearAllGaugeObservables(GaugeObservableParams &params) {
   params.plaquette_measurements.clear();
   params.W_temp_measurements.clear();
   params.W_mu_nu_measurements.clear();
-  params.density_E_measurements.clear();
+  params.action_density_measurements.clear();
   // ...
   // add more clear functions for other observables here
 }
@@ -583,9 +585,9 @@ forceflushAllGaugeObservables(GaugeObservableParams &params,
     file.close();
   }
 
-  if (params.measure_density_E && params.density_E_filename != "") {
-    std::ofstream file(params.density_E_filename, std::ios::app);
-    flushDensityE(file, params, HEADER);
+  if (params.measure_action_density && params.action_density_filename != "") {
+    std::ofstream file(params.action_density_filename, std::ios::app);
+    flushActionDensity(file, params, HEADER);
     file.close();
   }
 

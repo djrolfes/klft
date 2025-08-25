@@ -94,8 +94,8 @@ inline int parseInputFile(const std::string &filename,
       // whether to measure the mu-nu Wilson loop
       gaugeObservableParams.measure_wilson_loop_mu_nu =
           gp["measure_wilson_loop_mu_nu"].as<bool>(false);
-      gaugeObservableParams.measure_density_E =
-          gp["measure_density_E"].as<bool>(false);
+      gaugeObservableParams.measure_action_density =
+          gp["measure_action_density"].as<bool>(false);
 
       // pairs of (L,T) for the temporal Wilson loop
       if (gp["W_temp_L_T_pairs"]) {
@@ -132,16 +132,16 @@ inline int parseInputFile(const std::string &filename,
         // Populate the single wilson_flow_params object directly
         gaugeObservableParams.wilson_flow_params.tau =
             wfp_node["tau"].as<real_t>();
-        gaugeObservableParams.wilson_flow_params.n_steps =
-            wfp_node["nsteps"].as<index_t>();
+        gaugeObservableParams.wilson_flow_params.eps =
+            wfp_node["eps"].as<real_t>();
 
         // Recalculate eps based on parsed values
-        if (gaugeObservableParams.wilson_flow_params.n_steps > 0) {
-          gaugeObservableParams.wilson_flow_params.eps =
-              gaugeObservableParams.wilson_flow_params.tau /
-              gaugeObservableParams.wilson_flow_params.n_steps;
+        if (gaugeObservableParams.wilson_flow_params.eps > 0) {
+          gaugeObservableParams.wilson_flow_params.n_steps =
+              static_cast<int>(gaugeObservableParams.wilson_flow_params.tau /
+                               gaugeObservableParams.wilson_flow_params.eps);
         } else {
-          gaugeObservableParams.wilson_flow_params.eps =
+          gaugeObservableParams.wilson_flow_params.n_steps =
               0; // Avoid division by zero
         }
       }
@@ -155,8 +155,8 @@ inline int parseInputFile(const std::string &filename,
           output_directory + gp["W_temp_filename"].as<std::string>("");
       gaugeObservableParams.W_mu_nu_filename =
           output_directory + gp["W_mu_nu_filename"].as<std::string>("");
-      gaugeObservableParams.density_E_filename =
-          output_directory + gp["density_E_filename"].as<std::string>("");
+      gaugeObservableParams.action_density_filename =
+          output_directory + gp["action_density_filename"].as<std::string>("");
 
       // whether to write to file
       gaugeObservableParams.write_to_file = gp["write_to_file"].as<bool>(false);

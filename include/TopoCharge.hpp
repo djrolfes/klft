@@ -17,9 +17,8 @@
 //
 //******************************************************************************/
 
-// define plaquette functions for different gauge fields
-
 #pragma once
+#include "FieldStrengthTensor.hpp"
 #include "FieldTypeHelper.hpp"
 #include "GLOBAL.hpp"
 #include "Kokkos_Macros.hpp"
@@ -27,58 +26,11 @@
 
 namespace klft {
 // first define the necessary functor
-//
 
-template <typename T, size_t N>
-KOKKOS_FORCEINLINE_FUNCTION Kokkos::Array<Kokkos::Array<T, N>, N>
-operator*(const Kokkos::Array<Kokkos::Array<T, N>, N> &a,
-          const Kokkos::Array<Kokkos::Array<T, N>, N> &b) {
-  Kokkos::Array<Kokkos::Array<T, N>, N> c;
-#pragma unroll
-  for (size_t i = 0; i < N; ++i) {
-#pragma unroll
-    for (size_t j = 0; j < N; ++j) {
-      c[i][j] = a[i][0] * b[0][j];
-#pragma unroll
-      for (size_t k = 1; k < N; ++k) {
-        c[i][j] += a[i][k] * b[k][j];
-      }
-    }
-  }
-  return c;
-}
-
-template <typename T, typename U, size_t N>
-KOKKOS_FORCEINLINE_FUNCTION Kokkos::Array<Kokkos::Array<T, N>, N>
-operator*(const Kokkos::Array<Kokkos::Array<T, N>, N> &a, const U &b) {
-  Kokkos::Array<Kokkos::Array<T, N>, N> c;
-#pragma unroll
-  for (size_t i = 0; i < N; ++i) {
-#pragma unroll
-    for (size_t j = 0; j < N; ++j) {
-      c[i][j] = a[i][j] * b;
-    }
-  }
-  return c;
-}
-
-template <typename T, size_t N>
-KOKKOS_FORCEINLINE_FUNCTION Kokkos::Array<Kokkos::Array<T, N>, N>
-operator-(const Kokkos::Array<Kokkos::Array<T, N>, N> &a) {
-  Kokkos::Array<Kokkos::Array<T, N>, N> c;
-#pragma unroll
-  for (size_t i = 0; i < N; ++i) {
-#pragma unroll
-    for (size_t j = 0; j < N; ++j) {
-      c[i][j] = -a[i][j];
-    }
-  }
-  return c;
-}
-
-//
-
-template <typename DGaugeFieldType> struct TopoCharge {
+template <typename DGaugeFieldType,
+          typename FSTTag =
+              typename FieldStrengthTensor<DGaugeFieldType>::CloverDef>
+struct TopoCharge {
   // this kernel is defined for rank = Nd
   constexpr static const size_t Nd =
       DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank;
@@ -95,6 +47,8 @@ template <typename DGaugeFieldType> struct TopoCharge {
   using FieldType = typename DeviceScalarFieldType<Nd>::type;
   FieldType charge_per_site;
 
+  const FieldStrengthTensor<DGaugeFieldType> fst;
+
   using RealMatrix = Kokkos::Array<Kokkos::Array<real_t, Nc>, Nc>;
 
   // define the dimensions of the given Field
@@ -102,7 +56,7 @@ template <typename DGaugeFieldType> struct TopoCharge {
 
   TopoCharge(const GaugeFieldType g_in)
       : g_in(g_in), dimensions(g_in.dimensions),
-        charge_per_site(g_in.dimensions, real_t(0)) {}
+        charge_per_site(g_in.dimensions, real_t(0)), fst(g_in) {}
 
   /// Return the 4-D Levi–Civita symbol ε_{μνρσ} for indices 0..3.
   /// Zero if any indices repeat; +1 or –1 otherwise.
@@ -144,7 +98,7 @@ template <typename DGaugeFieldType> struct TopoCharge {
     for (int mu = 0; mu < Nd; ++mu) {
       for (int nu = mu + 1; nu < Nd; ++nu) {
         // get the clover C_munu
-        RealMatrix C_munu = get_clover(i0, i1, i2, i3, mu, nu);
+        RealMatrix C_munu = fst(FSTTag{}, i0, i1, i2, i3, mu, nu);
         C[mu][nu] = C_munu;
         C[nu][mu] = -C_munu;
       }
@@ -172,76 +126,55 @@ template <typename DGaugeFieldType> struct TopoCharge {
     // charge_per_site(i0, i1, i2, i3) = local_charge / 16;
   }
 
-  // get the imaginary parts of an SUN matrix
-  KOKKOS_FORCEINLINE_FUNCTION RealMatrix imag(const SUN<Nc> &in) const {
-    RealMatrix out{0};
-#pragma unroll
-    for (int i = 0; i < Nc; ++i) {
-#pragma unroll
-      for (int j = 0; j < Nc; ++j) {
-        out[i][j] = in[i][j].imag();
-      }
-    }
-    return out;
-  }
-
-  // return the trace of a RealMatrix
-  KOKKOS_FORCEINLINE_FUNCTION real_t trace(const RealMatrix &in) const {
-    real_t out{0};
-#pragma unroll
-    for (int i = 0; i < Nc; ++i) {
-      out += in[i][i];
-    }
-    return out;
-  }
-
   // return the clover C_munu
-  template <typename indexType>
-  KOKKOS_FORCEINLINE_FUNCTION RealMatrix
-  get_clover(const indexType i0, const indexType i1, const indexType i2,
-             const indexType i3, index_t mu, index_t nu) const {
-
-    SUN<Nc> P_munu = zeroSUN<Nc>();
-    const IndexArray<Nd> x{static_cast<index_t>(i0), static_cast<index_t>(i1),
-                           static_cast<index_t>(i2), static_cast<index_t>(i3)};
-
-    // Helper lambda for modular arithmetic
-    auto mod = [&](index_t s, index_t dir) {
-      return (s + this->dimensions[dir]);
-    };
-
-    // 1. Plaquette in (+mu, +nu) plane starting at x
-    IndexArray<Nd> x_p_mu = x;
-    x_p_mu[mu] = (x[mu] + 1) % dimensions[mu];
-    IndexArray<Nd> x_p_nu = x;
-    x_p_nu[nu] = (x[nu] + 1) % dimensions[nu];
-    P_munu += g_in(x, mu) * g_in(x_p_mu, nu) * conj(g_in(x_p_nu, mu)) *
-              conj(g_in(x, nu));
-
-    // 2. Plaquette in (+mu, -nu) plane starting at x
-    IndexArray<Nd> x_m_nu = x;
-    x_m_nu[nu] = mod(x[nu] - 1, nu) % dimensions[nu];
-    IndexArray<Nd> x_p_mu_m_nu = x_p_mu;
-    x_p_mu_m_nu[nu] = mod(x_p_mu[nu] - 1, nu) % dimensions[nu];
-    P_munu += g_in(x, mu) * conj(g_in(x_p_mu_m_nu, nu)) *
-              conj(g_in(x_m_nu, mu)) * g_in(x_m_nu, nu);
-
-    // 3. Plaquette in (-mu, +nu) plane starting at x
-    IndexArray<Nd> x_m_mu = x;
-    x_m_mu[mu] = mod(x[mu] - 1, mu) % dimensions[mu];
-    IndexArray<Nd> x_m_mu_p_nu = x_m_mu;
-    x_m_mu_p_nu[nu] = (x_m_mu[nu] + 1) % dimensions[nu];
-    P_munu += conj(g_in(x_m_mu, mu)) * g_in(x_m_mu, nu) *
-              g_in(x_m_mu_p_nu, mu) * conj(g_in(x, nu));
-
-    // 4. Plaquette in (-mu, -nu) plane starting at x
-    IndexArray<Nd> x_m_mu_m_nu = x_m_mu;
-    x_m_mu_m_nu[nu] = mod(x_m_mu[nu] - 1, nu) % dimensions[nu];
-    P_munu += conj(g_in(x_m_mu, mu)) * conj(g_in(x_m_mu_m_nu, nu)) *
-              g_in(x_m_mu_m_nu, mu) * g_in(x_m_nu, nu);
-
-    return imag(P_munu) * 0.25;
-  }
+  // template <typename indexType>
+  // KOKKOS_FORCEINLINE_FUNCTION RealMatrix
+  // get_clover(const indexType i0, const indexType i1, const indexType i2,
+  //            const indexType i3, index_t mu, index_t nu) const {
+  //
+  //   SUN<Nc> P_munu = zeroSUN<Nc>();
+  //   const IndexArray<Nd> x{static_cast<index_t>(i0),
+  //   static_cast<index_t>(i1),
+  //                          static_cast<index_t>(i2),
+  //                          static_cast<index_t>(i3)};
+  //
+  //   // Helper lambda for modular arithmetic
+  //   auto mod = [&](index_t s, index_t dir) {
+  //     return (s + this->dimensions[dir]);
+  //   };
+  //
+  //   // 1. Plaquette in (+mu, +nu) plane starting at x
+  //   IndexArray<Nd> x_p_mu = x;
+  //   x_p_mu[mu] = (x[mu] + 1) % dimensions[mu];
+  //   IndexArray<Nd> x_p_nu = x;
+  //   x_p_nu[nu] = (x[nu] + 1) % dimensions[nu];
+  //   P_munu += g_in(x, mu) * g_in(x_p_mu, nu) * conj(g_in(x_p_nu, mu)) *
+  //             conj(g_in(x, nu));
+  //
+  //   // 2. Plaquette in (+mu, -nu) plane starting at x
+  //   IndexArray<Nd> x_m_nu = x;
+  //   x_m_nu[nu] = mod(x[nu] - 1, nu) % dimensions[nu];
+  //   IndexArray<Nd> x_p_mu_m_nu = x_p_mu;
+  //   x_p_mu_m_nu[nu] = mod(x_p_mu[nu] - 1, nu) % dimensions[nu];
+  //   P_munu += g_in(x, mu) * conj(g_in(x_p_mu_m_nu, nu)) *
+  //             conj(g_in(x_m_nu, mu)) * g_in(x_m_nu, nu);
+  //
+  //   // 3. Plaquette in (-mu, +nu) plane starting at x
+  //   IndexArray<Nd> x_m_mu = x;
+  //   x_m_mu[mu] = mod(x[mu] - 1, mu) % dimensions[mu];
+  //   IndexArray<Nd> x_m_mu_p_nu = x_m_mu;
+  //   x_m_mu_p_nu[nu] = (x_m_mu[nu] + 1) % dimensions[nu];
+  //   P_munu += conj(g_in(x_m_mu, mu)) * g_in(x_m_mu, nu) *
+  //             g_in(x_m_mu_p_nu, mu) * conj(g_in(x, nu));
+  //
+  //   // 4. Plaquette in (-mu, -nu) plane starting at x
+  //   IndexArray<Nd> x_m_mu_m_nu = x_m_mu;
+  //   x_m_mu_m_nu[nu] = mod(x_m_mu[nu] - 1, nu) % dimensions[nu];
+  //   P_munu += conj(g_in(x_m_mu, mu)) * conj(g_in(x_m_mu_m_nu, nu)) *
+  //             g_in(x_m_mu_m_nu, mu) * g_in(x_m_nu, nu);
+  //
+  //   return imag(P_munu) * 0.25;
+  // }
 };
 
 template <typename DGaugeFieldType>
