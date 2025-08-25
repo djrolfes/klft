@@ -86,11 +86,13 @@ struct deviceField {
 
   template <typename TADD, typename TMUL>
   void add_mul(TADD add, TMUL mul) const {
+    auto local_field = field;
     tune_and_launch_for<4>(
         "mul_add_deviceField", IndexArray<4>{0, 0, 0, 0}, dimensions,
         KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2,
                       const index_t i3) {
-          field(i0, i1, i2, i3) = (field(i0, i1, i2, i3) + add) * mul;
+          local_field(i0, i1, i2, i3) =
+              (local_field(i0, i1, i2, i3) + add) * mul;
         });
     Kokkos::fence();
   }
@@ -172,10 +174,11 @@ struct deviceField3D {
 
   template <typename TADD, typename TMUL>
   void add_mul(TADD add, TMUL mul) const {
+    auto local_field = field;
     tune_and_launch_for<3>(
         "mul_add_deviceField3D", IndexArray<3>{0}, dimensions,
         KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2) {
-          field(i0, i1, i2) = (field(i0, i1, i2) + add) * mul;
+          local_field(i0, i1, i2) = (local_field(i0, i1, i2) + add) * mul;
         });
     Kokkos::fence();
   }
@@ -249,10 +252,11 @@ struct deviceField2D {
 
   template <typename TADD, typename TMUL>
   void add_mul(TADD add, TMUL mul) const {
+    auto local_field = field;
     tune_and_launch_for<2>(
         "mul_add_deviceField2D", IndexArray<2>{0}, dimensions,
         KOKKOS_LAMBDA(const index_t i0, const index_t i1) {
-          field(i0, i1) = (field(i0, i1) + add) * mul;
+          local_field(i0, i1) = (local_field(i0, i1) + add) * mul;
         });
     Kokkos::fence();
   }

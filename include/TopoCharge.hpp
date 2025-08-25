@@ -138,9 +138,6 @@ template <typename DGaugeFieldType> struct TopoCharge {
   operator()(const indexType i0, const indexType i1, const indexType i2,
              const indexType i3) const {
     real_t local_charge{0.0};
-    int rho;
-    int sigma;
-    int mu = 0;
     RealMatrix C1, C2;
     Kokkos::Array<Kokkos::Array<RealMatrix, Nd>, Nd> C;
 

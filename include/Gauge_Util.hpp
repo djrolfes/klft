@@ -260,7 +260,8 @@ void stapleField(const typename DGaugeFieldType::type g_in,
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
   constexpr static size_t Nd =
       DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank;
-  constexpr static size_t Nc = DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc;
+  // constexpr static size_t Nc =
+  // DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc;
   // TODO: add a check that g_out and g_in match
 
   // get the start and end indices
@@ -313,7 +314,8 @@ template <typename DGaugeFieldType> struct restoreSUNFunctor {
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
   constexpr static size_t rank =
       DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank;
-  constexpr static size_t Nc = DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc;
+  // constexpr static size_t Nc =
+  // DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc;
 
   using GaugeField = typename DGaugeFieldType::type;
 
