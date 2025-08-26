@@ -85,11 +85,11 @@ template <typename DGaugeFieldType> struct WilsonFlow {
                                      indexType i3, index_t mu) const {
     SUN<Nc> Z0_SUN = field.field(i0, i1, i2, i3, mu) *
                      (tmp_staple.field(i0, i1, i2, i3, mu));
-    SUNAdj<Nc> Z0 = traceT(Z0_SUN) * params.eps;
+    SUNAdj<Nc> Z0 = traceT(Z0_SUN) * (-1.0 * params.eps);
     tmp_Z(i0, i1, i2, i3, mu) = Z0; // does this need to be deep copied?
-    SUNAdj<Nc> tmp = (Z0 * static_cast<real_t>(1.0 / 4.0));
     field.field(i0, i1, i2, i3, mu) =
-        expoSUN(-1.0 * tmp) * field.field(i0, i1, i2, i3, mu);
+        expoSUN(Z0 * static_cast<real_t>(1.0 / 4.0)) *
+        field.field(i0, i1, i2, i3, mu);
     // restoreSUN(field.field(i0, i1, i2, i3, mu));
   }
 
@@ -98,13 +98,13 @@ template <typename DGaugeFieldType> struct WilsonFlow {
                                      indexType i3, index_t mu) const {
     SUN<Nc> Z1_SUN = field.field(i0, i1, i2, i3, mu) *
                      (tmp_staple.field(i0, i1, i2, i3, mu));
-    SUNAdj<Nc> Z1 = traceT(Z1_SUN) * params.eps;
+    SUNAdj<Nc> Z1 = traceT(Z1_SUN) * (-1.0 * params.eps);
     SUNAdj<Nc> Z0 = tmp_Z(i0, i1, i2, i3, mu);
     Z1 = Z1 * static_cast<real_t>(8.0 / 9.0) -
          Z0 * static_cast<real_t>(17.0 / 36.0);
     tmp_Z(i0, i1, i2, i3, mu) = Z1;
     field.field(i0, i1, i2, i3, mu) =
-        expoSUN(-1.0 * Z1) * field.field(i0, i1, i2, i3, mu);
+        expoSUN(Z1) * field.field(i0, i1, i2, i3, mu);
     // restoreSUN(field.field(i0, i1, i2, i3, mu));
   }
 
@@ -113,12 +113,12 @@ template <typename DGaugeFieldType> struct WilsonFlow {
                                     indexType i3, index_t mu) const {
     SUN<Nc> Z2_SUN = tmp_staple.field(i0, i1, i2, i3, mu) *
                      (field.field(i0, i1, i2, i3, mu));
-    SUNAdj<Nc> Z2 = traceT(Z2_SUN) * params.eps;
+    SUNAdj<Nc> Z2 = traceT(Z2_SUN) * (-1.0 * params.eps);
     SUNAdj<Nc> Z_old = tmp_Z(i0, i1, i2, i3, mu);
     Z2 = (Z2 * static_cast<real_t>(3.0 / 2.0) - Z_old);
     // SUNAdj<Nc> tmp = (Z2);
     field.field(i0, i1, i2, i3, mu) =
-        expoSUN(-1.0 * Z2) * field.field(i0, i1, i2, i3, mu);
+        expoSUN(Z2) * field.field(i0, i1, i2, i3, mu);
     // restoreSUN(field.field(i0, i1, i2, i3, mu));
   }
 
