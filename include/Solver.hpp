@@ -104,27 +104,35 @@ class CGSolver
 
   template <typename Tag>
   void solve_int(const SpinorFieldType& x0, const real_t& tol) {
-    SpinorFieldType xk(this->dirac_op.params.dimensions, complex_t(0.0, 0.0));
+    auto dims = this->dirac_op.params.dimensions;
+    SpinorFieldType xk(dims, complex_t(0.0, 0.0));
+    SpinorFieldType rk{dims, complex_t(0.0, 0.0)};
+    SpinorFieldType apk{dims, complex_t(0.0, 0.0)};
     Kokkos::deep_copy(xk.field, x0.field);  // x_0
+    axpy<rank, Nc, RepDim>(-1, this->dirac_op.template apply<Tag>(xk), this->b,
+                           rk);
 
-    SpinorFieldType rk = spinor_sub_mul<rank, Nc, RepDim>(
-        this->b, this->dirac_op.template apply<Tag>(xk), 1.0);
-
-    SpinorFieldType pk(this->dirac_op.params.dimensions, complex_t(0.0, 0.0));
+    SpinorFieldType pk(dims, complex_t(0.0, 0.0));
     Kokkos::deep_copy(pk.field, rk.field);  // p_0                        // d_0
     real_t rk_norm = spinor_norm<rank, Nc, RepDim>(rk);  //\delta_0
     int num_iter = 0;
     while (rk_norm > tol) {
-      const SpinorFieldType apk =
-          this->dirac_op.template apply<Tag>(pk);  // z = Ad_k
+      this->dirac_op.template apply<Tag>(pk, apk);
+      // z = Ad_k
       const complex_t rkrk = spinor_dot_product<rank, Nc, RepDim>(rk, rk);
       const complex_t alpha = (rkrk / spinor_dot_product<rank, Nc, RepDim>(
                                           pk, apk));  // Always real
-      xk = spinor_add_mul<rank, Nc, RepDim>(xk, pk, alpha);
-      rk = spinor_sub_mul<rank, Nc, RepDim>(rk, apk, alpha);
+      axpy<rank, Nc, RepDim>(alpha, pk, xk, xk);
+      // xk = spinor_add_mul<rank, Nc, RepDim>(xk, pk, alpha);
+      // xk = axpy<rank, Nc, RepDim>(alpha, pk, xk);
+      axpy<rank, Nc, RepDim>(-alpha, apk, rk, rk);
+      // rk = axpy<rank, Nc, RepDim>(-alpha, apk, rk);
+      // rk = spinor_sub_mul<rank, Nc, RepDim>(rk, apk, alpha);
       const complex_t beta =
           (spinor_dot_product<rank, Nc, RepDim>(rk, rk) / rkrk);
-      pk = spinor_add_mul<rank, Nc, RepDim>(rk, pk, beta);
+      axpy<rank, Nc, RepDim>(beta, pk, rk, pk);
+      // pk = axpy<rank, Nc, RepDim>(beta, pk, rk);
+      // pk = spinor_add_mul<rank, Nc, RepDim>(rk, pk, beta);
       // Check if swapping is needed of pk and rk, should be correct
 
       rk_norm = spinor_norm<rank, Nc, RepDim>(rk);
@@ -133,14 +141,14 @@ class CGSolver
         printf("CG Iteration %d: rk_norm = %.15f\n", num_iter, rk_norm);
         if (KLFT_VERBOSITY > 3) {
           printf("Norm of (b - A*x) %.15f\n",
-                 spinor_norm<rank, Nc, RepDim>(spinor_sub_mul<rank, Nc, RepDim>(
-                     this->b, this->dirac_op.template apply<Tag>(xk), 1.0)));
+                 spinor_norm<rank, Nc, RepDim>(axpy<rank, Nc, RepDim>(
+                     -1.0, this->dirac_op.template apply<Tag>(xk), this->b)));
         }
       }
     }
-    const real_t ex_res =
-        spinor_norm<rank, Nc, RepDim>(spinor_sub_mul<rank, Nc, RepDim>(
-            this->b, this->dirac_op.template apply<Tag>(xk), 1.0));
+
+    const real_t ex_res = spinor_norm<rank, Nc, RepDim>(axpy<rank, Nc, RepDim>(
+        -1.0, this->dirac_op.template apply<Tag>(xk), this->b));
 
     if (Kokkos::abs(ex_res / spinor_norm<rank, Nc, RepDim>(xk)) > tol) {
       printf(

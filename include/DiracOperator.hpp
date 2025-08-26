@@ -72,6 +72,13 @@ class DiracOperator {
     // Apply the operator
     return this->apply(Tag{});
   }
+
+  /// @brief applys the DiracOperator to the field s_in and stores the result in
+  /// s_out
+  /// @tparam Tag Can either be TagD or TagDdagger or TagDDdagger or TagDdaggerD
+  /// @param s_in
+  /// @param s_out
+  /// @return Nothing, result is stored in s_out
   template <typename Tag>
   KOKKOS_FORCEINLINE_FUNCTION void apply(const SpinorFieldType& s_in,
                                          const SpinorFieldType& s_out) {
@@ -102,17 +109,21 @@ class DiracOperator {
   // applys Composid Operator M= DDdagger*s_in
 
   SpinorFieldType apply(Tags::TagDDdagger) {
-    SpinorFieldType temp = this->apply(Tags::TagDdagger{});
-    this->s_in = temp;
+    auto cached_out = this->s_out;
     this->s_out = SpinorFieldType(params.dimensions, complex_t(0.0, 0.0));
-    return this->apply(Tags::TagD{}, temp);
+    this->apply(Tags::TagDdagger{});
+    this->s_in = this->s_out;
+    this->s_out = cached_out;
+    return this->apply(Tags::TagD{});
   }
 
   // applys Composid Operator Mdagger= DdaggerD*s_in
   SpinorFieldType apply(Tags::TagDdaggerD) {
-    SpinorFieldType temp = this->apply(Tags::TagD{});
-    this->s_in = temp;
+    auto cached_out = this->s_out;
     this->s_out = SpinorFieldType(params.dimensions, complex_t(0.0, 0.0));
+    this->apply(Tags::TagD{});
+    this->s_in = this->s_out;
+    this->s_out = cached_out;
     return this->apply(Tags::TagDdagger{});
   }
 
