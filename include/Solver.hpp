@@ -108,6 +108,8 @@ class CGSolver
     SpinorFieldType xk(dims, complex_t(0.0, 0.0));
     SpinorFieldType rk{dims, complex_t(0.0, 0.0)};
     SpinorFieldType apk{dims, complex_t(0.0, 0.0)};
+    SpinorFieldType temp_D{dims, complex_t(0.0, 0.0)};
+
     Kokkos::deep_copy(xk.field, x0.field);  // x_0
     axpy<rank, Nc, RepDim>(-1, this->dirac_op.template apply<Tag>(xk), this->b,
                            rk);
@@ -146,9 +148,9 @@ class CGSolver
         }
       }
     }
-
-    const real_t ex_res = spinor_norm<rank, Nc, RepDim>(axpy<rank, Nc, RepDim>(
-        -1.0, this->dirac_op.template apply<Tag>(xk), this->b));
+    this->dirac_op.template apply<Tag>(xk, temp_D);
+    axpy<rank, Nc, RepDim>(-1, temp_D, this->b, temp_D);
+    const real_t ex_res = spinor_norm<rank, Nc, RepDim>(temp_D);
 
     if (Kokkos::abs(ex_res / spinor_norm<rank, Nc, RepDim>(xk)) > tol) {
       printf(
