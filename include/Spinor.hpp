@@ -165,7 +165,7 @@ KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, Nd> axpy(
 template <size_t Nc, size_t Nd>
 KOKKOS_FORCEINLINE_FUNCTION void axpy(const complex_t& alpha,
                                       const Spinor<Nc, Nd>& spinor1,
-                                      Spinor<Nc, Nd>& spinor2,
+                                      const Spinor<Nc, Nd>& spinor2,
                                       Spinor<Nc, Nd>& res) {
 #pragma unroll
   for (size_t i = 0; i < Nc; i++) {
