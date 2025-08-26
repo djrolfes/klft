@@ -74,7 +74,7 @@ real_t getActionDensity(const typename DGaugeFieldType::type g_in) {
                           g_in.dimensions, ADFunctor);
   Kokkos::fence();
 
-  real_t density = 2 * Kokkos::real(ADFunctor.density_per_site.avg());
+  real_t density = 0.5 * Kokkos::real(ADFunctor.density_per_site.avg());
   Kokkos::fence();
 
   return density;

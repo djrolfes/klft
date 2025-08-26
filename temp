@@ -1,0 +1,27 @@
+arXiv:2404.14151v2
+
+I am currently working on implementing the the pure Gauge part of this paper (working in SU(2) for the moment) and have a few Questions:
+
+- How does the scale setting work, in general QCD simulations and how could I get some notion of scale in pure gauge SU(2)?
+
+- Where does the notion of temperature int the paper come from?
+
+- Can I observe topological freezing in SU(2) pure gauge and if so in what kind of parameter range should I look, for what should I look to see freezing?
+
+- How does the "standard reweighting procedure" look like? Where does the reweighing happen? (I calculate the observables between hmc steps and just output those, analysis happens externally in R)
+
+- Smearing: The paper employed stout smearing, how can I relate that to the flow time in Wilson Flow?
+
+- HMC: Are there established algorithms to dynamically set the number of integration steps, how do they work? How would this work when the fermionic part has a different number of integration steps?
+
+- Wilson Flow: should t_0 be determined dynamically, or is it fixed (for a given beta?/what are the dependencies?)?
+
+
+please add explicit citations to explanations
+
+
+Further Info:
+
+- Instead of cooling, I am using the Wilson Flow as a smearing algorithm (according to 1708.00696)
+
+- I am still working with the classical wilson action, the improved action is planned. (What kind of diagramm could show the difference coming from changing one to the other?) 

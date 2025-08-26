@@ -472,7 +472,7 @@ inline void flushActionDensity(std::ofstream &file,
     return;
   }
   if (HEADER)
-    file << "# step, density_E, t^2 density_E\n";
+    file << "# step, action_density, tsquaredxaction_density\n";
   for (size_t i = 0; i < params.measurement_steps.size(); ++i) {
     file << params.measurement_steps[i] << ", "
          << params.action_density_measurements[i] << ", "
