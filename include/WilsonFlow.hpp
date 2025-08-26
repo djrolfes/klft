@@ -83,9 +83,8 @@ template <typename DGaugeFieldType> struct WilsonFlow {
   template <typename indexType>
   KOKKOS_INLINE_FUNCTION void stepW1(indexType i0, indexType i1, indexType i2,
                                      indexType i3, index_t mu) const {
-    complex_t im(0.0, 1.0);
-    SUN<Nc> Z0_SUN = tmp_staple.field(i0, i1, i2, i3, mu) *
-                     conj(field.field(i0, i1, i2, i3, mu));
+    SUN<Nc> Z0_SUN = field.field(i0, i1, i2, i3, mu) *
+                     conj(tmp_staple.field(i0, i1, i2, i3, mu));
     SUNAdj<Nc> Z0 = traceT(Z0_SUN) * params.eps;
     tmp_Z(i0, i1, i2, i3, mu) = Z0; // does this need to be deep copied?
     SUNAdj<Nc> tmp = (Z0 * static_cast<real_t>(1.0 / 4.0));
@@ -97,9 +96,8 @@ template <typename DGaugeFieldType> struct WilsonFlow {
   template <typename indexType>
   KOKKOS_INLINE_FUNCTION void stepW2(indexType i0, indexType i1, indexType i2,
                                      indexType i3, index_t mu) const {
-    complex_t im(0.0, 1.0);
-    SUN<Nc> Z1_SUN =
-        tmp_staple.field(i0, i1, i2, i3, mu) * conj(field(i0, i1, i2, i3, mu));
+    SUN<Nc> Z1_SUN = field.field(i0, i1, i2, i3, mu) *
+                     conj(tmp_staple.field(i0, i1, i2, i3, mu));
     SUNAdj<Nc> Z1 = traceT(Z1_SUN) * params.eps;
     SUNAdj<Nc> Z0 = tmp_Z(i0, i1, i2, i3, mu);
     Z1 = Z1 * static_cast<real_t>(8.0 / 9.0) -
@@ -113,7 +111,6 @@ template <typename DGaugeFieldType> struct WilsonFlow {
   template <typename indexType>
   KOKKOS_INLINE_FUNCTION void stepV(indexType i0, indexType i1, indexType i2,
                                     indexType i3, index_t mu) const {
-    complex_t im(0.0, 1.0);
     SUN<Nc> Z2_SUN = tmp_staple.field(i0, i1, i2, i3, mu) *
                      conj(field.field(i0, i1, i2, i3, mu));
     SUNAdj<Nc> Z2 = traceT(Z2_SUN) * params.eps;
