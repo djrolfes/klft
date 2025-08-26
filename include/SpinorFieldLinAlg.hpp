@@ -153,8 +153,8 @@ struct axpyFunctor {
       : x(x), y(y), c(c), alpha(alpha), dimensions(dimensions) {}
   template <typename... Indices>
   KOKKOS_FORCEINLINE_FUNCTION void operator()(const Indices... Idcs) const {
-    axpy(alpha, x(Idcs...), y(Idcs...), c(Idcs...));
-    // c(Idcs...) = (y(Idcs...) + (alpha * x(Idcs...)));
+    // axpy(alpha, x(Idcs...), y(Idcs...), c(Idcs...));
+    c(Idcs...) = (y(Idcs...) + (alpha * x(Idcs...)));
   }
 };
 /// @brief Calculates alpha*x+y
