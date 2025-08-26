@@ -119,7 +119,7 @@ class CGSolver
     real_t rk_norm = spinor_norm<rank, Nc, RepDim>(rk);  //\delta_0
     int num_iter = 0;
     while (rk_norm > tol) {
-      this->dirac_op.template apply<Tag>(pk, apk);
+      this->dirac_op.template apply<Tag>(pk, temp_D, apk);
       // z = Ad_k
       const complex_t rkrk = spinor_dot_product<rank, Nc, RepDim>(rk, rk);
       const complex_t alpha = (rkrk / spinor_dot_product<rank, Nc, RepDim>(
@@ -148,7 +148,7 @@ class CGSolver
         }
       }
     }
-    this->dirac_op.template apply<Tag>(xk, temp_D);
+    this->dirac_op.template apply<Tag>(xk, apk, temp_D);
     axpy<rank, Nc, RepDim>(-1, temp_D, this->b, temp_D);
     const real_t ex_res = spinor_norm<rank, Nc, RepDim>(temp_D);
 

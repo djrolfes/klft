@@ -88,6 +88,19 @@ class DiracOperator {
     this->apply(Tag{});
   }
 
+  // Special overload t reduce allocations in solver further, only works with
+  // composed operators
+
+  template <typename Tag>
+  KOKKOS_FORCEINLINE_FUNCTION void apply(const SpinorFieldType& s_in,
+                                         const SpinorFieldType& s_temp,
+                                         const SpinorFieldType& s_out) {
+    this->s_in = s_in;
+    this->s_out = s_temp;
+    // Apply the operator
+    this->apply(Tag{}, s_out);
+  }
+
  private:
   SpinorFieldType apply(Tags::TagD) {
     // Apply the operator
@@ -111,19 +124,28 @@ class DiracOperator {
   SpinorFieldType apply(Tags::TagDDdagger) {
     auto cached_out = this->s_out;
     this->s_out = SpinorFieldType(params.dimensions, complex_t(0.0, 0.0));
-    this->apply(Tags::TagDdagger{});
-    this->s_in = this->s_out;
-    this->s_out = cached_out;
-    return this->apply(Tags::TagD{});
+
+    return this->apply(Tags::TagDDdagger{}, cached_out);
   }
 
   // applys Composid Operator Mdagger= DdaggerD*s_in
   SpinorFieldType apply(Tags::TagDdaggerD) {
     auto cached_out = this->s_out;
     this->s_out = SpinorFieldType(params.dimensions, complex_t(0.0, 0.0));
+
+    return this->apply(Tags::TagDdaggerD{}, cached_out);
+  }
+  SpinorFieldType apply(Tags::TagDDdagger, const SpinorFieldType& s_out) {
+    this->apply(Tags::TagDdagger{});
+    this->s_in = this->s_out;
+    this->s_out = s_out;
+    return this->apply(Tags::TagD{});
+  }
+
+  SpinorFieldType apply(Tags::TagDdaggerD, const SpinorFieldType& s_out) {
     this->apply(Tags::TagD{});
     this->s_in = this->s_out;
-    this->s_out = cached_out;
+    this->s_out = s_out;
     return this->apply(Tags::TagDdagger{});
   }
 
