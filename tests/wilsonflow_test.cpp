@@ -115,8 +115,6 @@ int test_wilsonflow(const std::string &input_file,
   std::mt19937 mt(hmcParams.seed);
   std::uniform_real_distribution<real_t> dist(0.0, 1.0);
 
-  constexpr const index_t Nd = 4;
-  const constexpr index_t Nc = 2;
   assert(hmcParams.Ndims == 4 && hmcParams.Nc == 2);
 
   using DGaugeFieldType = DeviceGaugeFieldType<4, 2>;
@@ -190,38 +188,41 @@ int test_wilsonflow(const std::string &input_file,
              static_cast<size_t>(accept), acc_rate, time);
     }
 
-    WilsonFlow<DGaugeFieldType> wilson_flow(hamiltonian_field.gauge_field,
-                                            gaugeObsParams.wilson_flow_params);
-    flow_times.push_back(0.0);
-    topological_charges.push_back(
-        get_topological_charge<DGaugeFieldType>(hamiltonian_field.gauge_field));
+    if (accept) {
 
-    for (int flow_Step = 1; flow_Step <= flow_steps; ++flow_Step) {
-      // perform wilson flow step
-      wilson_flow.flow();
+      WilsonFlow<DGaugeFieldType> wilson_flow(
+          hamiltonian_field.gauge_field, gaugeObsParams.wilson_flow_params);
+      flow_times.push_back(0.0);
+      topological_charges.push_back(get_topological_charge<DGaugeFieldType>(
+          hamiltonian_field.gauge_field));
 
-      flow_times.push_back(flow_Step * gaugeObsParams.wilson_flow_params.eps);
-      topological_charges.push_back(
-          get_topological_charge<DGaugeFieldType>(wilson_flow.field));
+      for (int flow_Step = 1; flow_Step <= flow_steps; ++flow_Step) {
+        // perform wilson flow step
+        wilson_flow.flow();
 
-      // measure observables
-    }
-    // Write the header only once, before the first line of data
-    if (!header_written) {
-      output_file << "hmc_step";
-      for (const auto &t : flow_times) {
-        output_file << "," << t;
+        flow_times.push_back(flow_Step * gaugeObsParams.wilson_flow_params.eps);
+        topological_charges.push_back(
+            get_topological_charge<DGaugeFieldType>(wilson_flow.field));
+
+        // measure observables
+      }
+      // Write the header only once, before the first line of data
+      if (!header_written) {
+        output_file << "hmc_step";
+        for (const auto &t : flow_times) {
+          output_file << "," << t;
+        }
+        output_file << "\n";
+        header_written = true;
+      }
+
+      // Write the data for the current step
+      output_file << step;
+      for (const auto &charge : topological_charges) {
+        output_file << "," << charge;
       }
       output_file << "\n";
-      header_written = true;
     }
-
-    // Write the data for the current step
-    output_file << step;
-    for (const auto &charge : topological_charges) {
-      output_file << "," << charge;
-    }
-    output_file << "\n";
   }
   return 0;
 }
