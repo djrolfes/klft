@@ -179,20 +179,19 @@ class WilsonDiracOperator : public DiracOperator<WilsonDiracOperator,
   KOKKOS_FORCEINLINE_FUNCTION void operator()(typename Tags::TagD,
                                               const Indices... Idcs) const {
     Spinor<Nc, RepDim> temp;
+    Kokkos::Array<size_t, rank> idx{Idcs...};
 #pragma unroll
     for (size_t mu = 0; mu < rank; ++mu) {
-      auto xm = shift_index_minus_bc<rank, size_t>(
-          Kokkos::Array<size_t, rank>{Idcs...}, mu, 1, 0, -1,
-          this->params.dimensions);
-      auto xp = shift_index_plus_bc<rank, size_t>(
-          Kokkos::Array<size_t, rank>{Idcs...}, mu, 1, 0, -1,
-          this->params.dimensions);
+      auto xm = shift_index_minus_bc<rank, size_t>(idx, mu, 1, 0, -1,
+                                                   this->params.dimensions);
+      auto xp = shift_index_plus_bc<rank, size_t>(idx, mu, 1, 0, -1,
+                                                  this->params.dimensions);
 
-      auto temp1 = (this->params.gamma_id - this->params.gammas[mu]) *
-                   (this->g_in(Idcs..., mu) * this->s_in(xp.first));
+      auto temp1 =
+          project(mu, -1, this->g_in(Idcs..., mu) * this->s_in(xp.first));
 
-      auto temp2 = (this->params.gamma_id + this->params.gammas[mu]) *
-                   (conj(this->g_in(xm.first, mu)) * this->s_in(xm.first));
+      auto temp2 =
+          project(mu, 1, conj(this->g_in(xm.first, mu)) * this->s_in(xm.first));
       temp += ((this->params.kappa * xp.second) * temp1 +
                (this->params.kappa * xm.second) * temp2);
     }
@@ -204,20 +203,21 @@ class WilsonDiracOperator : public DiracOperator<WilsonDiracOperator,
   KOKKOS_FORCEINLINE_FUNCTION void operator()(typename Tags::TagDdagger,
                                               const Indices... Idcs) const {
     Spinor<Nc, RepDim> temp;
+    Kokkos::Array<size_t, rank> idx{Idcs...};
+
 #pragma unroll
     for (size_t mu = 0; mu < rank; ++mu) {
-      auto xm = shift_index_minus_bc<rank, size_t>(
-          Kokkos::Array<size_t, rank>{Idcs...}, mu, 1, 0, -1,
-          this->params.dimensions);
-      auto xp = shift_index_plus_bc<rank, size_t>(
-          Kokkos::Array<size_t, rank>{Idcs...}, mu, 1, 0, -1,
-          this->params.dimensions);
+      auto xm = shift_index_minus_bc<rank, size_t>(idx, mu, 1, 0, -1,
+                                                   this->params.dimensions);
+      auto xp = shift_index_plus_bc<rank, size_t>(idx, mu, 1, 0, -1,
+                                                  this->params.dimensions);
 
-      auto temp1 = (this->params.gamma_id + this->params.gammas[mu]) *
-                   (this->g_in(Idcs..., mu) * this->s_in(xp.first));
+      auto temp1 =
+          project(mu, 1, (this->g_in(Idcs..., mu) * this->s_in(xp.first)));
 
-      auto temp2 = (this->params.gamma_id - this->params.gammas[mu]) *
-                   (conj(this->g_in(xm.first, mu)) * this->s_in(xm.first));
+      //
+      auto temp2 = project(
+          mu, -1, (conj(this->g_in(xm.first, mu)) * this->s_in(xm.first)));
       temp += (this->params.kappa * xp.second) * temp1 +
               (this->params.kappa * xm.second) * temp2;
     }
