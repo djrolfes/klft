@@ -1,8 +1,8 @@
 #include <iomanip>
 #include <iostream>
 
+#include "../../include/GLOBAL.hpp"
 #include "../../include/GammaMatrix.hpp"
-#include "Global.hpp"
 #include "Spinor.hpp"
 
 using namespace klft;
@@ -75,8 +75,8 @@ int main(int argc, char const* argv[]) {
   spinor[2][2] = complex_t(11, 0);
   spinor[2][3] = complex_t(12, 0);
   print_spinor_int(spinor);
-  auto res1 = (ggamma_id - ggamma3) * spinor;
-  auto res2 = project(3, -1, spinor);
+  auto res1 = (ggamma_id - ggamma0) * spinor;
+  auto res2 = project(0, -1, spinor);
   print_spinor_int(res1, " (I + gamma1) * spinor");
   print_spinor_int(res2, "P_-0*spinor");
   printf("Are equal: %i", res1 == res2);
