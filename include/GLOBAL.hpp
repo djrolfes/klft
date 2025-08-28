@@ -104,7 +104,7 @@ using SUN = Wrapper<Kokkos::Array<Kokkos::Array<complex_t, Nc>, Nc>>;
 // info correct dispatch is only guaranteed for    Nd != Nc ! -> Conflicts with
 // SUN.hpp version Maybe via class to make it safe
 template <size_t Nc, size_t Nd>
-using Spinor = Kokkos::Array<Kokkos::Array<complex_t, Nd>, Nc>;
+using Spinor = Kokkos::Array<Kokkos::Array<complex_t, Nc>, Nd>;
 
 // define field view types
 // by default all views are 4D
@@ -442,9 +442,9 @@ template <size_t Nc, size_t Nd>
 constexpr KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, Nd> zeroSpinor() {
   Spinor<Nc, Nd> zero;
 #pragma unroll
-  for (size_t i = 0; i < Nc; ++i) {
+  for (size_t i = 0; i < Nd; ++i) {
 #pragma unroll
-    for (size_t j = 0; j < Nd; ++j) {
+    for (size_t j = 0; j < Nc; ++j) {
       zero[i][j] = complex_t(0.0, 0.0);
     }
   }
@@ -468,9 +468,9 @@ template <size_t Nc, size_t Nd>
 constexpr KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, Nd> oneSpinor() {
   Spinor<Nc, Nd> id = zeroSpinor<Nc, Nd>();
 #pragma unroll
-  for (size_t i = 0; i < Nc; ++i) {
+  for (size_t i = 0; i < Nd; ++i) {
 #pragma unroll
-    for (size_t j = 0; j < Nd; ++j) {
+    for (size_t j = 0; j < Nc; ++j) {
       id[i][j] = complex_t(1.0, 0.0);
     }
   }
