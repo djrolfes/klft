@@ -3,6 +3,7 @@
 
 #include "../../include/GLOBAL.hpp"
 #include "../../include/GammaMatrix.hpp"
+#include "SUN.hpp"
 #include "Spinor.hpp"
 
 using namespace klft;
@@ -74,12 +75,27 @@ int main(int argc, char const* argv[]) {
   spinor[2][1] = complex_t(10, 0);
   spinor[2][2] = complex_t(11, 0);
   spinor[2][3] = complex_t(12, 0);
+  SUN<2> sun;
+  sun[0][0] = complex_t(0.652, 0.55);
+  sun[0][1] = complex_t(1.56, 0.1025);
+  sun[1][0] = complex_t(-0.523, -0.564);
+  sun[1][1] = complex_t(0.36, -0.486);
+
   print_spinor_int(spinor);
-  auto res1 = (ggamma_id - ggamma0) * spinor;
-  auto res2 = project(0, -1, spinor);
+  int dir = 3;
+  int sign = 1;
+  auto res1 = (ggamma_id + ggamma3) * spinor;
+  auto res2 = project(dir, sign, spinor);
   print_spinor_int(res1, " (I + gamma1) * spinor");
   print_spinor_int(res2, "P_-0*spinor");
-  printf("Are equal: %i", res1 == res2);
+  printf("Are equal: %i\n", res1 == reconstruct(dir, sign, res2));
+  printf("Checking multiplication with reconstruction:\n");
+  auto su2_1 = sun * res1;
+  auto su2_2 = reconstruct(dir, sign, sun * res2);
+  print_spinor_int(su2_1, "SU2*res1");
+  print_spinor_int(su2_2, "SU2*res2");
+  printf("Equal: %i\n", su2_1 == su2_2);
+
   /* code */
   return 0;
 }
