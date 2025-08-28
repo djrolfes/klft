@@ -39,8 +39,7 @@ struct TagDdaggerD {};
 }  // namespace Tags
 
 template <template <typename, typename> class _Derived,
-          typename DSpinorFieldType,
-          typename DGaugeFieldType>
+          typename DSpinorFieldType, typename DGaugeFieldType>
 class DiracOperator {
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
   static_assert(isDeviceFermionFieldType<DSpinorFieldType>::value);
@@ -160,9 +159,9 @@ class DiracOperator {
 };
 
 template <typename DSpinorFieldType, typename DGaugeFieldType>
-class WilsonDiracOperator : public DiracOperator<WilsonDiracOperator,
-                                                 DSpinorFieldType,
-                                                 DGaugeFieldType> {
+class WilsonDiracOperator
+    : public DiracOperator<WilsonDiracOperator, DSpinorFieldType,
+                           DGaugeFieldType> {
  public:
   constexpr static size_t Nc =
       DeviceFermionFieldTypeTraits<DSpinorFieldType>::Nc;
@@ -188,12 +187,12 @@ class WilsonDiracOperator : public DiracOperator<WilsonDiracOperator,
                                                   this->params.dimensions);
 
       auto temp1 =
-          project(mu, -1, this->g_in(Idcs..., mu) * this->s_in(xp.first));
+          this->g_in(Idcs..., mu) * project(mu, -1, this->s_in(xp.first));
 
       auto temp2 =
-          project(mu, 1, conj(this->g_in(xm.first, mu)) * this->s_in(xm.first));
-      temp += ((this->params.kappa * xp.second) * temp1 +
-               (this->params.kappa * xm.second) * temp2);
+          conj(this->g_in(xm.first, mu)) * project(mu, 1, this->s_in(xm.first));
+      temp += reconstruct(mu, -1, (this->params.kappa * xp.second) * temp1) +
+              reconstruct(mu, 1, (this->params.kappa * xm.second) * temp2);
     }
 
     this->s_out(Idcs...) = this->s_in(Idcs...) - temp;
@@ -213,22 +212,22 @@ class WilsonDiracOperator : public DiracOperator<WilsonDiracOperator,
                                                   this->params.dimensions);
 
       auto temp1 =
-          project(mu, 1, (this->g_in(Idcs..., mu) * this->s_in(xp.first)));
+          this->g_in(Idcs..., mu) * project(mu, 1, this->s_in(xp.first));
 
       //
-      auto temp2 = project(
-          mu, -1, (conj(this->g_in(xm.first, mu)) * this->s_in(xm.first)));
-      temp += (this->params.kappa * xp.second) * temp1 +
-              (this->params.kappa * xm.second) * temp2;
+      auto temp2 = conj(this->g_in(xm.first, mu)) *
+                   project(mu, -1, this->s_in(xm.first));
+      temp += reconstruct(mu, 1, (this->params.kappa * xp.second) * temp1) +
+              reconstruct(mu, -1, (this->params.kappa * xm.second) * temp2);
     }
     this->s_out(Idcs...) = this->s_in(Idcs...) - temp;
   }
 };
 
 template <typename DSpinorFieldType, typename DGaugeFieldType>
-class HWilsonDiracOperator : public DiracOperator<HWilsonDiracOperator,
-                                                  DSpinorFieldType,
-                                                  DGaugeFieldType> {
+class HWilsonDiracOperator
+    : public DiracOperator<HWilsonDiracOperator, DSpinorFieldType,
+                           DGaugeFieldType> {
  public:
   constexpr static size_t Nc =
       DeviceFermionFieldTypeTraits<DSpinorFieldType>::Nc;
