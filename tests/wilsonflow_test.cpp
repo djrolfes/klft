@@ -123,6 +123,9 @@ int test_wilsonflow(const std::string &input_file,
   typename DGaugeFieldType::type g_4_SU2(hmcParams.L0, hmcParams.L1,
                                          hmcParams.L2, hmcParams.L3, rng,
                                          hmcParams.rngDelta);
+  // typename DGaugeFieldType::type g_4_SU2(
+  //     hmcParams.L0, hmcParams.L1, hmcParams.L2, hmcParams.L3,
+  //     identitySUN<2>());
   typename DAdjFieldType::type a_4_SU2(hmcParams.L0, hmcParams.L1, hmcParams.L2,
                                        hmcParams.L3, traceT(identitySUN<2>()));
   typename DSpinorFieldType::type s_4_SU2(hmcParams.L0, hmcParams.L1,
