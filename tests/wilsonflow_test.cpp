@@ -170,6 +170,39 @@ int test_wilsonflow(const std::string &input_file,
   std::vector<real_t> flow_times;
   std::vector<real_t> topological_charges;
 
+  WilsonFlow<DGaugeFieldType> wilson_flow(hamiltonian_field.gauge_field,
+                                          gaugeObsParams.wilson_flow_params);
+  flow_times.push_back(0.0);
+  topological_charges.push_back(
+      get_topological_charge<DGaugeFieldType>(hamiltonian_field.gauge_field));
+
+  for (int flow_Step = 1; flow_Step <= flow_steps; ++flow_Step) {
+    // perform wilson flow step
+    wilson_flow.flow();
+
+    flow_times.push_back(flow_Step * gaugeObsParams.wilson_flow_params.eps);
+    topological_charges.push_back(
+        get_topological_charge<DGaugeFieldType>(wilson_flow.field));
+
+    // measure observables
+  }
+  // Write the header only once, before the first line of data
+  if (!header_written) {
+    output_file << "hmc_step";
+    for (const auto &t : flow_times) {
+      output_file << "," << t;
+    }
+    output_file << "\n";
+    header_written = true;
+  }
+
+  // Write the data for the current step
+  output_file << 0;
+  for (const auto &charge : topological_charges) {
+    output_file << "," << charge;
+  }
+  output_file << "\n";
+
   // hmc loop
   for (size_t step = 0; step < integratorParams.nsteps; ++step) {
     timer.reset();
