@@ -167,6 +167,15 @@ SUN<1> expoSUN(const SUNAdj<1> &a) {
 KOKKOS_FORCEINLINE_FUNCTION
 SUN<2> expoSUN(const SUNAdj<2> &a) {
   const real_t alpha = Kokkos::sqrt(a[0] * a[0] + a[1] * a[1] + a[2] * a[2]);
+  if (alpha < 1e-8) {
+    // use Taylor expansion
+    SUN<2> c;
+    c[0][0] = complex_t(1.0, a[2]);
+    c[0][1] = complex_t(a[1], a[0]);
+    c[1][0] = complex_t(-c[0][1].real(), c[0][1].imag());
+    c[1][1] = complex_t(1.0, -a[2]);
+    return c;
+  }
   const Kokkos::Array<real_t, 3> u = {a[0] / alpha, a[1] / alpha, a[2] / alpha};
   const real_t sin_alpha = Kokkos::sin(alpha);
   SUN<2> c;
