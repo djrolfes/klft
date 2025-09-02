@@ -38,9 +38,9 @@ struct ActionDensityFunctor {
     for (int mu = 0; mu < Nd; ++mu) {
       for (int nu = mu + 1; nu < Nd; ++nu) {
         // get the clover C_munu
-        RealMatrix C_munu = fst(FSTTag{}, i0, i1, i2, i3, mu, nu);
-        C[mu][nu] = C_munu;
-        C[nu][mu] = -C_munu;
+        // TODO: should this be the imaginary part?
+        C[mu][nu] = imag(fst(FSTTag{}, i0, i1, i2, i3, mu, nu)) * 0.25;
+        C[nu][mu] = imag(fst(FSTTag{}, i0, i1, i2, i3, nu, mu)) * 0.25;
       }
     }
 
