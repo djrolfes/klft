@@ -150,17 +150,26 @@ int test_wilsonflow(const std::string &input_file,
   // Construct the output filename. Each MPI rank will get its own file.
   std::string output_filename =
       output_directory + "topological_charge_cumulative.txt";
-  output_filename = output_filename;
-  std::ofstream output_file(output_filename);
+  std::ofstream output_file_topologicalcharge(output_filename);
 
-  if (!output_file.is_open()) {
+  if (!output_file_topologicalcharge.is_open()) {
+    fprintf(stderr, "Error: Could not open output file %s\n",
+            output_filename.c_str());
+    return -1; // Or handle the error as appropriate
+  }
+
+  std::string output_filename_action_density =
+      output_directory + "action_densities_cumulative.txt";
+  std::ofstream output_file_acitondensity(output_filename_action_density);
+
+  if (!output_file_topologicalcharge.is_open()) {
     fprintf(stderr, "Error: Could not open output file %s\n",
             output_filename.c_str());
     return -1; // Or handle the error as appropriate
   }
 
   // Set precision for floating point numbers in the output file
-  output_file << std::fixed << std::setprecision(8);
+  output_file_topologicalcharge << std::fixed << std::setprecision(8);
   bool header_written = false;
 
   Kokkos::Timer timer;
@@ -172,12 +181,15 @@ int test_wilsonflow(const std::string &input_file,
   gaugeObsParams.wilson_flow_params.n_steps = 1;
   std::vector<real_t> flow_times;
   std::vector<real_t> topological_charges;
+  std::vector<real_t> action_densities;
 
   WilsonFlow<DGaugeFieldType> wilson_flow(hamiltonian_field.gauge_field,
                                           gaugeObsParams.wilson_flow_params);
   flow_times.push_back(0.0);
   topological_charges.push_back(
       get_topological_charge<DGaugeFieldType>(hamiltonian_field.gauge_field));
+  action_densities.push_back(
+      getActionDensity<DGaugeFieldType>(hamiltonian_field.gauge_field));
 
   for (int flow_Step = 1; flow_Step <= flow_steps; ++flow_Step) {
     // perform wilson flow step
@@ -186,25 +198,35 @@ int test_wilsonflow(const std::string &input_file,
     flow_times.push_back(flow_Step * gaugeObsParams.wilson_flow_params.eps);
     topological_charges.push_back(
         get_topological_charge<DGaugeFieldType>(wilson_flow.field));
+    action_densities.push_back(
+        getActionDensity<DGaugeFieldType>(wilson_flow.field));
 
     // measure observables
   }
   // Write the header only once, before the first line of data
   if (!header_written) {
-    output_file << "hmc_step";
+    output_file_topologicalcharge << "hmc_step";
+    output_file_acitondensity << "hmc_step";
     for (const auto &t : flow_times) {
-      output_file << "," << t;
+      output_file_topologicalcharge << "," << t;
+      output_file_acitondensity << "," << t;
     }
-    output_file << "\n";
+    output_file_topologicalcharge << "\n";
+    output_file_acitondensity << "\n";
     header_written = true;
   }
 
   // Write the data for the current step
-  output_file << 0;
+  output_file_topologicalcharge << 0;
   for (const auto &charge : topological_charges) {
-    output_file << "," << charge;
+    output_file_topologicalcharge << "," << charge;
   }
-  output_file << "\n";
+  output_file_topologicalcharge << "\n";
+  output_file_acitondensity << 0;
+  for (const auto &density : action_densities) {
+    output_file_acitondensity << "," << density;
+  }
+  output_file_acitondensity << "\n";
 
   // hmc loop
   for (size_t step = 0; step < integratorParams.nsteps; ++step) {
@@ -231,6 +253,8 @@ int test_wilsonflow(const std::string &input_file,
       flow_times.push_back(0.0);
       topological_charges.push_back(get_topological_charge<DGaugeFieldType>(
           hamiltonian_field.gauge_field));
+      action_densities.push_back(
+          getActionDensity<DGaugeFieldType>(hamiltonian_field.gauge_field));
 
       for (int flow_Step = 1; flow_Step <= flow_steps; ++flow_Step) {
         // perform wilson flow step
@@ -239,25 +263,35 @@ int test_wilsonflow(const std::string &input_file,
         flow_times.push_back(flow_Step * gaugeObsParams.wilson_flow_params.eps);
         topological_charges.push_back(
             get_topological_charge<DGaugeFieldType>(wilson_flow.field));
+        action_densities.push_back(
+            getActionDensity<DGaugeFieldType>(wilson_flow.field));
 
         // measure observables
       }
       // Write the header only once, before the first line of data
       if (!header_written) {
-        output_file << "hmc_step";
+        output_file_topologicalcharge << "hmc_step";
+        output_file_acitondensity << "hmc_step";
         for (const auto &t : flow_times) {
-          output_file << "," << t;
+          output_file_topologicalcharge << "," << t;
+          output_file_acitondensity << "," << t;
         }
-        output_file << "\n";
+        output_file_topologicalcharge << "\n";
+        output_file_acitondensity << "\n";
         header_written = true;
       }
 
       // Write the data for the current step
-      output_file << step;
+      output_file_topologicalcharge << step;
       for (const auto &charge : topological_charges) {
-        output_file << "," << charge;
+        output_file_topologicalcharge << "," << charge;
       }
-      output_file << "\n";
+      output_file_topologicalcharge << "\n";
+      output_file_acitondensity << step;
+      for (const auto &density : action_densities) {
+        output_file_acitondensity << "," << density;
+      }
+      output_file_acitondensity << "\n";
     }
   }
   return 0;
