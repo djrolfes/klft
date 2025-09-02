@@ -233,6 +233,7 @@ int test_wilsonflow(const std::string &input_file,
     timer.reset();
     flow_times.clear();
     topological_charges.clear();
+    action_densities.clear();
 
     // perform hmc_step
     accept = hmc.hmc_step();
