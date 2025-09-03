@@ -28,27 +28,28 @@ int main(int argc, char* argv[]) {
   Kokkos::initialize(argc, argv);
   int RETURNVALUE = 0;
   {
-    constexpr int count = 100;
+    constexpr int count = 500;
     setVerbosity(5);
     printf("%i", KLFT_VERBOSITY);
     printf("\n=== Testing DiracOperator SU(3)  ===\n");
     printf("\n= Testing hermiticity =\n");
     index_t L0 = 32, L1 = 32, L2 = 32, L3 = 32;
-
+    auto gammas = get_gammas<4>();
+    GammaMat<4> gamma5 = get_gamma5();
     diracParams<4> params(IndexArray<4>{L0, L1, L2, L3}, 0.156);
     printf("Lattice Dimension %ix%ix%ix%i \n", L0, L1, L2, L3);
     printf("Generate SpinorFields...\n");
 
     Kokkos::Random_XorShift64_Pool<> random_pool(/*seed=*/1234);
-    deviceSpinorField<3, 4> u(L0, L1, L2, L3, random_pool, 0, 1.0 / 1.41);
-    deviceSpinorField<3, 4> Mu(L0, L1, L2, L3, 0);
-    deviceSpinorField<3, 4> temp(L0, L1, L2, L3, 0);
+    deviceSpinorField<2, 4> u(L0, L1, L2, L3, random_pool, 0, 1.0 / 1.41);
+    deviceSpinorField<2, 4> Mu(L0, L1, L2, L3, 0);
+    deviceSpinorField<2, 4> temp(L0, L1, L2, L3, 0);
 
     printf("Generating Random Gauge Config\n");
-    deviceGaugeField<4, 3> gauge(L0, L1, L2, L3, random_pool, 1);
+    deviceGaugeField<4, 2> gauge(L0, L1, L2, L3, random_pool, 1);
     printf("Instantiate DiracOperator...\n");
-    WilsonDiracOperator<DeviceSpinorFieldType<4, 3, 4>,
-                        DeviceGaugeFieldType<4, 3>>
+    WilsonDiracOperator<DeviceSpinorFieldType<4, 2, 4>,
+                        DeviceGaugeFieldType<4, 2>>
         D(gauge, params);
     printf("Apply DiracOperator...\n");
     Kokkos::Timer timer;
