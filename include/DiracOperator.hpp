@@ -39,7 +39,8 @@ struct TagDdaggerD {};
 }  // namespace Tags
 
 template <template <typename, typename> class _Derived,
-          typename DSpinorFieldType, typename DGaugeFieldType>
+          typename DSpinorFieldType,
+          typename DGaugeFieldType>
 class DiracOperator {
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
   static_assert(isDeviceFermionFieldType<DSpinorFieldType>::value);
@@ -58,8 +59,7 @@ class DiracOperator {
   using GaugeFieldType = typename DGaugeFieldType::type;
 
  public:
-  DiracOperator(const GaugeFieldType& g_in,
-                const diracParams<rank, RepDim>& params)
+  DiracOperator(const GaugeFieldType& g_in, const diracParams<rank>& params)
       : g_in(g_in), params(params) {}
   ~DiracOperator() = default;
   // Define callabale apply functions
@@ -152,16 +152,16 @@ class DiracOperator {
   SpinorFieldType s_in;
   SpinorFieldType s_out;
   const GaugeFieldType g_in;
-  const diracParams<rank, RepDim> params;
+  const diracParams<rank> params;
 
  protected:
   DiracOperator() = default;
 };
 
 template <typename DSpinorFieldType, typename DGaugeFieldType>
-class WilsonDiracOperator
-    : public DiracOperator<WilsonDiracOperator, DSpinorFieldType,
-                           DGaugeFieldType> {
+class WilsonDiracOperator : public DiracOperator<WilsonDiracOperator,
+                                                 DSpinorFieldType,
+                                                 DGaugeFieldType> {
  public:
   constexpr static size_t Nc =
       DeviceFermionFieldTypeTraits<DSpinorFieldType>::Nc;
@@ -225,9 +225,9 @@ class WilsonDiracOperator
 };
 
 template <typename DSpinorFieldType, typename DGaugeFieldType>
-class HWilsonDiracOperator
-    : public DiracOperator<HWilsonDiracOperator, DSpinorFieldType,
-                           DGaugeFieldType> {
+class HWilsonDiracOperator : public DiracOperator<HWilsonDiracOperator,
+                                                  DSpinorFieldType,
+                                                  DGaugeFieldType> {
  public:
   constexpr static size_t Nc =
       DeviceFermionFieldTypeTraits<DSpinorFieldType>::Nc;
@@ -244,23 +244,25 @@ class HWilsonDiracOperator
   KOKKOS_FORCEINLINE_FUNCTION void operator()(typename Tags::TagD,
                                               const Indices... Idcs) const {
     Spinor<Nc, RepDim> temp;
+    Kokkos::Array<size_t, rank> idx{Idcs...};
 #pragma unroll
     for (size_t mu = 0; mu < rank; ++mu) {
-      auto xm = shift_index_minus_bc<rank, size_t>(
-          Kokkos::Array<size_t, rank>{Idcs...}, mu, 1, 0, -1,
-          this->params.dimensions);
-      auto xp = shift_index_plus_bc<rank, size_t>(
-          Kokkos::Array<size_t, rank>{Idcs...}, mu, 1, 0, -1,
-          this->params.dimensions);
+      auto xm = shift_index_minus_bc<rank, size_t>(idx, mu, 1, 0, -1,
+                                                   this->params.dimensions);
+      auto xp = shift_index_plus_bc<rank, size_t>(idx, mu, 1, 0, -1,
+                                                  this->params.dimensions);
 
-      temp += (this->params.gamma_id - this->params.gammas[mu]) * xp.second *
-              (this->g_in(Idcs..., mu) * this->s_in(xp.first));
-      temp += (this->params.gamma_id + this->params.gammas[mu]) * xm.second *
-              (conj(this->g_in(xm.first, mu)) * this->s_in(xm.first));
+      auto temp1 =
+          this->g_in(Idcs..., mu) * project(mu, 1, this->s_in(xp.first));
+
+      //
+      auto temp2 = conj(this->g_in(xm.first, mu)) *
+                   project(mu, -1, this->s_in(xm.first));
+      temp += reconstruct(mu, 1, (this->params.kappa * xp.second) * temp1) +
+              reconstruct(mu, -1, (this->params.kappa * xm.second) * temp2);
     }
 
-    this->s_out(Idcs...) =
-        this->params.gamma5 * (this->s_in(Idcs...) - this->params.kappa * temp);
+    this->s_out(Idcs...) = gamma5(this->s_in(Idcs...) - temp);
   }
 
   // only for testing porpose, not the real Ddagger operator

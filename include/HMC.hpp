@@ -90,9 +90,7 @@ class HMC {
             typename DSpinorFieldType>
   void add_fermion_monomial(
       typename DSpinorFieldType::type& spinorField,
-      diracParams<DeviceFermionFieldTypeTraits<DSpinorFieldType>::Rank,
-
-                  DeviceFermionFieldTypeTraits<DSpinorFieldType>::RepDim>&
+      diracParams<DeviceFermionFieldTypeTraits<DSpinorFieldType>::Rank>&
           params_,
       const real_t& tol_,
       RNG& rng,

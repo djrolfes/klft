@@ -25,21 +25,13 @@
 namespace klft {
 
 // Parameters specific to the Dirac operator
-template <size_t rank, size_t RepDim>
+template <size_t rank>
 struct diracParams {
-  using VecGammaMatrix = Kokkos::Array<GammaMat<RepDim>, 4>;
-  const VecGammaMatrix gammas;
-  const GammaMat<RepDim> gamma_id = get_identity<RepDim>();
-  const GammaMat<RepDim> gamma5;
   const real_t kappa;
   const IndexArray<rank> dimensions;
-  diracParams(const IndexArray<rank> _dimensions,
-              const VecGammaMatrix& _gammas,
-              const GammaMat<RepDim>& _gamma5,
-              const real_t& _kappa)
+  diracParams(const IndexArray<rank> _dimensions, const real_t& _kappa)
       : dimensions(_dimensions),
-        gammas(_gammas),
-        gamma5(_gamma5),
+
         kappa(_kappa) {}
 };
 
@@ -78,20 +70,8 @@ struct FermionParams {
 template <size_t rank>
 auto getDiracParams(const IndexArray<rank>& dimensions,
                     const FermionMonomial_Params& fparams) {
-  if (fparams.RepDim == 4) {
-    auto gammas = get_gammas<4>();
-    GammaMat<4> gamma5 = get_gamma5();
-    diracParams<rank, 4> dParams(dimensions, gammas, gamma5, fparams.kappa);
-    return dParams;
-
-  } else {
-    printf("Warning: Unsupported Gamma Matrix Representation\n");
-    printf("Warning: Fallback RepDim = 4\n");
-    auto gammas = get_gammas<4>();
-    GammaMat<4> gamma5 = get_gamma5();
-    diracParams<rank, 4> dParams(dimensions, gammas, gamma5, fparams.kappa);
-    return dParams;
-  }
+  diracParams<rank> dParams(dimensions, fparams.kappa);
+  return dParams;
 }
 
 }  // namespace klft
