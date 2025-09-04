@@ -39,8 +39,8 @@ struct ActionDensityFunctor {
       for (int nu = mu + 1; nu < Nd; ++nu) {
         // get the clover C_munu
         // TODO: should this be the imaginary part?
-        C[mu][nu] = imag(fst(FSTTag{}, i0, i1, i2, i3, mu, nu)) * 0.25;
-        C[nu][mu] = imag(fst(FSTTag{}, i0, i1, i2, i3, nu, mu)) * 0.25;
+        C[mu][nu] = fst(FSTTag{}, i0, i1, i2, i3, mu, nu);
+        C[nu][mu] = fst(FSTTag{}, i0, i1, i2, i3, nu, mu);
       }
     }
 

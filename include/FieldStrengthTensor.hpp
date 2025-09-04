@@ -155,7 +155,7 @@ template <typename DGaugeFieldType> struct FieldStrengthTensor {
     x_m_nu[nu] = mod(x[nu] - 1, nu) % dimensions[nu];
     IndexArray<Nd> x_p_mu_m_nu = x_p_mu;
     x_p_mu_m_nu[nu] = mod(x_p_mu[nu] - 1, nu) % dimensions[nu];
-    P_munu -= g_in(x, mu) * conj(g_in(x_p_mu_m_nu, nu)) *
+    P_munu += g_in(x, mu) * conj(g_in(x_p_mu_m_nu, nu)) *
               conj(g_in(x_m_nu, mu)) * g_in(x_m_nu, nu);
 
     // 3. Plaquette in (-mu, +nu) plane starting at x
@@ -163,7 +163,7 @@ template <typename DGaugeFieldType> struct FieldStrengthTensor {
     x_m_mu[mu] = mod(x[mu] - 1, mu) % dimensions[mu];
     IndexArray<Nd> x_m_mu_p_nu = x_m_mu;
     x_m_mu_p_nu[nu] = (x_m_mu[nu] + 1) % dimensions[nu];
-    P_munu -= conj(g_in(x_m_mu, mu)) * g_in(x_m_mu, nu) *
+    P_munu += conj(g_in(x_m_mu, mu)) * g_in(x_m_mu, nu) *
               g_in(x_m_mu_p_nu, mu) * conj(g_in(x, nu));
 
     // 4. Plaquette in (-mu, -nu) plane starting at x
@@ -172,7 +172,7 @@ template <typename DGaugeFieldType> struct FieldStrengthTensor {
     P_munu += conj(g_in(x_m_mu, mu)) * conj(g_in(x_m_mu_m_nu, nu)) *
               g_in(x_m_mu_m_nu, mu) * g_in(x_m_nu, nu);
 
-    return (P_munu);
+    return imag(P_munu) * 0.25;
   }
 };
 

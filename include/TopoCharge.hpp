@@ -103,24 +103,13 @@ struct TopoCharge {
       }
     }
 
-// TODO 12.05.: implement this according to 1708.00696
-#pragma unroll
-    for (int mu = 0; mu < 4; ++mu) {
-#pragma unroll
-      for (int nu = 0; nu < 4; ++nu) {
-#pragma unroll
-        for (int rho = 0; rho < 4; ++rho) {
-#pragma unroll
-          for (int sigma = 0; sigma < 4; ++sigma) {
-            if (epsilon4(mu, nu, rho, sigma) == 0) {
-              continue;
-            }
-            local_charge +=
-                epsilon4(mu, nu, rho, sigma) * trace(C[mu][nu] * C[rho][sigma]);
-          }
-        }
-      }
-    }
+    // TODO 12.05.: implement this according to 1708.00696
+    local_charge += (trace(fst(FSTTag{}, i0, i1, i2, i3, 0, 1) *
+                           fst(FSTTag{}, i0, i1, i2, i3, 2, 3)) +
+                     trace(fst(FSTTag{}, i0, i1, i2, i3, 0, 2) *
+                           fst(FSTTag{}, i0, i1, i2, i3, 3, 1)) +
+                     trace(fst(FSTTag{}, i0, i1, i2, i3, 0, 3) *
+                           fst(FSTTag{}, i0, i1, i2, i3, 1, 2)));
     charge_per_site(i0, i1, i2, i3) = local_charge;
     // charge_per_site(i0, i1, i2, i3) = local_charge / 16;
   }
@@ -196,6 +185,6 @@ real_t get_topological_charge(const typename DGaugeFieldType::type g_in) {
   Kokkos::fence();
   // charge /= 32 * PI * PI;
 
-  return charge / (32 * PI * PI);
+  return charge / (8 * PI * PI);
 }
 } // namespace klft
