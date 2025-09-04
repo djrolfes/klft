@@ -95,13 +95,13 @@ struct TopoCharge {
     RealMatrix C1, C2;
     Kokkos::Array<Kokkos::Array<RealMatrix, Nd>, Nd> C;
 
-    for (int mu = 0; mu < Nd; ++mu) {
-      for (int nu = mu + 1; nu < Nd; ++nu) {
-        // get the clover C_munu
-        C[mu][nu] = imag(fst(FSTTag{}, i0, i1, i2, i3, mu, nu)) * 0.25;
-        C[nu][mu] = imag(fst(FSTTag{}, i0, i1, i2, i3, nu, mu)) * 0.25;
-      }
-    }
+    // for (int mu = 0; mu < Nd; ++mu) {
+    //   for (int nu = mu + 1; nu < Nd; ++nu) {
+    //     // get the clover C_munu
+    //     C[mu][nu] = (fst(FSTTag{}, i0, i1, i2, i3, mu, nu));
+    //     C[nu][mu] = (fst(FSTTag{}, i0, i1, i2, i3, nu, mu));
+    //   }
+    // }
 
     // TODO 12.05.: implement this according to 1708.00696
     local_charge += (trace(fst(FSTTag{}, i0, i1, i2, i3, 0, 1) *
