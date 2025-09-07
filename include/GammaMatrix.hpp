@@ -115,28 +115,16 @@ struct GammaMat {
     return matrix == b.matrix;
   }
 };
-GammaMat<4> get_gamma0() {
-  GammaMat<4> g;
-  g(0, 0) = complex_t(0, 0);
-  g(0, 1) = complex_t(0, 0);
-  g(0, 2) = complex_t(-1, 0);
-  g(0, 3) = complex_t(0, 0);
-  g(1, 0) = complex_t(0, 0);
-  g(1, 1) = complex_t(0, 0);
-  g(1, 2) = complex_t(0, 0);
-  g(1, 3) = complex_t(-1, 0);
-  g(2, 0) = complex_t(-1, 0);
-  g(2, 1) = complex_t(0, 0);
-  g(2, 2) = complex_t(0, 0);
-  g(2, 3) = complex_t(0, 0);
-  g(3, 0) = complex_t(0, 0);
-  g(3, 1) = complex_t(-1, 0);
-  g(3, 2) = complex_t(0, 0);
-  g(3, 3) = complex_t(0, 0);
-  return g;
-}
 
-GammaMat<4> get_gamma1() {
+/* Following Gattinger:
+           [0 0 0 -i
+gamma_2 =   0 0 -i 0
+            0 i 0 0
+            i 0 0 0]
+
+*/
+// xdir
+GammaMat<4> get_gamma0() {
   GammaMat<4> g{};
   g(0, 0) = complex_t(0, 0);
   g(0, 1) = complex_t(0, 0);
@@ -157,7 +145,15 @@ GammaMat<4> get_gamma1() {
   return g;
 }
 
-GammaMat<4> get_gamma2() {
+/* Following Gattinger:
+           [0 0 0 -1
+gamma_2 =   0 0 1 0
+            0 1 0 0
+           -1 0 0 0]
+
+*/
+// y dir
+GammaMat<4> get_gamma1() {
   GammaMat<4> g{};
   g(0, 0) = complex_t(0, 0);
   g(0, 1) = complex_t(0, 0);
@@ -178,7 +174,15 @@ GammaMat<4> get_gamma2() {
   return g;
 }
 
-GammaMat<4> get_gamma3() {
+/* Following Gattinger:
+           [0 0 -i 0
+gamma_3 =   0 0 0 i
+            i 0 0 0
+            0 -i 0 0]
+
+*/
+// z  dir
+GammaMat<4> get_gamma2() {
   GammaMat<4> g{};
   g(0, 0) = complex_t(0, 0);
   g(0, 1) = complex_t(0, 0);
@@ -194,6 +198,34 @@ GammaMat<4> get_gamma3() {
   g(2, 3) = complex_t(0, 0);
   g(3, 0) = complex_t(0, 0);
   g(3, 1) = complex_t(0, -1);
+  g(3, 2) = complex_t(0, 0);
+  g(3, 3) = complex_t(0, 0);
+  return g;
+}
+/* Following Gattinger:
+           [0 0 1 0
+gamma_4 =   0 0 0 1
+            1 0 0 0
+            0 1 0 0]
+
+*/
+// t dir
+GammaMat<4> get_gamma3() {
+  GammaMat<4> g{};
+  g(0, 0) = complex_t(0, 0);
+  g(0, 1) = complex_t(0, 0);
+  g(0, 2) = complex_t(1, 0);
+  g(0, 3) = complex_t(0, 0);
+  g(1, 0) = complex_t(0, 0);
+  g(1, 1) = complex_t(0, 0);
+  g(1, 2) = complex_t(0, 0);
+  g(1, 3) = complex_t(1, 0);
+  g(2, 0) = complex_t(1, 0);
+  g(2, 1) = complex_t(0, 0);
+  g(2, 2) = complex_t(0, 0);
+  g(2, 3) = complex_t(0, 0);
+  g(3, 0) = complex_t(0, 0);
+  g(3, 1) = complex_t(1, 0);
   g(3, 2) = complex_t(0, 0);
   g(3, 3) = complex_t(0, 0);
   return g;
@@ -374,16 +406,16 @@ static constexpr KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, 2> project(
         case +1:
 #pragma unroll
           for (size_t i = 0; i < Nc; i++) {
-            result[0][i] = spinor[0][i] - spinor[2][i];
-            result[1][i] = spinor[1][i] - spinor[3][i];
+            result[0][i] = spinor[0][i] - complex_t(0, 1) * spinor[3][i];
+            result[1][i] = spinor[1][i] - complex_t(0, 1) * spinor[2][i];
           }
           break;
 
         case -1:
 #pragma unroll
           for (size_t i = 0; i < Nc; i++) {
-            result[0][i] = spinor[0][i] + spinor[2][i];
-            result[1][i] = spinor[1][i] + spinor[3][i];
+            result[0][i] = spinor[0][i] + complex_t(0, 1) * spinor[3][i];
+            result[1][i] = spinor[1][i] + complex_t(0, 1) * spinor[2][i];
           }
           break;
       }
@@ -393,8 +425,8 @@ static constexpr KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, 2> project(
         case +1:
 #pragma unroll
           for (size_t i = 0; i < Nc; i++) {
-            result[0][i] = spinor[0][i] - complex_t(0, 1) * spinor[3][i];
-            result[1][i] = spinor[1][i] - complex_t(0, 1) * spinor[2][i];
+            result[0][i] = spinor[0][i] - spinor[3][i];
+            result[1][i] = spinor[1][i] + spinor[2][i];
           }
 
           break;
@@ -402,8 +434,8 @@ static constexpr KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, 2> project(
         case -1:
 #pragma unroll
           for (size_t i = 0; i < Nc; i++) {
-            result[0][i] = spinor[0][i] + complex_t(0, 1) * spinor[3][i];
-            result[1][i] = spinor[1][i] + complex_t(0, 1) * spinor[2][i];
+            result[0][i] = spinor[0][i] + spinor[3][i];
+            result[1][i] = spinor[1][i] - spinor[2][i];
           }
       }
       break;
@@ -412,15 +444,15 @@ static constexpr KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, 2> project(
         case +1:
 #pragma unroll
           for (size_t i = 0; i < Nc; i++) {
-            result[0][i] = spinor[0][i] - spinor[3][i];
-            result[1][i] = spinor[1][i] + spinor[2][i];
+            result[0][i] = spinor[0][i] - complex_t(0, 1) * spinor[2][i];
+            result[1][i] = spinor[1][i] + complex_t(0, 1) * spinor[3][i];
           }
           break;
         case -1:
 #pragma unroll
           for (size_t i = 0; i < Nc; i++) {
-            result[0][i] = spinor[0][i] + spinor[3][i];
-            result[1][i] = spinor[1][i] - spinor[2][i];
+            result[0][i] = spinor[0][i] + complex_t(0, 1) * spinor[2][i];
+            result[1][i] = spinor[1][i] - complex_t(0, 1) * spinor[3][i];
           }
           break;
       }
@@ -430,8 +462,8 @@ static constexpr KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, 2> project(
         case 1:
 #pragma unroll
           for (size_t i = 0; i < Nc; i++) {
-            result[0][i] = spinor[0][i] - complex_t(0, 1) * spinor[2][i];
-            result[1][i] = spinor[1][i] + complex_t(0, 1) * spinor[3][i];
+            result[0][i] = spinor[0][i] + spinor[2][i];
+            result[1][i] = spinor[1][i] + spinor[3][i];
           }
 
           break;
@@ -439,8 +471,8 @@ static constexpr KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, 2> project(
         case -1:
 #pragma unroll
           for (size_t i = 0; i < Nc; i++) {
-            result[0][i] = spinor[0][i] + complex_t(0, 1) * spinor[2][i];
-            result[1][i] = spinor[1][i] - complex_t(0, 1) * spinor[3][i];
+            result[0][i] = spinor[0][i] - spinor[2][i];
+            result[1][i] = spinor[1][i] - spinor[3][i];
           }
 
           break;
@@ -463,16 +495,16 @@ static constexpr KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, 2> project_alt(
         case +1:
 #pragma unroll
           for (size_t i = 0; i < Nc; i++) {
-            result[0][i] = spinor[0][i] - spinor[2][i];
-            result[1][i] = spinor[1][i] - spinor[3][i];
+            result[0][i] = spinor[0][i] + complex_t(0, 1) * spinor[3][i];
+            result[1][i] = spinor[1][i] + complex_t(0, 1) * spinor[2][i];
           }
           break;
 
         case -1:
 #pragma unroll
           for (size_t i = 0; i < Nc; i++) {
-            result[0][i] = spinor[0][i] + spinor[2][i];
-            result[1][i] = spinor[1][i] + spinor[3][i];
+            result[0][i] = spinor[0][i] + complex_t(0, -1) * spinor[3][i];
+            result[1][i] = spinor[1][i] + complex_t(0, -1) * spinor[2][i];
           }
           break;
       }
@@ -482,8 +514,8 @@ static constexpr KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, 2> project_alt(
         case +1:
 #pragma unroll
           for (size_t i = 0; i < Nc; i++) {
-            result[0][i] = spinor[0][i] + complex_t(0, 1) * spinor[3][i];
-            result[1][i] = spinor[1][i] + complex_t(0, 1) * spinor[2][i];
+            result[0][i] = spinor[0][i] - spinor[3][i];
+            result[1][i] = spinor[1][i] + spinor[2][i];
           }
 
           break;
@@ -491,8 +523,8 @@ static constexpr KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, 2> project_alt(
         case -1:
 #pragma unroll
           for (size_t i = 0; i < Nc; i++) {
-            result[0][i] = spinor[0][i] - complex_t(0, 1) * spinor[3][i];
-            result[1][i] = spinor[1][i] - complex_t(0, 1) * spinor[2][i];
+            result[0][i] = spinor[0][i] + spinor[3][i];
+            result[1][i] = spinor[1][i] - spinor[2][i];
           }
       }
       break;
@@ -501,15 +533,15 @@ static constexpr KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, 2> project_alt(
         case +1:
 #pragma unroll
           for (size_t i = 0; i < Nc; i++) {
-            result[0][i] = spinor[0][i] - spinor[3][i];
-            result[1][i] = spinor[1][i] + spinor[2][i];
+            result[0][i] = spinor[0][i] + complex_t(0, 1) * spinor[2][i];
+            result[1][i] = spinor[1][i] + complex_t(0, -1) * spinor[3][i];
           }
           break;
         case -1:
 #pragma unroll
           for (size_t i = 0; i < Nc; i++) {
-            result[0][i] = spinor[0][i] + spinor[3][i];
-            result[1][i] = spinor[1][i] - spinor[2][i];
+            result[0][i] = spinor[0][i] + complex_t(0, -1) * spinor[2][i];
+            result[1][i] = spinor[1][i] + complex_t(0, 1) * spinor[3][i];
           }
           break;
       }
@@ -519,8 +551,8 @@ static constexpr KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, 2> project_alt(
         case 1:
 #pragma unroll
           for (size_t i = 0; i < Nc; i++) {
-            result[0][i] = spinor[0][i] + complex_t(0, 1) * spinor[2][i];
-            result[1][i] = spinor[1][i] - complex_t(0, 1) * spinor[3][i];
+            result[0][i] = spinor[0][i] + spinor[2][i];
+            result[1][i] = spinor[1][i] + spinor[3][i];
           }
 
           break;
@@ -528,8 +560,8 @@ static constexpr KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, 2> project_alt(
         case -1:
 #pragma unroll
           for (size_t i = 0; i < Nc; i++) {
-            result[0][i] = spinor[0][i] - complex_t(0, 1) * spinor[2][i];
-            result[1][i] = spinor[1][i] + complex_t(0, 1) * spinor[3][i];
+            result[0][i] = spinor[0][i] - spinor[2][i];
+            result[1][i] = spinor[1][i] - spinor[3][i];
           }
 
           break;
@@ -573,8 +605,8 @@ static constexpr KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, 4> reconstruct(
           for (size_t i = 0; i < Nc; i++) {
             result[0][i] = spinor[0][i];
             result[1][i] = spinor[1][i];
-            result[2][i] = -1 * result[0][i];
-            result[3][i] = -1 * result[1][i];
+            result[2][i] = complex_t(0, 1) * result[1][i];
+            result[3][i] = complex_t(0, 1) * result[0][i];
           }
           break;
 
@@ -583,8 +615,8 @@ static constexpr KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, 4> reconstruct(
           for (size_t i = 0; i < Nc; i++) {
             result[0][i] = spinor[0][i];
             result[1][i] = spinor[1][i];
-            result[2][i] = result[0][i];
-            result[3][i] = result[1][i];
+            result[2][i] = complex_t(0, -1) * result[1][i];
+            result[3][i] = complex_t(0, -1) * result[0][i];
           }
           break;
       }
@@ -596,8 +628,8 @@ static constexpr KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, 4> reconstruct(
           for (size_t i = 0; i < Nc; i++) {
             result[0][i] = spinor[0][i];
             result[1][i] = spinor[1][i];
-            result[2][i] = complex_t(0, 1) * result[1][i];
-            result[3][i] = complex_t(0, 1) * result[0][i];
+            result[2][i] = result[1][i];
+            result[3][i] = -1 * result[0][i];
           }
 
           break;
@@ -607,8 +639,8 @@ static constexpr KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, 4> reconstruct(
           for (size_t i = 0; i < Nc; i++) {
             result[0][i] = spinor[0][i];
             result[1][i] = spinor[1][i];
-            result[2][i] = -complex_t(0, 1) * result[1][i];
-            result[3][i] = -complex_t(0, 1) * result[0][i];
+            result[2][i] = -1 * result[1][i];
+            result[3][i] = result[0][i];
           }
       }
       break;
@@ -619,8 +651,8 @@ static constexpr KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, 4> reconstruct(
           for (size_t i = 0; i < Nc; i++) {
             result[0][i] = spinor[0][i];
             result[1][i] = spinor[1][i];
-            result[2][i] = result[1][i];
-            result[3][i] = -1 * result[0][i];
+            result[2][i] = complex_t(0, 1) * result[0][i];
+            result[3][i] = complex_t(0, -1) * result[1][i];
           }
           break;
         case -1:
@@ -628,8 +660,8 @@ static constexpr KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, 4> reconstruct(
           for (size_t i = 0; i < Nc; i++) {
             result[0][i] = spinor[0][i];
             result[1][i] = spinor[1][i];
-            result[2][i] = -1 * result[1][i];
-            result[3][i] = result[0][i];
+            result[2][i] = complex_t(0, -1) * result[0][i];
+            result[3][i] = complex_t(0, 1) * result[1][i];
           }
           break;
       }
@@ -641,8 +673,8 @@ static constexpr KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, 4> reconstruct(
           for (size_t i = 0; i < Nc; i++) {
             result[0][i] = spinor[0][i];
             result[1][i] = spinor[1][i];
-            result[2][i] = complex_t(0, 1) * result[0][i];
-            result[3][i] = -complex_t(0, 1) * result[1][i];
+            result[2][i] = result[0][i];
+            result[3][i] = result[1][i];
           }
 
           break;
@@ -652,8 +684,8 @@ static constexpr KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, 4> reconstruct(
           for (size_t i = 0; i < Nc; i++) {
             result[0][i] = spinor[0][i];
             result[1][i] = spinor[1][i];
-            result[2][i] = -complex_t(0, 1) * result[0][i];
-            result[3][i] = complex_t(0, 1) * result[1][i];
+            result[2][i] = -1 * result[0][i];
+            result[3][i] = -1 * result[1][i];
           }
 
           break;
@@ -678,8 +710,8 @@ constexpr KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, 4> static reconstruct_alt(
           for (size_t i = 0; i < Nc; i++) {
             result[0][i] = spinor[0][i];
             result[1][i] = spinor[1][i];
-            result[2][i] = -1 * result[0][i];
-            result[3][i] = -1 * result[1][i];
+            result[2][i] = complex_t(0, -1) * result[1][i];
+            result[3][i] = complex_t(0, -1) * result[0][i];
           }
           break;
 
@@ -688,8 +720,8 @@ constexpr KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, 4> static reconstruct_alt(
           for (size_t i = 0; i < Nc; i++) {
             result[0][i] = spinor[0][i];
             result[1][i] = spinor[1][i];
-            result[2][i] = result[0][i];
-            result[3][i] = result[1][i];
+            result[2][i] = complex_t(0, 1) * result[1][i];
+            result[3][i] = complex_t(0, 1) * result[0][i];
           }
           break;
       }
@@ -701,8 +733,8 @@ constexpr KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, 4> static reconstruct_alt(
           for (size_t i = 0; i < Nc; i++) {
             result[0][i] = spinor[0][i];
             result[1][i] = spinor[1][i];
-            result[2][i] = -complex_t(0, 1) * result[1][i];
-            result[3][i] = -complex_t(0, 1) * result[0][i];
+            result[2][i] = result[1][i];
+            result[3][i] = -1 * result[0][i];
           }
 
           break;
@@ -712,8 +744,8 @@ constexpr KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, 4> static reconstruct_alt(
           for (size_t i = 0; i < Nc; i++) {
             result[0][i] = spinor[0][i];
             result[1][i] = spinor[1][i];
-            result[2][i] = complex_t(0, 1) * result[1][i];
-            result[3][i] = complex_t(0, 1) * result[0][i];
+            result[2][i] = -1 * result[1][i];
+            result[3][i] = result[0][i];
           }
       }
       break;
@@ -724,8 +756,8 @@ constexpr KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, 4> static reconstruct_alt(
           for (size_t i = 0; i < Nc; i++) {
             result[0][i] = spinor[0][i];
             result[1][i] = spinor[1][i];
-            result[2][i] = result[1][i];
-            result[3][i] = -1 * result[0][i];
+            result[2][i] = -complex_t(0, 1) * result[0][i];
+            result[3][i] = complex_t(0, 1) * result[1][i];
           }
           break;
         case -1:
@@ -733,8 +765,8 @@ constexpr KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, 4> static reconstruct_alt(
           for (size_t i = 0; i < Nc; i++) {
             result[0][i] = spinor[0][i];
             result[1][i] = spinor[1][i];
-            result[2][i] = -1 * result[1][i];
-            result[3][i] = result[0][i];
+            result[2][i] = complex_t(0, 1) * result[0][i];
+            result[3][i] = -complex_t(0, 1) * result[1][i];
           }
           break;
       }
@@ -746,8 +778,8 @@ constexpr KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, 4> static reconstruct_alt(
           for (size_t i = 0; i < Nc; i++) {
             result[0][i] = spinor[0][i];
             result[1][i] = spinor[1][i];
-            result[2][i] = -complex_t(0, 1) * result[0][i];
-            result[3][i] = +complex_t(0, 1) * result[1][i];
+            result[2][i] = result[0][i];
+            result[3][i] = result[1][i];
           }
 
           break;
@@ -757,8 +789,8 @@ constexpr KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, 4> static reconstruct_alt(
           for (size_t i = 0; i < Nc; i++) {
             result[0][i] = spinor[0][i];
             result[1][i] = spinor[1][i];
-            result[2][i] = complex_t(0, 1) * result[0][i];
-            result[3][i] = -complex_t(0, 1) * result[1][i];
+            result[2][i] = -1 * result[0][i];
+            result[3][i] = -1 * result[1][i];
           }
 
           break;

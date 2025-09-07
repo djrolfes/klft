@@ -82,14 +82,15 @@ int main(int argc, char const* argv[]) {
   sun[1][1] = complex_t(0.36, -0.486);
 
   print_spinor_int(spinor);
+
+  print_spinor_int(spinor);
   int dir = 3;
-  int sign = -1;
-  auto res1 = (ggamma5 * spinor);
-  auto res2 = (gamma5(spinor));
+  int sign = 1;
+  auto res1 = spinor * (ggamma_id + ggamma3);
+  auto res2 = project_alt(dir, sign, spinor);
   print_spinor_int(res1, " (I + gamma1) * spinor");
   print_spinor_int(res2, "P_-0*spinor");
-  // print_spinor_int(reconstruct_alt(dir, sign, (res2)), "reconstructed");
-  printf("Are equal: %i\n", res1 == (res2));
+  printf("Are equal: %i\n", res1 == reconstruct_alt(dir, sign, res2));
   // printf("Checking multiplication with reconstruction:\n");
   // auto su2_1 = sun * res1;
   // auto su2_2 = reconstruct(dir, sign, sun * res2);

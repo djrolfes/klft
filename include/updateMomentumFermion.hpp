@@ -26,11 +26,9 @@
 
 namespace klft {
 
-template <typename DSpinorFieldType,
-          typename DGaugeFieldType,
+template <typename DSpinorFieldType, typename DGaugeFieldType,
           typename DAdjFieldType,
-          template <template <typename, typename> class DiracOpT,
-                    typename,
+          template <template <typename, typename> class DiracOpT, typename,
                     typename> class _Solver,
           template <typename, typename> class DiracOpT>
 class UpdateMomentumWilson : public UpdateMomentum {
@@ -70,11 +68,9 @@ class UpdateMomentumWilson : public UpdateMomentum {
   UpdateMomentumWilson() = delete;
   ~UpdateMomentumWilson() = default;
 
-  UpdateMomentumWilson(FermionField& phi_,
-                       GaugeFieldType& gauge_field_,
+  UpdateMomentumWilson(FermionField& phi_, GaugeFieldType& gauge_field_,
                        AdjFieldType& adjoint_field_,
-                       const diracParams<rank>& params_,
-                       const real_t& tol_)
+                       const diracParams<rank>& params_, const real_t& tol_)
       : UpdateMomentum(0),
         phi(phi_),
         gauge_field(gauge_field_),
@@ -107,7 +103,7 @@ class UpdateMomentumWilson : public UpdateMomentum {
       // X = chi , Y = chi_alt
 
       auto xp = shift_index_plus_bc<rank, size_t>(
-          Kokkos::Array<size_t, rank>{Idcs...}, mu, 1, 0, -1,
+          Kokkos::Array<size_t, rank>{Idcs...}, mu, 1, 3, -1,
           this->params.dimensions);
       auto X_proj = project(mu, -1, this->chi(xp.first));
       // minus sign in the projector comes from the derivative of D
