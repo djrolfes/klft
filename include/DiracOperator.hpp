@@ -39,8 +39,7 @@ struct TagDdaggerD {};
 }  // namespace Tags
 
 template <template <typename, typename> class _Derived,
-          typename DSpinorFieldType,
-          typename DGaugeFieldType>
+          typename DSpinorFieldType, typename DGaugeFieldType>
 class DiracOperator {
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
   static_assert(isDeviceFermionFieldType<DSpinorFieldType>::value);
@@ -159,9 +158,9 @@ class DiracOperator {
 };
 
 template <typename DSpinorFieldType, typename DGaugeFieldType>
-class WilsonDiracOperator : public DiracOperator<WilsonDiracOperator,
-                                                 DSpinorFieldType,
-                                                 DGaugeFieldType> {
+class WilsonDiracOperator
+    : public DiracOperator<WilsonDiracOperator, DSpinorFieldType,
+                           DGaugeFieldType> {
  public:
   constexpr static size_t Nc =
       DeviceFermionFieldTypeTraits<DSpinorFieldType>::Nc;
@@ -181,9 +180,9 @@ class WilsonDiracOperator : public DiracOperator<WilsonDiracOperator,
     Kokkos::Array<size_t, rank> idx{Idcs...};
 #pragma unroll
     for (size_t mu = 0; mu < rank; ++mu) {
-      auto xm = shift_index_minus_bc<rank, size_t>(idx, mu, 1, 0, -1,
+      auto xm = shift_index_minus_bc<rank, size_t>(idx, mu, 1, 3, -1,
                                                    this->params.dimensions);
-      auto xp = shift_index_plus_bc<rank, size_t>(idx, mu, 1, 0, -1,
+      auto xp = shift_index_plus_bc<rank, size_t>(idx, mu, 1, 3, -1,
                                                   this->params.dimensions);
 
       auto temp1 =
@@ -206,9 +205,9 @@ class WilsonDiracOperator : public DiracOperator<WilsonDiracOperator,
 
 #pragma unroll
     for (size_t mu = 0; mu < rank; ++mu) {
-      auto xm = shift_index_minus_bc<rank, size_t>(idx, mu, 1, 0, -1,
+      auto xm = shift_index_minus_bc<rank, size_t>(idx, mu, 1, 3, -1,
                                                    this->params.dimensions);
-      auto xp = shift_index_plus_bc<rank, size_t>(idx, mu, 1, 0, -1,
+      auto xp = shift_index_plus_bc<rank, size_t>(idx, mu, 1, 3, -1,
                                                   this->params.dimensions);
 
       auto temp1 =
@@ -225,9 +224,9 @@ class WilsonDiracOperator : public DiracOperator<WilsonDiracOperator,
 };
 
 template <typename DSpinorFieldType, typename DGaugeFieldType>
-class HWilsonDiracOperator : public DiracOperator<HWilsonDiracOperator,
-                                                  DSpinorFieldType,
-                                                  DGaugeFieldType> {
+class HWilsonDiracOperator
+    : public DiracOperator<HWilsonDiracOperator, DSpinorFieldType,
+                           DGaugeFieldType> {
  public:
   constexpr static size_t Nc =
       DeviceFermionFieldTypeTraits<DSpinorFieldType>::Nc;
@@ -247,9 +246,9 @@ class HWilsonDiracOperator : public DiracOperator<HWilsonDiracOperator,
     Kokkos::Array<size_t, rank> idx{Idcs...};
 #pragma unroll
     for (size_t mu = 0; mu < rank; ++mu) {
-      auto xm = shift_index_minus_bc<rank, size_t>(idx, mu, 1, 0, -1,
+      auto xm = shift_index_minus_bc<rank, size_t>(idx, mu, 1, 3, -1,
                                                    this->params.dimensions);
-      auto xp = shift_index_plus_bc<rank, size_t>(idx, mu, 1, 0, -1,
+      auto xp = shift_index_plus_bc<rank, size_t>(idx, mu, 1, 3, -1,
                                                   this->params.dimensions);
 
       auto temp1 =
