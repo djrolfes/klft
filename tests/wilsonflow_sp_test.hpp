@@ -36,7 +36,7 @@ void get_sp_distribution(const typename DGaugeFieldType::type gauge_field,
   tune_and_launch_for<Nd>(
       "binning sp's", IndexArray<Nd>{0}, gauge_field.dimensions,
       KOKKOS_LAMBDA(index_t i0, index_t i1, index_t i2, index_t i3) {
-        real_t s = Kokkos::real(Nc - plaq_per_site(i0, i1, i2, i3));
+        real_t s = Kokkos::real(2.0 - plaq_per_site(i0, i1, i2, i3));
         // now find the end bin:
         index_t endbin =
             static_cast<index_t>(nbins * Kokkos::min(1.0, s / max));
@@ -89,7 +89,7 @@ real_t get_spmax(const typename DGaugeFieldType::type gauge_field) {
       KOKKOS_LAMBDA(index_t i0, index_t i1, index_t i2, index_t i3,
                     real_t & local_max) {
         // GPlaq(i0, i1, i2, i3);
-        real_t s = Kokkos::real(Nc - plaq_per_site(i0, i1, i2, i3));
+        real_t s = Kokkos::real(2.0 - plaq_per_site(i0, i1, i2, i3));
         local_max = Kokkos::max(local_max, s);
       },
       Kokkos::Max<real_t>(rtn));
