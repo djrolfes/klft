@@ -88,8 +88,7 @@ template <typename DGaugeFieldType> struct WilsonFlow {
     SUNAdj<Nc> Z0 = traceT(Z0_SUN) * (-1.0 * params.eps);
     tmp_Z(i0, i1, i2, i3, mu) = Z0; // does this need to be deep copied?
     field.field(i0, i1, i2, i3, mu) =
-        expoSUN(Z0 * static_cast<real_t>(1.0 / 4.0)) *
-        field.field(i0, i1, i2, i3, mu);
+        expoSUN(Z0 * 0.25) * field.field(i0, i1, i2, i3, mu);
     // restoreSUN(field.field(i0, i1, i2, i3, mu));
   }
 
