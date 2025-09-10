@@ -322,10 +322,10 @@ int test_wilsonflow_sp(const std::string &input_file,
         wilson_flow.flow();
 
         flow_times.push_back(flow_Step * gaugeObsParams.wilson_flow_params.eps);
-        // topological_charges.push_back(
-        // get_topological_charge<DGaugeFieldType>(wilson_flow.field));
-        // action_densities.push_back(
-        //     getActionDensity<DGaugeFieldType>(wilson_flow.field));
+        topological_charges.push_back(
+            get_topological_charge<DGaugeFieldType>(wilson_flow.field));
+        action_densities.push_back(
+            getActionDensity<DGaugeFieldType>(wilson_flow.field));
         sp_max.push_back(get_spmax<DGaugeFieldType>(wilson_flow.field));
 
         // measure observables
