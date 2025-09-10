@@ -32,6 +32,7 @@ void get_sp_distribution(const typename DGaugeFieldType::type gauge_field,
 
   tune_and_launch_for<Nd>("compute plaq_per_site", IndexArray<Nd>{0},
                           gauge_field.dimensions, GPlaq);
+  Kokkos::fence();
 
   tune_and_launch_for<Nd>(
       "binning sp's", IndexArray<Nd>{0}, gauge_field.dimensions,
@@ -44,6 +45,7 @@ void get_sp_distribution(const typename DGaugeFieldType::type gauge_field,
           Kokkos::atomic_inc(&rtn_d[i]);
         }
       });
+  Kokokos::fence();
 
   Kokkos::View<real_t *>::HostMirror rtn_h = Kokkos::create_mirror_view(rtn_d);
 
@@ -82,6 +84,7 @@ real_t get_spmax(const typename DGaugeFieldType::type gauge_field) {
   tune_and_launch_for<Nd>("compute plaq_per_site", IndexArray<Nd>{0},
                           gauge_field.dimensions, GPlaq);
 
+  Kokkos::fence();
   real_t rtn = 0.0;
   auto policy = Policy<Nd>({0, 0, 0, 0}, gauge_field.dimensions);
   Kokkos::parallel_reduce(
@@ -93,6 +96,7 @@ real_t get_spmax(const typename DGaugeFieldType::type gauge_field) {
         local_max = Kokkos::max(local_max, s);
       },
       Kokkos::Max<real_t>(rtn));
+  Kokkos::fence();
 
   return rtn;
 }
