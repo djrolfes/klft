@@ -3,6 +3,7 @@
 #include "FieldTypeHelper.hpp"
 #include "GLOBAL.hpp"
 #include "Gauge_Util.hpp"
+#include "Kokkos_Complex.hpp"
 
 namespace klft {
 
@@ -56,9 +57,11 @@ public:
 #pragma unroll
     for (index_t mu = 0; mu < rank; ++mu) {
       adjoint_field(Idcs..., mu) -=
-          this->eps * ((this->beta / this->Nc) *
-                       (traceT(this->gauge_field(Idcs..., mu) *
-                               (this->staple_field(Idcs..., mu)))));
+          this->eps * ((this->beta / this->Nc) * 0.5 *
+                       (traceT((this->gauge_field(Idcs..., mu) *
+                                (this->staple_field(Idcs..., mu))) -
+                               conj<Nc>(this->gauge_field(Idcs..., mu) *
+                                        (this->staple_field(Idcs..., mu))))));
     }
   }
 

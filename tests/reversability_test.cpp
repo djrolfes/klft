@@ -63,6 +63,78 @@ int parse_args(int argc, char **argv, std::string &input_file) {
   return 0;
 }
 
+int test_reversability(const std::string &input_file,
+                       const std::string &output_directory) {
+
+  PTBCParams ptbcParams;
+  HMCParams hmcParams;
+  GaugeObservableParams gaugeObsParams;
+  SimulationLoggingParams simLogParams;
+  PTBCSimulationLoggingParams ptbcSimLogParams;
+  Integrator_Params integratorParams;
+  FermionMonomial_Params fermionParams;
+  auto resParsef = parseInputFile(input_file, output_directory, fermionParams);
+  GaugeMonomial_Params gaugeMonomialParams;
+  bool inputFileParsedCorrectly =
+      (parseInputFile(input_file, output_directory, gaugeObsParams) &&
+       parseInputFile(input_file, output_directory, hmcParams) &&
+       parseInputFile(input_file, output_directory, simLogParams) &&
+       parseInputFile(input_file, output_directory, ptbcParams) &&
+       parseInputFile(input_file, output_directory, integratorParams) &&
+       abs(resParsef) &&
+       parseInputFile(input_file, output_directory, gaugeMonomialParams) &&
+       parseInputFile(input_file, output_directory, ptbcSimLogParams));
+  if (!inputFileParsedCorrectly) {
+    printf("Error parsing input file\n");
+    return -1;
+  }
+  gaugeObsParams.wilson_flow_params.beta = gaugeMonomialParams.beta;
+
+  simLogParams.log_filename = (simLogParams.log_filename);
+  RNGType rng(hmcParams.seed);
+  std::mt19937 mt(hmcParams.seed);
+  std::uniform_real_distribution<real_t> dist(0.0, 1.0);
+
+  assert(hmcParams.Ndims == 4 && hmcParams.Nc == 2);
+
+  using DGaugeFieldType = DeviceGaugeFieldType<4, 2>;
+  using DAdjFieldType = DeviceAdjFieldType<4, 2>;
+  using DSpinorFieldType = DeviceSpinorFieldType<4, 2, 4>;
+  typename DGaugeFieldType::type g_4_SU2(hmcParams.L0, hmcParams.L1,
+                                         hmcParams.L2, hmcParams.L3, rng,
+                                         hmcParams.rngDelta);
+  // typename DGaugeFieldType::type g_4_SU2(
+  //     hmcParams.L0, hmcParams.L1, hmcParams.L2, hmcParams.L3,
+  //     identitySUN<2>());
+  typename DAdjFieldType::type a_4_SU2(hmcParams.L0, hmcParams.L1, hmcParams.L2,
+                                       hmcParams.L3, traceT(identitySUN<2>()));
+  typename DSpinorFieldType::type s_4_SU2(hmcParams.L0, hmcParams.L1,
+                                          hmcParams.L2, hmcParams.L3, 0);
+  auto integrator =
+      createIntegrator<DGaugeFieldType, DAdjFieldType, DSpinorFieldType>(
+          g_4_SU2, a_4_SU2, s_4_SU2, integratorParams, gaugeMonomialParams,
+          fermionParams, resParsef);
+  using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
+  HField hamiltonian_field = HField(g_4_SU2, a_4_SU2);
+
+  using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
+  HMC hmc(integratorParams, hamiltonian_field, integrator, rng, dist, mt);
+  hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
+  hmc.add_kinetic_monomial(0);
+  if (resParsef > 0) {
+    auto diracParams = getDiracParams<4>(g_4_SU2.dimensions, fermionParams);
+    hmc.add_fermion_monomial<CGSolver, HWilsonDiracOperator, DSpinorFieldType>(
+        s_4_SU2, diracParams, fermionParams.tol, rng, 0);
+  }
+
+  for (size_t step = 0; step < integratorParams.nsteps; ++step) {
+
+    // perform hmc_step
+    bool accept = hmc.hmc_step(true);
+  }
+
+  return 0;
+}
 // for now, the test only allows for Nd=4
 int main(int argc, char *argv[]) {
   printf(HLINE);
@@ -82,116 +154,8 @@ int main(int argc, char *argv[]) {
     Kokkos::finalize();
     return 0;
   }
-  if (rc != 0) {
-    Kokkos::finalize();
-    return rc;
-  }
-
-  HMCParams hmcParams;
-  SimulationLoggingParams simLogParams;
-  GaugeObservableParams gaugeObsParams;
-  if (!parseInputFile(input_file, hmcParams)) {
-    printf("Error parsing input file\n");
-    return -1;
-  }
-  if (!parseInputFile(input_file, simLogParams)) {
-    printf("Error parsing input file\n");
-    return -1;
-  }
-  if (!parseInputFile(input_file, gaugeObsParams)) {
-    printf("Error parsing input file\n");
-    return -1;
-  }
-
-  constexpr const index_t Nd = 4;
-  const constexpr index_t Nc = 2;
-  assert(hmcParams.Ndims == 4 && hmcParams.Nc == 2);
-
-  if (Nd == 4 && Nc == 2) {
-
-    RNGType rng(hmcParams.seed);
-    using DGaugeFieldType = DeviceGaugeFieldType<Nd, Nc>;
-    using DAdjFieldType = DeviceAdjFieldType<Nd, Nc>;
-
-    typename DGaugeFieldType::type dev_g_SU2_4D(hmcParams.L0, hmcParams.L1,
-                                                hmcParams.L2, hmcParams.L3, rng,
-                                                hmcParams.rngDelta);
-    typename DAdjFieldType::type dev_a_SU2_4D(hmcParams.L0, hmcParams.L1,
-                                              hmcParams.L2, hmcParams.L3,
-                                              traceT(identitySUN<Nc>()));
-    using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
-    using Update_Q = UpdatePositionGauge<Nd, Nc>;
-    using Update_P = UpdateMomentumGauge<DGaugeFieldType, DAdjFieldType>;
-
-    HField hamiltonian_field = HField(dev_g_SU2_4D, dev_a_SU2_4D);
-    // after the move, the gauge and adjoint fields are no longer valid
-
-    Update_Q update_q(hamiltonian_field.gauge_field,
-                      hamiltonian_field.adjoint_field);
-    Update_P update_p(hamiltonian_field.gauge_field,
-                      hamiltonian_field.adjoint_field, hmcParams.beta);
-    // the integrate might need to be passed into the run_HMC as an argument as
-    // it contains a large amount of design decisions
-    std::shared_ptr<LeapFrog> leap_frog =
-        std::make_shared<LeapFrog>(hmcParams.nstepsGauge, true, nullptr,
-                                   std::make_shared<Update_Q>(update_q),
-                                   std::make_shared<Update_P>(update_p));
-
-    // now define and run the hmc
-    std::mt19937 mt(hmcParams.seed);
-    std::uniform_real_distribution<real_t> dist(0.0, 1.0);
-    using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
-    HMC hmc(hmcParams, hamiltonian_field, leap_frog, rng, dist, mt);
-    hmc.add_gauge_monomial(hmcParams.beta, 0);
-    hmc.add_kinetic_monomial(0);
-
-    // timer to measure the time per step
-    Kokkos::Timer timer;
-    bool accept;
-    real_t acc_sum{0.0};
-    real_t acc_rate{0.0};
-
-    for (size_t step = 0; step < hmcParams.nsteps; ++step) {
-
-      printf("tau: %f\n", hmcParams.tau);
-      timer.reset();
-      // perform hmc_step
-      accept = hmc.hmc_step();
-      const real_t time = timer.seconds();
-      acc_sum += static_cast<real_t>(accept);
-      acc_rate = acc_sum / static_cast<real_t>(step + 1);
-      if (KLFT_VERBOSITY > 0) {
-        printf("Step: %ld, accepted: %ld, Acceptance rate: %f, Time: %f\n",
-               step, static_cast<size_t>(accept), acc_rate, time);
-      }
-      measureGaugeObservables<Nd, Nc>(hamiltonian_field.gauge_field,
-                                      gaugeObsParams, step);
-      addLogData(simLogParams, step, hmc.delta_H, acc_rate, accept, time);
-
-      // printf("Reverse step with tau = -1\n");
-      // hmcParams.tau *= -1;
-      // printf("tau: %f\n", hmcParams.tau);
-      //
-      // timer.reset();
-      // // perform hmc_step
-      // accept = hmc.hmc_step(true);
-      // const real_t time1 = timer.seconds();
-      // acc_sum += static_cast<real_t>(accept);
-      // acc_rate = acc_sum / static_cast<real_t>(step + 1);
-      // if (KLFT_VERBOSITY > 0) {
-      //   printf(
-      //       "Reverse Step: %ld, accepted: %ld, Acceptance rate: %f, Time:
-      //       %f\n", step, static_cast<size_t>(accept), acc_rate, time);
-      // }
-      // addLogData(simLogParams, step, hmc.delta_H, acc_rate, accept, time);
-      // printf("resetting gauge to before reverse step\n");
-      // hmc.reset_gauge_field();
-      //
-      // hmcParams.tau *= -1;
-    }
-
-    flushAllGaugeObservables(gaugeObsParams);
-    flushSimulationLogs(simLogParams);
+  if (rc == 0) {
+    rc = test_reversability(input_file, "./");
   }
   Kokkos::finalize();
 
