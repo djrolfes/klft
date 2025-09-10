@@ -191,8 +191,8 @@ int test_wilsonflow_sp(const std::string &input_file,
   // Set precision for floating point numbers in the output file
   output_file_topologicalcharge << std::fixed << std::setprecision(8);
   output_file_actiondensity << std::fixed << std::setprecision(8);
-  output_file_sp_dist << std::fixed << std::setprecision(8);
-  output_file_sp_max << std::fixed << std::setprecision(8);
+  output_file_sp_dist << std::fixed << std::setprecision(12);
+  output_file_sp_max << std::fixed << std::setprecision(12);
   bool header_written = false;
 
   Kokkos::Timer timer;
