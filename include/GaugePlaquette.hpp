@@ -23,6 +23,7 @@
 #include "FieldTypeHelper.hpp"
 #include "GLOBAL.hpp"
 #include "IndexHelper.hpp"
+#include "Kokkos_Macros.hpp"
 #include "Tuner.hpp"
 
 namespace klft {
@@ -47,6 +48,37 @@ struct GaugePlaq {
             const IndexArray<rank> &dimensions)
       : g_in(g_in), plaq_per_site(plaq_per_site), dimensions(dimensions) {
   } // TODO: g_in does copy construction (does it?), this needs to be changed
+
+  template <typename... Indices>
+  KOKKOS_FORCEINLINE_FUNCTION complex_t
+  operator()(const index_t mu, const index_t nu, const Indices... Idcs) const {
+    // return the trace of a given plaquette (mu,nu) at site Idcs...
+    //  temp SUN matrices to store products
+    SUN<Nc> lmu, lnu;
+    // reduction variable for all mu and nu
+    complex_t tmunu(0.0, 0.0);
+
+    lmu = g_in(Idcs..., mu) *
+          g_in(shift_index_plus<rank, size_t>(
+                   Kokkos::Array<size_t, rank>{Idcs...}, mu, 1, dimensions),
+               nu);
+    // lnu = U_nu(x) * U_mu(x+nu)
+    lnu = g_in(Idcs..., nu) *
+          g_in(shift_index_plus<rank, size_t>(
+                   Kokkos::Array<size_t, rank>{Idcs...}, nu, 1, dimensions),
+               mu);
+// multiply the 2 half plaquettes
+// lmu * lnu^dagger
+// take the trace
+#pragma unroll
+    for (index_t c1 = 0; c1 < Nc; ++c1) {
+#pragma unroll
+      for (index_t c2 = 0; c2 < Nc; ++c2) {
+        tmunu += lmu[c1][c2] * Kokkos::conj(lnu[c1][c2]);
+      }
+    }
+    return tmunu;
+  }
 
   template <typename... Indices>
   KOKKOS_FORCEINLINE_FUNCTION void operator()(const Indices... Idcs) const {

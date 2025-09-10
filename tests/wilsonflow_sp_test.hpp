@@ -30,19 +30,27 @@ void get_sp_distribution(const typename DGaugeFieldType::type gauge_field,
   GaugePlaq<Nd, Nc, k> GPlaq(gauge_field, plaq_per_site,
                              gauge_field.dimensions);
 
-  tune_and_launch_for<Nd>("compute plaq_per_site", IndexArray<Nd>{0},
-                          gauge_field.dimensions, GPlaq);
-  Kokkos::fence();
+  // tune_and_launch_for<Nd>("compute plaq_per_site", IndexArray<Nd>{0},
+  //                         gauge_field.dimensions, GPlaq);
+  // Kokkos::fence();
 
   tune_and_launch_for<Nd>(
       "binning sp's", IndexArray<Nd>{0}, gauge_field.dimensions,
-      KOKKOS_LAMBDA(index_t i0, index_t i1, index_t i2, index_t i3) {
-        real_t s = Kokkos::real(2.0 - plaq_per_site(i0, i1, i2, i3));
-        // now find the end bin:
-        index_t endbin =
-            static_cast<index_t>(nbins * Kokkos::min(1.0, s / max));
-        for (index_t i = 0; i < endbin; i++) {
-          Kokkos::atomic_inc(&rtn_d[i]);
+      KOKKOS_LAMBDA(size_t i0, size_t i1, size_t i2, size_t i3) {
+        for (index_t mu = 0; mu < Nd; ++mu) {
+          for (index_t nu = 0; nu < Nd; ++nu) {
+            if (nu > mu) {
+              real_t s = Kokkos::real(2.0 - GPlaq(mu, nu, i0, i1, i2, i3));
+              // now find the end bin:
+              index_t endbin =
+                  static_cast<index_t>(nbins * Kokkos::min(1.0, s / max));
+              endbin = endbin =
+                  0 ? 1 : endbin; // ensure at least one bin is filled
+              for (index_t i = 0; i < endbin; i++) {
+                Kokkos::atomic_inc(&rtn_d[i]);
+              }
+            }
+          }
         }
       });
   Kokkos::fence();
@@ -57,7 +65,7 @@ void get_sp_distribution(const typename DGaugeFieldType::type gauge_field,
     rtn[i] = rtn_h(i);
   }
 
-  auto volume = 1;
+  auto volume = Nc * Nc;
   for (size_t vol : gauge_field.dimensions) {
     volume *= vol;
   }
@@ -81,18 +89,25 @@ real_t get_spmax(const typename DGaugeFieldType::type gauge_field) {
   GaugePlaq<Nd, Nc, k> GPlaq(gauge_field, plaq_per_site,
                              gauge_field.dimensions);
 
-  tune_and_launch_for<Nd>("compute plaq_per_site", IndexArray<Nd>{0},
-                          gauge_field.dimensions, GPlaq);
+  // tune_and_launch_for<Nd>("compute plaq_per_site", IndexArray<Nd>{0},
+  //                         gauge_field.dimensions, GPlaq);
+  // Kokkos::fence();
 
-  Kokkos::fence();
   real_t rtn = 0.0;
   auto policy = Policy<Nd>({0, 0, 0, 0}, gauge_field.dimensions);
   Kokkos::parallel_reduce(
       "get h (sp_max)", policy,
-      KOKKOS_LAMBDA(index_t i0, index_t i1, index_t i2, index_t i3,
-                    real_t & local_max) {
+      KOKKOS_LAMBDA(size_t i0, size_t i1, size_t i2, size_t i3,
+                    real_t &local_max) {
         // GPlaq(i0, i1, i2, i3);
-        real_t s = Kokkos::real(2.0 - plaq_per_site(i0, i1, i2, i3));
+        real_t s = 0.0;
+        for (index_t mu = 0; mu < Nd; ++mu) {
+          for (index_t nu = 0; nu < Nd; ++nu) {
+            if (nu > mu) {
+              s += Kokkos::real(2 - GPlaq(mu, nu, i0, i1, i2, i3));
+            }
+          }
+        }
         local_max = Kokkos::max(local_max, s);
       },
       Kokkos::Max<real_t>(rtn));
