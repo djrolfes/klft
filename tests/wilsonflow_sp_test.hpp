@@ -45,7 +45,7 @@ void get_sp_distribution(const typename DGaugeFieldType::type gauge_field,
           Kokkos::atomic_inc(&rtn_d[i]);
         }
       });
-  Kokokos::fence();
+  Kokkos::fence();
 
   Kokkos::View<real_t *>::HostMirror rtn_h = Kokkos::create_mirror_view(rtn_d);
 
