@@ -285,6 +285,8 @@ int test_wilsonflow_sp(const std::string &input_file,
     flow_times.clear();
     topological_charges.clear();
     action_densities.clear();
+    sp_dist.clear();
+    sp_max.clear();
 
     // perform hmc_step
     accept = hmc.hmc_step();
