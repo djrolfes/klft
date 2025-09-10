@@ -250,6 +250,7 @@ int test_wilsonflow_sp(const std::string &input_file,
       output_file_sp_dist << "," << tmp;
       tmp += sp_dist_bin_width;
     }
+    output_file_sp_dist << "\n";
     output_file_topologicalcharge << "\n";
     output_file_actiondensity << "\n";
     output_file_sp_max << "\n";
@@ -278,6 +279,7 @@ int test_wilsonflow_sp(const std::string &input_file,
   for (const auto &max : sp_max) {
     output_file_sp_max << "," << max;
   }
+  output_file_sp_max << "\n";
 
   // hmc loop
   for (size_t step = 0; step < integratorParams.nsteps; ++step) {
