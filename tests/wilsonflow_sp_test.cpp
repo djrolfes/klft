@@ -200,7 +200,6 @@ int test_wilsonflow_sp(const std::string &input_file,
   real_t acc_sum{0.0};
   real_t acc_rate{0.0};
 
-  printf("allocating vectors\n");
   index_t flow_steps = gaugeObsParams.wilson_flow_params.n_steps;
   gaugeObsParams.wilson_flow_params.n_steps = 1;
   std::vector<real_t> flow_times;
@@ -211,27 +210,19 @@ int test_wilsonflow_sp(const std::string &input_file,
   real_t sp_dist_max = 0.1;
   real_t sp_dist_bin_width = 0.001;
 
-  printf("starting wilson flow\n");
   WilsonFlow<DGaugeFieldType> wilson_flow(hamiltonian_field.gauge_field,
                                           gaugeObsParams.wilson_flow_params);
   flow_times.push_back(0.0);
-  printf("measuring initial observables\n");
-  printf("measuring topological charge\n");
   topological_charges.push_back(
       get_topological_charge<DGaugeFieldType>(hamiltonian_field.gauge_field));
-  printf("measuring action density\n");
   action_densities.push_back(
       getActionDensity<DGaugeFieldType>(hamiltonian_field.gauge_field));
-  printf("measuring sp distribution\n");
   get_sp_distribution<DGaugeFieldType>(hamiltonian_field.gauge_field, sp_dist,
                                        sp_dist_max, sp_dist_bin_width);
-  printf("measuring sp max\n");
   sp_max.push_back(get_spmax<DGaugeFieldType>(hamiltonian_field.gauge_field));
 
-  printf("flowing\n");
   for (int flow_Step = 1; flow_Step <= flow_steps; ++flow_Step) {
     // perform wilson flow step
-    printf("flow step %d\n", flow_Step);
     wilson_flow.flow();
 
     flow_times.push_back(flow_Step * gaugeObsParams.wilson_flow_params.eps);
@@ -244,7 +235,6 @@ int test_wilsonflow_sp(const std::string &input_file,
     // measure observables
   }
   // Write the header only once, before the first line of data
-  printf("writing header\n");
   if (!header_written) {
     output_file_topologicalcharge << "hmc_step";
     output_file_actiondensity << "hmc_step";
@@ -266,7 +256,6 @@ int test_wilsonflow_sp(const std::string &input_file,
     header_written = true;
   }
 
-  printf("writing initial observables\n");
   // Write the data for the current step
   output_file_topologicalcharge << 0;
   for (const auto &charge : topological_charges) {

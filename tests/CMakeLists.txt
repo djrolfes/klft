@@ -1,7 +1,7 @@
 # add_executable(reversability_test reversability_test.cpp)
 # target_link_libraries(reversability_test PUBLIC klft Kokkos::kokkos yaml-cpp)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -g")
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -g")
 
 add_executable(wilsonflow_test wilsonflow_test.cpp)
 target_link_libraries(wilsonflow_test PUBLIC klft Kokkos::kokkos yaml-cpp)
