@@ -3,9 +3,9 @@
 namespace klft {
 
 template <typename DSpinorFieldType, typename DGaugeFieldType>
-class WilsonDiracOperator : public DiracOperator<WilsonDiracOperator,
-                                                 DSpinorFieldType,
-                                                 DGaugeFieldType> {
+class WilsonDiracOperator
+    : public DiracOperator<WilsonDiracOperator, DSpinorFieldType,
+                           DGaugeFieldType> {
  public:
   constexpr static size_t Nc =
       DeviceFermionFieldTypeTraits<DSpinorFieldType>::Nc;
@@ -53,8 +53,8 @@ class WilsonDiracOperator : public DiracOperator<WilsonDiracOperator,
               reconstruct(mu, 1, (this->params.kappa * xm.second) * temp2);
     }
 
-    // this->s_out(Idcs...) = this->s_in(Idcs...) - temp;
-    this->s_out(Idcs...) = 1 * temp;
+    this->s_out(Idcs...) = this->s_in(Idcs...) - temp;
+    // this->s_out(Idcs...) = 1 * temp;
   }
 
   template <typename... Indices>
@@ -84,9 +84,9 @@ class WilsonDiracOperator : public DiracOperator<WilsonDiracOperator,
 };
 
 template <typename DSpinorFieldType, typename DGaugeFieldType>
-class HWilsonDiracOperator : public DiracOperator<HWilsonDiracOperator,
-                                                  DSpinorFieldType,
-                                                  DGaugeFieldType> {
+class HWilsonDiracOperator
+    : public DiracOperator<HWilsonDiracOperator, DSpinorFieldType,
+                           DGaugeFieldType> {
  public:
   constexpr static size_t Nc =
       DeviceFermionFieldTypeTraits<DSpinorFieldType>::Nc;
@@ -133,9 +133,9 @@ class HWilsonDiracOperator : public DiracOperator<HWilsonDiracOperator,
 };
 
 template <typename DSpinorFieldType, typename DGaugeFieldType>
-class EOWilsonDiracOperator : public EODiracOperator<EOWilsonDiracOperator,
-                                                     DSpinorFieldType,
-                                                     DGaugeFieldType> {
+class EOWilsonDiracOperator
+    : public EODiracOperator<EOWilsonDiracOperator, DSpinorFieldType,
+                             DGaugeFieldType> {
  public:
   using Base =
       EODiracOperator<EOWilsonDiracOperator, DSpinorFieldType, DGaugeFieldType>;

@@ -44,7 +44,7 @@ int main(int argc, char* argv[]) {
     Kokkos::Random_XorShift64_Pool<> random_pool(/*seed=*/1234);
     deviceSpinorField<2, 4> u_for_normal(L0, L1, L2, L3, 0);
 
-    print_spinor_int(u_for_normal(0, 0, 0, 0), "u_for_normal");
+    // print_spinor_int(u_for_normal(0, 0, 0, 0), "u_for_normal");
 
     Kokkos::Random_XorShift64_Pool<> random_pool1(/*seed=*/1234);
     deviceSpinorField<2, 4> u_for_eo(L0 / 2, L1, L2, L3, random_pool1, 0,
@@ -66,9 +66,10 @@ int main(int argc, char* argv[]) {
           }
         });
     auto test_idx = Kokkos::Array<int, 4>({2, 0, 0, 0});
-    printf(
-        "u_for_eo == u_for_normal @(0,0,0,0) is equal: %i\n",
-        u_for_eo(index_full_to_half(test_idx).first) == u_for_normal(test_idx));
+    // printf(
+    //     "u_for_eo == u_for_normal @(0,0,0,0) is equal: %i\n",
+    //     u_for_eo(index_full_to_half(test_idx).first) ==
+    //     u_for_normal(test_idx));
 
     // deviceSpinorField<2, 4> Mu(L0 / 2, L1 / 2, L2 / 2, L3 / 2, 0);
     // deviceSpinorField<2, 4> temp(L0 / 2, L1 / 2, L2 / 2, L3 / 2, 0);
@@ -98,8 +99,8 @@ int main(int argc, char* argv[]) {
     printf("D^ Kernel Time:     %11.4e s\n", diracTime1);
     // print_spinor_int(out_eo(0, 0, 0, 0), "out_eo(0,0,0,0)");
     // print_spinor_int(out_normal(0, 0, 0, 0), "out_normal(0,0,0,0)");
-    printf("out_for_eo == out_for_normal @(0,0,0,0) is equal: %i\n",
-           out_eo(0, 2, 64, 64) == out_normal(0, 2, 64, 64));
+    // printf("out_for_eo == out_for_normal @(0,0,0,0) is equal: %i\n",
+    //        out_eo(0, 2, 64, 64) == out_normal(0, 2, 64, 64));
     printf("Checking total difference:\n");
     real_t result = 0;
     Kokkos::parallel_reduce(
@@ -142,11 +143,11 @@ int main(int argc, char* argv[]) {
     // print_spinor_int(out_nor(0, 0, 0, 0), "Build from normal Dirac
     // Operator");
 
-    printf("temp2 == out_comp @(0,0,0,0) is equal: %i\n",
-           out_man(1, 0, 0, 0) == out_comp(1, 0, 0, 0));
+    // printf("temp2 == out_comp @(0,0,0,0) is equal: %i\n",
+    //        out_man(1, 0, 0, 0) == out_comp(1, 0, 0, 0));
 
-    printf("temp2 == out_nor @(0,0,0,0) is equal: %i\n",
-           out_man(1, 0, 0, 0) == out_nor(2, 0, 0, 0));
+    // printf("temp2 == out_nor @(0,0,0,0) is equal: %i\n",
+    //        out_man(1, 0, 0, 0) == out_nor(2, 0, 0, 0));
 
     result = 0;
     Kokkos::parallel_reduce(

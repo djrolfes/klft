@@ -42,8 +42,7 @@ struct TagHeo {};
 }  // namespace Tags
 
 template <template <typename, typename> class _Derived,
-          typename DSpinorFieldType,
-          typename DGaugeFieldType>
+          typename DSpinorFieldType, typename DGaugeFieldType>
 class DiracOperator {
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
   static_assert(isDeviceFermionFieldType<DSpinorFieldType>::value);
@@ -162,7 +161,6 @@ class DiracOperator {
       axpy<DSpinorFieldType>(-1, this->s_out, temp_field, this->s_out);
       return this->s_out;
     }
-    printf("I am a normal Layout\n");
 
     this->apply_(Tags::TagDdagger{});
     this->s_in = this->s_out;
@@ -181,7 +179,6 @@ class DiracOperator {
       axpy<DSpinorFieldType>(-1, this->s_out, temp_field, this->s_out);
       return this->s_out;
     }
-    printf("I am a normal Layout\n");
     this->apply_(Tags::TagD{});
     this->s_in = this->s_out;
     this->s_out = s_out;
@@ -199,8 +196,7 @@ class DiracOperator {
 };
 // intermidiate base class for EO Precon. Dirac Operators
 template <template <typename, typename> class _Derived,
-          typename DSpinorFieldType,
-          typename DGaugeFieldType>
+          typename DSpinorFieldType, typename DGaugeFieldType>
 class EODiracOperator
     : public DiracOperator<_Derived, DSpinorFieldType, DGaugeFieldType> {
   using SpinorFieldType = typename DSpinorFieldType::type;
@@ -210,8 +206,8 @@ class EODiracOperator
 
  public:
   int parity;
-  using DiracOperator<_Derived, DSpinorFieldType, DGaugeFieldType>::
-      DiracOperator;
+  using DiracOperator<_Derived, DSpinorFieldType,
+                      DGaugeFieldType>::DiracOperator;
 
   SpinorFieldType apply_(Tags::TagHeo) {
     this->s_out = SpinorFieldType(this->params.dimensions, complex_t(0.0, 0.0));

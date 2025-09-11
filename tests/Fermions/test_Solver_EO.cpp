@@ -38,8 +38,7 @@ int main(int argc, char* argv[]) {
     printf("\n=== Testing DiracOperator SU(3)  ===\n");
     printf("\n= Testing hermiticity =\n");
     index_t L0 = 32, L1 = 32, L2 = 32, L3 = 32;
-    diracParams<4> params(IndexArray<4>{L0 / 2, L1, L2, L3}, 0.015);
-
+    diracParams<4> params(IndexArray<4>{L0 / 2, L1, L2, L3}, 0.135);
     printf("Lattice Dimension %ix%ix%ix%i \n", L0, L1, L2, L3);
     printf("Generate SpinorFields...\n");
     using DSpinorFieldType =
@@ -105,7 +104,7 @@ int main(int argc, char* argv[]) {
            res_norm / norm < eps);
     printf("Back substitution calc...\n ");
     auto temp = D_pre.template apply<Tags::TagHoe>(solver.x);
-    auto psi_odd = axpy<DSpinorFieldType>(1, even_b, temp);
+    auto psi_odd = axpy<DSpinorFieldType>(1, odd_b, temp);
     auto res_norm_odd =
         spinor_norm<4, N, 4>(axpy<DSpinorFieldType>(-1, psi_odd, odd_true));
     auto norm_odd = spinor_norm<4, N, 4>(odd_true);

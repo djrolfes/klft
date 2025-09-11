@@ -26,12 +26,10 @@
 
 namespace klft {
 
-template <template <template <typename, typename> class DiracOpT,
-                    typename,
+template <template <template <typename, typename> class DiracOpT, typename,
                     typename> class _Derived,
           template <typename, typename> class DiracOpT,
-          typename DSpinorFieldType,
-          typename DGaugeFieldType>
+          typename DSpinorFieldType, typename DGaugeFieldType>
 class Solver {
   // using DSpinorFieldType =
   //     typename DiracOpFieldTypeTraits<DiracOperator>::DSpinorFieldType;
@@ -78,8 +76,7 @@ class Solver {
 //               SpinorType::RepDim>;
 
 template <template <typename, typename> class DiracOpT,
-          typename DSpinorFieldType,
-          typename DGaugeFieldType>
+          typename DSpinorFieldType, typename DGaugeFieldType>
 class CGSolver
     : public Solver<CGSolver, DiracOpT, DSpinorFieldType, DGaugeFieldType> {
   // using DSpinorFieldType =
@@ -124,16 +121,16 @@ class CGSolver
       const complex_t rkrk = spinor_dot_product<rank, Nc, RepDim>(rk, rk);
       const complex_t alpha = (rkrk / spinor_dot_product<rank, Nc, RepDim>(
                                           pk, apk));  // Always real
-      // axpy<DSpinorFieldType>(alpha, pk, xk, xk);
+      axpy<DSpinorFieldType>(alpha, pk, xk, xk);
       // xk = spinor_add_mul<rank, Nc, RepDim>(xk, pk, alpha);
-      xk = axpy<DSpinorFieldType>(alpha, pk, xk);
-      // axpy<DSpinorFieldType>(-alpha, apk, rk, rk);
-      rk = axpy<DSpinorFieldType>(-alpha, apk, rk);
+      // xk = axpy<DSpinorFieldType>(alpha, pk, xk);
+      axpy<DSpinorFieldType>(-alpha, apk, rk, rk);
+      // rk = axpy<DSpinorFieldType>(-alpha, apk, rk);
       // rk = spinor_sub_mul<rank, Nc, RepDim>(rk, apk, alpha);
       const complex_t beta =
           (spinor_dot_product<rank, Nc, RepDim>(rk, rk) / rkrk);
-      // axpy<DSpinorFieldType>(beta, pk, rk, pk);
-      pk = axpy<DSpinorFieldType>(beta, pk, rk);
+      axpy<DSpinorFieldType>(beta, pk, rk, pk);
+      // pk = axpy<DSpinorFieldType>(beta, pk, rk);
       // pk = spinor_add_mul<rank, Nc, RepDim>(rk, pk, beta);
       // Check if swapping is needed of pk and rk, should be correct
 

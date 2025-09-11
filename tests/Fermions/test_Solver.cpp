@@ -35,14 +35,14 @@ int main(int argc, char* argv[]) {
     const int verbosity = std::getenv("KLFT_VERBOSITY")
                               ? std::atoi(std::getenv("KLFT_VERBOSITY"))
                               : 10;
-    setVerbosity(verbosity);
+    setVerbosity(5);
     printf("%i", KLFT_VERBOSITY);
     const size_t N = 3;
     printf("\n=== Testing DiracOperator SU(%zu)  ===\n", N);
     printf("\n= Testing hermiticity =\n");
     index_t L0 = 32, L1 = 32, L2 = 32, L3 = 32;
     IndexArray<4> dims = {L0, L1, L2, L3};
-    diracParams<4> param(dims, 0.1);
+    diracParams<4> param(dims, 0.135);
 
     printf("Lattice Dimension %ix%ix%ix%i \n", L0, L1, L2, L3);
     printf("Generate SpinorFields...\n");
