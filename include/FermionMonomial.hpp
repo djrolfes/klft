@@ -26,12 +26,9 @@
 #define SQRT2INV \
   0.707106781186547524400844362104849039284835937688474036588339868995366239231053519425193767163820786367506  // Oeis A010503
 namespace klft {
-template <class RNGType,
-          typename DSpinorFieldType,
-          typename DGaugeFieldType,
+template <class RNGType, typename DSpinorFieldType, typename DGaugeFieldType,
           typename DAdjFieldType,
-          template <template <typename, typename> class DiracOpT,
-                    typename,
+          template <template <typename, typename> class DiracOpT, typename,
                     typename> class _Solver,
           template <typename, typename> class DiracOpT>
 class FermionMonomial : public Monomial<DGaugeFieldType, DAdjFieldType> {
@@ -57,14 +54,11 @@ class FermionMonomial : public Monomial<DGaugeFieldType, DAdjFieldType> {
 
  public:
   FermionField& phi;
-  const diracParams<rank> params;
+  const diracParams params;
   const real_t tol;
   RNGType rng;
-  FermionMonomial(FermionField& _phi,
-                  const diracParams<rank>& params_,
-                  const real_t& tol_,
-                  RNGType& RNG_,
-                  unsigned int _time_scale)
+  FermionMonomial(FermionField& _phi, const diracParams& params_,
+                  const real_t& tol_, RNGType& RNG_, unsigned int _time_scale)
       : Monomial<DGaugeFieldType, DAdjFieldType>(_time_scale),
         phi(_phi),
         params(params_),

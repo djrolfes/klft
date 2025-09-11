@@ -42,7 +42,7 @@ int main(int argc, char* argv[]) {
     printf("\n= Testing hermiticity =\n");
     index_t L0 = 32, L1 = 32, L2 = 32, L3 = 32;
     IndexArray<4> dims = {L0, L1, L2, L3};
-    diracParams<4> param(dims, 0.1);
+    diracParams param(0.1);
 
     printf("Lattice Dimension %ix%ix%ix%i \n", L0, L1, L2, L3);
     printf("Generate SpinorFields...\n");

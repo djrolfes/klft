@@ -56,10 +56,10 @@ class UpdateMomentumWilson : public UpdateMomentum {
   using AdjFieldType = typename DeviceAdjFieldType<rank, Nc>::type;
   GaugeFieldType gauge_field;
   AdjFieldType momentum;
-  const diracParams<rank> params;
+  const diracParams params;
   // \phi = D R, where R gaussian random field.
   FermionField phi;
-
+  const Kokkos::Array<index_t, rank> dimensions;
   FermionField chi;
   FermionField chi_alt;
   const real_t tol;
@@ -69,15 +69,16 @@ class UpdateMomentumWilson : public UpdateMomentum {
   ~UpdateMomentumWilson() = default;
 
   UpdateMomentumWilson(FermionField& phi_, GaugeFieldType& gauge_field_,
-                       AdjFieldType& adjoint_field_,
-                       const diracParams<rank>& params_, const real_t& tol_)
+                       AdjFieldType& adjoint_field_, const diracParams& params_,
+                       const real_t& tol_)
       : UpdateMomentum(0),
         phi(phi_),
         gauge_field(gauge_field_),
         momentum(adjoint_field_),
         params(params_),
         eps(0.0),
-        tol(tol_) {}
+        tol(tol_),
+        dimensions(phi_.dimensions) {}
 
   // Implemntation of the force correspondig to the Hermitian Wilson dirac
   // Operator
@@ -103,8 +104,7 @@ class UpdateMomentumWilson : public UpdateMomentum {
       // X = chi , Y = chi_alt
 
       auto xp = shift_index_plus_bc<rank, size_t>(
-          Kokkos::Array<size_t, rank>{Idcs...}, mu, 1, 3, -1,
-          this->params.dimensions);
+          Kokkos::Array<size_t, rank>{Idcs...}, mu, 1, 3, -1, this->dimensions);
       auto X_proj = project(mu, -1, this->chi(xp.first));
       // minus sign in the projector comes from the derivative of D
       auto Xplus = (-1 * this->params.kappa * xp.second) * X_proj;
@@ -130,8 +130,8 @@ class UpdateMomentumWilson : public UpdateMomentum {
     IndexArray<rank> start;
     DiracOp D(gauge_field, this->params);
     DiracOp D1(gauge_field, this->params);
-    FermionField x(this->params.dimensions, complex_t(0.0, 0.0));
-    FermionField x0(this->params.dimensions, complex_t(0.0, 0.0));
+    FermionField x(this->phi.dimensions, complex_t(0.0, 0.0));
+    FermionField x0(this->phi.dimensions, complex_t(0.0, 0.0));
 
     Solver solver(this->phi, x, D);
     if (KLFT_VERBOSITY > 4) {
@@ -146,8 +146,8 @@ class UpdateMomentumWilson : public UpdateMomentum {
       start[i] = 0;
     }
     // launch the kernel
-    tune_and_launch_for<rank>("UpdateMomentumWilson", start,
-                              gauge_field.dimensions, *this);
+    tune_and_launch_for<rank>("UpdateMomentumWilson", start, phi.dimensions,
+                              *this);
     Kokkos::fence();
   }
 };

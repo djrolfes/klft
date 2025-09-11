@@ -58,7 +58,7 @@ class DiracOperator {
   using GaugeFieldType = typename DGaugeFieldType::type;
 
  public:
-  DiracOperator(const GaugeFieldType& g_in, const diracParams<rank>& params)
+  DiracOperator(const GaugeFieldType& g_in, const diracParams& params)
       : g_in(g_in), params(params) {}
   ~DiracOperator() = default;
   // Define callabale apply functions
@@ -66,7 +66,8 @@ class DiracOperator {
   KOKKOS_FORCEINLINE_FUNCTION SpinorFieldType
   apply(const SpinorFieldType& s_in) {
     this->s_in = s_in;
-    this->s_out = SpinorFieldType(params.dimensions, complex_t(0.0, 0.0));
+    this->dimensions = s_in.dimensions;
+    this->s_out = SpinorFieldType(this->dimensions, complex_t(0.0, 0.0));
     // Apply the operator
     return this->apply(Tag{});
   }
@@ -81,6 +82,7 @@ class DiracOperator {
   KOKKOS_FORCEINLINE_FUNCTION void apply(const SpinorFieldType& s_in,
                                          const SpinorFieldType& s_out) {
     this->s_in = s_in;
+    this->dimensions = s_in.dimensions;
     this->s_out = s_out;
     // Apply the operator
     this->apply(Tag{});
@@ -93,6 +95,7 @@ class DiracOperator {
   KOKKOS_FORCEINLINE_FUNCTION void apply(const SpinorFieldType& s_in,
                                          const SpinorFieldType& s_temp,
                                          const SpinorFieldType& s_out) {
+    this->dimensions = s_in.dimensions;
     this->s_in = s_in;
     this->s_out = s_temp;
     // Apply the operator
@@ -103,7 +106,7 @@ class DiracOperator {
   SpinorFieldType apply(Tags::TagD) {
     // Apply the operator
     tune_and_launch_for<rank, Tags::TagD>(typeid(Derived).name(),
-                                          IndexArray<rank>{}, params.dimensions,
+                                          IndexArray<rank>{}, this->dimensions,
                                           static_cast<Derived&>(*this));
     Kokkos::fence();
     return s_out;
@@ -112,7 +115,7 @@ class DiracOperator {
   SpinorFieldType apply(Tags::TagDdagger) {
     // Apply the operator
     tune_and_launch_for<rank, Tags::TagDdagger>(
-        typeid(Derived).name(), IndexArray<rank>{}, params.dimensions,
+        typeid(Derived).name(), IndexArray<rank>{}, this->dimensions,
         static_cast<Derived&>(*this));
     Kokkos::fence();
     return s_out;
@@ -121,7 +124,7 @@ class DiracOperator {
 
   SpinorFieldType apply(Tags::TagDDdagger) {
     auto cached_out = this->s_out;
-    this->s_out = SpinorFieldType(params.dimensions, complex_t(0.0, 0.0));
+    this->s_out = SpinorFieldType(this->dimensions, complex_t(0.0, 0.0));
 
     return this->apply(Tags::TagDDdagger{}, cached_out);
   }
@@ -129,7 +132,7 @@ class DiracOperator {
   // applys Composid Operator Mdagger= DdaggerD*s_in
   SpinorFieldType apply(Tags::TagDdaggerD) {
     auto cached_out = this->s_out;
-    this->s_out = SpinorFieldType(params.dimensions, complex_t(0.0, 0.0));
+    this->s_out = SpinorFieldType(this->dimensions, complex_t(0.0, 0.0));
 
     return this->apply(Tags::TagDdaggerD{}, cached_out);
   }
@@ -151,7 +154,8 @@ class DiracOperator {
   SpinorFieldType s_in;
   SpinorFieldType s_out;
   const GaugeFieldType g_in;
-  const diracParams<rank> params;
+  const diracParams params;
+  Kokkos::Array<index_t, rank> dimensions;
 
  protected:
   DiracOperator() = default;
@@ -181,9 +185,9 @@ class WilsonDiracOperator
 #pragma unroll
     for (size_t mu = 0; mu < rank; ++mu) {
       auto xm = shift_index_minus_bc<rank, size_t>(idx, mu, 1, 3, -1,
-                                                   this->params.dimensions);
+                                                   this->dimensions);
       auto xp = shift_index_plus_bc<rank, size_t>(idx, mu, 1, 3, -1,
-                                                  this->params.dimensions);
+                                                  this->dimensions);
 
       auto temp1 =
           this->g_in(Idcs..., mu) * project(mu, -1, this->s_in(xp.first));
@@ -206,9 +210,9 @@ class WilsonDiracOperator
 #pragma unroll
     for (size_t mu = 0; mu < rank; ++mu) {
       auto xm = shift_index_minus_bc<rank, size_t>(idx, mu, 1, 3, -1,
-                                                   this->params.dimensions);
+                                                   this->dimensions);
       auto xp = shift_index_plus_bc<rank, size_t>(idx, mu, 1, 3, -1,
-                                                  this->params.dimensions);
+                                                  this->dimensions);
 
       auto temp1 =
           this->g_in(Idcs..., mu) * project(mu, 1, this->s_in(xp.first));
@@ -247,9 +251,9 @@ class HWilsonDiracOperator
 #pragma unroll
     for (size_t mu = 0; mu < rank; ++mu) {
       auto xm = shift_index_minus_bc<rank, size_t>(idx, mu, 1, 3, -1,
-                                                   this->params.dimensions);
+                                                   this->dimensions);
       auto xp = shift_index_plus_bc<rank, size_t>(idx, mu, 1, 3, -1,
-                                                  this->params.dimensions);
+                                                  this->dimensions);
 
       auto temp1 =
           this->g_in(Idcs..., mu) * project(mu, 1, this->s_in(xp.first));

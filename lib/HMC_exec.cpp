@@ -36,17 +36,14 @@ using RNGType = Kokkos::Random_XorShift64_Pool<Kokkos::DefaultExecutionSpace>;
 namespace klft {
 
 // Still need to add check for different Dirac Operators
-template <typename DGaugeFieldType,
-          typename DAdjFieldType,
+template <typename DGaugeFieldType, typename DAdjFieldType,
           typename DSpinorFieldType>
 std::shared_ptr<Integrator> createIntegrator(
-    typename DGaugeFieldType::type& g_in,
-    typename DAdjFieldType::type& a_in,
+    typename DGaugeFieldType::type& g_in, typename DAdjFieldType::type& a_in,
     typename DSpinorFieldType::type& s_in,
     const Integrator_Params& integratorParams,
     const GaugeMonomial_Params& gaugeMonomialParams,
-    const FermionMonomial_Params& fermionParams,
-    const int& resParsef) {
+    const FermionMonomial_Params& fermionParams, const int& resParsef) {
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
   static_assert(isDeviceAdjFieldType<DAdjFieldType>::value);
   constexpr static size_t rank =
@@ -95,8 +92,7 @@ std::shared_ptr<Integrator> createIntegrator(
         // if the level is 0, we create a new integrator with nullptr as inner
         // integrator
         if (fermionParams.RepDim == 4) {
-          auto diracParams =
-              getDiracParams<rank>(g_in.dimensions, fermionParams);
+          auto diracParams = getDiracParams(fermionParams);
           UpdatePositionGauge<Nd, Nc> update_q(g_in, a_in);
           UpdateMomentumWilson<DSpinorFieldType, DGaugeFieldType, DAdjFieldType,
 
@@ -162,7 +158,7 @@ std::shared_ptr<Integrator> createIntegrator(
       // if the level is 0, we create a new integrator with nullptr as inner
       // integrator
       if (fermionParams.RepDim == 4) {
-        auto diracParams = getDiracParams<rank>(g_in.dimensions, fermionParams);
+        auto diracParams = getDiracParams(fermionParams);
 
         UpdatePositionGauge<Nd, Nc> update_q(g_in, a_in);
         UpdateMomentumWilson<DSpinorFieldType, DGaugeFieldType, DAdjFieldType,
@@ -304,8 +300,7 @@ int build_and_run_HMC(const std::string& input_file,
         hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
         hmc.add_kinetic_monomial(0);
         if (resParsef > 0) {
-          auto diracParams =
-              getDiracParams<4>(g_4_U1.dimensions, fermionParams);
+          auto diracParams = getDiracParams(fermionParams);
           hmc.add_fermion_monomial<CGSolver, WilsonDiracOperator,
                                    DSpinorFieldType>(s_4_U1, diracParams,
                                                      fermionParams.tol, rng, 0);
@@ -338,8 +333,7 @@ int build_and_run_HMC(const std::string& input_file,
         hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
         hmc.add_kinetic_monomial(0);
         if (resParsef > 0) {
-          auto diracParams =
-              getDiracParams<4>(g_4_SU2.dimensions, fermionParams);
+          auto diracParams = getDiracParams(fermionParams);
           hmc.add_fermion_monomial<CGSolver, WilsonDiracOperator,
                                    DSpinorFieldType>(s_4_SU2, diracParams,
                                                      fermionParams.tol, rng, 0);
@@ -378,7 +372,7 @@ int build_and_run_HMC(const std::string& input_file,
         // hmc.add_kinetic_monomial(0);
         // if (resParsef > 0) {
         //   auto diracParams =
-        //       getDiracParams<4>(g_4_SU3.dimensions, fermionParams);
+        //       getDiracParams( fermionParams);
         //   hmc.add_fermion_monomial<CGSolver, WilsonDiracOperator,
         //                            DSpinorFieldType>(s_4_SU3, diracParams,
         //                                              fermionParams.tol, rng,
@@ -609,8 +603,7 @@ int build_and_run_HMC(const std::string& input_file,
         hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
         hmc.add_kinetic_monomial(0);
         if (resParsef > 0) {
-          auto diracParams =
-              getDiracParams<4>(g_4_U1.dimensions, fermionParams);
+          auto diracParams = getDiracParams(fermionParams);
           hmc.add_fermion_monomial<CGSolver, WilsonDiracOperator,
                                    DSpinorFieldType>(s_4_U1, diracParams,
                                                      fermionParams.tol, rng, 0);
@@ -643,8 +636,7 @@ int build_and_run_HMC(const std::string& input_file,
         hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
         hmc.add_kinetic_monomial(0);
         if (resParsef > 0) {
-          auto diracParams =
-              getDiracParams<4>(g_4_SU2.dimensions, fermionParams);
+          auto diracParams = getDiracParams(fermionParams);
           hmc.add_fermion_monomial<CGSolver, WilsonDiracOperator,
                                    DSpinorFieldType>(s_4_SU2, diracParams,
                                                      fermionParams.tol, rng, 0);
@@ -683,7 +675,7 @@ int build_and_run_HMC(const std::string& input_file,
         // hmc.add_kinetic_monomial(0);
         // if (resParsef > 0) {
         //   auto diracParams =
-        //       getDiracParams<4>(g_4_SU3.dimensions, fermionParams);
+        //       getDiracParams( fermionParams);
         //   hmc.add_fermion_monomial<CGSolver, WilsonDiracOperator,
         //                            DSpinorFieldType>(s_4_SU3, diracParams,
         //                                              fermionParams.tol, rng,

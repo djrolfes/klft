@@ -25,12 +25,11 @@
 namespace klft {
 
 // Parameters specific to the Dirac operator
-template <size_t rank>
 struct diracParams {
   const real_t kappa;
-  const IndexArray<rank> dimensions;
-  diracParams(const IndexArray<rank> _dimensions, const real_t& _kappa)
-      : dimensions(_dimensions),
+
+  diracParams(const real_t& _kappa)
+      :
 
         kappa(_kappa) {}
 };
@@ -43,12 +42,8 @@ struct FermionParams {
   size_t RepDim;
   real_t kappa;
   real_t tol;
-  FermionParams(size_t _rank,
-                size_t _Nc,
-                size_t _RepDim,
-                real_t _kappa,
-                real_t _tol,
-                const std::string& _fermion_type = "Wilson")
+  FermionParams(size_t _rank, size_t _Nc, size_t _RepDim, real_t _kappa,
+                real_t _tol, const std::string& _fermion_type = "Wilson")
       : rank(_rank),
         Nc(_Nc),
         RepDim(_RepDim),
@@ -67,10 +62,8 @@ struct FermionParams {
     printf("  Tolerance: %f\n", tol);
   }
 };
-template <size_t rank>
-auto getDiracParams(const IndexArray<rank>& dimensions,
-                    const FermionMonomial_Params& fparams) {
-  diracParams<rank> dParams(dimensions, fparams.kappa);
+auto getDiracParams(const FermionMonomial_Params& fparams) {
+  diracParams dParams(fparams.kappa);
   return dParams;
 }
 
