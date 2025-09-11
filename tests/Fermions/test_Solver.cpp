@@ -79,7 +79,8 @@ int main(int argc, char* argv[]) {
     printf("Comparing Solver result to expected result...\n");
     // print_spinor<3, 4>(solver.x(0, 0, 0, 0) - u(0, 0, 0, 0), "Solver
     // Result");
-    auto res_norm = spinor_norm<4, N, 4>(axpy<4, N, 4>(-1, solver.x, u));
+    auto res_norm = spinor_norm<4, N, 4>(
+        axpy<DeviceSpinorFieldType<4, N, 4>>(-1, solver.x, u));
     auto norm = spinor_norm<4, N, 4>(u);
 
     printf("Norm of Residual: %.20f\n", res_norm / norm);

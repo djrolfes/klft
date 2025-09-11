@@ -30,6 +30,7 @@
 #include "SimulationLogging.hpp"
 #include "UpdateMomentum.hpp"
 #include "UpdatePosition.hpp"
+#include "WilsonDiracOperator.hpp"
 #include "updateMomentumFermion.hpp"
 using RNGType = Kokkos::Random_XorShift64_Pool<Kokkos::DefaultExecutionSpace>;
 

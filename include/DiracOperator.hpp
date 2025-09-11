@@ -26,6 +26,7 @@
 #include "GammaMatrix.hpp"
 #include "IndexHelper.hpp"
 #include "Spinor.hpp"
+#include "SpinorFieldLinAlg.hpp"
 
 namespace klft {
 // Base Class for Single Dirac Operator
@@ -36,10 +37,13 @@ struct TagDdagger {};
 struct TagDDdagger {};
 // applys Composid Operator Mdagger= DdaggerD*s_in
 struct TagDdaggerD {};
+struct TagHoe {};
+struct TagHeo {};
 }  // namespace Tags
 
 template <template <typename, typename> class _Derived,
-          typename DSpinorFieldType, typename DGaugeFieldType>
+          typename DSpinorFieldType,
+          typename DGaugeFieldType>
 class DiracOperator {
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
   static_assert(isDeviceFermionFieldType<DSpinorFieldType>::value);
@@ -51,6 +55,8 @@ class DiracOperator {
       DeviceFermionFieldTypeTraits<DSpinorFieldType>::RepDim;
   static_assert((rank == DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank) &&
                 (Nc == DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc));
+  constexpr static SpinorFieldLayout Layout =
+      DeviceFermionFieldTypeTraits<DSpinorFieldType>::Layout;
 
   using Derived = _Derived<DSpinorFieldType, DGaugeFieldType>;
   // Define Tags for template dispatch:
@@ -68,7 +74,13 @@ class DiracOperator {
     this->s_in = s_in;
     this->s_out = SpinorFieldType(params.dimensions, complex_t(0.0, 0.0));
     // Apply the operator
-    return this->apply(Tag{});
+    if constexpr (std::is_same_v<Tag, Tags::TagHeo> or
+                  std::is_same_v<Tag, Tags::TagHoe>) {
+      // forward to Derived class only for TagHeo
+      return static_cast<Derived&>(*this).apply_(Tag{});
+    } else {
+      return this->apply_(Tag{});
+    }
   }
 
   /// @brief applys the DiracOperator to the field s_in and stores the result in
@@ -82,8 +94,13 @@ class DiracOperator {
                                          const SpinorFieldType& s_out) {
     this->s_in = s_in;
     this->s_out = s_out;
-    // Apply the operator
-    this->apply(Tag{});
+    if constexpr (std::is_same_v<Tag, Tags::TagHeo> or
+                  std::is_same_v<Tag, Tags::TagHoe>) {
+      // forward to Derived class only for TagHeo
+      return static_cast<Derived&>(*this).apply_(Tag{});
+    } else {
+      this->apply_(Tag{});
+    }
   }
 
   // Special overload t reduce allocations in solver further, only works with
@@ -95,12 +112,13 @@ class DiracOperator {
                                          const SpinorFieldType& s_out) {
     this->s_in = s_in;
     this->s_out = s_temp;
+
     // Apply the operator
-    this->apply(Tag{}, s_out);
+    this->apply_(Tag{}, s_out);
   }
 
  private:
-  SpinorFieldType apply(Tags::TagD) {
+  SpinorFieldType apply_(Tags::TagD) {
     // Apply the operator
     tune_and_launch_for<rank, Tags::TagD>(typeid(Derived).name(),
                                           IndexArray<rank>{}, params.dimensions,
@@ -109,7 +127,7 @@ class DiracOperator {
     return s_out;
   }
 
-  SpinorFieldType apply(Tags::TagDdagger) {
+  SpinorFieldType apply_(Tags::TagDdagger) {
     // Apply the operator
     tune_and_launch_for<rank, Tags::TagDdagger>(
         typeid(Derived).name(), IndexArray<rank>{}, params.dimensions,
@@ -119,32 +137,55 @@ class DiracOperator {
   }
   // applys Composid Operator M= DDdagger*s_in
 
-  SpinorFieldType apply(Tags::TagDDdagger) {
+  SpinorFieldType apply_(Tags::TagDDdagger) {
     auto cached_out = this->s_out;
     this->s_out = SpinorFieldType(params.dimensions, complex_t(0.0, 0.0));
 
-    return this->apply(Tags::TagDDdagger{}, cached_out);
+    return this->apply_(Tags::TagDDdagger{}, cached_out);
   }
 
   // applys Composid Operator Mdagger= DdaggerD*s_in
-  SpinorFieldType apply(Tags::TagDdaggerD) {
+  SpinorFieldType apply_(Tags::TagDdaggerD) {
     auto cached_out = this->s_out;
     this->s_out = SpinorFieldType(params.dimensions, complex_t(0.0, 0.0));
 
-    return this->apply(Tags::TagDdaggerD{}, cached_out);
+    return this->apply_(Tags::TagDdaggerD{}, cached_out);
   }
-  SpinorFieldType apply(Tags::TagDDdagger, const SpinorFieldType& s_out) {
-    this->apply(Tags::TagDdagger{});
+  SpinorFieldType apply_(Tags::TagDDdagger, const SpinorFieldType& s_out) {
+    if constexpr (Layout == SpinorFieldLayout::Checkerboard) {
+      // printf("Iam a CheckerboardLayout\n");
+      auto temp_field = this->s_in;
+      this->apply_(Tags::TagDdagger{});
+      this->s_in = this->s_out;
+      this->s_out = s_out;
+      this->apply_(Tags::TagD{});
+      axpy<DSpinorFieldType>(-1, this->s_out, temp_field, this->s_out);
+      return this->s_out;
+    }
+    printf("I am a normal Layout\n");
+
+    this->apply_(Tags::TagDdagger{});
     this->s_in = this->s_out;
     this->s_out = s_out;
-    return this->apply(Tags::TagD{});
+    return this->apply_(Tags::TagD{});
   }
 
-  SpinorFieldType apply(Tags::TagDdaggerD, const SpinorFieldType& s_out) {
-    this->apply(Tags::TagD{});
+  SpinorFieldType apply_(Tags::TagDdaggerD, const SpinorFieldType& s_out) {
+    if constexpr (Layout == SpinorFieldLayout::Checkerboard) {
+      // printf("Iam a CheckerboardLayout\n");
+      auto temp_field = this->s_in;
+      this->apply_(Tags::TagD{});
+      this->s_in = this->s_out;
+      this->s_out = s_out;
+      this->apply_(Tags::TagDdagger{});
+      axpy<DSpinorFieldType>(-1, this->s_out, temp_field, this->s_out);
+      return this->s_out;
+    }
+    printf("I am a normal Layout\n");
+    this->apply_(Tags::TagD{});
     this->s_in = this->s_out;
     this->s_out = s_out;
-    return this->apply(Tags::TagDdagger{});
+    return this->apply_(Tags::TagDdagger{});
   }
 
  public:
@@ -156,119 +197,35 @@ class DiracOperator {
  protected:
   DiracOperator() = default;
 };
-
-template <typename DSpinorFieldType, typename DGaugeFieldType>
-class WilsonDiracOperator
-    : public DiracOperator<WilsonDiracOperator, DSpinorFieldType,
-                           DGaugeFieldType> {
- public:
-  constexpr static size_t Nc =
-      DeviceFermionFieldTypeTraits<DSpinorFieldType>::Nc;
-  constexpr static size_t RepDim =
-      DeviceFermionFieldTypeTraits<DSpinorFieldType>::RepDim;
+// intermidiate base class for EO Precon. Dirac Operators
+template <template <typename, typename> class _Derived,
+          typename DSpinorFieldType,
+          typename DGaugeFieldType>
+class EODiracOperator
+    : public DiracOperator<_Derived, DSpinorFieldType, DGaugeFieldType> {
+  using SpinorFieldType = typename DSpinorFieldType::type;
+  using InterDervied = _Derived<DSpinorFieldType, DGaugeFieldType>;
   constexpr static size_t rank =
       DeviceFermionFieldTypeTraits<DSpinorFieldType>::Rank;
 
-  ~WilsonDiracOperator() = default;
-  using Base =
-      DiracOperator<WilsonDiracOperator, DSpinorFieldType, DGaugeFieldType>;
-  using Base::Base;
-  template <typename... Indices>
-  KOKKOS_FORCEINLINE_FUNCTION void operator()(typename Tags::TagD,
-                                              const Indices... Idcs) const {
-    Spinor<Nc, RepDim> temp;
-    Kokkos::Array<size_t, rank> idx{Idcs...};
-#pragma unroll
-    for (size_t mu = 0; mu < rank; ++mu) {
-      auto xm = shift_index_minus_bc<rank, size_t>(idx, mu, 1, 3, -1,
-                                                   this->params.dimensions);
-      auto xp = shift_index_plus_bc<rank, size_t>(idx, mu, 1, 3, -1,
-                                                  this->params.dimensions);
-
-      auto temp1 =
-          this->g_in(Idcs..., mu) * project(mu, -1, this->s_in(xp.first));
-
-      auto temp2 =
-          conj(this->g_in(xm.first, mu)) * project(mu, 1, this->s_in(xm.first));
-      temp += reconstruct(mu, -1, (this->params.kappa * xp.second) * temp1) +
-              reconstruct(mu, 1, (this->params.kappa * xm.second) * temp2);
-    }
-
-    this->s_out(Idcs...) = this->s_in(Idcs...) - temp;
-  }
-
-  template <typename... Indices>
-  KOKKOS_FORCEINLINE_FUNCTION void operator()(typename Tags::TagDdagger,
-                                              const Indices... Idcs) const {
-    Spinor<Nc, RepDim> temp;
-    Kokkos::Array<size_t, rank> idx{Idcs...};
-
-#pragma unroll
-    for (size_t mu = 0; mu < rank; ++mu) {
-      auto xm = shift_index_minus_bc<rank, size_t>(idx, mu, 1, 3, -1,
-                                                   this->params.dimensions);
-      auto xp = shift_index_plus_bc<rank, size_t>(idx, mu, 1, 3, -1,
-                                                  this->params.dimensions);
-
-      auto temp1 =
-          this->g_in(Idcs..., mu) * project(mu, 1, this->s_in(xp.first));
-
-      //
-      auto temp2 = conj(this->g_in(xm.first, mu)) *
-                   project(mu, -1, this->s_in(xm.first));
-      temp += reconstruct(mu, 1, (this->params.kappa * xp.second) * temp1) +
-              reconstruct(mu, -1, (this->params.kappa * xm.second) * temp2);
-    }
-    this->s_out(Idcs...) = this->s_in(Idcs...) - temp;
-  }
-};
-
-template <typename DSpinorFieldType, typename DGaugeFieldType>
-class HWilsonDiracOperator
-    : public DiracOperator<HWilsonDiracOperator, DSpinorFieldType,
-                           DGaugeFieldType> {
  public:
-  constexpr static size_t Nc =
-      DeviceFermionFieldTypeTraits<DSpinorFieldType>::Nc;
-  constexpr static size_t RepDim =
-      DeviceFermionFieldTypeTraits<DSpinorFieldType>::RepDim;
-  constexpr static size_t rank =
-      DeviceFermionFieldTypeTraits<DSpinorFieldType>::Rank;
+  int parity;
+  using DiracOperator<_Derived, DSpinorFieldType, DGaugeFieldType>::
+      DiracOperator;
 
-  ~HWilsonDiracOperator() = default;
-  using Base =
-      DiracOperator<HWilsonDiracOperator, DSpinorFieldType, DGaugeFieldType>;
-  using Base::Base;
-  template <typename... Indices>
-  KOKKOS_FORCEINLINE_FUNCTION void operator()(typename Tags::TagD,
-                                              const Indices... Idcs) const {
-    Spinor<Nc, RepDim> temp;
-    Kokkos::Array<size_t, rank> idx{Idcs...};
-#pragma unroll
-    for (size_t mu = 0; mu < rank; ++mu) {
-      auto xm = shift_index_minus_bc<rank, size_t>(idx, mu, 1, 3, -1,
-                                                   this->params.dimensions);
-      auto xp = shift_index_plus_bc<rank, size_t>(idx, mu, 1, 3, -1,
-                                                  this->params.dimensions);
-
-      auto temp1 =
-          this->g_in(Idcs..., mu) * project(mu, 1, this->s_in(xp.first));
-
-      //
-      auto temp2 = conj(this->g_in(xm.first, mu)) *
-                   project(mu, -1, this->s_in(xm.first));
-      temp += reconstruct(mu, 1, (this->params.kappa * xp.second) * temp1) +
-              reconstruct(mu, -1, (this->params.kappa * xm.second) * temp2);
-    }
-
-    this->s_out(Idcs...) = gamma5(this->s_in(Idcs...) - temp);
+  SpinorFieldType apply_(Tags::TagHeo) {
+    this->s_out = SpinorFieldType(this->params.dimensions, complex_t(0.0, 0.0));
+    tune_and_launch_for<rank, Tags::TagD>(
+        typeid(InterDervied).name(), IndexArray<rank>{},
+        this->params.dimensions, static_cast<InterDervied&>(*this));
+    return this->s_out;
   }
-
-  // only for testing porpose, not the real Ddagger operator
-  template <typename... Indices>
-  KOKKOS_FORCEINLINE_FUNCTION void operator()(typename Tags::TagDdagger,
-                                              const Indices... Idcs) const {
-    operator()(typename Tags::TagD(), Idcs...);
+  SpinorFieldType apply_(Tags::TagHoe) {
+    this->s_out = SpinorFieldType(this->params.dimensions, complex_t(0.0, 0.0));
+    tune_and_launch_for<rank, Tags::TagDdagger>(
+        typeid(InterDervied).name(), IndexArray<rank>{},
+        this->params.dimensions, static_cast<InterDervied&>(*this));
+    return this->s_out;
   }
 };
 

@@ -7,6 +7,7 @@
 #include "../../include/GammaMatrix.hpp"
 #include "../../include/SpinorField.hpp"
 #include "../../include/SpinorFieldLinAlg.hpp"
+#include "../../include/WilsonDiracOperator.hpp"
 #include "../../include/klft.hpp"
 #define HLINE "=========================================================\n"
 

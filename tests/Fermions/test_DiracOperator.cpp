@@ -7,6 +7,7 @@
 #include "../../include/GammaMatrix.hpp"
 #include "../../include/SpinorField.hpp"
 #include "../../include/SpinorFieldLinAlg.hpp"
+#include "../../include/WilsonDiracOperator.hpp"
 #include "../../include/klft.hpp"
 #define HLINE "=========================================================\n"
 
@@ -36,27 +37,27 @@ int main(int argc, char* argv[]) {
     index_t L0 = 32, L1 = 32, L2 = 32, L3 = 32;
     auto gammas = get_gammas<4>();
     GammaMat<4> gamma5 = get_gamma5();
-    diracParams<4> params(IndexArray<4>{L0, L1, L2, L3}, 0.156);
+    diracParams<4> params(IndexArray<4>{L0, L1, L2, L3 / 2}, 0.156);
     printf("Lattice Dimension %ix%ix%ix%i \n", L0, L1, L2, L3);
     printf("Generate SpinorFields...\n");
 
     Kokkos::Random_XorShift64_Pool<> random_pool(/*seed=*/1234);
-    deviceSpinorField<2, 4> u(L0, L1, L2, L3, random_pool, 0, 1.0 / 1.41);
+    deviceSpinorField<2, 4> u(L0, L1, L2, L3 / 2, random_pool, 0, 1.0 / 1.41);
     deviceSpinorField<2, 4> Mu(L0, L1, L2, L3, 0);
     deviceSpinorField<2, 4> temp(L0, L1, L2, L3, 0);
 
     printf("Generating Random Gauge Config\n");
     deviceGaugeField<4, 2> gauge(L0, L1, L2, L3, random_pool, 1);
     printf("Instantiate DiracOperator...\n");
-    WilsonDiracOperator<DeviceSpinorFieldType<4, 2, 4>,
-                        DeviceGaugeFieldType<4, 2>>
+    EOWilsonDiracOperator<DeviceSpinorFieldType<4, 2, 4>,
+                          DeviceGaugeFieldType<4, 2>>
         D(gauge, params);
     printf("Apply DiracOperator...\n");
     Kokkos::Timer timer;
 
     real_t diracTime = std::numeric_limits<real_t>::max();
     for (size_t i = 0; i < count; i++) {
-      D.template apply<Tags::TagDDdagger>(u, temp, Mu);
+      D.template apply<Tags::TagHeo>(u);
     }
     auto diracTime1 = std::min(diracTime, timer.seconds());
     printf("D^ Kernel Time:     %11.4e s\n", diracTime1 / count);

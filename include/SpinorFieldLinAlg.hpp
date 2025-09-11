@@ -158,19 +158,22 @@ struct axpyFunctor {
   }
 };
 /// @brief Calculates alpha*x+y
-/// @tparam rank
-/// @tparam Nc
-/// @tparam RepDim
+
 /// @param alpha
 /// @param x
 /// @param y
 /// @return c = alpha*x+y
-template <size_t rank, size_t Nc, size_t RepDim>
-typename DeviceSpinorFieldType<rank, Nc, RepDim>::type
-    KOKKOS_FORCEINLINE_FUNCTION
-    axpy(const complex_t& alpha,
-         const typename DeviceSpinorFieldType<rank, Nc, RepDim>::type& x,
-         const typename DeviceSpinorFieldType<rank, Nc, RepDim>::type& y) {
+template <typename DSpinorFieldType>
+typename DSpinorFieldType::type KOKKOS_FORCEINLINE_FUNCTION
+axpy(const complex_t& alpha,
+     const typename DSpinorFieldType::type& x,
+     const typename DSpinorFieldType::type& y) {
+  constexpr static size_t rank =
+      DeviceFermionFieldTypeTraits<DSpinorFieldType>::Rank;
+  constexpr static size_t Nc =
+      DeviceFermionFieldTypeTraits<DSpinorFieldType>::Nc;
+  constexpr static size_t RepDim =
+      DeviceFermionFieldTypeTraits<DSpinorFieldType>::RepDim;
   assert(x.dimensions == y.dimensions);
   static_assert(
       Kokkos::SpaceAccessibility<
@@ -181,8 +184,7 @@ typename DeviceSpinorFieldType<rank, Nc, RepDim>::type
                                                                 // or host-host
                                                                 // interaction
 
-  using SpinorFieldType =
-      typename DeviceSpinorFieldType<rank, Nc, RepDim>::type;
+  using SpinorFieldType = typename DSpinorFieldType::type;
   SpinorFieldType c(x.dimensions, complex_t(0.0, 0.0));
   IndexArray<rank> start{};
   axpyFunctor<rank, Nc, RepDim> add(alpha, x, y, c, x.dimensions);
@@ -191,13 +193,23 @@ typename DeviceSpinorFieldType<rank, Nc, RepDim>::type
   Kokkos::fence();
   return c;
 }
-
-template <size_t rank, size_t Nc, size_t RepDim>
-void KOKKOS_FORCEINLINE_FUNCTION
-axpy(const complex_t& alpha,
-     const typename DeviceSpinorFieldType<rank, Nc, RepDim>::type& x,
-     const typename DeviceSpinorFieldType<rank, Nc, RepDim>::type& y,
-     typename DeviceSpinorFieldType<rank, Nc, RepDim>::type& c) {
+/// @brief Calculates alpha*x+y
+/// @param alpha
+/// @param x
+/// @param y
+/// @param c
+/// @return c = alpha*x+y
+template <typename DSpinorFieldType>
+void KOKKOS_FORCEINLINE_FUNCTION axpy(const complex_t& alpha,
+                                      const typename DSpinorFieldType::type& x,
+                                      const typename DSpinorFieldType::type& y,
+                                      typename DSpinorFieldType::type& c) {
+  constexpr static size_t rank =
+      DeviceFermionFieldTypeTraits<DSpinorFieldType>::Rank;
+  constexpr static size_t Nc =
+      DeviceFermionFieldTypeTraits<DSpinorFieldType>::Nc;
+  constexpr static size_t RepDim =
+      DeviceFermionFieldTypeTraits<DSpinorFieldType>::RepDim;
   assert(x.dimensions == y.dimensions);
   static_assert(
       Kokkos::SpaceAccessibility<

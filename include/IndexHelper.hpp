@@ -27,8 +27,10 @@ namespace klft {
 // return x + shift  mu
 template <size_t rank, typename indexType>
 constexpr KOKKOS_FORCEINLINE_FUNCTION Kokkos::Array<index_t, rank>
-shift_index_plus(const Kokkos::Array<indexType, rank>& idx, const index_t mu,
-                 const index_t shift, const IndexArray<rank>& dimensions) {
+shift_index_plus(const Kokkos::Array<indexType, rank>& idx,
+                 const index_t mu,
+                 const index_t shift,
+                 const IndexArray<rank>& dimensions) {
   // make sure mu makes sense
   assert(mu < rank && mu >= 0);
   Kokkos::Array<index_t, rank> new_idx;
@@ -43,8 +45,10 @@ shift_index_plus(const Kokkos::Array<indexType, rank>& idx, const index_t mu,
 // return x - shift mu
 template <size_t rank, typename indexType>
 constexpr KOKKOS_FORCEINLINE_FUNCTION Kokkos::Array<index_t, rank>
-shift_index_minus(const Kokkos::Array<indexType, rank>& idx, const index_t mu,
-                  const index_t shift, const IndexArray<rank>& dimensions) {
+shift_index_minus(const Kokkos::Array<indexType, rank>& idx,
+                  const index_t mu,
+                  const index_t shift,
+                  const IndexArray<rank>& dimensions) {
   // make sure mu makes sense
   assert(mu < rank && mu >= 0);
   Kokkos::Array<index_t, rank> new_idx;
@@ -89,8 +93,10 @@ template <size_t rank, typename indexType>
 constexpr KOKKOS_FORCEINLINE_FUNCTION
     Kokkos::pair<Kokkos::Array<index_t, rank>, real_t>
     shift_index_plus_bc(const Kokkos::Array<indexType, rank>& idx,
-                        const index_t mu, const index_t shift,
-                        const index_t bc_dim, const real_t bc_value,
+                        const index_t mu,
+                        const index_t shift,
+                        const index_t bc_dim,
+                        const real_t bc_value,
                         const IndexArray<rank>& dimensions) {
   // make sure mu makes sense
   assert(mu < rank && mu >= 0);
@@ -109,8 +115,10 @@ template <size_t rank, typename indexType>
 constexpr KOKKOS_FORCEINLINE_FUNCTION
     Kokkos::pair<Kokkos::Array<index_t, rank>, real_t>
     shift_index_minus_bc(const Kokkos::Array<indexType, rank>& idx,
-                         const index_t mu, const index_t shift,
-                         const index_t bc_dim, const real_t bc_value,
+                         const index_t mu,
+                         const index_t shift,
+                         const index_t bc_dim,
+                         const real_t bc_value,
                          const IndexArray<rank>& dimensions) {
   // make sure mu makes sense
   assert(mu < rank && mu >= 0);
@@ -131,9 +139,9 @@ constexpr KOKKOS_FORCEINLINE_FUNCTION
 //
 template <size_t rank, typename indexType>
 constexpr KOKKOS_FORCEINLINE_FUNCTION
-    Kokkos::pair<Kokkos::Array<index_t, rank>, real_t>
+    Kokkos::pair<Kokkos::Array<index_t, rank>, int>
     index_full_to_half(const Kokkos::Array<indexType, rank>& idx) {
-  Kokkos::Array<index_t, rank> new_idx;
+  Kokkos::Array<index_t, rank> new_idx{};
   // starting at index 0 is on purpose
 #pragma unroll
   for (int i = 1; i < rank; ++i) {
@@ -155,15 +163,16 @@ template <size_t rank, typename indexType>
 constexpr KOKKOS_FORCEINLINE_FUNCTION Kokkos::Array<index_t, rank>
 index_half_to_full(const Kokkos::Array<indexType, rank>& idx,
                    const int& parity) {
-  Kokkos::Array<index_t, rank> new_idx;
-// using 0 entry as temp storage for the sum of all other dims
+  Kokkos::Array<index_t, rank> new_idx{};
+  // using 0 entry as temp storage for the sum of all other dims
 #pragma unroll
   for (index_t i = 1; i < rank; i++) {
     auto temp = static_cast<index_t>(idx[i]);
     new_idx[0] += temp;
     new_idx[i] = temp;
   }
-  new_idx[0] = 2 * idx[0] + (new_idx[0] + parity) & 1;
+  new_idx[0] = 2 * idx[0] + ((new_idx[0] + parity) & 1);
+
   return new_idx;
 }
 

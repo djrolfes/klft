@@ -15,3 +15,9 @@ target_link_libraries(test_GDircOperator PUBLIC Kokkos::kokkos)
 
 add_executable(test_Solver test_Solver.cpp)
 target_link_libraries(test_Solver PUBLIC Kokkos::kokkos)
+
+add_executable(test_Solver_EO test_Solver_EO.cpp)
+target_link_libraries(test_Solver_EO PUBLIC Kokkos::kokkos)
+
+add_executable(test_spam test_spam.cpp)
+target_link_libraries(test_spam PUBLIC Kokkos::kokkos)
