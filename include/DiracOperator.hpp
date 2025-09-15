@@ -36,9 +36,12 @@ struct TagDdagger {};
 // applys Composid Operator M= DDdagger*s_in
 struct TagDDdagger {};
 // applys Composid Operator Mdagger= DdaggerD*s_in
+// If spinorfield are Checkerboard the operator S_e is used
 struct TagDdaggerD {};
 struct TagHoe {};
 struct TagHeo {};
+struct TagSe {};
+struct TagSo {};
 }  // namespace Tags
 
 template <template <typename, typename> class _Derived,
@@ -96,7 +99,7 @@ class DiracOperator {
     if constexpr (std::is_same_v<Tag, Tags::TagHeo> or
                   std::is_same_v<Tag, Tags::TagHoe>) {
       // forward to Derived class only for TagHeo
-      return static_cast<Derived&>(*this).apply_(Tag{});
+      static_cast<Derived&>(*this).apply_(Tag{});
     } else {
       this->apply_(Tag{});
     }
@@ -116,7 +119,7 @@ class DiracOperator {
     this->apply_(Tag{}, s_out);
   }
 
- private:
+ protected:
   SpinorFieldType apply_(Tags::TagD) {
     // Apply the operator
     tune_and_launch_for<rank, Tags::TagD>(typeid(Derived).name(),
@@ -150,15 +153,38 @@ class DiracOperator {
 
     return this->apply_(Tags::TagDdaggerD{}, cached_out);
   }
+  SpinorFieldType apply_(Tags::TagSe) {
+    auto cached_out = this->s_out;
+    this->s_out = SpinorFieldType(params.dimensions, complex_t(0.0, 0.0));
+    return this->apply_(Tags::TagSe{}, cached_out);
+  }
+
+  SpinorFieldType apply_(Tags::TagSe, const SpinorFieldType& s_out) {
+    auto cached_out = this->s_out;
+
+    return static_cast<Derived&>(*this).apply_(Tags::TagSe{}, s_out);
+  }
+  SpinorFieldType apply_(Tags::TagSo) {
+    auto cached_out = this->s_out;
+    this->s_out = SpinorFieldType(params.dimensions, complex_t(0.0, 0.0));
+    return this->apply_(Tags::TagSo{}, cached_out);
+  }
+
+  SpinorFieldType apply_(Tags::TagSo, const SpinorFieldType& s_out) {
+    auto cached_out = this->s_out;
+    static_cast<Derived&>(*this).apply_(Tags::TagSo{}, s_out);
+    return this->s_out;
+  }
   SpinorFieldType apply_(Tags::TagDDdagger, const SpinorFieldType& s_out) {
     if constexpr (Layout == SpinorFieldLayout::Checkerboard) {
       // printf("Iam a CheckerboardLayout\n");
-      auto temp_field = this->s_in;
-      this->apply_(Tags::TagDdagger{});
-      this->s_in = this->s_out;
-      this->s_out = s_out;
-      this->apply_(Tags::TagD{});
-      axpy<DSpinorFieldType>(-1, this->s_out, temp_field, this->s_out);
+      static_cast<Derived&>(*this).apply_(Tags::TagDDdagger{}, s_out);
+      // auto temp_field = this->s_in;
+      // apply<Tags::TagHoe>(this->s_in, this->s_out);
+      // this->s_in = this->s_out;
+      // this->s_out = s_out;
+      // apply<Tags::TagHeo>(this->s_in, this->s_out);
+      // axpy<DSpinorFieldType>(-1, this->s_out, temp_field, this->s_out);
       return this->s_out;
     }
 
@@ -170,13 +196,14 @@ class DiracOperator {
 
   SpinorFieldType apply_(Tags::TagDdaggerD, const SpinorFieldType& s_out) {
     if constexpr (Layout == SpinorFieldLayout::Checkerboard) {
+      static_cast<Derived&>(*this).apply_(Tags::TagDdaggerD{}, s_out);
       // printf("Iam a CheckerboardLayout\n");
-      auto temp_field = this->s_in;
-      this->apply_(Tags::TagD{});
-      this->s_in = this->s_out;
-      this->s_out = s_out;
-      this->apply_(Tags::TagDdagger{});
-      axpy<DSpinorFieldType>(-1, this->s_out, temp_field, this->s_out);
+      // auto temp_field = this->s_in;
+      // this->apply_(Tags::TagD{});
+      // this->s_in = this->s_out;
+      // this->s_out = s_out;
+      // this->apply_(Tags::TagDdagger{});
+      // axpy<DSpinorFieldType>(-1, this->s_out, temp_field, this->s_out);
       return this->s_out;
     }
     this->apply_(Tags::TagD{});
@@ -205,22 +232,70 @@ class EODiracOperator
       DeviceFermionFieldTypeTraits<DSpinorFieldType>::Rank;
 
  public:
-  int parity;
+  SpinorFieldType s_in_same_parity;
+  struct Tag1minusHeo {};
+  struct Tag1minusHoe {};
+  int test = 0;
   using DiracOperator<_Derived, DSpinorFieldType,
                       DGaugeFieldType>::DiracOperator;
 
   SpinorFieldType apply_(Tags::TagHeo) {
-    this->s_out = SpinorFieldType(this->params.dimensions, complex_t(0.0, 0.0));
-    tune_and_launch_for<rank, Tags::TagD>(
-        typeid(InterDervied).name(), IndexArray<rank>{},
-        this->params.dimensions, static_cast<InterDervied&>(*this));
+    // this->s_out = SpinorFieldType(this->params.dimensions, complex_t(0.0,
+    // 0.0));
+    tune_and_launch_for<rank, Tags::TagHeo>(
+        typeid(InterDervied).name(), IndexArray<rank>{}, this->s_in.dimensions,
+        static_cast<InterDervied&>(*this));
     return this->s_out;
   }
   SpinorFieldType apply_(Tags::TagHoe) {
-    this->s_out = SpinorFieldType(this->params.dimensions, complex_t(0.0, 0.0));
-    tune_and_launch_for<rank, Tags::TagDdagger>(
-        typeid(InterDervied).name(), IndexArray<rank>{},
-        this->params.dimensions, static_cast<InterDervied&>(*this));
+    // this->s_out = SpinorFieldType(this->params.dimensions, complex_t(0.0,
+    // 0.0));
+
+    tune_and_launch_for<rank, Tags::TagHoe>(
+        typeid(InterDervied).name(), IndexArray<rank>{}, this->s_in.dimensions,
+        static_cast<InterDervied&>(*this));
+    return this->s_out;
+  }
+
+  SpinorFieldType apply_(Tags::TagSe, const SpinorFieldType& s_out) {
+    // printf("iam a EO Se\n");
+    // printf("%i", this->test);
+    this->apply_(Tags::TagHoe{});
+
+    this->s_in_same_parity = this->s_in;
+    this->s_in = this->s_out;
+    this->s_out = s_out;
+
+    tune_and_launch_for<rank, Tag1minusHeo>(
+        typeid(InterDervied).name(), IndexArray<rank>{}, this->s_in.dimensions,
+        static_cast<InterDervied&>(*this));
+
+    return this->s_out;
+  }
+  SpinorFieldType apply_(Tags::TagSo, const SpinorFieldType& s_out) {
+    this->apply_(Tags::TagHeo{});
+    this->s_in_same_parity = this->s_in;
+    this->s_in = this->s_out;
+    this->s_out = s_out;
+
+    tune_and_launch_for<rank, Tag1minusHoe>(
+        typeid(InterDervied).name(), IndexArray<rank>{}, this->s_in.dimensions,
+        static_cast<InterDervied&>(*this));
+
+    return this->s_out;
+  }
+  SpinorFieldType apply_(Tags::TagDDdagger, const SpinorFieldType& s_out) {
+    auto temp = SpinorFieldType(this->s_in.dimensions, 0);
+    auto cached_s_out = this->s_out;
+    apply_(Tags::TagSe{}, temp);
+    this->s_in = temp;
+    this->s_out = cached_s_out;
+    // out is not correctly set for first Heo application
+    apply_(Tags::TagSe{}, s_out);
+    return this->s_out;
+  }
+  SpinorFieldType apply_(Tags::TagDdaggerD, const SpinorFieldType& s_out) {
+    apply_(Tags::TagDDdagger{}, s_out);
     return this->s_out;
   }
 };

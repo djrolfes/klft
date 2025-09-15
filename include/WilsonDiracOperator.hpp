@@ -148,7 +148,7 @@ class EOWilsonDiracOperator
       DeviceFermionFieldTypeTraits<DSpinorFieldType>::Rank;
   // odd to even so H_eo
   template <typename... Indices>
-  KOKKOS_FORCEINLINE_FUNCTION void operator()(typename Tags::TagD,
+  KOKKOS_FORCEINLINE_FUNCTION void operator()(typename Tags::TagHeo,
                                               const Indices... Idcs) const {
     Spinor<Nc, RepDim> temp;
     Kokkos::Array<size_t, rank> idx{Idcs...};
@@ -176,7 +176,7 @@ class EOWilsonDiracOperator
   // even to odd = Hoe
 
   template <typename... Indices>
-  KOKKOS_FORCEINLINE_FUNCTION void operator()(typename Tags::TagDdagger,
+  KOKKOS_FORCEINLINE_FUNCTION void operator()(typename Tags::TagHoe,
                                               const Indices... Idcs) const {
     Spinor<Nc, RepDim> temp;
     Kokkos::Array<size_t, rank> idx{Idcs...};
@@ -200,6 +200,34 @@ class EOWilsonDiracOperator
     }
 
     this->s_out(Idcs...) = temp;
+  }
+  template <typename... Indices>
+  KOKKOS_FORCEINLINE_FUNCTION void operator()(typename Tags::TagD,
+                                              const Indices... Idcs) const {
+    operator()(typename Tags::TagHeo(), Idcs...);
+    this->s_out(Idcs...) -= this->s_in_same_parity(Idcs...);
+    this->s_out(Idcs...) *= -1;
+  }
+  template <typename... Indices>
+  KOKKOS_FORCEINLINE_FUNCTION void operator()(typename Tags::TagDdagger,
+                                              const Indices... Idcs) const {
+    operator()(typename Tags::TagHoe(), Idcs...);
+    this->s_out(Idcs...) -= this->s_in_same_parity(Idcs...);
+    this->s_out(Idcs...) *= -1;
+  }
+  template <typename... Indices>
+  KOKKOS_FORCEINLINE_FUNCTION void operator()(typename Base::Tag1minusHeo,
+                                              const Indices... Idcs) const {
+    operator()(typename Tags::TagHeo(), Idcs...);
+    this->s_out(Idcs...) -= this->s_in_same_parity(Idcs...);
+    this->s_out(Idcs...) *= -1;
+  }
+  template <typename... Indices>
+  KOKKOS_FORCEINLINE_FUNCTION void operator()(typename Base::Tag1minusHoe,
+                                              const Indices... Idcs) const {
+    operator()(typename Tags::TagHoe(), Idcs...);
+    this->s_out(Idcs...) -= this->s_in_same_parity(Idcs...);
+    this->s_out(Idcs...) *= -1;
   }
 };
 

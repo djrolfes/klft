@@ -46,7 +46,7 @@ class Solver {
       DeviceFermionFieldTypeTraits<DSpinorFieldType>::RepDim;
   static_assert((rank == DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank) &&
                 (Nc == DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc));
-  using DiracOp = DiracOperator<DiracOpT, DSpinorFieldType, DGaugeFieldType>;
+  using DiracOp = DiracOpT<DSpinorFieldType, DGaugeFieldType>;
   using Derived = _Derived<DiracOpT, DSpinorFieldType, DGaugeFieldType>;
 
   // using DiracOperator =
@@ -57,7 +57,7 @@ class Solver {
  public:
   using SpinorFieldType = typename DSpinorFieldType::type;
   using GaugeFieldType = typename DGaugeFieldType::type;
-  const SpinorFieldType b;
+  SpinorFieldType b;
   SpinorFieldType x;  // Solution to DiracOP*x=b
   DiracOp dirac_op;
   Solver(const SpinorFieldType& b, SpinorFieldType& x, const DiracOp& dirac_op)
@@ -65,6 +65,27 @@ class Solver {
   template <typename Tag>
   void solve(const SpinorFieldType& x0, const real_t& tol) {
     static_cast<Derived*>(this)->template solve_int<Tag>(x0, tol);
+  }
+
+  /// @brief Constructs the b vector when using an Even/Odd Precondition Field,
+  /// assumes that the field saved in b is the even part of the Vector b
+  /// @param odd_b
+  void construct_problem(const SpinorFieldType& odd_b) {
+    auto out_even_from_odd_b = dirac_op.template apply<Tags::TagHeo>(odd_b);
+    axpy<DSpinorFieldType>(1.0, out_even_from_odd_b, this->b, this->b);
+  }
+
+  /// @brief Reconstructs the Odd part of the solution
+  /// @param out
+  void reconstruct_solution(const SpinorFieldType& odd_b,
+                            SpinorFieldType& out) {
+    dirac_op.template apply<Tags::TagHoe>(this->x, out);
+    axpy<DSpinorFieldType>(1.0, odd_b, out, out);
+  }
+  SpinorFieldType reconstruct_solution(const SpinorFieldType& odd_b) {
+    auto out = SpinorFieldType(x.dimensions, complex_t(0.0, 0.0));
+    reconstruct_solution(odd_b, out);
+    return out;
   }
 };
 // // Deduction guide for Solver
@@ -108,6 +129,7 @@ class CGSolver
     SpinorFieldType temp_D{dims, complex_t(0.0, 0.0)};
 
     Kokkos::deep_copy(xk.field, x0.field);  // x_0
+
     axpy<DSpinorFieldType>(-1, this->dirac_op.template apply<Tag>(xk), this->b,
                            rk);
 

@@ -34,7 +34,7 @@ int main(int argc, char* argv[]) {
     setVerbosity(5);
     printf("%i", KLFT_VERBOSITY);
     printf("\n=== Testing DiracOperator SU(3)  ===\n");
-    printf("\n= Testing hermiticity =\n");
+    printf("\n= Testing Hoe =\n");
     index_t L0 = 32, L1 = 32, L2 = 32, L3 = 32;
     diracParams<4> params(IndexArray<4>{L0 / 2, L1, L2, L3}, 0.156);
     diracParams<4> params_normal(IndexArray<4>{L0, L1, L2, L3}, 0.156);
@@ -88,7 +88,7 @@ int main(int argc, char* argv[]) {
 
     real_t diracTime = std::numeric_limits<real_t>::max();
     // for (size_t i = 0; i < count; i++) {
-    auto out_eo = D_pre.template apply<Tags::TagDDdagger>(u_for_eo);
+    auto out_eo = D_pre.template apply<Tags::TagHoe>(u_for_eo);
     auto diracTime1 = std::min(diracTime, timer.seconds());
     printf("D^ Precondition Kernel Time:     %11.4e s\n", diracTime1);
     timer.reset();
@@ -123,11 +123,11 @@ int main(int argc, char* argv[]) {
         DeviceGaugeFieldType<4, 2>>
         D_pre_alt(gauge, params);
     deviceSpinorField<2, 4> u_eo_temp(L0 / 2, L1, L2, L3, 0);
-    deviceSpinorField<2, 4> out_comp(L0 / 2, L1, L2, L3, 0);
-    D_pre_alt.template apply<Tags::TagDDdagger>(u_for_eo, u_eo_temp, out_comp);
+    // deviceSpinorField<2, 4> out_comp(L0 / 2, L1, L2, L3, 0);
+    auto out_comp = D_pre_alt.template apply<Tags::TagSe>(u_for_eo);
     // build it manually:
-    auto temp1 = D_pre.template apply<Tags::TagDdagger>(u_for_eo);
-    auto temp2 = D_pre.template apply<Tags::TagD>(temp1);
+    auto temp1 = D_pre.template apply<Tags::TagHoe>(u_for_eo);
+    auto temp2 = D_pre.template apply<Tags::TagHeo>(temp1);
     auto out_man =
         axpy<DeviceSpinorFieldType<4, 2, 4, SpinorFieldKind::Standard,
                                    SpinorFieldLayout::Checkerboard>>(-1, temp2,
@@ -156,13 +156,13 @@ int main(int argc, char* argv[]) {
                       const index_t i3, real_t& lsum) {
           // auto idx = index_full_to_half(Kokkos::Array<int, 4>{i0, i1, i2,
           // i3}); if (idx.second == 0) {
-          lsum = sqnorm(out_man(i0, i1, i2, i3)) -
-                 //  sqnorm(u_for_normal(i0, i1, i2, i3)) -
-                 sqnorm(out_comp(i0, i1, i2, i3));
+          lsum = sqnorm(out_man(i0, i1, i2, i3) -
+                        //  sqnorm(u_for_normal(i0, i1, i2, i3)) -
+                        out_comp(i0, i1, i2, i3));
           // }
         },
         Kokkos::Sum<real_t>(result));
-    printf("Total difference comp to manually: %.16f\n", result);
+    printf("Total difference comp to EO manually: %.16f\n", result);
     result = 0;
     Kokkos::parallel_reduce(
         "Reduction", Policy<4>({0, 0, 0, 0}, {L0, L1, L2, L3}),
@@ -182,7 +182,7 @@ int main(int argc, char* argv[]) {
     Kokkos::Random_XorShift64_Pool<> random_pool2(/*seed=*/1233464);
 
     deviceSpinorField<2, 4> x(L0 / 2, L1, L2, L3, random_pool2, 0, 1.0 / 1.41);
-    auto temp_x = D_pre_alt.template apply<Tags::TagDDdagger>(x);
+    auto temp_x = D_pre_alt.template apply<Tags::TagSe>(x);
     auto res = spinor_dot_product<4, 2, 4>(x, temp_x);
     printf("Positivity test: %f+i%f.\n ", res.real(), res.imag());
     printf("Check for hermicity:\n\n");
@@ -193,8 +193,8 @@ int main(int argc, char* argv[]) {
     norm = Kokkos::sqrt(norm);
     deviceSpinorField<2, 4> Mu(L0 / 2, L1, L2, L3, complex_t(0.0, 0.0));
     deviceSpinorField<2, 4> Mv(L0 / 2, L1, L2, L3, complex_t(0.0, 0.0));
-    D_pre_alt.template apply<Tags::TagDDdagger>(u, Mu);
-    D_pre_alt.template apply<Tags::TagDDdagger>(v, Mv);
+    D_pre_alt.template apply<Tags::TagSe>(u, Mu);
+    D_pre_alt.template apply<Tags::TagSe>(v, Mv);
     printf("Calculate Scalarproducts...\n");
     auto r1 = spinor_dot_product<4, 2, 4>(u, Mv);
     auto r2 = spinor_dot_product<4, 2, 4>(Mu, v);

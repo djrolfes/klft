@@ -38,7 +38,7 @@ int main(int argc, char* argv[]) {
     printf("\n=== Testing DiracOperator SU(3)  ===\n");
     printf("\n= Testing hermiticity =\n");
     index_t L0 = 32, L1 = 32, L2 = 32, L3 = 32;
-    diracParams<4> params(IndexArray<4>{L0 / 2, L1, L2, L3}, 0.135);
+    diracParams<4> params(IndexArray<4>{L0 / 2, L1, L2, L3}, 0.156);
     printf("Lattice Dimension %ix%ix%ix%i \n", L0, L1, L2, L3);
     printf("Generate SpinorFields...\n");
     using DSpinorFieldType =
@@ -59,32 +59,43 @@ int main(int argc, char* argv[]) {
     deviceGaugeField<4, N> gauge(L0, L1, L2, L3, random_pool1, 1);
     EOWilsonDiracOperator<DSpinorFieldType, DeviceGaugeFieldType<4, N>> D_pre(
         gauge, params);
+    EOWilsonDiracOperator<DSpinorFieldType, DeviceGaugeFieldType<4, N>> D_pre2(
+        gauge, params);
 
     // apply DiracOperators to later verify solution:
-    auto even_b = D_pre.template apply<Tags::TagHeo>(odd_true);
-    axpy<DSpinorFieldType>(-1, even_b, even_true, even_b);
+    D_pre.s_in_same_parity = even_true;
+    auto even_b = D_pre.template apply<Tags::TagD>(odd_true);
+    // axpy<DSpinorFieldType>(-1, even_b, even_true, even_b);
 
-    auto odd_b = D_pre.template apply<Tags::TagHoe>(even_true);
-    axpy<DSpinorFieldType>(-1, odd_b, odd_true, odd_b);
+    D_pre.s_in_same_parity = odd_true;
+    auto odd_b = D_pre.template apply<Tags::TagDdagger>(even_true);
 
-    // Construct RHS of Prblem to solve
-    auto out_even_from_odd_b = D_pre.template apply<Tags::TagHeo>(odd_b);
-    axpy<DSpinorFieldType>(1.0, out_even_from_odd_b, even_b,
-                           even_b);  // maybe here the other sign
+    // D_pre.s_in_same_parity = even_b_1;
+    // auto even_b = D_pre.template apply<Tags::TagD>(odd_b_1);
 
-    // Solver fields
-    SpinorFieldType x(L0 / 2, L1, L2, L3, complex_t(0.0, 0.0));
-    SpinorFieldType x0(L0 / 2, L1, L2, L3, complex_t(0.0, 0.0));
+    // D_pre.s_in_same_parity = odd_b_1;
+    // auto odd_b = D_pre.template apply<Tags::TagD>(even_b_1);
+    // axpy<DSpinorFieldType>(-1, odd_b, odd_true, odd_b);
     // Construct Solver:
+    SpinorFieldType x(L0 / 2, L1, L2, L3, complex_t(0.0, 0.0));
+
     CGSolver<EOWilsonDiracOperator, DSpinorFieldType,
              DeviceGaugeFieldType<4, N>>
         solver(even_b, x, D_pre);
+    // Construct RHS of Prblem to solve
+    // auto out_even_from_odd_b = D_pre.template apply<Tags::TagHeo>(odd_b);
+    // axpy<DSpinorFieldType>(1.0, out_even_from_odd_b, even_b,
+    //                        even_b);  // maybe here the other sign
+    solver.construct_problem(odd_b);
+    // Solver fields
+    SpinorFieldType x0(L0 / 2, L1, L2, L3, complex_t(0.0, 0.0));
+
     printf("Apply Solver...\n");
     auto eps = 1e-13;
     Kokkos::Timer timer;
 
     real_t diracTime = std::numeric_limits<real_t>::max();
-    solver.solve<Tags::TagDDdagger>(x0, eps);
+    solver.solve<Tags::TagSe>(x0, eps);
     auto diracTime1 = std::min(diracTime, timer.seconds());
     printf("Solver Time:     %11.4e s\n", diracTime1);
     timer.reset();
@@ -103,8 +114,7 @@ int main(int argc, char* argv[]) {
     printf("Is the residual norm smaller than %.2e ? %i\n", eps,
            res_norm / norm < eps);
     printf("Back substitution calc...\n ");
-    auto temp = D_pre.template apply<Tags::TagHoe>(solver.x);
-    auto psi_odd = axpy<DSpinorFieldType>(1, odd_b, temp);
+    auto psi_odd = solver.reconstruct_solution(odd_b);
     auto res_norm_odd =
         spinor_norm<4, N, 4>(axpy<DSpinorFieldType>(-1, psi_odd, odd_true));
     auto norm_odd = spinor_norm<4, N, 4>(odd_true);
