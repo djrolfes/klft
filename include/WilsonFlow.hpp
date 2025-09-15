@@ -83,41 +83,47 @@ template <typename DGaugeFieldType> struct WilsonFlow {
   template <typename indexType>
   KOKKOS_INLINE_FUNCTION void stepW1(indexType i0, indexType i1, indexType i2,
                                      indexType i3, index_t mu) const {
-    SUN<Nc> Z0_SUN = (field.field(i0, i1, i2, i3, mu)) *
-                     (tmp_staple.field(i0, i1, i2, i3, mu));
-    SUNAdj<Nc> Z0 = -params.eps * traceT(Z0_SUN) * (Nc / params.beta);
+    // SUN<Nc> Z0_SUN = (field.field(i0, i1, i2, i3, mu)) *
+    //                  (tmp_staple.field(i0, i1, i2, i3, mu));
+    SUN<Nc> Z0_SUN = (tmp_staple.field(i0, i1, i2, i3, mu) *
+                      conj(field.field(i0, i1, i2, i3, mu)));
+    SUNAdj<Nc> Z0 = traceT(Z0_SUN); //* (Nc / params.beta);
     tmp_Z(i0, i1, i2, i3, mu) = Z0; // does this need to be deep copied?
     field.field(i0, i1, i2, i3, mu) =
-        expoSUN(Z0 * 0.25) * field.field(i0, i1, i2, i3, mu);
+        expoSUN(Z0 * 0.25 * params.eps) * field.field(i0, i1, i2, i3, mu);
     // restoreSUN(field.field(i0, i1, i2, i3, mu));
   }
 
   template <typename indexType>
   KOKKOS_INLINE_FUNCTION void stepW2(indexType i0, indexType i1, indexType i2,
                                      indexType i3, index_t mu) const {
-    SUN<Nc> Z1_SUN = (field.field(i0, i1, i2, i3, mu)) *
-                     (tmp_staple.field(i0, i1, i2, i3, mu));
-    SUNAdj<Nc> Z1 = -params.eps * traceT(Z1_SUN) * (Nc / params.beta);
+    // SUN<Nc> Z1_SUN = (field.field(i0, i1, i2, i3, mu)) *
+    //                  (tmp_staple.field(i0, i1, i2, i3, mu));
+    SUN<Nc> Z1_SUN = (tmp_staple.field(i0, i1, i2, i3, mu) *
+                      conj(field.field(i0, i1, i2, i3, mu)));
+    SUNAdj<Nc> Z1 = traceT(Z1_SUN); // * (Nc / params.beta);
     SUNAdj<Nc> Z0 = tmp_Z(i0, i1, i2, i3, mu);
     Z1 = Z1 * static_cast<real_t>(8.0 / 9.0) -
          Z0 * static_cast<real_t>(17.0 / 36.0);
     tmp_Z(i0, i1, i2, i3, mu) = Z1;
     field.field(i0, i1, i2, i3, mu) =
-        expoSUN(Z1) * field.field(i0, i1, i2, i3, mu);
+        expoSUN(Z1 * params.eps) * field.field(i0, i1, i2, i3, mu);
     // restoreSUN(field.field(i0, i1, i2, i3, mu));
   }
 
   template <typename indexType>
   KOKKOS_INLINE_FUNCTION void stepV(indexType i0, indexType i1, indexType i2,
                                     indexType i3, index_t mu) const {
-    SUN<Nc> Z2_SUN = (field.field(i0, i1, i2, i3, mu)) *
-                     (tmp_staple.field(i0, i1, i2, i3, mu));
-    SUNAdj<Nc> Z2 = -params.eps * traceT(Z2_SUN) * (Nc / params.beta);
+    // SUN<Nc> Z2_SUN = (field.field(i0, i1, i2, i3, mu)) *
+    //                  (tmp_staple.field(i0, i1, i2, i3, mu));
+    SUN<Nc> Z2_SUN = (tmp_staple.field(i0, i1, i2, i3, mu) *
+                      conj(field.field(i0, i1, i2, i3, mu)));
+    SUNAdj<Nc> Z2 = traceT(Z2_SUN); // * (Nc / params.beta);
     SUNAdj<Nc> Z_old = tmp_Z(i0, i1, i2, i3, mu);
     Z2 = (Z2 * 0.75 - Z_old);
     // SUNAdj<Nc> tmp = (Z2);
     field.field(i0, i1, i2, i3, mu) =
-        expoSUN(Z2) * field.field(i0, i1, i2, i3, mu);
+        expoSUN(Z2 * params.eps) * field.field(i0, i1, i2, i3, mu);
     // restoreSUN(field.field(i0, i1, i2, i3, mu));
   }
 
