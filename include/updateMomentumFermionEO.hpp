@@ -47,7 +47,12 @@ class UpdateMomentumWilson : public UpdateMomentum {
                     Nc == DeviceFermionFieldTypeTraits<DSpinorFieldType>::Nc,
                 "Rank and Nc must match between gauge, adjoint, and fermion "
                 "field types.");
-  using DiracOp = DiracOpT<DSpinorFieldType, DGaugeFieldType>;
+  static_assert(DeviceFermionFieldTypeTraits<DSpinorFieldType>::Layout ==
+                    SpinorFieldLayout::Checkerboard,
+                "When using Even/odd preconditioning "
+                "the spinor field layout must be "
+                "Checkerboard");
+  using DiracOp = DiracOperator<DiracOpT, DSpinorFieldType, DGaugeFieldType>;
   using Solver = _Solver<DiracOpT, DSpinorFieldType, DGaugeFieldType>;
 
  public:
@@ -60,8 +65,10 @@ class UpdateMomentumWilson : public UpdateMomentum {
   // \phi = D R, where R gaussian random field.
   FermionField phi;
 
+  FermionField y;
   FermionField chi;
-  FermionField chi_alt;
+  FermionField rho;
+  FermionField sigma;
   const real_t tol;
   real_t eps;
 
@@ -98,30 +105,74 @@ class UpdateMomentumWilson : public UpdateMomentum {
   // U_\mu(z)^\dagger\delta_{z,y} <- Have to Check this
   template <typename... Indices>
   KOKKOS_FORCEINLINE_FUNCTION void operator()(const Indices... Idcs) const {
+    Kokkos::Array<size_t, rank> idx{Idcs...};
+    // compute parity of the site:
+    int parity = 0;
 #pragma unroll
-    for (size_t mu = 0; mu < rank; ++mu) {
-      // X = chi , Y = chi_alt
-
-      auto xp = shift_index_plus_bc<rank, size_t>(
-          Kokkos::Array<size_t, rank>{Idcs...}, mu, 1, 3, -1,
-          this->params.dimensions);
-      auto X_proj = project(mu, -1, this->chi(xp.first));
-      // minus sign in the projector comes from the derivative of D
-      auto Xplus = (-1 * this->params.kappa * xp.second) * X_proj;
-      auto temp1 = reconstruct(mu, -1, gauge_field(Idcs..., mu) * Xplus);
-      auto deriv = temp1 * (conj(this->chi_alt(Idcs...)));
-
-      auto Y_proj = project_alt(mu, 1, conj(this->chi_alt(xp.first)));
-      auto YPlus = (this->params.kappa * xp.second) * Y_proj;
-      auto temp3 =
-          reconstruct_alt(mu, 1, YPlus * conj(this->gauge_field(Idcs..., mu)));
-      deriv += this->chi(Idcs...) * temp3;
-
-      momentum(Idcs..., mu) -= 2 * eps *
-                               traceT(traceLessAntiHermitian(
-
-                                   deriv));
+    for (index_t i = 0; i < rank; ++i) {
+      parity += idx[i];
     }
+    parity &= 1;
+    auto x_half = index_full_to_half(idx) switch (parity) {
+      case 0:  // Even
+        for (size_t mu = 0; mu < rank; ++mu) {
+          // X = chi , Y = chi_alt
+
+          auto xp = shift_index_plus_bc<rank, size_t>(
+              Kokkos::Array<size_t, rank>{Idcs...}, mu, 1, 3, -1,
+              this->params.dimensions);  // odd
+          auto X_proj = project(mu, -1, this->sigma(xp.first));
+          // minus sign in the projector comes from the derivative of D
+          auto Xplus =
+              (-1 * this->params.kappa * this->params.kappa * xp.second) *
+              X_proj;
+          auto temp1 = reconstruct(mu, -1, gauge_field(Idcs..., mu) * Xplus);
+          auto deriv = temp1 * (conj(this->chi(Idcs...)));
+
+          auto Y_proj = project_alt(mu, -1, conj(this->rho(xp.first)));
+          auto YPlus =
+              (this->params.kappa * this->params.kappa * xp.second) * Y_proj;
+          auto temp3 = reconstruct_alt(
+              mu, -1, YPlus * conj(this->gauge_field(Idcs..., mu)));
+          deriv += this->y(Idcs...) * temp3;
+
+          momentum(Idcs..., mu) -= 2 * eps *
+                                   traceT(traceLessAntiHermitian(
+
+                                       deriv));
+        }
+        break;
+      case 1:  // Odd:
+        for (size_t mu = 0; mu < rank; ++mu) {
+          // X = chi , Y = chi_alt
+
+          auto xp = shift_index_plus_bc<rank, size_t>(
+              Kokkos::Array<size_t, rank>{Idcs...}, mu, 1, 3, -1,
+              this->params.dimensions);  // even
+          auto X_proj = project(mu, -1, this->y(xp.first));
+          // minus sign in the projector comes from the derivative of D
+          auto Xplus = (-1 * this->params.kappa * this->params.kappa *
+                        this->params.kappa * xp.second) *
+                       X_proj;
+          auto temp1 = reconstruct(mu, -1, gauge_field(Idcs..., mu) * Xplus);
+          auto deriv = temp1 * (conj(this->rho(Idcs...)));
+
+          auto Y_proj = project_alt(mu, -1, conj(this->chi(xp.first)));
+          auto YPlus =
+              (this->params.kappa * this->params.kappa * xp.second) * Y_proj;
+          auto temp3 = reconstruct_alt(
+              mu, -1, YPlus * conj(this->gauge_field(Idcs..., mu)));
+          deriv += this->sigma(Idcs...) * temp3;
+
+          momentum(Idcs..., mu) -= 2 * eps *
+                                   traceT(traceLessAntiHermitian(
+
+                                       deriv));
+        }
+        break;
+    }
+    // X = chi , Y = chi_alt
+    // Checkboard 0:
   }
 
   void update(const real_t step_size) override {
@@ -129,8 +180,9 @@ class UpdateMomentumWilson : public UpdateMomentum {
 
     IndexArray<rank> start;
     DiracOp D(gauge_field, this->params);
-    DiracOp D1(gauge_field, this->params);
+
     FermionField x(this->params.dimensions, complex_t(0.0, 0.0));
+    FermionField x2(this->params.dimensions, complex_t(0.0, 0.0));
     FermionField x0(this->params.dimensions, complex_t(0.0, 0.0));
 
     Solver solver(this->phi, x, D);
@@ -138,10 +190,17 @@ class UpdateMomentumWilson : public UpdateMomentum {
       printf("Solving insde UpdateMomentumWilson:");
     }
 
-    solver.template solve<Tags::TagDdaggerD>(x0, this->tol);
-    this->chi = solver.x;
-    this->chi_alt = D1.template apply<Tags::TagD>(this->chi);
+    solver.template solve<Tags::TagSe>(x0, this->tol);
 
+    this->y = solver.x;  // y = S_e^-1 phi
+    solver.x = x2;
+    solver.b = this->y;
+    solver
+        .template solve<Tags::TagSe>(
+            x0, this->tol)      // solve chi = S_e^-1 y = S_e^-1 S_e^-1 phi
+        this->chi = solver2.x;  // X
+    D.template apply<Tags::TagHoe>(this->chi, this->roh);
+    D.template apply<Tags::TagHoe>(this->y, this->sigma);
     for (size_t i = 0; i < rank; ++i) {
       start[i] = 0;
     }

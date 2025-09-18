@@ -37,17 +37,14 @@ using RNGType = Kokkos::Random_XorShift64_Pool<Kokkos::DefaultExecutionSpace>;
 namespace klft {
 
 // Still need to add check for different Dirac Operators
-template <typename DGaugeFieldType,
-          typename DAdjFieldType,
+template <typename DGaugeFieldType, typename DAdjFieldType,
           typename DSpinorFieldType>
 std::shared_ptr<Integrator> createIntegrator(
-    typename DGaugeFieldType::type& g_in,
-    typename DAdjFieldType::type& a_in,
+    typename DGaugeFieldType::type& g_in, typename DAdjFieldType::type& a_in,
     typename DSpinorFieldType::type& s_in,
     const Integrator_Params& integratorParams,
     const GaugeMonomial_Params& gaugeMonomialParams,
-    const FermionMonomial_Params& fermionParams,
-    const int& resParsef) {
+    const FermionMonomial_Params& fermionParams, const int& resParsef) {
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
   static_assert(isDeviceAdjFieldType<DAdjFieldType>::value);
   constexpr static size_t rank =
@@ -316,7 +313,9 @@ int build_and_run_HMC(const std::string& input_file,
       } else if (hmcParams.Nc == 2) {
         using DGaugeFieldType = DeviceGaugeFieldType<4, 2>;
         using DAdjFieldType = DeviceAdjFieldType<4, 2>;
-        using DSpinorFieldType = DeviceSpinorFieldType<4, 2, 4>;
+        using DSpinorFieldType =
+            DeviceSpinorFieldType<4, 2, 4, SpinorFieldKind::Standard,
+                                  SpinorFieldLayout::Checkerboard>;
         typename DGaugeFieldType::type g_4_SU2(hmcParams.L0, hmcParams.L1,
                                                hmcParams.L2, hmcParams.L3,
                                                identitySUN<2>());

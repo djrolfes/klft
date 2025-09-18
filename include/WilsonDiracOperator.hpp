@@ -150,7 +150,7 @@ class EOWilsonDiracOperator
   template <typename... Indices>
   KOKKOS_FORCEINLINE_FUNCTION void operator()(typename Tags::TagHeo,
                                               const Indices... Idcs) const {
-    Spinor<Nc, RepDim> temp;
+    Spinor<Nc, RepDim> temp{};
     Kokkos::Array<size_t, rank> idx{Idcs...};
     auto full_idx = index_half_to_full(idx, 0);
 #pragma unroll
@@ -178,7 +178,7 @@ class EOWilsonDiracOperator
   template <typename... Indices>
   KOKKOS_FORCEINLINE_FUNCTION void operator()(typename Tags::TagHoe,
                                               const Indices... Idcs) const {
-    Spinor<Nc, RepDim> temp;
+    Spinor<Nc, RepDim> temp{};
     Kokkos::Array<size_t, rank> idx{Idcs...};
     auto full_idx = index_half_to_full(idx, 1);
 #pragma unroll

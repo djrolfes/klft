@@ -35,14 +35,14 @@ int main(int argc, char* argv[]) {
     const int verbosity = std::getenv("KLFT_VERBOSITY")
                               ? std::atoi(std::getenv("KLFT_VERBOSITY"))
                               : 10;
-    setVerbosity(5);
+    setVerbosity(2);
     printf("%i", KLFT_VERBOSITY);
     const size_t N = 3;
     printf("\n=== Testing DiracOperator SU(%zu)  ===\n", N);
     printf("\n= Testing hermiticity =\n");
     index_t L0 = 32, L1 = 32, L2 = 32, L3 = 32;
     IndexArray<4> dims = {L0, L1, L2, L3};
-    diracParams<4> param(dims, 0.135);
+    diracParams<4> param(dims, 0.156);
 
     printf("Lattice Dimension %ix%ix%ix%i \n", L0, L1, L2, L3);
     printf("Generate SpinorFields...\n");
@@ -53,8 +53,8 @@ int main(int argc, char* argv[]) {
     deviceSpinorField<N, 4> x0(L0, L1, L2, L3, complex_t(0.0, 0.0));
     deviceGaugeField<4, N> gauge(L0, L1, L2, L3, random_pool, 1);
     printf("Instantiate DiracOperator...\n");
-    DiracOperator<WilsonDiracOperator, DeviceSpinorFieldType<4, N, 4>,
-                  DeviceGaugeFieldType<4, N>>
+    WilsonDiracOperator<DeviceSpinorFieldType<4, N, 4>,
+                        DeviceGaugeFieldType<4, N>>
         D(gauge, param);
     printf("Apply dirac Operator...\n");
     // print_spinor(u(0, 0, 0, 0));
@@ -64,7 +64,7 @@ int main(int argc, char* argv[]) {
     printf("QQ^\\dagger Kernel Time:     %11.4e s\n", diracTime1);
     // print_spinor(test(0, 0, 0, 0), "Spinor to solve before solving");
     printf("Initialize Solver...\n");
-    CGSolver<WilsonDiracOperator, DeviceSpinorFieldType<4, N, 4>,
+    BiCGStab<WilsonDiracOperator, DeviceSpinorFieldType<4, N, 4>,
              DeviceGaugeFieldType<4, N>>
         solver(test, x, D);
 

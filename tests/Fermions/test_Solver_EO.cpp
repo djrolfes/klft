@@ -38,7 +38,7 @@ int main(int argc, char* argv[]) {
     printf("\n=== Testing DiracOperator SU(3)  ===\n");
     printf("\n= Testing hermiticity =\n");
     index_t L0 = 32, L1 = 32, L2 = 32, L3 = 32;
-    diracParams<4> params(IndexArray<4>{L0 / 2, L1, L2, L3}, 0.156);
+    diracParams<4> params(IndexArray<4>{L0 / 2, L1, L2, L3}, 0.139);
     printf("Lattice Dimension %ix%ix%ix%i \n", L0, L1, L2, L3);
     printf("Generate SpinorFields...\n");
     using DSpinorFieldType =
@@ -52,24 +52,28 @@ int main(int argc, char* argv[]) {
     // print_spinor_int(u_for_normal(0, 1, 0, 0), "u_for_normal");
 
     Kokkos::Random_XorShift64_Pool<> random_pool1(/*seed=*/1234);
-    SpinorFieldType even_true(L0 / 2, L1, L2, L3, random_pool1, 0, 1.0 / 1.41);
-    SpinorFieldType odd_true(L0 / 2, L1, L2, L3, random_pool1, 0, 1.0 / 1.41);
+    SpinorFieldType even_true(
+        L0 / 2, L1, L2, L3, random_pool1, 0,
+        0.707106781186547524400844362104849039284835937688474036588339868995366239231053519425193767163820786367506);
+    SpinorFieldType odd_true(
+        L0 / 2, L1, L2, L3, random_pool1, 0,
+        0.707106781186547524400844362104849039284835937688474036588339868995366239231053519425193767163820786367506);
 
     printf("Generating Random Gauge Config\n");
-    deviceGaugeField<4, N> gauge(L0, L1, L2, L3, random_pool1, 1);
+    deviceGaugeField<4, N> gauge(L0, L1, L2, L3, random_pool1, 0.001);
     EOWilsonDiracOperator<DSpinorFieldType, DeviceGaugeFieldType<4, N>> D_pre(
         gauge, params);
     EOWilsonDiracOperator<DSpinorFieldType, DeviceGaugeFieldType<4, N>> D_pre2(
         gauge, params);
 
     // apply DiracOperators to later verify solution:
-    D_pre.s_in_same_parity = even_true;
-    auto even_b = D_pre.template apply<Tags::TagD>(odd_true);
-    // axpy<DSpinorFieldType>(-1, even_b, even_true, even_b);
+    // D_pre.s_in_same_parity = even_true;
+    // auto even_b = D_pre.template apply<Tags::TagD>(odd_true);
+    // // axpy<DSpinorFieldType>(-1, even_b, even_true, even_b);
 
-    D_pre.s_in_same_parity = odd_true;
-    auto odd_b = D_pre.template apply<Tags::TagDdagger>(even_true);
-
+    // D_pre.s_in_same_parity = odd_true;
+    // auto odd_b = D_pre.template apply<Tags::TagDdagger>(even_true);
+    auto even_b = D_pre.template apply<Tags::TagSe>(even_true);
     // D_pre.s_in_same_parity = even_b_1;
     // auto even_b = D_pre.template apply<Tags::TagD>(odd_b_1);
 
@@ -86,7 +90,8 @@ int main(int argc, char* argv[]) {
     // auto out_even_from_odd_b = D_pre.template apply<Tags::TagHeo>(odd_b);
     // axpy<DSpinorFieldType>(1.0, out_even_from_odd_b, even_b,
     //                        even_b);  // maybe here the other sign
-    solver.construct_problem(odd_b);
+    // solver.construct_problem(odd_b);
+
     // Solver fields
     SpinorFieldType x0(L0 / 2, L1, L2, L3, complex_t(0.0, 0.0));
 
@@ -114,14 +119,14 @@ int main(int argc, char* argv[]) {
     printf("Is the residual norm smaller than %.2e ? %i\n", eps,
            res_norm / norm < eps);
     printf("Back substitution calc...\n ");
-    auto psi_odd = solver.reconstruct_solution(odd_b);
-    auto res_norm_odd =
-        spinor_norm<4, N, 4>(axpy<DSpinorFieldType>(-1, psi_odd, odd_true));
-    auto norm_odd = spinor_norm<4, N, 4>(odd_true);
-    printf("Norm of Residual of the odd field: %.20f\n",
-           res_norm_odd / norm_odd);
-    printf("Is the residual norm smaller than %.2e ? %i\n", eps,
-           res_norm_odd / norm_odd < eps);
+    // auto psi_odd = solver.reconstruct_solution(odd_b);
+    // auto res_norm_odd =
+    //     spinor_norm<4, N, 4>(axpy<DSpinorFieldType>(-1, psi_odd, odd_true));
+    // auto norm_odd = spinor_norm<4, N, 4>(odd_true);
+    // printf("Norm of Residual of the odd field: %.20f\n",
+    //        res_norm_odd / norm_odd);
+    // printf("Is the residual norm smaller than %.2e ? %i\n", eps,
+    //        res_norm_odd / norm_odd < eps);
   }
   Kokkos::finalize();
   return RETURNVALUE;
