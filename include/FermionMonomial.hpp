@@ -53,10 +53,10 @@ class FermionMonomial : public Monomial<DGaugeFieldType, DAdjFieldType> {
 
  public:
   FermionField& phi;
-  const diracParams<rank> params;
+  const diracParams params;
   const real_t tol;
   RNGType rng;
-  FermionMonomial(FermionField& _phi, const diracParams<rank>& params_,
+  FermionMonomial(FermionField& _phi, const diracParams& params_,
                   const real_t& tol_, RNGType& RNG_, unsigned int _time_scale)
       : Monomial<DGaugeFieldType, DAdjFieldType>(_time_scale),
         phi(_phi),

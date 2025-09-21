@@ -124,7 +124,7 @@ class CGSolver
 
   template <typename Tag>
   void solve_int(const SpinorFieldType& x0, const real_t& tol) {
-    auto dims = x0.dimensions;
+    auto dims = this->x.dimensions;
     SpinorFieldType xk(dims, complex_t(0.0, 0.0));
     SpinorFieldType rk{dims, complex_t(0.0, 0.0)};
     SpinorFieldType apk{dims, complex_t(0.0, 0.0)};

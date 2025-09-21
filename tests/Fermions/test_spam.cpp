@@ -36,8 +36,8 @@ int main(int argc, char* argv[]) {
     printf("\n=== Testing DiracOperator SU(3)  ===\n");
     printf("\n= Testing Hoe =\n");
     index_t L0 = 32, L1 = 32, L2 = 32, L3 = 32;
-    diracParams<4> params(IndexArray<4>{L0 / 2, L1, L2, L3}, 0.156);
-    diracParams<4> params_normal(IndexArray<4>{L0, L1, L2, L3}, 0.156);
+    diracParams params(0.156);
+    diracParams params_normal(0.156);
     printf("Lattice Dimension %ix%ix%ix%i \n", L0, L1, L2, L3);
     printf("Generate SpinorFields...\n");
 

@@ -38,7 +38,7 @@ int main(int argc, char* argv[]) {
     printf("\n=== Testing DiracOperator SU(3)  ===\n");
     printf("\n= Testing hermiticity =\n");
     index_t L0 = 32, L1 = 32, L2 = 32, L3 = 32;
-    diracParams<4> params(IndexArray<4>{L0 / 2, L1, L2, L3}, 0.139);
+    diracParams params(0.13);
     printf("Lattice Dimension %ix%ix%ix%i \n", L0, L1, L2, L3);
     printf("Generate SpinorFields...\n");
     using DSpinorFieldType =

@@ -33,7 +33,7 @@ int main(int argc, char* argv[]) {
     printf("\n=== Testing DiracOperator SU(3)  ===\n");
     printf("\n= Testing hermiticity =\n");
     index_t L0 = 4, L1 = 4, L2 = 4, L3 = 4;
-    diracParams<4> params(IndexArray<4>{L0, L1, L2, L3}, -0.5);
+    diracParams params(-0.5);
     printf("Lattice Dimension %ix%ix%ix%i \n", L0, L1, L2, L3);
     printf("Generate SpinorFields...\n");
 
@@ -142,7 +142,7 @@ int main(int argc, char* argv[]) {
     setVerbosity(5);
     printf("%i", KLFT_VERBOSITY);
     index_t L0 = 32, L1 = 32, L2 = 32, L3 = 32;
-    diracParams<4> params(IndexArray<4>{L0, L1, L2, L3}, 0.5);
+    diracParams params(0.5);
     printf("Lattice Dimension %ix%ix%ix%i", L0, L1, L2, L3);
     printf("\n= Testing hermiticity =\n");
 
@@ -238,7 +238,7 @@ int main(int argc, char* argv[]) {
     setVerbosity(5);
     printf("%i", KLFT_VERBOSITY);
     index_t L0 = 32, L1 = 32, L2 = 32, L3 = 32;
-    diracParams<4> params(IndexArray<4>{L0, L1, L2, L3}, 0.5);
+    diracParams params(0.5);
     printf("Lattice Dimension %ix%ix%ix%i", L0, L1, L2, L3);
     printf("\n= Testing hermiticity =\n");
 

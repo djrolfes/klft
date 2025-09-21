@@ -31,9 +31,9 @@ Fermion Monomial:
   fermion: "Wilson"
   solver: "CG"
   RepDim: 4
-  kappa: 0.15
+  kappa: 0.12
   tol: 1e-10
-
+  preconditioning: true
 GaugeObservableParams:
   measurement_interval: 5
   measure_plaquette: true

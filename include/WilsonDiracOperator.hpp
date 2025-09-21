@@ -26,9 +26,9 @@ class WilsonDiracOperator
 #pragma unroll
     for (size_t mu = 0; mu < rank; ++mu) {
       auto xm = shift_index_minus_bc<rank, size_t>(idx, mu, 1, 3, -1,
-                                                   this->params.dimensions);
+                                                   this->s_in.dimensions);
       auto xp = shift_index_plus_bc<rank, size_t>(idx, mu, 1, 3, -1,
-                                                  this->params.dimensions);
+                                                  this->s_in.dimensions);
       //   if (idx == Kokkos::Array<size_t, 4>({2, 2, 0, 0})) {
       //     printf("Normal D Op:\n");
       //     printf(
@@ -66,9 +66,9 @@ class WilsonDiracOperator
 #pragma unroll
     for (size_t mu = 0; mu < rank; ++mu) {
       auto xm = shift_index_minus_bc<rank, size_t>(idx, mu, 1, 3, -1,
-                                                   this->params.dimensions);
+                                                   this->s_in.dimensions);
       auto xp = shift_index_plus_bc<rank, size_t>(idx, mu, 1, 3, -1,
-                                                  this->params.dimensions);
+                                                  this->s_in.dimensions);
 
       auto temp1 =
           this->g_in(Idcs..., mu) * project(mu, 1, this->s_in(xp.first));
@@ -107,9 +107,9 @@ class HWilsonDiracOperator
 #pragma unroll
     for (size_t mu = 0; mu < rank; ++mu) {
       auto xm = shift_index_minus_bc<rank, size_t>(idx, mu, 1, 3, -1,
-                                                   this->params.dimensions);
+                                                   this->s_in.dimensions);
       auto xp = shift_index_plus_bc<rank, size_t>(idx, mu, 1, 3, -1,
-                                                  this->params.dimensions);
+                                                  this->s_in.dimensions);
 
       auto temp1 =
           this->g_in(Idcs..., mu) * project(mu, 1, this->s_in(xp.first));

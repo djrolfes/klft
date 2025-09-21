@@ -31,7 +31,7 @@ template <typename DSpinorFieldType, typename DGaugeFieldType,
           template <template <typename, typename> class DiracOpT, typename,
                     typename> class _Solver,
           template <typename, typename> class DiracOpT>
-class UpdateMomentumWilson : public UpdateMomentum {
+class UpdateMomentumWilsonEO : public UpdateMomentum {
   static_assert(isDeviceFermionFieldType<DSpinorFieldType>::value);
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
   static_assert(isDeviceAdjFieldType<DAdjFieldType>::value);
@@ -52,7 +52,7 @@ class UpdateMomentumWilson : public UpdateMomentum {
                 "When using Even/odd preconditioning "
                 "the spinor field layout must be "
                 "Checkerboard");
-  using DiracOp = DiracOperator<DiracOpT, DSpinorFieldType, DGaugeFieldType>;
+  using DiracOp = DiracOpT<DSpinorFieldType, DGaugeFieldType>;
   using Solver = _Solver<DiracOpT, DSpinorFieldType, DGaugeFieldType>;
 
  public:
@@ -61,7 +61,7 @@ class UpdateMomentumWilson : public UpdateMomentum {
   using AdjFieldType = typename DeviceAdjFieldType<rank, Nc>::type;
   GaugeFieldType gauge_field;
   AdjFieldType momentum;
-  const diracParams<rank> params;
+  const diracParams params;
   // \phi = D R, where R gaussian random field.
   FermionField phi;
 
@@ -72,19 +72,22 @@ class UpdateMomentumWilson : public UpdateMomentum {
   const real_t tol;
   real_t eps;
 
-  UpdateMomentumWilson() = delete;
-  ~UpdateMomentumWilson() = default;
+  UpdateMomentumWilsonEO() = delete;
+  ~UpdateMomentumWilsonEO() = default;
 
-  UpdateMomentumWilson(FermionField& phi_, GaugeFieldType& gauge_field_,
-                       AdjFieldType& adjoint_field_,
-                       const diracParams<rank>& params_, const real_t& tol_)
+  UpdateMomentumWilsonEO(FermionField& phi_, GaugeFieldType& gauge_field_,
+                         AdjFieldType& adjoint_field_,
+                         const diracParams& params_, const real_t& tol_)
       : UpdateMomentum(0),
         phi(phi_),
         gauge_field(gauge_field_),
         momentum(adjoint_field_),
         params(params_),
         eps(0.0),
-        tol(tol_) {}
+        tol(tol_) {
+    rho = FermionField(phi.dimensions, 0);
+    sigma = FermionField(phi.dimensions, 0);
+  }
 
   // Implemntation of the force correspondig to the Hermitian Wilson dirac
   // Operator
@@ -106,35 +109,36 @@ class UpdateMomentumWilson : public UpdateMomentum {
   template <typename... Indices>
   KOKKOS_FORCEINLINE_FUNCTION void operator()(const Indices... Idcs) const {
     Kokkos::Array<size_t, rank> idx{Idcs...};
-    // compute parity of the site:
-    int parity = 0;
-#pragma unroll
-    for (index_t i = 0; i < rank; ++i) {
-      parity += idx[i];
-    }
-    parity &= 1;
-    auto x_half = index_full_to_half(idx) switch (parity) {
+    //     // compute parity of the site:
+    //     int parity = 0;
+    // #pragma unroll
+    //     for (index_t i = 0; i < rank; ++i) {
+    //       parity += idx[i];
+    //     }
+    //     parity &= 1;
+    auto x_half = index_full_to_half(idx);
+    switch (x_half.second) {
       case 0:  // Even
         for (size_t mu = 0; mu < rank; ++mu) {
           // X = chi , Y = chi_alt
 
           auto xp = shift_index_plus_bc<rank, size_t>(
               Kokkos::Array<size_t, rank>{Idcs...}, mu, 1, 3, -1,
-              this->params.dimensions);  // odd
+              this->gauge_field.dimensions);  // odd
           auto X_proj = project(mu, -1, this->sigma(xp.first));
           // minus sign in the projector comes from the derivative of D
           auto Xplus =
               (-1 * this->params.kappa * this->params.kappa * xp.second) *
               X_proj;
           auto temp1 = reconstruct(mu, -1, gauge_field(Idcs..., mu) * Xplus);
-          auto deriv = temp1 * (conj(this->chi(Idcs...)));
+          auto deriv = temp1 * (conj(this->chi(x_half.first)));
 
           auto Y_proj = project_alt(mu, -1, conj(this->rho(xp.first)));
           auto YPlus =
               (this->params.kappa * this->params.kappa * xp.second) * Y_proj;
           auto temp3 = reconstruct_alt(
               mu, -1, YPlus * conj(this->gauge_field(Idcs..., mu)));
-          deriv += this->y(Idcs...) * temp3;
+          deriv += this->y(x_half.first) * temp3;
 
           momentum(Idcs..., mu) -= 2 * eps *
                                    traceT(traceLessAntiHermitian(
@@ -145,24 +149,24 @@ class UpdateMomentumWilson : public UpdateMomentum {
       case 1:  // Odd:
         for (size_t mu = 0; mu < rank; ++mu) {
           // X = chi , Y = chi_alt
-
+          // (1-gamma_mu) correct? dnt think so
           auto xp = shift_index_plus_bc<rank, size_t>(
               Kokkos::Array<size_t, rank>{Idcs...}, mu, 1, 3, -1,
-              this->params.dimensions);  // even
+              this->gauge_field.dimensions);  // even
           auto X_proj = project(mu, -1, this->y(xp.first));
           // minus sign in the projector comes from the derivative of D
           auto Xplus = (-1 * this->params.kappa * this->params.kappa *
                         this->params.kappa * xp.second) *
                        X_proj;
           auto temp1 = reconstruct(mu, -1, gauge_field(Idcs..., mu) * Xplus);
-          auto deriv = temp1 * (conj(this->rho(Idcs...)));
+          auto deriv = temp1 * (conj(this->rho(x_half.first)));
 
           auto Y_proj = project_alt(mu, -1, conj(this->chi(xp.first)));
           auto YPlus =
               (this->params.kappa * this->params.kappa * xp.second) * Y_proj;
           auto temp3 = reconstruct_alt(
               mu, -1, YPlus * conj(this->gauge_field(Idcs..., mu)));
-          deriv += this->sigma(Idcs...) * temp3;
+          deriv += this->sigma(x_half.first) * temp3;
 
           momentum(Idcs..., mu) -= 2 * eps *
                                    traceT(traceLessAntiHermitian(
@@ -181,9 +185,9 @@ class UpdateMomentumWilson : public UpdateMomentum {
     IndexArray<rank> start;
     DiracOp D(gauge_field, this->params);
 
-    FermionField x(this->params.dimensions, complex_t(0.0, 0.0));
-    FermionField x2(this->params.dimensions, complex_t(0.0, 0.0));
-    FermionField x0(this->params.dimensions, complex_t(0.0, 0.0));
+    FermionField x(this->phi.dimensions, complex_t(0.0, 0.0));
+    FermionField x2(this->phi.dimensions, complex_t(0.0, 0.0));
+    FermionField x0(this->phi.dimensions, complex_t(0.0, 0.0));
 
     Solver solver(this->phi, x, D);
     if (KLFT_VERBOSITY > 4) {
@@ -195,11 +199,10 @@ class UpdateMomentumWilson : public UpdateMomentum {
     this->y = solver.x;  // y = S_e^-1 phi
     solver.x = x2;
     solver.b = this->y;
-    solver
-        .template solve<Tags::TagSe>(
-            x0, this->tol)      // solve chi = S_e^-1 y = S_e^-1 S_e^-1 phi
-        this->chi = solver2.x;  // X
-    D.template apply<Tags::TagHoe>(this->chi, this->roh);
+    solver.template solve<Tags::TagSe>(
+        x0, this->tol);    // solve chi = S_e^-1 y = S_e^-1 S_e^-1 phi
+    this->chi = solver.x;  // X
+    D.template apply<Tags::TagHoe>(this->chi, this->rho);
     D.template apply<Tags::TagHoe>(this->y, this->sigma);
     for (size_t i = 0; i < rank; ++i) {
       start[i] = 0;

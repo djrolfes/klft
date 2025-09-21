@@ -66,7 +66,7 @@ class DiracOperator {
   using GaugeFieldType = typename DGaugeFieldType::type;
 
  public:
-  DiracOperator(const GaugeFieldType& g_in, const diracParams<rank>& params)
+  DiracOperator(const GaugeFieldType& g_in, const diracParams& params)
       : g_in(g_in), params(params) {}
   ~DiracOperator() = default;
   // Define callabale apply functions
@@ -74,7 +74,7 @@ class DiracOperator {
   KOKKOS_FORCEINLINE_FUNCTION SpinorFieldType
   apply(const SpinorFieldType& s_in) {
     this->s_in = s_in;
-    this->s_out = SpinorFieldType(params.dimensions, complex_t(0.0, 0.0));
+    this->s_out = SpinorFieldType(s_in.dimensions, complex_t(0.0, 0.0));
     // Apply the operator
     if constexpr (std::is_same_v<Tag, Tags::TagHeo> or
                   std::is_same_v<Tag, Tags::TagHoe>) {
@@ -122,9 +122,9 @@ class DiracOperator {
  protected:
   SpinorFieldType apply_(Tags::TagD) {
     // Apply the operator
-    tune_and_launch_for<rank, Tags::TagD>(typeid(Derived).name(),
-                                          IndexArray<rank>{}, params.dimensions,
-                                          static_cast<Derived&>(*this));
+    tune_and_launch_for<rank, Tags::TagD>(
+        typeid(Derived).name(), IndexArray<rank>{}, this->s_in.dimensions,
+        static_cast<Derived&>(*this));
     Kokkos::fence();
     return s_out;
   }
@@ -132,7 +132,7 @@ class DiracOperator {
   SpinorFieldType apply_(Tags::TagDdagger) {
     // Apply the operator
     tune_and_launch_for<rank, Tags::TagDdagger>(
-        typeid(Derived).name(), IndexArray<rank>{}, params.dimensions,
+        typeid(Derived).name(), IndexArray<rank>{}, this->s_in.dimensions,
         static_cast<Derived&>(*this));
     Kokkos::fence();
     return s_out;
@@ -141,7 +141,7 @@ class DiracOperator {
 
   SpinorFieldType apply_(Tags::TagDDdagger) {
     auto cached_out = this->s_out;
-    this->s_out = SpinorFieldType(params.dimensions, complex_t(0.0, 0.0));
+    this->s_out = SpinorFieldType(this->s_in.dimensions, complex_t(0.0, 0.0));
 
     return this->apply_(Tags::TagDDdagger{}, cached_out);
   }
@@ -149,13 +149,13 @@ class DiracOperator {
   // applys Composid Operator Mdagger= DdaggerD*s_in
   SpinorFieldType apply_(Tags::TagDdaggerD) {
     auto cached_out = this->s_out;
-    this->s_out = SpinorFieldType(params.dimensions, complex_t(0.0, 0.0));
+    this->s_out = SpinorFieldType(this->s_in.dimensions, complex_t(0.0, 0.0));
 
     return this->apply_(Tags::TagDdaggerD{}, cached_out);
   }
   SpinorFieldType apply_(Tags::TagSe) {
     auto cached_out = this->s_out;
-    this->s_out = SpinorFieldType(params.dimensions, complex_t(0.0, 0.0));
+    this->s_out = SpinorFieldType(this->s_in.dimensions, complex_t(0.0, 0.0));
     return this->apply_(Tags::TagSe{}, cached_out);
   }
 
@@ -166,7 +166,7 @@ class DiracOperator {
   }
   SpinorFieldType apply_(Tags::TagSo) {
     auto cached_out = this->s_out;
-    this->s_out = SpinorFieldType(params.dimensions, complex_t(0.0, 0.0));
+    this->s_out = SpinorFieldType(this->s_in.dimensions, complex_t(0.0, 0.0));
     return this->apply_(Tags::TagSo{}, cached_out);
   }
 
@@ -216,7 +216,7 @@ class DiracOperator {
   SpinorFieldType s_in;
   SpinorFieldType s_out;
   const GaugeFieldType g_in;
-  const diracParams<rank> params;
+  const diracParams params;
 
  protected:
   DiracOperator() = default;
@@ -240,7 +240,7 @@ class EODiracOperator
                       DGaugeFieldType>::DiracOperator;
 
   SpinorFieldType apply_(Tags::TagHeo) {
-    // this->s_out = SpinorFieldType(this->params.dimensions, complex_t(0.0,
+    // this->s_out = SpinorFieldType(this->this->s_in.dimensions, complex_t(0.0,
     // 0.0));
     tune_and_launch_for<rank, Tags::TagHeo>(
         typeid(InterDervied).name(), IndexArray<rank>{}, this->s_in.dimensions,
@@ -248,7 +248,7 @@ class EODiracOperator
     return this->s_out;
   }
   SpinorFieldType apply_(Tags::TagHoe) {
-    // this->s_out = SpinorFieldType(this->params.dimensions, complex_t(0.0,
+    // this->s_out = SpinorFieldType(this->this->s_in.dimensions, complex_t(0.0,
     // 0.0));
 
     tune_and_launch_for<rank, Tags::TagHoe>(

@@ -56,7 +56,7 @@ class UpdateMomentumWilson : public UpdateMomentum {
   using AdjFieldType = typename DeviceAdjFieldType<rank, Nc>::type;
   GaugeFieldType gauge_field;
   AdjFieldType momentum;
-  const diracParams<rank> params;
+  const diracParams params;
   // \phi = D R, where R gaussian random field.
   FermionField phi;
 
@@ -69,8 +69,8 @@ class UpdateMomentumWilson : public UpdateMomentum {
   ~UpdateMomentumWilson() = default;
 
   UpdateMomentumWilson(FermionField& phi_, GaugeFieldType& gauge_field_,
-                       AdjFieldType& adjoint_field_,
-                       const diracParams<rank>& params_, const real_t& tol_)
+                       AdjFieldType& adjoint_field_, const diracParams& params_,
+                       const real_t& tol_)
       : UpdateMomentum(0),
         phi(phi_),
         gauge_field(gauge_field_),
@@ -104,7 +104,7 @@ class UpdateMomentumWilson : public UpdateMomentum {
 
       auto xp = shift_index_plus_bc<rank, size_t>(
           Kokkos::Array<size_t, rank>{Idcs...}, mu, 1, 3, -1,
-          this->params.dimensions);
+          this->phi.dimensions);
       auto X_proj = project(mu, -1, this->chi(xp.first));
       // minus sign in the projector comes from the derivative of D
       auto Xplus = (-1 * this->params.kappa * xp.second) * X_proj;
@@ -129,9 +129,9 @@ class UpdateMomentumWilson : public UpdateMomentum {
 
     IndexArray<rank> start;
     DiracOp D(gauge_field, this->params);
-    DiracOp D1(gauge_field, this->params);
-    FermionField x(this->params.dimensions, complex_t(0.0, 0.0));
-    FermionField x0(this->params.dimensions, complex_t(0.0, 0.0));
+
+    FermionField x(this->phi.dimensions, complex_t(0.0, 0.0));
+    FermionField x0(this->phi.dimensions, complex_t(0.0, 0.0));
 
     Solver solver(this->phi, x, D);
     if (KLFT_VERBOSITY > 4) {
@@ -140,7 +140,7 @@ class UpdateMomentumWilson : public UpdateMomentum {
 
     solver.template solve<Tags::TagDdaggerD>(x0, this->tol);
     this->chi = solver.x;
-    this->chi_alt = D1.template apply<Tags::TagD>(this->chi);
+    this->chi_alt = D.template apply<Tags::TagD>(this->chi);
 
     for (size_t i = 0; i < rank; ++i) {
       start[i] = 0;

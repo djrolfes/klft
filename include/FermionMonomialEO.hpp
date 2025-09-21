@@ -31,7 +31,7 @@ template <class RNGType, typename DSpinorFieldType, typename DGaugeFieldType,
           template <template <typename, typename> class DiracOpT, typename,
                     typename> class _Solver,
           template <typename, typename> class DiracOpT>
-class FermionMonomial_EO : public Monomial<DGaugeFieldType, DAdjFieldType> {
+class FermionMonomialEO : public Monomial<DGaugeFieldType, DAdjFieldType> {
   static_assert(isDeviceFermionFieldType<DSpinorFieldType>::value);
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
   static_assert(isDeviceAdjFieldType<DAdjFieldType>::value);
@@ -53,18 +53,16 @@ class FermionMonomial_EO : public Monomial<DGaugeFieldType, DAdjFieldType> {
                 "the spinor field layout must be "
                 "Checkerboard");
   using FermionField = typename DSpinorFieldType::type;
-  using DiracOperator =
-      DiracOperator<DiracOpT, DSpinorFieldType, DGaugeFieldType>;
+  using DiracOperator = DiracOpT<DSpinorFieldType, DGaugeFieldType>;
   using Solver = _Solver<DiracOpT, DSpinorFieldType, DGaugeFieldType>;
 
  public:
   FermionField& phi;
-  const diracParams<rank> params;
+  const diracParams params;
   const real_t tol;
   RNGType rng;
-  FermionMonomial_EO(FermionField& _phi, const diracParams<rank>& params_,
-                     const real_t& tol_, RNGType& RNG_,
-                     unsigned int _time_scale)
+  FermionMonomialEO(FermionField& _phi, const diracParams& params_,
+                    const real_t& tol_, RNGType& RNG_, unsigned int _time_scale)
       : Monomial<DGaugeFieldType, DAdjFieldType>(_time_scale),
         phi(_phi),
         params(params_),
@@ -76,7 +74,7 @@ class FermionMonomial_EO : public Monomial<DGaugeFieldType, DAdjFieldType> {
   }
 
   void heatbath(HamiltonianField<DGaugeFieldType, DAdjFieldType> h) override {
-    auto dims = h.gauge_field.dimensions;
+    auto dims = phi.dimensions;
 
     FermionField R(dims, rng, 0, SQRT2INV);
 
@@ -87,7 +85,7 @@ class FermionMonomial_EO : public Monomial<DGaugeFieldType, DAdjFieldType> {
   }
 
   void accept(HamiltonianField<DGaugeFieldType, DAdjFieldType> h) override {
-    auto dims = phi.gauge_field.dimensions;
+    auto dims = phi.dimensions;
 
     FermionField x(dims, complex_t(0.0, 0.0));
     FermionField x0(dims, complex_t(0.0, 0.0));
