@@ -90,7 +90,7 @@ template <typename DGaugeFieldType> struct WilsonFlow {
     SUNAdj<Nc> Z0 = traceT(Z0_SUN); //* (Nc / params.beta);
     tmp_Z(i0, i1, i2, i3, mu) = Z0; // does this need to be deep copied?
     field.field(i0, i1, i2, i3, mu) =
-        expoSUN(Z0 * 0.25 * params.eps) * field.field(i0, i1, i2, i3, mu);
+        expoSUN(Z0 * -0.25 * params.eps) * field.field(i0, i1, i2, i3, mu);
     // restoreSUN(field.field(i0, i1, i2, i3, mu));
   }
 
@@ -107,7 +107,7 @@ template <typename DGaugeFieldType> struct WilsonFlow {
          Z0 * static_cast<real_t>(17.0 / 36.0);
     tmp_Z(i0, i1, i2, i3, mu) = Z1;
     field.field(i0, i1, i2, i3, mu) =
-        expoSUN(Z1 * params.eps) * field.field(i0, i1, i2, i3, mu);
+        expoSUN(Z1 * -params.eps) * field.field(i0, i1, i2, i3, mu);
     // restoreSUN(field.field(i0, i1, i2, i3, mu));
   }
 
@@ -123,7 +123,7 @@ template <typename DGaugeFieldType> struct WilsonFlow {
     Z2 = (Z2 * 0.75 - Z_old);
     // SUNAdj<Nc> tmp = (Z2);
     field.field(i0, i1, i2, i3, mu) =
-        expoSUN(Z2 * params.eps) * field.field(i0, i1, i2, i3, mu);
+        expoSUN(Z2 * -params.eps) * field.field(i0, i1, i2, i3, mu);
     // restoreSUN(field.field(i0, i1, i2, i3, mu));
   }
 
