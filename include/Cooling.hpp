@@ -1,4 +1,4 @@
-
+// TODO: cooling needs to happen iteratively and thus is not parallelizable
 #pragma once
 #include "AdjointSUN.hpp"
 #include "FieldTypeHelper.hpp"
