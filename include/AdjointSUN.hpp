@@ -232,12 +232,12 @@ get_SU3_from_adj(const SUNAdj<3> &a) {
   SUN<3> c;
   c[0][0] = complex_t(0.0, 0.5 * (SQRT3INV * a[7] + a[2]));
   c[0][1] = complex_t(0.5 * a[1], 0.5 * a[0]);
-  c[0][2] = 0.5 * complex_t(0.5 * a[4], 0.5 * a[3]);
-  c[1][0] = 0.5 * complex_t(0.5 * -a[1], 0.5 * a[0]);
+  c[0][2] = complex_t(0.5 * a[4], 0.5 * a[3]);
+  c[1][0] = complex_t(0.5 * -a[1], 0.5 * a[0]);
   c[1][1] = complex_t(0.0, 0.5 * (SQRT3INV * a[7] - a[2]));
-  c[1][2] = 0.5 * complex_t(0.5 * a[6], 0.5 * a[5]);
-  c[2][0] = 0.5 * complex_t(0.5 * -a[4], 0.5 * a[3]);
-  c[2][1] = 0.5 * complex_t(0.5 * -a[6], 0.5 * a[5]);
+  c[1][2] = complex_t(0.5 * a[6], 0.5 * a[5]);
+  c[2][0] = complex_t(0.5 * -a[4], 0.5 * a[3]);
+  c[2][1] = complex_t(0.5 * -a[6], 0.5 * a[5]);
   c[2][2] = complex_t(0.0, -SQRT3INV * a[7]);
   return c;
 }
