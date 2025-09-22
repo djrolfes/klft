@@ -20,7 +20,6 @@
 #pragma once
 #include "DiracOPTypeHelper.hpp"
 #include "FieldTypeHelper.hpp"
-#include "GDiracOperator.hpp"
 #include "GLOBAL.hpp"
 #include "SpinorFieldLinAlg.hpp"
 
