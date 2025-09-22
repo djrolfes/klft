@@ -76,6 +76,10 @@ template <size_t Nd, size_t Nc> struct devicePTBCGaugeField {
     Kokkos::fence();
   }
 
+  operator deviceGaugeField<Nd, Nc>() const {
+    return deviceGaugeField<Nd, Nc>(this->field, this->dimensions);
+  }
+
   // should defect_length and cr be encompassed in a defect struct?
   devicePTBCGaugeField(const index_t L0, const index_t L1, const index_t L2,
                        const index_t L3, const complex_t init,
@@ -491,6 +495,10 @@ template <size_t Nd, size_t Nc> struct devicePTBCGaugeField3D {
       : dimensions(dimensions) {
     do_init(field, init);
     do_init_defect(defectField);
+  }
+
+  operator deviceGaugeField3D<Nd, Nc>() const {
+    return deviceGaugeField3D<Nd, Nc>(this->field, this->dimensions);
   }
 
   devicePTBCGaugeField3D(const IndexArray<3> &dimensions, const complex_t init)
@@ -992,6 +1000,10 @@ template <size_t Nd, size_t Nc> struct devicePTBCGaugeField2D {
   real_t get_defect() const {
     // return the defect value
     return this->dParams.defect_value;
+  }
+
+  operator deviceGaugeField2D<Nd, Nc>() const {
+    return deviceGaugeField2D<Nd, Nc>(this->field, this->dimensions);
   }
 
   // define accessors for the field

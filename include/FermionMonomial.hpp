@@ -1,13 +1,12 @@
 
 #pragma once
-#include "GDiracOperator.hpp"
 #include "GLOBAL.hpp"
 #include "Monomial.hpp"
 #include "Solver.hpp"
 #include "SpinorFieldLinAlg.hpp"
 
-#define SQRT2INV \
-  0.707106781186547524400844362104849039284835937688474036588339868995366239231053519425193767163820786367506  // Oeis A010503
+#define SQRT2INV                                                               \
+  0.707106781186547524400844362104849039284835937688474036588339868995366239231053519425193767163820786367506 // Oeis A010503
 namespace klft {
 template <class RNGType, typename DSpinorFieldType, typename DGaugeFieldType,
           typename DAdjFieldType,
@@ -35,18 +34,15 @@ class FermionMonomial : public Monomial<DGaugeFieldType, DAdjFieldType> {
       DiracOperator<DiracOpT, DSpinorFieldType, DGaugeFieldType>;
   using Solver = _Solver<DiracOpT, DSpinorFieldType, DGaugeFieldType>;
 
- public:
-  FermionField& phi;
+public:
+  FermionField &phi;
   const diracParams<rank, RepDim> params;
   const real_t tol;
   RNGType rng;
-  FermionMonomial(FermionField& _phi, const diracParams<rank, RepDim>& params_,
-                  const real_t& tol_, RNGType& RNG_, unsigned int _time_scale)
-      : Monomial<DGaugeFieldType, DAdjFieldType>(_time_scale),
-        phi(_phi),
-        params(params_),
-        rng(RNG_),
-        tol(tol_) {
+  FermionMonomial(FermionField &_phi, const diracParams<rank, RepDim> &params_,
+                  const real_t &tol_, RNGType &RNG_, unsigned int _time_scale)
+      : Monomial<DGaugeFieldType, DAdjFieldType>(_time_scale), phi(_phi),
+        params(params_), rng(RNG_), tol(tol_) {
     Monomial<DGaugeFieldType, DAdjFieldType>::monomial_type =
         KLFT_MONOMIAL_FERMION;
   }
@@ -83,4 +79,4 @@ class FermionMonomial : public Monomial<DGaugeFieldType, DAdjFieldType> {
     printf("Fermion Monomial: %.20f\n", this->get_delta_H());
   }
 };
-}  // namespace klft
+} // namespace klft

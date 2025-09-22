@@ -344,8 +344,7 @@ void measureGaugeObservables(const typename DGaugeFieldType::type &g_in,
     printf("step: %zu\n", step);
   }
 
-  // Nc < 3 to allow for compilation, remove when SU3 is implemented
-  if constexpr (Nd == 4 && Nc < 3) {
+  if constexpr (Nd == 4) {
     WilsonFlowParams wfparams = params.wilson_flow_params;
     WilsonFlow<DGaugeFieldType> wf(g_in, wfparams);
     if (params.do_wilson_flow) {
