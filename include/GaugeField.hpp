@@ -55,6 +55,9 @@ template <size_t Nd, size_t Nc> struct deviceGaugeField {
     Kokkos::deep_copy(field, f_in);
   }
 
+  deviceGaugeField(const GaugeField<Nd, Nc> f_in, const IndexArray<Nd> &dims_in)
+      : field(f_in), dimensions(dims_in) {}
+
   // initialize all sites to a given value
   deviceGaugeField(const index_t L0, const index_t L1, const index_t L2,
                    const index_t L3, const complex_t init)
@@ -343,6 +346,11 @@ template <size_t Nd, size_t Nc> struct deviceGaugeField3D {
       : dimensions({L0, L1, L2}) {
     do_init(L0, L1, L2, field, init);
   }
+
+  deviceGaugeField3D(const GaugeField3D<Nd, Nc> f_in,
+                     const IndexArray<Nd> &dims_in)
+      : field(f_in), dimensions(dims_in) {}
+
   deviceGaugeField3D(const IndexArray<3> &dimensions, const complex_t init)
       : dimensions(dimensions) {
     do_init(dimensions[0], dimensions[1], dimensions[2], field, init);
@@ -595,6 +603,11 @@ template <size_t Nd, size_t Nc> struct deviceGaugeField2D {
       : dimensions({L0, L1}) {
     do_init(L0, L1, field, init);
   }
+
+  deviceGaugeField2D(const GaugeField2D<Nd, Nc> f_in,
+                     const IndexArray<Nd> &dims_in)
+      : field(f_in), dimensions(dims_in) {}
+
   deviceGaugeField2D(const IndexArray<2> &dimensions, const complex_t init)
       : dimensions(dimensions) {
     do_init(dimensions[0], dimensions[1], field, init);

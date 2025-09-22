@@ -55,7 +55,7 @@ class DiracOperator {
   using Derived = _Derived<DSpinorFieldType, DGaugeFieldType>;
   // Define Tags for template dispatch:
   using SpinorFieldType = typename DSpinorFieldType::type;
-  using GaugeFieldType = typename DGaugeFieldType::type;
+  using GaugeFieldType = typename DeviceGaugeFieldType<rank, Nc>::type;
 
 public:
   DiracOperator(const GaugeFieldType &g_in,

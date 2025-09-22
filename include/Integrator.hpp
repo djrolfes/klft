@@ -82,6 +82,7 @@ public:
 }; // class LeapFrog
 //
 
+// Still need to add check for different Dirac Operators
 template <typename DGaugeFieldType, typename DAdjFieldType,
           typename DSpinorFieldType>
 std::shared_ptr<Integrator> createIntegrator(
@@ -98,8 +99,6 @@ std::shared_ptr<Integrator> createIntegrator(
   static_assert((rank == DeviceAdjFieldTypeTraits<DAdjFieldType>::Rank) &&
                 (Nc == DeviceAdjFieldTypeTraits<DAdjFieldType>::Nc));
   constexpr const size_t Nd = rank;
-  constexpr const GaugeFieldKind k =
-      DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Kind;
   using GaugeField = typename DGaugeFieldType::type;
   using AdjointField = typename DAdjFieldType::type;
   // Create the integrator based on the type
@@ -115,15 +114,14 @@ std::shared_ptr<Integrator> createIntegrator(
       // if the level is 0, we create a new integrator with nullptr as inner
       // integrator
       if (gaugeMonomialParams.level == 0) {
-        UpdatePositionGauge<Nd, Nc, k> update_q(g_in, a_in);
+        UpdatePositionGauge<Nd, Nc> update_q(g_in, a_in);
         UpdateMomentumGauge<DGaugeFieldType, DAdjFieldType> update_p(
             g_in, a_in, gaugeMonomialParams.beta);
         if (monomial.type == "Leapfrog") {
           integrator = std::make_shared<LeapFrog>(
               monomial.steps,
               monomial.level == integratorParams.monomials.back().level,
-              nullptr,
-              std::make_shared<UpdatePositionGauge<Nd, Nc, k>>(update_q),
+              nullptr, std::make_shared<UpdatePositionGauge<Nd, Nc>>(update_q),
               std::make_shared<
                   UpdateMomentumGauge<DGaugeFieldType, DAdjFieldType>>(
                   update_p));
@@ -131,8 +129,7 @@ std::shared_ptr<Integrator> createIntegrator(
           integrator = std::make_shared<LeapFrog>(
               monomial.steps,
               monomial.level == integratorParams.monomials.back().level,
-              nullptr,
-              std::make_shared<UpdatePositionGauge<Nd, Nc, k>>(update_q),
+              nullptr, std::make_shared<UpdatePositionGauge<Nd, Nc>>(update_q),
               std::make_shared<
                   UpdateMomentumGauge<DGaugeFieldType, DAdjFieldType>>(
                   update_p));
@@ -144,9 +141,10 @@ std::shared_ptr<Integrator> createIntegrator(
         if (fermionParams.RepDim == 4) {
           auto diracParams =
               getDiracParams<rank>(g_in.dimensions, fermionParams);
-          UpdatePositionGauge<Nd, Nc, k> update_q(g_in, a_in);
-          UpdateMomentumFermion<DSpinorFieldType, DGaugeFieldType,
-                                DAdjFieldType, CGSolver, HWilsonDiracOperator>
+          UpdatePositionGauge<Nd, Nc> update_q(g_in, a_in);
+          UpdateMomentumWilson<DSpinorFieldType, DGaugeFieldType, DAdjFieldType,
+
+                               CGSolver, WilsonDiracOperator>
               update_p(s_in, g_in, a_in, diracParams, fermionParams.tol);
 
           if (monomial.type == "Leapfrog") {
@@ -154,11 +152,11 @@ std::shared_ptr<Integrator> createIntegrator(
                 monomial.steps,
                 monomial.level == integratorParams.monomials.back().level,
                 nullptr,
-                std::make_shared<UpdatePositionGauge<Nd, Nc, k>>(update_q),
-                std::make_shared<UpdateMomentumFermion<
+                std::make_shared<UpdatePositionGauge<Nd, Nc>>(update_q),
+                std::make_shared<UpdateMomentumWilson<
                     DSpinorFieldType, DGaugeFieldType, DAdjFieldType,
 
-                    CGSolver, HWilsonDiracOperator>>(update_p));
+                    CGSolver, WilsonDiracOperator>>(update_p));
 
           } else {
             printf(
@@ -168,10 +166,10 @@ std::shared_ptr<Integrator> createIntegrator(
                 monomial.steps,
                 monomial.level == integratorParams.monomials.back().level,
                 nullptr,
-                std::make_shared<UpdatePositionGauge<Nd, Nc, k>>(update_q),
-                std::make_shared<UpdateMomentumFermion<
+                std::make_shared<UpdatePositionGauge<Nd, Nc>>(update_q),
+                std::make_shared<UpdateMomentumWilson<
                     DSpinorFieldType, DGaugeFieldType, DAdjFieldType, CGSolver,
-                    HWilsonDiracOperator>>(update_p));
+                    WilsonDiracOperator>>(update_p));
           }
         } else {
           printf("Error: Fermion RepDim must be 4\n");
@@ -182,7 +180,7 @@ std::shared_ptr<Integrator> createIntegrator(
     } else if (gaugeMonomialParams.level == monomial.level) {
       // if the level is the same, we create a new integrator with the
       // previous one as inner integrator
-      UpdatePositionGauge<Nd, Nc, k> update_q(g_in, a_in);
+      UpdatePositionGauge<Nd, Nc> update_q(g_in, a_in);
       UpdateMomentumGauge<DGaugeFieldType, DAdjFieldType> update_p(
           g_in, a_in, gaugeMonomialParams.beta);
       if (monomial.type == "Leapfrog") {
@@ -190,7 +188,7 @@ std::shared_ptr<Integrator> createIntegrator(
             monomial.steps,
             monomial.level == integratorParams.monomials.back().level,
             nested_integrator,
-            std::make_shared<UpdatePositionGauge<Nd, Nc, k>>(update_q),
+            std::make_shared<UpdatePositionGauge<Nd, Nc>>(update_q),
             std::make_shared<
                 UpdateMomentumGauge<DGaugeFieldType, DAdjFieldType>>(update_p));
 
@@ -199,7 +197,7 @@ std::shared_ptr<Integrator> createIntegrator(
             monomial.steps,
             monomial.level == integratorParams.monomials.back().level,
             nested_integrator,
-            std::make_shared<UpdatePositionGauge<Nd, Nc, k>>(update_q),
+            std::make_shared<UpdatePositionGauge<Nd, Nc>>(update_q),
             std::make_shared<
                 UpdateMomentumGauge<DGaugeFieldType, DAdjFieldType>>(update_p));
       }
@@ -210,9 +208,9 @@ std::shared_ptr<Integrator> createIntegrator(
       if (fermionParams.RepDim == 4) {
         auto diracParams = getDiracParams<rank>(g_in.dimensions, fermionParams);
 
-        UpdatePositionGauge<Nd, Nc, k> update_q(g_in, a_in);
-        UpdateMomentumFermion<DSpinorFieldType, DGaugeFieldType, DAdjFieldType,
-                              CGSolver, HWilsonDiracOperator>
+        UpdatePositionGauge<Nd, Nc> update_q(g_in, a_in);
+        UpdateMomentumWilson<DSpinorFieldType, DGaugeFieldType, DAdjFieldType,
+                             CGSolver, WilsonDiracOperator>
             update_p(s_in, g_in, a_in, diracParams, fermionParams.tol);
 
         if (monomial.type == "Leapfrog") {
@@ -220,19 +218,19 @@ std::shared_ptr<Integrator> createIntegrator(
               monomial.steps,
               monomial.level == integratorParams.monomials.back().level,
               nested_integrator,
-              std::make_shared<UpdatePositionGauge<Nd, Nc, k>>(update_q),
-              std::make_shared<UpdateMomentumFermion<
+              std::make_shared<UpdatePositionGauge<Nd, Nc>>(update_q),
+              std::make_shared<UpdateMomentumWilson<
                   DSpinorFieldType, DGaugeFieldType, DAdjFieldType, CGSolver,
-                  HWilsonDiracOperator>>(update_p));
+                  WilsonDiracOperator>>(update_p));
         } else {
           integrator = std::make_shared<LeapFrog>(
               monomial.steps,
               monomial.level == integratorParams.monomials.back().level,
               nested_integrator,
-              std::make_shared<UpdatePositionGauge<Nd, Nc, k>>(update_q),
-              std::make_shared<UpdateMomentumFermion<
+              std::make_shared<UpdatePositionGauge<Nd, Nc>>(update_q),
+              std::make_shared<UpdateMomentumWilson<
                   DSpinorFieldType, DGaugeFieldType, DAdjFieldType, CGSolver,
-                  HWilsonDiracOperator>>(update_p));
+                  WilsonDiracOperator>>(update_p));
         }
       } else {
         printf("Error: Fermion RepDim must be 4\n");
