@@ -158,12 +158,13 @@ template <typename T> struct Wrapper {
   // }
 
   // operator[] forwarding
-  template <typename Index> KOKKOS_INLINE_FUNCTION auto &operator[](Index i) {
+  template <typename Index>
+  constexpr KOKKOS_INLINE_FUNCTION auto &operator[](Index i) {
     return data[i];
   }
 
   template <typename Index>
-  KOKKOS_INLINE_FUNCTION const auto &operator[](Index i) const {
+  KOKKOS_INLINE_FUNCTION constexpr const auto &operator[](Index i) const {
     return data[i];
   }
 
