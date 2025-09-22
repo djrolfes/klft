@@ -226,12 +226,13 @@ template <size_t Nc> struct SUNAdj {
   auto operator->() const { return &data; }
 
   // operator[] forwarding
-  template <typename Index> KOKKOS_INLINE_FUNCTION auto &operator[](Index i) {
+  template <typename Index>
+  KOKKOS_INLINE_FUNCTION constexpr auto &operator[](Index i) {
     return data[i];
   }
 
   template <typename Index>
-  KOKKOS_INLINE_FUNCTION const auto &operator[](Index i) const {
+  KOKKOS_INLINE_FUNCTION constexpr const auto &operator[](Index i) const {
     return data[i];
   }
 };
