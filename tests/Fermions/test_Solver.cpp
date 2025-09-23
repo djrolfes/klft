@@ -3,7 +3,7 @@
 #include <Kokkos_Complex.hpp>
 #include <Kokkos_Core.hpp>
 
-#include "../../include/GDiracOperator.hpp"
+#include "../../include/DiracOperator.hpp"
 #include "../../include/GammaMatrix.hpp"
 #include "../../include/Solver.hpp"
 #include "../../include/SpinorField.hpp"
@@ -41,10 +41,8 @@ int main(int argc, char* argv[]) {
     printf("\n=== Testing DiracOperator SU(%zu)  ===\n", N);
     printf("\n= Testing hermiticity =\n");
     index_t L0 = 32, L1 = 32, L2 = 32, L3 = 32;
-    auto gammas = get_gammas<4>();
-    GammaMat<4> gamma5 = get_gamma5();
     IndexArray<4> dims = {L0, L1, L2, L3};
-    diracParams<4, 4> param(dims, gammas, gamma5, 0.1);
+    diracParams param(0.1);
 
     printf("Lattice Dimension %ix%ix%ix%i \n", L0, L1, L2, L3);
     printf("Generate SpinorFields...\n");
@@ -81,8 +79,7 @@ int main(int argc, char* argv[]) {
     printf("Comparing Solver result to expected result...\n");
     // print_spinor<3, 4>(solver.x(0, 0, 0, 0) - u(0, 0, 0, 0), "Solver
     // Result");
-    auto res_norm =
-        spinor_norm<4, N, 4>(spinor_sub_mul<4, N, 4>(u, solver.x, 1));
+    auto res_norm = spinor_norm<4, N, 4>(axpy<4, N, 4>(-1, solver.x, u));
     auto norm = spinor_norm<4, N, 4>(u);
 
     printf("Norm of Residual: %.20f\n", res_norm / norm);

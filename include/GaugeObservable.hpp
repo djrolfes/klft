@@ -591,17 +591,20 @@ inline void forceflushAllGaugeObservables(
 
   if (params.measure_plaquette && params.plaquette_filename != "") {
     std::ofstream file(params.plaquette_filename, std::ios::app);
+    std::ofstream file(params.plaquette_filename, std::ios::app);
     flushPlaquette(file, params, HEADER);
     file.close();
   }
   // flush temporal Wilson loop measurements
   if (params.measure_wilson_loop_temporal && params.W_temp_filename != "") {
     std::ofstream file(params.W_temp_filename, std::ios::app);
+    std::ofstream file(params.W_temp_filename, std::ios::app);
     flushWilsonLoopTemporal(file, params, HEADER);
     file.close();
   }
   // flush mu-nu Wilson loop measurements
   if (params.measure_wilson_loop_mu_nu && params.W_mu_nu_filename != "") {
+    std::ofstream file(params.W_mu_nu_filename, std::ios::app);
     std::ofstream file(params.W_mu_nu_filename, std::ios::app);
     flushWilsonLoopMuNu(file, params, HEADER);
     file.close();

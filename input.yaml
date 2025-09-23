@@ -28,7 +28,7 @@ Gauge Monomial:
 
 Fermion Monomial:
   level: 1
-  fermion: "HWilson"
+  fermion: "Wilson"
   solver: "CG"
   RepDim: 4
   kappa: 0.15

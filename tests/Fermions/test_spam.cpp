@@ -9,15 +9,45 @@
 using namespace klft;
 
 #define HLINE "=========================================================\n"
+struct TagOperatorBase {
+  /* data */
+};
+struct TagHWilson : TagOperatorBase {
+  /* data */
+};
+
+struct TagWilson : TagOperatorBase {
+  /* data */
+};
+
+struct Foo {
+  TagOperatorBase tag;
+  Foo(const TagOperatorBase& tag) : tag(tag) {}
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const TagWilson,
+                  const Kokkos::TeamPolicy<>::member_type& team) const {
+    printf("Greetings from thread %i of team %i with TagWilson\n",
+           team.thread_rank(), team.league_rank());
+  }
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const TagHWilson,
+                  const Kokkos::TeamPolicy<>::member_type& team) const {
+    printf("Greetings from thread %i of team %i with TagHWilson\n",
+           team.thread_rank(), team.league_rank());
+  }
+  void run() {
+    Kokkos::parallel_for(Kokkos::TeamPolicy<>(N, Kokkos::AUTO), foo);
+  }
+};
 
 int main(int argc, char* argv[]) {
   Kokkos::initialize(argc, argv);
-  Kokkos::Random_XorShift64_Pool<> random_pool(/*seed=*/1234);
-  auto rng = random_pool.get_state();
-  SUN<2> a;
-  randSUN(a, rng, 0.1);
-  random_pool.free_state(rng);
-  print_SUN(a);
+  {
+    Foo foo;
+
+    Kokkos::parallel_for("Loop2", Kokkos::TeamPolicy<TagB>(N, Kokkos::AUTO),
+                         foo);
+  }
   Kokkos::finalize();
   return 0;
 }

@@ -1,3 +1,21 @@
+//******************************************************************************/
+//
+// This file is part of the Kokkos Lattice Field Theory (KLFT) library.
+//
+// KLFT is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// KLFT is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with KLFT.  If not, see <http://www.gnu.org/licenses/>.
+//
+//******************************************************************************/
 #pragma once
 #include "FieldTypeHelper.hpp"
 #include "GLOBAL.hpp"
@@ -117,57 +135,79 @@ real_t spinor_norm(
 }
 
 template <size_t rank, size_t Nc, size_t RepDim>
-struct SpinorAddMul {
+struct axpyFunctor {
   using SpinorFieldType =
       typename DeviceSpinorFieldType<rank, Nc, RepDim>::type;
-  const SpinorFieldType a;
-  const SpinorFieldType b;
+  const SpinorFieldType x;
+  const SpinorFieldType y;
   const complex_t alpha;
   SpinorFieldType c;
   const IndexArray<rank> dimensions;
-  SpinorAddMul(const SpinorFieldType& a, const SpinorFieldType& b,
-               SpinorFieldType& c, const complex_t& alpha,
-               const IndexArray<rank>& dimensions)
-      : a(a), b(b), c(c), alpha(alpha), dimensions(dimensions) {}
+  axpyFunctor(const complex_t& alpha, const SpinorFieldType& x,
+              const SpinorFieldType& y, SpinorFieldType& c,
+              const IndexArray<rank>& dimensions)
+      : x(x), y(y), c(c), alpha(alpha), dimensions(dimensions) {}
   template <typename... Indices>
   KOKKOS_FORCEINLINE_FUNCTION void operator()(const Indices... Idcs) const {
-    c(Idcs...) = (a(Idcs...) + (alpha * b(Idcs...)));
+    // axpy(alpha, x(Idcs...), y(Idcs...), c(Idcs...));
+    c(Idcs...) = (y(Idcs...) + (alpha * x(Idcs...)));
   }
 };
+/// @brief Calculates alpha*x+y
+/// @tparam rank
+/// @tparam Nc
+/// @tparam RepDim
+/// @param alpha
+/// @param x
+/// @param y
+/// @return c = alpha*x+y
 template <size_t rank, size_t Nc, size_t RepDim>
-typename DeviceSpinorFieldType<rank, Nc, RepDim>::type spinor_add_mul(
-    const typename DeviceSpinorFieldType<rank, Nc, RepDim>::type& a,
-    const typename DeviceSpinorFieldType<rank, Nc, RepDim>::type& b,
-    const complex_t& alpha) {
-  assert(a.dimensions == b.dimensions);
+typename DeviceSpinorFieldType<rank, Nc, RepDim>::type
+    KOKKOS_FORCEINLINE_FUNCTION
+    axpy(const complex_t& alpha,
+         const typename DeviceSpinorFieldType<rank, Nc, RepDim>::type& x,
+         const typename DeviceSpinorFieldType<rank, Nc, RepDim>::type& y) {
+  assert(x.dimensions == y.dimensions);
   static_assert(
       Kokkos::SpaceAccessibility<
-          typename decltype(a.field)::execution_space,
-          typename decltype(b.field)::memory_space>::accessible,
+          typename decltype(x.field)::execution_space,
+          typename decltype(y.field)::memory_space>::accessible,
       "Execution space of A cannot access memory space of B");  // allow only
                                                                 // device-device
                                                                 // or host-host
                                                                 // interaction
-  IndexArray<rank> start;
-  IndexArray<rank> end;
-  for (index_t i = 0; i < rank; ++i) {
-    start[i] = 0;
-    end[i] = a.dimensions[i];
-  }
+
   using SpinorFieldType =
       typename DeviceSpinorFieldType<rank, Nc, RepDim>::type;
-  SpinorFieldType c(end, complex_t(0.0, 0.0));
-  SpinorAddMul<rank, Nc, RepDim> add(a, b, c, alpha, end);
-  tune_and_launch_for<rank>("SpinorField_add", start, end, add);
+  SpinorFieldType c(x.dimensions, complex_t(0.0, 0.0));
+  IndexArray<rank> start{};
+  axpyFunctor<rank, Nc, RepDim> add(alpha, x, y, c, x.dimensions);
+
+  tune_and_launch_for<rank>("SpinorField_axpy", start, x.dimensions, add);
   Kokkos::fence();
   return c;
 }
-template <size_t rank, size_t Nc, size_t RepDim>
-typename DeviceSpinorFieldType<rank, Nc, RepDim>::type spinor_sub_mul(
-    const typename DeviceSpinorFieldType<rank, Nc, RepDim>::type& a,
-    const typename DeviceSpinorFieldType<rank, Nc, RepDim>::type& b,
-    const complex_t& alpha) {
-  return spinor_add_mul<rank, Nc, RepDim>(a, b, -alpha);
-}
 
+template <size_t rank, size_t Nc, size_t RepDim>
+void KOKKOS_FORCEINLINE_FUNCTION
+axpy(const complex_t& alpha,
+     const typename DeviceSpinorFieldType<rank, Nc, RepDim>::type& x,
+     const typename DeviceSpinorFieldType<rank, Nc, RepDim>::type& y,
+     typename DeviceSpinorFieldType<rank, Nc, RepDim>::type& c) {
+  assert(x.dimensions == y.dimensions);
+  static_assert(
+      Kokkos::SpaceAccessibility<
+          typename decltype(x.field)::execution_space,
+          typename decltype(y.field)::memory_space>::accessible,
+      "Execution space of A cannot access memory space of B");  // allow only
+                                                                // device-device
+                                                                // or host-host
+                                                                // interaction
+  IndexArray<rank> start{};
+  axpyFunctor<rank, Nc, RepDim> add(alpha, x, y, c, x.dimensions);
+
+  tune_and_launch_for<rank>("SpinorField_axpy_inplace", start, x.dimensions,
+                            add);
+  Kokkos::fence();
+}
 }  // namespace klft

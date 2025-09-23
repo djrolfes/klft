@@ -73,6 +73,7 @@ inline bool parseInputFile(const std::string& filename,
 // get GaugeObservableParams from input file
 inline int parseInputFile(const std::string& filename,
                           const std::string& output_directory,
+                          const std::string& output_directory,
                           GaugeObservableParams& gaugeObservableParams) {
   try {
     YAML::Node config = YAML::LoadFile(filename);
@@ -152,8 +153,10 @@ inline int parseInputFile(const std::string& filename,
           gp["topological_charge_filename"].as<std::string>("");
       gaugeObservableParams.plaquette_filename =
           output_directory + gp["plaquette_filename"].as<std::string>("");
+      output_directory + gp["plaquette_filename"].as<std::string>("");
       gaugeObservableParams.W_temp_filename =
           output_directory + gp["W_temp_filename"].as<std::string>("");
+      output_directory + gp["W_temp_filename"].as<std::string>("");
       gaugeObservableParams.W_mu_nu_filename =
           output_directory + gp["W_mu_nu_filename"].as<std::string>("");
       gaugeObservableParams.action_density_filename =
@@ -249,6 +252,7 @@ inline bool parseInputFile(const std::string& filename,
 
 inline int parseInputFile(const std::string& filename,
                           const std::string& output_directory,
+                          const std::string& output_directory,
                           GaugeMonomial_Params& gmparams) {
   try {
     YAML::Node config = YAML::LoadFile(filename);
@@ -272,6 +276,7 @@ inline int parseInputFile(const std::string& filename,
 }
 
 inline int parseInputFile(const std::string& filename,
+                          const std::string& output_directory,
                           const std::string& output_directory,
                           FermionMonomial_Params& fermionParams) {
   try {
@@ -333,6 +338,7 @@ inline int parseInputFile(const std::string& filename,
 
 inline int parseInputFile(const std::string& filename,
                           const std::string& output_directory,
+                          const std::string& output_directory,
                           Integrator_Params& intParams) {
   try {
     YAML::Node config = YAML::LoadFile(filename);
@@ -391,6 +397,8 @@ inline int parseInputFile(const std::string& filename,
       simParams.log_interval = mp["log_interval"].as<size_t>(0);
       simParams.log_filename =
           output_directory + mp["log_filename"].as<std::string>("");
+      simParams.log_filename =
+          output_directory + mp["log_filename"].as<std::string>("");
       simParams.write_to_file = mp["write_to_file"].as<bool>(false);
       simParams.flush = mp["flush"].as<size_t>(25);
 
@@ -423,8 +431,8 @@ inline int parseSanityChecks(const Integrator_Params& iparams,
   // Check if the gauge monomial parameters are set
   if (gmparams.beta <= 0) {
     printf("Error: Gauge Monomial beta must be positive\n");
-    // TODO: Change back
-    //  return false;
+
+    return false;
   }
   printf("resParsef: %d\n", resParsef);
   if (!(resParsef <= 0)) {
@@ -439,7 +447,8 @@ inline int parseSanityChecks(const Integrator_Params& iparams,
       return false;
     }
     // Check for correct solver
-    if (!(fparams.Solver == "CG" && fparams.fermion_type == "HWilson")) {
+    if (!(fparams.Solver == "CG" && (fparams.fermion_type == "HWilson" ||
+                                     fparams.fermion_type == "Wilson"))) {
       printf(
           "Error: Unsupported Fermion Monomial solver: %s for Fermion Type: "
           "%s\n",
@@ -453,10 +462,10 @@ inline int parseSanityChecks(const Integrator_Params& iparams,
       return false;
     }
     // Check if the fermion monomial parameters are set
-    // if (fparams.kappa < 0) {
-    //   printf("Error: Fermion Monomial kappa must be positive\n");
-    //   return false;
-    // }
+    if (fparams.kappa < 0) {
+      printf("Error: Fermion Monomial kappa must be positive\n");
+      return false;
+    }
   }
   return true;
   //

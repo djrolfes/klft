@@ -1,3 +1,21 @@
+//******************************************************************************/
+//
+// This file is part of the Kokkos Lattice Field Theory (KLFT) library.
+//
+// KLFT is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// KLFT is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with KLFT.  If not, see <http://www.gnu.org/licenses/>.
+//
+//******************************************************************************/
 #pragma once
 #include "AdjointSUN.hpp"
 #include "GLOBAL.hpp"
@@ -15,8 +33,11 @@ struct deviceAdjointField {
   SUNAdjField<Nd, Nc> field;
   IndexArray<Nd> dimensions;
 
-  deviceAdjointField(const index_t L0, const index_t L1, const index_t L2,
-                     const index_t L3, const SUNAdj<Nc>& init)
+  deviceAdjointField(const index_t L0,
+                     const index_t L1,
+                     const index_t L2,
+                     const index_t L3,
+                     const SUNAdj<Nc>& init)
       : dimensions({L0, L1, L2, L3}) {
     do_init(field, init);
   }
@@ -75,13 +96,15 @@ struct deviceAdjointField {
   // define accessors with 4D Kokkos array
   template <typename indexType>
   KOKKOS_FORCEINLINE_FUNCTION SUNAdj<Nc>& operator()(
-      const Kokkos::Array<indexType, 4> site, const index_t mu) const {
+      const Kokkos::Array<indexType, 4> site,
+      const index_t mu) const {
     return field(site[0], site[1], site[2], site[3], mu);
   }
 
   template <typename indexType>
   KOKKOS_FORCEINLINE_FUNCTION SUNAdj<Nc>& operator()(
-      const Kokkos::Array<indexType, 4> site, const index_t mu) {
+      const Kokkos::Array<indexType, 4> site,
+      const index_t mu) {
     return field(site[0], site[1], site[2], site[3], mu);
   }
 };
@@ -93,7 +116,9 @@ struct deviceAdjointField3D {
   SUNAdjField3D<Nd, Nc> field;
   IndexArray<Nd> dimensions;
 
-  deviceAdjointField3D(const index_t L0, const index_t L1, const index_t L2,
+  deviceAdjointField3D(const index_t L0,
+                       const index_t L1,
+                       const index_t L2,
                        const SUNAdj<Nc>& init)
       : dimensions({L0, L1, L2}) {
     do_init(field, init);
@@ -146,13 +171,15 @@ struct deviceAdjointField3D {
   // define accessors with 4D Kokkos array
   template <typename indexType>
   KOKKOS_FORCEINLINE_FUNCTION SUNAdj<Nc>& operator()(
-      const Kokkos::Array<indexType, 3> site, const index_t mu) const {
+      const Kokkos::Array<indexType, 3> site,
+      const index_t mu) const {
     return field(site[0], site[1], site[2], mu);
   }
 
   template <typename indexType>
   KOKKOS_FORCEINLINE_FUNCTION SUNAdj<Nc>& operator()(
-      const Kokkos::Array<indexType, 3> site, const index_t mu) {
+      const Kokkos::Array<indexType, 3> site,
+      const index_t mu) {
     return field(site[0], site[1], site[2], mu);
   }
 };
@@ -164,7 +191,8 @@ struct deviceAdjointField2D {
   SUNAdjField2D<Nd, Nc> field;
   IndexArray<Nd> dimensions;
 
-  deviceAdjointField2D(const index_t L0, const index_t L1,
+  deviceAdjointField2D(const index_t L0,
+                       const index_t L1,
                        const SUNAdj<Nc>& init)
       : dimensions({L0, L1}) {
     do_init(field, init);
@@ -215,13 +243,15 @@ struct deviceAdjointField2D {
   // define accessors with 4D Kokkos array
   template <typename indexType>
   KOKKOS_FORCEINLINE_FUNCTION SUNAdj<Nc>& operator()(
-      const Kokkos::Array<indexType, 2> site, const index_t mu) const {
+      const Kokkos::Array<indexType, 2> site,
+      const index_t mu) const {
     return field(site[0], site[1], mu);
   }
 
   template <typename indexType>
   KOKKOS_FORCEINLINE_FUNCTION SUNAdj<Nc>& operator()(
-      const Kokkos::Array<indexType, 2> site, const index_t mu) {
+      const Kokkos::Array<indexType, 2> site,
+      const index_t mu) {
     return field(site[0], site[1], mu);
   }
 };

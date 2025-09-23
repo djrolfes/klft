@@ -32,7 +32,8 @@ namespace klft {
 
 template <size_t Nc>
 KOKKOS_FORCEINLINE_FUNCTION void print_SUNAdj(
-    const SUNAdj<Nc>& a, const std::string& name = "SUNAdj:") {
+    const SUNAdj<Nc>& a,
+    const std::string& name = "SUNAdj:") {
   printf("%s\n", name.c_str());
   for (size_t i = 0; i < Nc * Nc - 1; ++i) {
     printf("    [%zu] = (% .20f)\n", i, a[i]);
