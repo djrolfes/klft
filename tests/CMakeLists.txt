@@ -14,3 +14,4 @@ target_link_libraries(cooling_test PUBLIC klft Kokkos::kokkos yaml-cpp)
 
 # build the Grouptests
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/Group ${CMAKE_CURRENT_BINARY_DIR}/Group)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/Fermions ${CMAKE_CURRENT_BINARY_DIR}/Fermions)
