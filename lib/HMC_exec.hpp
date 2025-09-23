@@ -11,9 +11,9 @@ using RNGType = Kokkos::Random_XorShift64_Pool<Kokkos::DefaultExecutionSpace>;
 namespace klft {
 
 template <typename HMCType>
-int run_HMC(HMCType &hmc, const Integrator_Params &integratorParams,
-            GaugeObservableParams &gaugeObsParams,
-            SimulationLoggingParams &simLogParams) {
+int run_HMC(HMCType& hmc, const Integrator_Params& integratorParams,
+            GaugeObservableParams& gaugeObsParams,
+            SimulationLoggingParams& simLogParams) {
   // initiate and execute the HMC with the given parameters
   printf("Executing HMC ...");
   static_assert(isHMCClass<HMCType>::value,
@@ -92,12 +92,12 @@ int run_HMC(HMCType &hmc, const Integrator_Params &integratorParams,
     // }
     //
     // #define INSTANTIATE_HMC(R, N) \
-//   template int \
-//   run_HMC<DeviceGaugeFieldType<R, N>, DeviceAdjFieldType<R, N>, RNGType>(
+    //   template int \
+    //   run_HMC<DeviceGaugeFieldType<R, N>, DeviceAdjFieldType<R, N>, RNGType>(
     //   \
-//       typename DeviceGaugeFieldType<R, N>::type, \
-//       typename DeviceAdjFieldType<R, N>::type, const HMCParams &, \
-//       GaugeObservableParams &, SimulationLoggingParams &, RNGType &);
+    //       typename DeviceGaugeFieldType<R, N>::type, \
+    //       typename DeviceAdjFieldType<R, N>::type, const HMCParams &, \
+    //       GaugeObservableParams &, SimulationLoggingParams &, RNGType &);
     //
     // INSTANTIATE_HMC(4, 1);
     // INSTANTIATE_HMC(4, 2);
@@ -154,4 +154,4 @@ int run_HMC(HMCType &hmc, const Integrator_Params &integratorParams,
 
 // TODO: when SU3 is fully implemented, add Nc=3 here.
 
-} // namespace klft
+}  // namespace klft

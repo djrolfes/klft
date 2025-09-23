@@ -24,8 +24,8 @@
 
 namespace klft {
 template <size_t Nc>
-KOKKOS_FORCEINLINE_FUNCTION void
-print_SUN(const SUN<Nc> &a, const std::string &name = "SUN Matrix") {
+KOKKOS_FORCEINLINE_FUNCTION void print_SUN(
+    const SUN<Nc>& a, const std::string& name = "SUN Matrix") {
   printf("%s:\n", name.c_str());
   for (size_t i = 0; i < Nc; i++) {
     for (size_t j = 0; j < Nc; j++) {
@@ -37,8 +37,8 @@ print_SUN(const SUN<Nc> &a, const std::string &name = "SUN Matrix") {
 }
 
 template <size_t Nc>
-KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> operator*(const SUN<Nc> &a,
-                                              const SUN<Nc> &b) {
+KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> operator*(const SUN<Nc>& a,
+                                              const SUN<Nc>& b) {
   SUN<Nc> c;
 #pragma unroll
   for (size_t i = 0; i < Nc; ++i) {
@@ -55,14 +55,14 @@ KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> operator*(const SUN<Nc> &a,
 }
 
 template <size_t Nc>
-KOKKOS_FORCEINLINE_FUNCTION void operator*=(SUN<Nc> &a, const SUN<Nc> &b) {
+KOKKOS_FORCEINLINE_FUNCTION void operator*=(SUN<Nc>& a, const SUN<Nc>& b) {
   SUN<Nc> c = a * b;
   a = c;
 }
 
 template <size_t Nc>
-KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> operator+(const SUN<Nc> &a,
-                                              const SUN<Nc> &b) {
+KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> operator+(const SUN<Nc>& a,
+                                              const SUN<Nc>& b) {
   SUN<Nc> c;
 #pragma unroll
   for (size_t i = 0; i < Nc; ++i) {
@@ -75,7 +75,7 @@ KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> operator+(const SUN<Nc> &a,
 }
 
 template <size_t Nc>
-KOKKOS_FORCEINLINE_FUNCTION void operator+=(SUN<Nc> &a, const SUN<Nc> &b) {
+KOKKOS_FORCEINLINE_FUNCTION void operator+=(SUN<Nc>& a, const SUN<Nc>& b) {
 #pragma unroll
   for (size_t i = 0; i < Nc; ++i) {
 #pragma unroll
@@ -86,8 +86,8 @@ KOKKOS_FORCEINLINE_FUNCTION void operator+=(SUN<Nc> &a, const SUN<Nc> &b) {
 }
 
 template <size_t Nc>
-KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> operator-(const SUN<Nc> &a,
-                                              const SUN<Nc> &b) {
+KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> operator-(const SUN<Nc>& a,
+                                              const SUN<Nc>& b) {
   SUN<Nc> c;
 #pragma unroll
   for (size_t i = 0; i < Nc; ++i) {
@@ -100,7 +100,7 @@ KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> operator-(const SUN<Nc> &a,
 }
 
 template <size_t Nc>
-KOKKOS_FORCEINLINE_FUNCTION void operator-=(SUN<Nc> &a, const SUN<Nc> &b) {
+KOKKOS_FORCEINLINE_FUNCTION void operator-=(SUN<Nc>& a, const SUN<Nc>& b) {
 #pragma unroll
   for (size_t i = 0; i < Nc; ++i) {
 #pragma unroll
@@ -111,7 +111,7 @@ KOKKOS_FORCEINLINE_FUNCTION void operator-=(SUN<Nc> &a, const SUN<Nc> &b) {
 }
 
 template <size_t Nc, typename Tin>
-KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> operator*(const SUN<Nc> &a, const Tin &b) {
+KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> operator*(const SUN<Nc>& a, const Tin& b) {
   SUN<Nc> c;
 #pragma unroll
   for (size_t i = 0; i < Nc; ++i) {
@@ -124,7 +124,7 @@ KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> operator*(const SUN<Nc> &a, const Tin &b) {
 }
 
 template <size_t Nc, typename Tin>
-KOKKOS_FORCEINLINE_FUNCTION void operator*=(SUN<Nc> &a, const Tin &b) {
+KOKKOS_FORCEINLINE_FUNCTION void operator*=(SUN<Nc>& a, const Tin& b) {
 #pragma unroll
   for (size_t i = 0; i < Nc; ++i) {
 #pragma unroll
@@ -134,8 +134,8 @@ KOKKOS_FORCEINLINE_FUNCTION void operator*=(SUN<Nc> &a, const Tin &b) {
   }
 }
 template <size_t Nc>
-KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> operator*(const complex_t &a,
-                                              const SUN<Nc> &b) {
+KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> operator*(const complex_t& a,
+                                              const SUN<Nc>& b) {
   SUN<Nc> c;
 #pragma unroll
   for (size_t i = 0; i < Nc; ++i) {
@@ -148,7 +148,7 @@ KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> operator*(const complex_t &a,
 }
 
 template <size_t Nc>
-KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> conj(const SUN<Nc> &a) {
+KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> conj(const SUN<Nc>& a) {
   SUN<Nc> c;
 #pragma unroll
   for (size_t i = 0; i < Nc; ++i) {
@@ -161,7 +161,7 @@ KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> conj(const SUN<Nc> &a) {
 }
 
 template <size_t Nc>
-KOKKOS_FORCEINLINE_FUNCTION complex_t trace(const SUN<Nc> &a) {
+KOKKOS_FORCEINLINE_FUNCTION complex_t trace(const SUN<Nc>& a) {
   complex_t c(0.0, 0.0);
 #pragma unroll
   for (size_t i = 0; i < Nc; ++i) {
@@ -169,7 +169,7 @@ KOKKOS_FORCEINLINE_FUNCTION complex_t trace(const SUN<Nc> &a) {
   }
   return c;
 }
-KOKKOS_FORCEINLINE_FUNCTION SUN<1> traceLessAntiHermitian(const SUN<1> &a) {
+KOKKOS_FORCEINLINE_FUNCTION SUN<1> traceLessAntiHermitian(const SUN<1>& a) {
   SUN<1> res;
   res[0][0] = complex_t(0, a[0][0].imag());
   return res;
@@ -193,7 +193,7 @@ KOKKOS_FORCEINLINE_FUNCTION SUN<1> traceLessAntiHermitian(const SUN<1> &a) {
 // }
 
 template <size_t Nc>
-KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> traceLessAntiHermitian(const SUN<Nc> &a) {
+KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> traceLessAntiHermitian(const SUN<Nc>& a) {
   SUN<Nc> res;
   complex_t tra = 0.0;
   res = (a - conj(a)) * 0.5;
@@ -227,7 +227,7 @@ KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> traceLessAntiHermitian(const SUN<Nc> &a) {
 
 // template <size_t N = Nc, typename std::enable_if<N == 1, int>::type = 0,
 template <class RNG>
-KOKKOS_FORCEINLINE_FUNCTION void randSUN(SUN<1> &r, RNG &generator,
+KOKKOS_FORCEINLINE_FUNCTION void randSUN(SUN<1>& r, RNG& generator,
                                          real_t delta) {
   // SUN<1> r;
   r[0][0] = Kokkos::exp(
@@ -238,7 +238,7 @@ KOKKOS_FORCEINLINE_FUNCTION void randSUN(SUN<1> &r, RNG &generator,
 
 // template <size_t N = Nc, typename std::enable_if<N == 2, int>::type = 0,
 template <class RNG>
-KOKKOS_FORCEINLINE_FUNCTION void randSUN(SUN<2> &r, RNG &generator,
+KOKKOS_FORCEINLINE_FUNCTION void randSUN(SUN<2>& r, RNG& generator,
                                          real_t delta) {
   // SUN<2> r;
   real_t alpha =
@@ -257,7 +257,7 @@ KOKKOS_FORCEINLINE_FUNCTION void randSUN(SUN<2> &r, RNG &generator,
 
 // template <size_t N = Nc, typename std::enable_if<N == 3, int>::type = 0,
 template <class RNG>
-KOKKOS_FORCEINLINE_FUNCTION void randSUN(SUN<3> &r, RNG &generator,
+KOKKOS_FORCEINLINE_FUNCTION void randSUN(SUN<3>& r, RNG& generator,
                                          real_t delta) {
   // SUN<3> r;
   real_t r1[6], r2[6], norm, fact;
@@ -268,8 +268,7 @@ KOKKOS_FORCEINLINE_FUNCTION void randSUN(SUN<3> &r, RNG &generator,
     }
     norm = Kokkos::sqrt(r1[0] * r1[0] + r1[1] * r1[1] + r1[2] * r1[2] +
                         r1[3] * r1[3] + r1[4] * r1[4] + r1[5] * r1[5]);
-    if (1.0 != (1.0 + norm))
-      break;
+    if (1.0 != (1.0 + norm)) break;
   }
   fact = 1.0 / norm;
   z1[0] = fact * complex_t(r1[0], r1[1]);
@@ -282,8 +281,7 @@ KOKKOS_FORCEINLINE_FUNCTION void randSUN(SUN<3> &r, RNG &generator,
       }
       norm = Kokkos::sqrt(r2[0] * r2[0] + r2[1] * r2[1] + r2[2] * r2[2] +
                           r2[3] * r2[3] + r2[4] * r2[4] + r2[5] * r2[5]);
-      if (1.0 != (1.0 + norm))
-        break;
+      if (1.0 != (1.0 + norm)) break;
     }
     fact = 1.0 / norm;
     z2[0] = fact * complex_t(r2[0], r2[1]);
@@ -298,8 +296,7 @@ KOKKOS_FORCEINLINE_FUNCTION void randSUN(SUN<3> &r, RNG &generator,
         Kokkos::sqrt(z2[0].real() * z2[0].real() + z2[0].imag() * z2[0].imag() +
                      z2[1].real() * z2[1].real() + z2[1].imag() * z2[1].imag() +
                      z2[2].real() * z2[2].real() + z2[2].imag() * z2[2].imag());
-    if (1.0 != (1.0 + norm))
-      break;
+    if (1.0 != (1.0 + norm)) break;
   }
   fact = 1.0 / norm;
   z2[0] *= fact;
@@ -324,7 +321,7 @@ KOKKOS_FORCEINLINE_FUNCTION void randSUN(SUN<3> &r, RNG &generator,
 // this also must be defined for each Nc
 
 KOKKOS_FORCEINLINE_FUNCTION
-SUN<1> restoreSUN(const SUN<1> &a) {
+SUN<1> restoreSUN(const SUN<1>& a) {
   SUN<1> c;
   c[0][0] = a[0][0] / Kokkos::sqrt(a[0][0].real() * a[0][0].real() +
                                    a[0][0].imag() * a[0][0].imag());
@@ -332,13 +329,13 @@ SUN<1> restoreSUN(const SUN<1> &a) {
 }
 
 KOKKOS_FORCEINLINE_FUNCTION
-void restoreSUN(SUN<1> &a) {
+void restoreSUN(SUN<1>& a) {
   a[0][0] /= Kokkos::sqrt(a[0][0].real() * a[0][0].real() +
                           a[0][0].imag() * a[0][0].imag());
 }
 
 KOKKOS_FORCEINLINE_FUNCTION
-SUN<2> restoreSUN(const SUN<2> &a) {
+SUN<2> restoreSUN(const SUN<2>& a) {
   SUN<2> c;
   real_t norm = Kokkos::sqrt(
       a[0][0].real() * a[0][0].real() + a[0][0].imag() * a[0][0].imag() +
@@ -359,7 +356,7 @@ SUN<2> restoreSUN(const SUN<2> &a) {
 }
 
 KOKKOS_FORCEINLINE_FUNCTION
-void restoreSUN(SUN<2> &a) {
+void restoreSUN(SUN<2>& a) {
   real_t norm = Kokkos::sqrt(
       a[0][0].real() * a[0][0].real() + a[0][0].imag() * a[0][0].imag() +
       a[0][1].real() * a[0][1].real() + a[0][1].imag() * a[0][1].imag());
@@ -370,7 +367,7 @@ void restoreSUN(SUN<2> &a) {
 }
 
 KOKKOS_FORCEINLINE_FUNCTION
-SUN<3> restoreSUN(const SUN<3> &a) {
+SUN<3> restoreSUN(const SUN<3>& a) {
   SUN<3> c;
   real_t norm0 = Kokkos::sqrt((Kokkos::conj(a[0][0]) * a[0][0] +
                                Kokkos::conj(a[0][1]) * a[0][1] +
@@ -396,7 +393,7 @@ SUN<3> restoreSUN(const SUN<3> &a) {
 }
 
 KOKKOS_FORCEINLINE_FUNCTION
-void restoreSUN(SUN<3> &a) {
+void restoreSUN(SUN<3>& a) {
   real_t norm0 = Kokkos::sqrt((Kokkos::conj(a[0][0]) * a[0][0] +
                                Kokkos::conj(a[0][1]) * a[0][1] +
                                Kokkos::conj(a[0][2]) * a[0][2])
@@ -419,4 +416,4 @@ void restoreSUN(SUN<3> &a) {
   a[1][2] = Kokkos::conj((a[2][0] * a[0][1]) - (a[2][1] * a[0][0]));
 }
 
-} // namespace klft
+}  // namespace klft

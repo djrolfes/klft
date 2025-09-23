@@ -35,8 +35,8 @@ using RNGType = Kokkos::Random_XorShift64_Pool<Kokkos::DefaultExecutionSpace>;
 
 namespace klft {
 
-int build_and_run_HMC(const std::string &input_file,
-                      const std::string &output_directory) {
+int build_and_run_HMC(const std::string& input_file,
+                      const std::string& output_directory) {
   // get verbosity from environment
   const int verbosity = std::getenv("KLFT_VERBOSITY")
                             ? std::atoi(std::getenv("KLFT_VERBOSITY"))
@@ -49,7 +49,7 @@ int build_and_run_HMC(const std::string &input_file,
   // if tuning is enbled, check if the user has set the
   // KLFT_CACHE_FILE environment variable
   if (tuning) {
-    const char *cache_file = std::getenv("KLFT_CACHE_FILE");
+    const char* cache_file = std::getenv("KLFT_CACHE_FILE");
     // if it exists, read the cache
     if (cache_file) {
       if (KLFT_VERBOSITY > 0) {
@@ -133,7 +133,7 @@ int build_and_run_HMC(const std::string &input_file,
         using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
         HField hamiltonian_field = HField(g_4_U1, a_4_U1);
 
-        const auto &dimensions = g_4_U1.dimensions;
+        const auto& dimensions = g_4_U1.dimensions;
 
         using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
         HMC hmc(integratorParams, hamiltonian_field, integrator, rng, dist, mt);
@@ -167,7 +167,7 @@ int build_and_run_HMC(const std::string &input_file,
         using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
         HField hamiltonian_field = HField(g_4_SU2, a_4_SU2);
 
-        const auto &dimensions = g_4_SU2.dimensions;
+        const auto& dimensions = g_4_SU2.dimensions;
 
         using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
         HMC hmc(integratorParams, hamiltonian_field, integrator, rng, dist, mt);
@@ -204,7 +204,7 @@ int build_and_run_HMC(const std::string &input_file,
         using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
         HField hamiltonian_field = HField(g_4_SU3, a_4_SU3);
 
-        const auto &dimensions = g_4_SU3.dimensions;
+        const auto& dimensions = g_4_SU3.dimensions;
 
         using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
         HMC hmc(integratorParams, hamiltonian_field, integrator, rng, dist, mt);
@@ -245,7 +245,7 @@ int build_and_run_HMC(const std::string &input_file,
         using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
         HField hamiltonian_field = HField(g_3_U1, a_3_U1);
 
-        const auto &dimensions = g_3_U1.dimensions;
+        const auto& dimensions = g_3_U1.dimensions;
 
         using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
         HMC hmc(integratorParams, hamiltonian_field, integrator, rng, dist, mt);
@@ -274,7 +274,7 @@ int build_and_run_HMC(const std::string &input_file,
         using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
         HField hamiltonian_field = HField(g_3_SU2, a_3_SU2);
 
-        const auto &dimensions = g_3_SU2.dimensions;
+        const auto& dimensions = g_3_SU2.dimensions;
 
         using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
         HMC hmc(integratorParams, hamiltonian_field, integrator, rng, dist, mt);
@@ -342,7 +342,7 @@ int build_and_run_HMC(const std::string &input_file,
         using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
         HField hamiltonian_field = HField(g_2_U1, a_2_U1);
 
-        const auto &dimensions = g_2_U1.dimensions;
+        const auto& dimensions = g_2_U1.dimensions;
 
         using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
         HMC hmc(integratorParams, hamiltonian_field, integrator, rng, dist, mt);
@@ -370,7 +370,7 @@ int build_and_run_HMC(const std::string &input_file,
         using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
         HField hamiltonian_field = HField(g_2_SU2, a_2_SU2);
 
-        const auto &dimensions = g_2_SU2.dimensions;
+        const auto& dimensions = g_2_SU2.dimensions;
 
         using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
         HMC hmc(integratorParams, hamiltonian_field, integrator, rng, dist, mt);
@@ -414,7 +414,7 @@ int build_and_run_HMC(const std::string &input_file,
         // run_HMC(hmc, integratorParams, gaugeObsParams, simLogParams);
       }
     }
-  } else { // Hotstart
+  } else {  // Hotstart
     if (hmcParams.Ndims == 4) {
       if (hmcParams.Nc == 1) {
         using DGaugeFieldType = DeviceGaugeFieldType<4, 1>;
@@ -435,7 +435,7 @@ int build_and_run_HMC(const std::string &input_file,
         using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
         HField hamiltonian_field = HField(g_4_U1, a_4_U1);
 
-        const auto &dimensions = g_4_U1.dimensions;
+        const auto& dimensions = g_4_U1.dimensions;
 
         using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
         HMC hmc(integratorParams, hamiltonian_field, integrator, rng, dist, mt);
@@ -469,7 +469,7 @@ int build_and_run_HMC(const std::string &input_file,
         using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
         HField hamiltonian_field = HField(g_4_SU2, a_4_SU2);
 
-        const auto &dimensions = g_4_SU2.dimensions;
+        const auto& dimensions = g_4_SU2.dimensions;
 
         using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
         HMC hmc(integratorParams, hamiltonian_field, integrator, rng, dist, mt);
@@ -506,7 +506,7 @@ int build_and_run_HMC(const std::string &input_file,
         using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
         HField hamiltonian_field = HField(g_4_SU3, a_4_SU3);
 
-        const auto &dimensions = g_4_SU3.dimensions;
+        const auto& dimensions = g_4_SU3.dimensions;
 
         using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
         HMC hmc(integratorParams, hamiltonian_field, integrator, rng, dist, mt);
@@ -547,7 +547,7 @@ int build_and_run_HMC(const std::string &input_file,
         using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
         HField hamiltonian_field = HField(g_3_U1, a_3_U1);
 
-        const auto &dimensions = g_3_U1.dimensions;
+        const auto& dimensions = g_3_U1.dimensions;
 
         using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
         HMC hmc(integratorParams, hamiltonian_field, integrator, rng, dist, mt);
@@ -576,7 +576,7 @@ int build_and_run_HMC(const std::string &input_file,
         using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
         HField hamiltonian_field = HField(g_3_SU2, a_3_SU2);
 
-        const auto &dimensions = g_3_SU2.dimensions;
+        const auto& dimensions = g_3_SU2.dimensions;
 
         using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
         HMC hmc(integratorParams, hamiltonian_field, integrator, rng, dist, mt);
@@ -644,7 +644,7 @@ int build_and_run_HMC(const std::string &input_file,
         using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
         HField hamiltonian_field = HField(g_2_U1, a_2_U1);
 
-        const auto &dimensions = g_2_U1.dimensions;
+        const auto& dimensions = g_2_U1.dimensions;
 
         using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
         HMC hmc(integratorParams, hamiltonian_field, integrator, rng, dist, mt);
@@ -672,7 +672,7 @@ int build_and_run_HMC(const std::string &input_file,
         using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
         HField hamiltonian_field = HField(g_2_SU2, a_2_SU2);
 
-        const auto &dimensions = g_2_SU2.dimensions;
+        const auto& dimensions = g_2_SU2.dimensions;
 
         using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
         HMC hmc(integratorParams, hamiltonian_field, integrator, rng, dist, mt);
@@ -722,4 +722,4 @@ int build_and_run_HMC(const std::string &input_file,
   return 0;
   // return 1;
 }
-} // namespace klft
+}  // namespace klft

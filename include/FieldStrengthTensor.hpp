@@ -18,17 +18,18 @@
 //******************************************************************************/
 
 #pragma once
+#include <unistd.h>
+
 #include "FieldTypeHelper.hpp"
 #include "GLOBAL.hpp"
-#include <unistd.h>
 
 namespace klft {
 
 // TODO: move these operators somewhere more appropriate
 template <typename T, size_t N>
-KOKKOS_FORCEINLINE_FUNCTION Kokkos::Array<Kokkos::Array<T, N>, N>
-operator*(const Kokkos::Array<Kokkos::Array<T, N>, N> &a,
-          const Kokkos::Array<Kokkos::Array<T, N>, N> &b) {
+KOKKOS_FORCEINLINE_FUNCTION Kokkos::Array<Kokkos::Array<T, N>, N> operator*(
+    const Kokkos::Array<Kokkos::Array<T, N>, N>& a,
+    const Kokkos::Array<Kokkos::Array<T, N>, N>& b) {
   Kokkos::Array<Kokkos::Array<T, N>, N> c;
 #pragma unroll
   for (size_t i = 0; i < N; ++i) {
@@ -45,8 +46,8 @@ operator*(const Kokkos::Array<Kokkos::Array<T, N>, N> &a,
 }
 
 template <typename T, typename U, size_t N>
-KOKKOS_FORCEINLINE_FUNCTION Kokkos::Array<Kokkos::Array<T, N>, N>
-operator*(const Kokkos::Array<Kokkos::Array<T, N>, N> &a, const U &b) {
+KOKKOS_FORCEINLINE_FUNCTION Kokkos::Array<Kokkos::Array<T, N>, N> operator*(
+    const Kokkos::Array<Kokkos::Array<T, N>, N>& a, const U& b) {
   Kokkos::Array<Kokkos::Array<T, N>, N> c;
 #pragma unroll
   for (size_t i = 0; i < N; ++i) {
@@ -59,8 +60,8 @@ operator*(const Kokkos::Array<Kokkos::Array<T, N>, N> &a, const U &b) {
 }
 
 template <typename T, size_t N>
-KOKKOS_FORCEINLINE_FUNCTION Kokkos::Array<Kokkos::Array<T, N>, N>
-operator-(const Kokkos::Array<Kokkos::Array<T, N>, N> &a) {
+KOKKOS_FORCEINLINE_FUNCTION Kokkos::Array<Kokkos::Array<T, N>, N> operator-(
+    const Kokkos::Array<Kokkos::Array<T, N>, N>& a) {
   Kokkos::Array<Kokkos::Array<T, N>, N> c;
 #pragma unroll
   for (size_t i = 0; i < N; ++i) {
@@ -74,8 +75,8 @@ operator-(const Kokkos::Array<Kokkos::Array<T, N>, N> &a) {
 
 // get the imaginary parts of an SUN matrix
 template <size_t N>
-KOKKOS_FORCEINLINE_FUNCTION Kokkos::Array<Kokkos::Array<real_t, N>, N>
-imag(const SUN<N> &in) {
+KOKKOS_FORCEINLINE_FUNCTION Kokkos::Array<Kokkos::Array<real_t, N>, N> imag(
+    const SUN<N>& in) {
   Kokkos::Array<Kokkos::Array<real_t, N>, N> out{0};
 #pragma unroll
   for (int i = 0; i < N; ++i) {
@@ -90,7 +91,7 @@ imag(const SUN<N> &in) {
 // return the trace of a RealMatrix
 template <size_t N>
 KOKKOS_FORCEINLINE_FUNCTION real_t
-trace(const Kokkos::Array<Kokkos::Array<real_t, N>, N> &in) {
+trace(const Kokkos::Array<Kokkos::Array<real_t, N>, N>& in) {
   real_t out{0};
 #pragma unroll
   for (int i = 0; i < N; ++i) {
@@ -99,7 +100,8 @@ trace(const Kokkos::Array<Kokkos::Array<real_t, N>, N> &in) {
   return out;
 }
 
-template <typename DGaugeFieldType> struct FieldStrengthTensor {
+template <typename DGaugeFieldType>
+struct FieldStrengthTensor {
   // this kernel is defined for rank = Nd
   constexpr static const size_t Nd =
       DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank;
@@ -131,7 +133,6 @@ template <typename DGaugeFieldType> struct FieldStrengthTensor {
   KOKKOS_FORCEINLINE_FUNCTION RealMatrix operator()(
       CloverDef, const indexType i0, const indexType i1, const indexType i2,
       const indexType i3, index_t mu, index_t nu) const {
-
     SUN<Nc> P_munu = zeroSUN<Nc>();
     const IndexArray<Nd> x{static_cast<index_t>(i0), static_cast<index_t>(i1),
                            static_cast<index_t>(i2), static_cast<index_t>(i3)};
@@ -175,4 +176,4 @@ template <typename DGaugeFieldType> struct FieldStrengthTensor {
   }
 };
 
-} // namespace klft
+}  // namespace klft

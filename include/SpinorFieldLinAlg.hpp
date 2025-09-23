@@ -7,7 +7,8 @@
 //  For  now in an external file, should be in SpinorField.hpp
 namespace klft {
 
-template <size_t rank, size_t Nc, size_t RepDim> struct SpinorDotProduct {
+template <size_t rank, size_t Nc, size_t RepDim>
+struct SpinorDotProduct {
   using SpinorFieldType =
       typename DeviceSpinorFieldType<rank, Nc, RepDim>::type;
   const SpinorFieldType a;
@@ -16,10 +17,12 @@ template <size_t rank, size_t Nc, size_t RepDim> struct SpinorDotProduct {
   FieldType dot_product_per_site;
 
   const IndexArray<rank> dimensions;
-  SpinorDotProduct(const SpinorFieldType &a, const SpinorFieldType &b,
-                   FieldType &dot_product_per_site,
-                   const IndexArray<rank> &dimensions)
-      : a(a), b(b), dot_product_per_site(dot_product_per_site),
+  SpinorDotProduct(const SpinorFieldType& a, const SpinorFieldType& b,
+                   FieldType& dot_product_per_site,
+                   const IndexArray<rank>& dimensions)
+      : a(a),
+        b(b),
+        dot_product_per_site(dot_product_per_site),
         dimensions(dimensions) {}
 
   template <typename... Indices>
@@ -31,17 +34,17 @@ template <size_t rank, size_t Nc, size_t RepDim> struct SpinorDotProduct {
 
 template <size_t rank, size_t Nc, size_t RepDim>
 complex_t spinor_dot_product(
-    const typename DeviceSpinorFieldType<rank, Nc, RepDim>::type &a,
-    const typename DeviceSpinorFieldType<rank, Nc, RepDim>::type &b) {
+    const typename DeviceSpinorFieldType<rank, Nc, RepDim>::type& a,
+    const typename DeviceSpinorFieldType<rank, Nc, RepDim>::type& b) {
   assert(a.dimensions == b.dimensions);
   static_assert(
       Kokkos::SpaceAccessibility<
           typename decltype(a.field)::execution_space,
           typename decltype(b.field)::memory_space>::accessible,
-      "Execution space of A cannot access memory space of B"); // allow only
-                                                               // device-device
-                                                               // or host-host
-                                                               // interaction
+      "Execution space of A cannot access memory space of B");  // allow only
+                                                                // device-device
+                                                                // or host-host
+                                                                // interaction
   complex_t result = 0.0;
   IndexArray<rank> start;
   IndexArray<rank> end;
@@ -63,7 +66,8 @@ complex_t spinor_dot_product(
   return result;
 }
 
-template <size_t rank, size_t Nc, size_t RepDim> struct SpinorNorm {
+template <size_t rank, size_t Nc, size_t RepDim>
+struct SpinorNorm {
   using SpinorFieldType =
       typename DeviceSpinorFieldType<rank, Nc, RepDim>::type;
   const SpinorFieldType a;
@@ -71,8 +75,8 @@ template <size_t rank, size_t Nc, size_t RepDim> struct SpinorNorm {
   FieldType norm_per_site;
   const IndexArray<rank> dimensions;
 
-  SpinorNorm(const SpinorFieldType &a, FieldType &norm_per_site,
-             const IndexArray<rank> &dimensions)
+  SpinorNorm(const SpinorFieldType& a, FieldType& norm_per_site,
+             const IndexArray<rank>& dimensions)
       : a(a), norm_per_site(norm_per_site), dimensions(dimensions) {}
 
   template <typename... Indices>
@@ -84,7 +88,7 @@ template <size_t rank, size_t Nc, size_t RepDim> struct SpinorNorm {
 
 template <size_t rank, size_t Nc, size_t RepDim>
 real_t spinor_norm_sq(
-    const typename DeviceSpinorFieldType<rank, Nc, RepDim>::type &a) {
+    const typename DeviceSpinorFieldType<rank, Nc, RepDim>::type& a) {
   real_t result = 0.0;
   IndexArray<rank> start;
   IndexArray<rank> end;
@@ -107,12 +111,13 @@ real_t spinor_norm_sq(
   return result;
 }
 template <size_t rank, size_t Nc, size_t RepDim>
-real_t
-spinor_norm(const typename DeviceSpinorFieldType<rank, Nc, RepDim>::type &a) {
+real_t spinor_norm(
+    const typename DeviceSpinorFieldType<rank, Nc, RepDim>::type& a) {
   return Kokkos::sqrt(spinor_norm_sq<rank, Nc, RepDim>(a));
 }
 
-template <size_t rank, size_t Nc, size_t RepDim> struct SpinorAddMul {
+template <size_t rank, size_t Nc, size_t RepDim>
+struct SpinorAddMul {
   using SpinorFieldType =
       typename DeviceSpinorFieldType<rank, Nc, RepDim>::type;
   const SpinorFieldType a;
@@ -120,9 +125,9 @@ template <size_t rank, size_t Nc, size_t RepDim> struct SpinorAddMul {
   const complex_t alpha;
   SpinorFieldType c;
   const IndexArray<rank> dimensions;
-  SpinorAddMul(const SpinorFieldType &a, const SpinorFieldType &b,
-               SpinorFieldType &c, const complex_t &alpha,
-               const IndexArray<rank> &dimensions)
+  SpinorAddMul(const SpinorFieldType& a, const SpinorFieldType& b,
+               SpinorFieldType& c, const complex_t& alpha,
+               const IndexArray<rank>& dimensions)
       : a(a), b(b), c(c), alpha(alpha), dimensions(dimensions) {}
   template <typename... Indices>
   KOKKOS_FORCEINLINE_FUNCTION void operator()(const Indices... Idcs) const {
@@ -130,19 +135,19 @@ template <size_t rank, size_t Nc, size_t RepDim> struct SpinorAddMul {
   }
 };
 template <size_t rank, size_t Nc, size_t RepDim>
-typename DeviceSpinorFieldType<rank, Nc, RepDim>::type
-spinor_add_mul(const typename DeviceSpinorFieldType<rank, Nc, RepDim>::type &a,
-               const typename DeviceSpinorFieldType<rank, Nc, RepDim>::type &b,
-               const complex_t &alpha) {
+typename DeviceSpinorFieldType<rank, Nc, RepDim>::type spinor_add_mul(
+    const typename DeviceSpinorFieldType<rank, Nc, RepDim>::type& a,
+    const typename DeviceSpinorFieldType<rank, Nc, RepDim>::type& b,
+    const complex_t& alpha) {
   assert(a.dimensions == b.dimensions);
   static_assert(
       Kokkos::SpaceAccessibility<
           typename decltype(a.field)::execution_space,
           typename decltype(b.field)::memory_space>::accessible,
-      "Execution space of A cannot access memory space of B"); // allow only
-                                                               // device-device
-                                                               // or host-host
-                                                               // interaction
+      "Execution space of A cannot access memory space of B");  // allow only
+                                                                // device-device
+                                                                // or host-host
+                                                                // interaction
   IndexArray<rank> start;
   IndexArray<rank> end;
   for (index_t i = 0; i < rank; ++i) {
@@ -158,11 +163,11 @@ spinor_add_mul(const typename DeviceSpinorFieldType<rank, Nc, RepDim>::type &a,
   return c;
 }
 template <size_t rank, size_t Nc, size_t RepDim>
-typename DeviceSpinorFieldType<rank, Nc, RepDim>::type
-spinor_sub_mul(const typename DeviceSpinorFieldType<rank, Nc, RepDim>::type &a,
-               const typename DeviceSpinorFieldType<rank, Nc, RepDim>::type &b,
-               const complex_t &alpha) {
+typename DeviceSpinorFieldType<rank, Nc, RepDim>::type spinor_sub_mul(
+    const typename DeviceSpinorFieldType<rank, Nc, RepDim>::type& a,
+    const typename DeviceSpinorFieldType<rank, Nc, RepDim>::type& b,
+    const complex_t& alpha) {
   return spinor_add_mul<rank, Nc, RepDim>(a, b, -alpha);
 }
 
-} // namespace klft
+}  // namespace klft

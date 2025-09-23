@@ -18,11 +18,12 @@
 //******************************************************************************/
 
 #pragma once
+#include <unistd.h>
+
 #include "FieldStrengthTensor.hpp"
 #include "FieldTypeHelper.hpp"
 #include "GLOBAL.hpp"
 #include "Kokkos_Macros.hpp"
-#include <unistd.h>
 
 namespace klft {
 // first define the necessary functor
@@ -55,8 +56,10 @@ struct TopoCharge {
   const IndexArray<Nd> dimensions;
 
   TopoCharge(const GaugeFieldType g_in)
-      : g_in(g_in), dimensions(g_in.dimensions),
-        charge_per_site(g_in.dimensions, real_t(0)), fst(g_in) {}
+      : g_in(g_in),
+        dimensions(g_in.dimensions),
+        charge_per_site(g_in.dimensions, real_t(0)),
+        fst(g_in) {}
 
   /// Return the 4-D Levi–Civita symbol ε_{μνρσ} for indices 0..3.
   /// Zero if any indices repeat; +1 or –1 otherwise.
@@ -75,8 +78,7 @@ struct TopoCharge {
     int inv = 0;
     for (int i = 0; i < N; ++i) {
       for (int j = i + 1; j < N; ++j) {
-        if (idx[i] > idx[j])
-          ++inv;
+        if (idx[i] > idx[j]) ++inv;
       }
     }
     // parity of inversion count gives sign
@@ -88,9 +90,10 @@ struct TopoCharge {
   // now define the topological charge calculation for a single site (should
   // this also be parallized over some directions?)
   template <typename indexType>
-  KOKKOS_FORCEINLINE_FUNCTION void
-  operator()(const indexType i0, const indexType i1, const indexType i2,
-             const indexType i3) const {
+  KOKKOS_FORCEINLINE_FUNCTION void operator()(const indexType i0,
+                                              const indexType i1,
+                                              const indexType i2,
+                                              const indexType i3) const {
     real_t local_charge{0.0};
     RealMatrix C1, C2;
     Kokkos::Array<Kokkos::Array<RealMatrix, Nd>, Nd> C;
@@ -187,4 +190,4 @@ real_t get_topological_charge(const typename DGaugeFieldType::type g_in) {
 
   return charge / (8 * PI * PI);
 }
-} // namespace klft
+}  // namespace klft

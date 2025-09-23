@@ -3,12 +3,12 @@
 
 namespace klft {
 
-int Metropolis(const std::string &input_file,
-               const std::string &output_directory);
+int Metropolis(const std::string& input_file,
+               const std::string& output_directory);
 
-int PTBC_execute(const std::string &input_file,
-                 const std::string &output_directory);
+int PTBC_execute(const std::string& input_file,
+                 const std::string& output_directory);
 
-int build_and_run_HMC(const std::string &input_file,
-                      const std::string &output_directory);
-} // namespace klft
+int build_and_run_HMC(const std::string& input_file,
+                      const std::string& output_directory);
+}  // namespace klft

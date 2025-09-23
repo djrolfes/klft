@@ -3,7 +3,7 @@
 
 #include <filesystem>
 
-#include "klft.hpp" // or wherever HMC_execute is declared
+#include "klft.hpp"  // or wherever HMC_execute is declared
 using namespace klft;
 
 // we are hard coding the RNG now to use Kokkos::Random_XorShift64_Pool
@@ -13,11 +13,11 @@ using namespace klft;
 
 using RNGType = Kokkos::Random_XorShift64_Pool<Kokkos::DefaultExecutionSpace>;
 
-#define HLINE                                                                  \
+#define HLINE \
   "====================================================================\n"
 
-int parse_args(int argc, char **argv, std::string &input_file,
-               std::string &output_directory) {
+int parse_args(int argc, char** argv, std::string& input_file,
+               std::string& output_directory) {
   // Defaults
   input_file = "../../../input.yaml";
   output_directory = "./";
@@ -45,33 +45,33 @@ int parse_args(int argc, char **argv, std::string &input_file,
   while ((c = getopt_long(argc, argv, "f:o:h", long_options, &option_index)) !=
          -1)
     switch (c) {
-    case 'f':
-      input_file = optarg;
-      break;
-    case 'o':
-      output_directory = optarg;
-      if (output_directory.back() != '/') {
-        output_directory += '/';
-      }
-      if (!std::filesystem::exists(output_directory)) {
-        std::filesystem::create_directories(output_directory);
-      }
-      break;
-    case 'h':
-      printf("%s", help_string.c_str());
-      return -2;
-      break;
-    case 0:
-      break;
-    default:
-      printf("%s", help_string.c_str());
-      return -1;
-      break;
+      case 'f':
+        input_file = optarg;
+        break;
+      case 'o':
+        output_directory = optarg;
+        if (output_directory.back() != '/') {
+          output_directory += '/';
+        }
+        if (!std::filesystem::exists(output_directory)) {
+          std::filesystem::create_directories(output_directory);
+        }
+        break;
+      case 'h':
+        printf("%s", help_string.c_str());
+        return -2;
+        break;
+      case 0:
+        break;
+      default:
+        printf("%s", help_string.c_str());
+        return -1;
+        break;
     }
   return 0;
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
   printf(HLINE);
   printf("HMC for SU(N) gauge fields\n");
   printf(HLINE);

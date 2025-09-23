@@ -11,7 +11,7 @@ typedef enum IntegratorType_s { LEAPFROG = 0, LP_LEAPFROG } IntegratorType;
 
 // template <class UpdatePosition, class UpdateMomentum>
 class Integrator : public std::enable_shared_from_this<Integrator> {
-public:
+ public:
   Integrator() = delete;
   virtual ~Integrator() = default;
 
@@ -19,8 +19,11 @@ public:
              std::shared_ptr<Integrator> nested_,
              std::shared_ptr<UpdatePosition> update_q_,
              std::shared_ptr<UpdateMomentum> update_p_)
-      : n_steps(n_steps_), outermost(outermost_), nested(nested_),
-        update_q(update_q_), update_p(update_p_) {};
+      : n_steps(n_steps_),
+        outermost(outermost_),
+        nested(nested_),
+        update_q(update_q_),
+        update_p(update_p_) {};
 
   virtual void integrate(const real_t tau, const bool last_step) const = 0;
   virtual void halfstep(const real_t tau) const = 0;
@@ -33,8 +36,8 @@ public:
 };
 
 // template <class UpdatePosition, class UpdateMomentum>
-class LeapFrog : public Integrator { // <UpdatePosition, UpdateMomentum> {
-public:
+class LeapFrog : public Integrator {  // <UpdatePosition, UpdateMomentum> {
+ public:
   LeapFrog() = delete;
 
   LeapFrog(const size_t n_steps_, const bool outermost_,
@@ -48,13 +51,11 @@ public:
   void halfstep(const real_t tau) const override {
     const real_t eps = tau / n_steps;
     update_p->update(eps * 0.5);
-    if (nested)
-      nested->halfstep(eps);
+    if (nested) nested->halfstep(eps);
   }
 
   void integrate(const real_t tau, const bool last_step) const override {
-    if (outermost)
-      halfstep(tau);
+    if (outermost) halfstep(tau);
     const real_t eps = tau / n_steps;
     for (size_t i = 0; i < n_steps - 1; ++i) {
       if (nested) {
@@ -73,24 +74,22 @@ public:
     } else {
       update_q->update(eps);
     }
-    if (!last_step && !outermost)
-      update_p->update(eps);
-    if (outermost)
-      halfstep(tau);
+    if (!last_step && !outermost) update_p->update(eps);
+    if (outermost) halfstep(tau);
   }
 
-}; // class LeapFrog
+};  // class LeapFrog
 //
 
 // Still need to add check for different Dirac Operators
 template <typename DGaugeFieldType, typename DAdjFieldType,
           typename DSpinorFieldType>
 std::shared_ptr<Integrator> createIntegrator(
-    typename DGaugeFieldType::type &g_in, typename DAdjFieldType::type &a_in,
-    typename DSpinorFieldType::type &s_in,
-    const Integrator_Params &integratorParams,
-    const GaugeMonomial_Params &gaugeMonomialParams,
-    const FermionMonomial_Params &fermionParams, const int &resParsef) {
+    typename DGaugeFieldType::type& g_in, typename DAdjFieldType::type& a_in,
+    typename DSpinorFieldType::type& s_in,
+    const Integrator_Params& integratorParams,
+    const GaugeMonomial_Params& gaugeMonomialParams,
+    const FermionMonomial_Params& fermionParams, const int& resParsef) {
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
   static_assert(isDeviceAdjFieldType<DAdjFieldType>::value);
   constexpr static size_t rank =
@@ -108,7 +107,7 @@ std::shared_ptr<Integrator> createIntegrator(
   }
   // startingpoit of integrator chain
   std::shared_ptr<Integrator> nested_integrator = nullptr;
-  for (const auto &monomial : integratorParams.monomials) {
+  for (const auto& monomial : integratorParams.monomials) {
     std::shared_ptr<Integrator> integrator = nullptr;
     if (monomial.level == 0) {
       // if the level is 0, we create a new integrator with nullptr as inner
@@ -243,4 +242,4 @@ std::shared_ptr<Integrator> createIntegrator(
   return nested_integrator;
 }
 
-} // namespace klft
+}  // namespace klft

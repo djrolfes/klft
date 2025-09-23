@@ -10,8 +10,9 @@ typedef enum MonomialType_s {
   KLFT_MONOMIAL_KINETIC
 } MonomialType;
 
-template <typename DGaugeFieldType, typename DAdjFieldType> class Monomial {
-public:
+template <typename DGaugeFieldType, typename DAdjFieldType>
+class Monomial {
+ public:
   // template argument deduction and safety
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
   static_assert(isDeviceAdjFieldType<DAdjFieldType>::value);
@@ -44,7 +45,7 @@ public:
     H_new = 0.0;
   }
 
-  void set_time_scale(const unsigned int &_time_scale) {
+  void set_time_scale(const unsigned int& _time_scale) {
     time_scale = _time_scale;
   }
 
@@ -55,7 +56,7 @@ public:
 
 template <typename DGaugeFieldType, typename DAdjFieldType>
 class KineticMonomial : public Monomial<DGaugeFieldType, DAdjFieldType> {
-public:
+ public:
   KineticMonomial(unsigned int _time_scale)
       : Monomial<DGaugeFieldType, DAdjFieldType>(_time_scale) {
     Monomial<DGaugeFieldType, DAdjFieldType>::monomial_type =
@@ -76,4 +77,4 @@ public:
   }
 };
 
-} // namespace klft
+}  // namespace klft

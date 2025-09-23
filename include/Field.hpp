@@ -26,7 +26,6 @@
 namespace klft {
 
 struct deviceField {
-
   deviceField() = delete;
 
   // initialize all sites to a given value
@@ -36,14 +35,14 @@ struct deviceField {
     do_init(L0, L1, L2, L3, field, init);
   }
 
-  deviceField(const IndexArray<4> &dimensions, const complex_t init)
+  deviceField(const IndexArray<4>& dimensions, const complex_t init)
       : dimensions(dimensions) {
     do_init(dimensions[0], dimensions[1], dimensions[2], dimensions[3], field,
             init);
   }
 
   void do_init(const index_t L0, const index_t L1, const index_t L2,
-               const index_t L3, Field &V, const complex_t init) {
+               const index_t L3, Field& V, const complex_t init) {
     Kokkos::realloc(Kokkos::WithoutInitializing, V, L0, L1, L2, L3);
     tune_and_launch_for<4>(
         "init_deviceField", IndexArray<4>{0, 0, 0, 0},
@@ -58,29 +57,31 @@ struct deviceField {
 
   // define accessors
   template <typename indexType>
-  KOKKOS_FORCEINLINE_FUNCTION complex_t &
-  operator()(const indexType i0, const indexType i1, const indexType i2,
-             const indexType i3) const {
+  KOKKOS_FORCEINLINE_FUNCTION complex_t& operator()(const indexType i0,
+                                                    const indexType i1,
+                                                    const indexType i2,
+                                                    const indexType i3) const {
     return field(i0, i1, i2, i3);
   }
 
   template <typename indexType>
-  KOKKOS_FORCEINLINE_FUNCTION complex_t &
-  operator()(const indexType i0, const indexType i1, const indexType i2,
-             const indexType i3) {
+  KOKKOS_FORCEINLINE_FUNCTION complex_t& operator()(const indexType i0,
+                                                    const indexType i1,
+                                                    const indexType i2,
+                                                    const indexType i3) {
     return field(i0, i1, i2, i3);
   }
 
   // define accessors with 4D Kokkos array
   template <typename indexType>
-  KOKKOS_FORCEINLINE_FUNCTION complex_t &
-  operator()(const Kokkos::Array<indexType, 4> site) const {
+  KOKKOS_FORCEINLINE_FUNCTION complex_t& operator()(
+      const Kokkos::Array<indexType, 4> site) const {
     return field(site[0], site[1], site[2], site[3]);
   }
 
   template <typename indexType>
-  KOKKOS_FORCEINLINE_FUNCTION complex_t &
-  operator()(const Kokkos::Array<indexType, 4> site) {
+  KOKKOS_FORCEINLINE_FUNCTION complex_t& operator()(
+      const Kokkos::Array<indexType, 4> site) {
     return field(site[0], site[1], site[2], site[3]);
   }
 
@@ -103,7 +104,7 @@ struct deviceField {
         "sum_deviceField", Policy<4>({0, 0, 0, 0}, dimensions),
         KOKKOS_CLASS_LAMBDA(const index_t i0, const index_t i1,
                             const index_t i2, const index_t i3,
-                            complex_t &lsum) { lsum += field(i0, i1, i2, i3); },
+                            complex_t& lsum) { lsum += field(i0, i1, i2, i3); },
         Kokkos::Sum<complex_t>(sum));
     return sum;
   }
@@ -117,7 +118,6 @@ struct deviceField {
 };
 
 struct deviceField3D {
-
   deviceField3D() = delete;
 
   // initialize all sites to a given value
@@ -127,12 +127,12 @@ struct deviceField3D {
     do_init(L0, L1, L2, field, init);
   }
 
-  deviceField3D(const IndexArray<3> &dimensions, const complex_t init)
+  deviceField3D(const IndexArray<3>& dimensions, const complex_t init)
       : dimensions(dimensions) {
     do_init(dimensions[0], dimensions[1], dimensions[2], field, init);
   }
 
-  void do_init(const index_t L0, const index_t L1, const index_t L2, Field3D &V,
+  void do_init(const index_t L0, const index_t L1, const index_t L2, Field3D& V,
                const complex_t init) {
     Kokkos::realloc(Kokkos::WithoutInitializing, V, L0, L1, L2);
     tune_and_launch_for<3>(
@@ -148,27 +148,29 @@ struct deviceField3D {
 
   // define accessors
   template <typename indexType>
-  KOKKOS_FORCEINLINE_FUNCTION complex_t &
-  operator()(const indexType i0, const indexType i1, const indexType i2) const {
+  KOKKOS_FORCEINLINE_FUNCTION complex_t& operator()(const indexType i0,
+                                                    const indexType i1,
+                                                    const indexType i2) const {
     return field(i0, i1, i2);
   }
 
   template <typename indexType>
-  KOKKOS_FORCEINLINE_FUNCTION complex_t &
-  operator()(const indexType i0, const indexType i1, const indexType i2) {
+  KOKKOS_FORCEINLINE_FUNCTION complex_t& operator()(const indexType i0,
+                                                    const indexType i1,
+                                                    const indexType i2) {
     return field(i0, i1, i2);
   }
 
   // define accessors with 3D Kokkos array
   template <typename indexType>
-  KOKKOS_FORCEINLINE_FUNCTION complex_t &
-  operator()(const Kokkos::Array<indexType, 3> site) const {
+  KOKKOS_FORCEINLINE_FUNCTION complex_t& operator()(
+      const Kokkos::Array<indexType, 3> site) const {
     return field(site[0], site[1], site[2]);
   }
 
   template <typename indexType>
-  KOKKOS_FORCEINLINE_FUNCTION complex_t &
-  operator()(const Kokkos::Array<indexType, 3> site) {
+  KOKKOS_FORCEINLINE_FUNCTION complex_t& operator()(
+      const Kokkos::Array<indexType, 3> site) {
     return field(site[0], site[1], site[2]);
   }
 
@@ -189,14 +191,13 @@ struct deviceField3D {
         "sum_deviceField3D", Policy<3>({0, 0, 0}, dimensions),
         KOKKOS_CLASS_LAMBDA(const index_t i0, const index_t i1,
                             const index_t i2,
-                            complex_t &lsum) { lsum += field(i0, i1, i2); },
+                            complex_t& lsum) { lsum += field(i0, i1, i2); },
         Kokkos::Sum<complex_t>(sum));
     return sum;
   }
 };
 
 struct deviceField2D {
-
   deviceField2D() = delete;
 
   // initialize all sites to a given value
@@ -205,12 +206,12 @@ struct deviceField2D {
     do_init(L0, L1, field, init);
   }
 
-  deviceField2D(const IndexArray<2> &dimensions, const complex_t init)
+  deviceField2D(const IndexArray<2>& dimensions, const complex_t init)
       : dimensions(dimensions) {
     do_init(dimensions[0], dimensions[1], field, init);
   }
 
-  void do_init(const index_t L0, const index_t L1, Field2D &V,
+  void do_init(const index_t L0, const index_t L1, Field2D& V,
                const complex_t init) {
     Kokkos::realloc(Kokkos::WithoutInitializing, V, L0, L1);
     tune_and_launch_for<2>(
@@ -226,27 +227,27 @@ struct deviceField2D {
 
   // define accessors
   template <typename indexType>
-  KOKKOS_FORCEINLINE_FUNCTION complex_t &operator()(const indexType i0,
+  KOKKOS_FORCEINLINE_FUNCTION complex_t& operator()(const indexType i0,
                                                     const indexType i1) const {
     return field(i0, i1);
   }
 
   template <typename indexType>
-  KOKKOS_FORCEINLINE_FUNCTION complex_t &operator()(const indexType i0,
+  KOKKOS_FORCEINLINE_FUNCTION complex_t& operator()(const indexType i0,
                                                     const indexType i1) {
     return field(i0, i1);
   }
 
   // define accessors with 2D Kokkos array
   template <typename indexType>
-  KOKKOS_FORCEINLINE_FUNCTION complex_t &
-  operator()(const Kokkos::Array<indexType, 2> site) const {
+  KOKKOS_FORCEINLINE_FUNCTION complex_t& operator()(
+      const Kokkos::Array<indexType, 2> site) const {
     return field(site[0], site[1]);
   }
 
   template <typename indexType>
-  KOKKOS_FORCEINLINE_FUNCTION complex_t &
-  operator()(const Kokkos::Array<indexType, 2> site) {
+  KOKKOS_FORCEINLINE_FUNCTION complex_t& operator()(
+      const Kokkos::Array<indexType, 2> site) {
     return field(site[0], site[1]);
   }
 
@@ -266,10 +267,10 @@ struct deviceField2D {
     Kokkos::parallel_reduce(
         "sum_deviceField2D", Policy<2>({0, 0}, dimensions),
         KOKKOS_CLASS_LAMBDA(const index_t i0, const index_t i1,
-                            complex_t &lsum) { lsum += field(i0, i1); },
+                            complex_t& lsum) { lsum += field(i0, i1); },
         Kokkos::Sum<complex_t>(sum));
     return sum;
   }
 };
 
-} // namespace klft
+}  // namespace klft

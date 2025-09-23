@@ -30,9 +30,10 @@ struct ActionDensityFunctor {
         fst(_gauge_field) {}
 
   template <typename indexType>
-  KOKKOS_FORCEINLINE_FUNCTION void
-  operator()(const indexType i0, const indexType i1, const indexType i2,
-             const indexType i3) const {
+  KOKKOS_FORCEINLINE_FUNCTION void operator()(const indexType i0,
+                                              const indexType i1,
+                                              const indexType i2,
+                                              const indexType i3) const {
     Kokkos::Array<Kokkos::Array<RealMatrix, Nd>, Nd> C;
 
     for (int mu = 0; mu < Nd; ++mu) {
@@ -79,4 +80,4 @@ real_t getActionDensity(const typename DGaugeFieldType::type g_in) {
 
   return density;
 }
-} // namespace klft
+}  // namespace klft

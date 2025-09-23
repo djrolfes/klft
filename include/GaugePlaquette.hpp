@@ -44,10 +44,12 @@ struct GaugePlaq {
   using FieldType = typename DeviceFieldType<rank>::type;
   FieldType plaq_per_site;
   const IndexArray<rank> dimensions;
-  GaugePlaq(const GaugeFieldType &g_in, FieldType &plaq_per_site,
-            const IndexArray<rank> &dimensions)
-      : g_in(g_in), plaq_per_site(plaq_per_site), dimensions(dimensions) {
-  } // TODO: g_in does copy construction (does it?), this needs to be changed
+  GaugePlaq(const GaugeFieldType& g_in, FieldType& plaq_per_site,
+            const IndexArray<rank>& dimensions)
+      : g_in(g_in),
+        plaq_per_site(plaq_per_site),
+        dimensions(dimensions) {
+  }  // TODO: g_in does copy construction (does it?), this needs to be changed
 
   template <typename... Indices>
   KOKKOS_FORCEINLINE_FUNCTION complex_t
@@ -125,9 +127,9 @@ struct GaugePlaq {
 };
 
 template <size_t rank, size_t Nc, GaugeFieldKind k = GaugeFieldKind::Standard>
-real_t
-GaugePlaquette(const typename DeviceGaugeFieldType<rank, Nc, k>::type &g_in,
-               const bool normalize = true) {
+real_t GaugePlaquette(
+    const typename DeviceGaugeFieldType<rank, Nc, k>::type& g_in,
+    const bool normalize = true) {
   // this kernel is defined for rank = Nd
   constexpr static const size_t Nd = rank;
   // final return variable
@@ -173,4 +175,4 @@ GaugePlaquette(const typename DeviceGaugeFieldType<rank, Nc, k>::type &g_in,
   return Kokkos::real(plaq);
 }
 
-} // namespace klft
+}  // namespace klft

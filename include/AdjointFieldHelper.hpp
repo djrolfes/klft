@@ -4,7 +4,7 @@
 #include "GLOBAL.hpp"
 namespace klft {
 template <typename DAdjFieldType, class RNG>
-void randomize_field(typename DAdjFieldType::type &field, RNG &rng) {
+void randomize_field(typename DAdjFieldType::type& field, RNG& rng) {
   size_t constexpr Nd = DeviceAdjFieldTypeTraits<DAdjFieldType>::Rank;
   size_t constexpr Nc = DeviceAdjFieldTypeTraits<DAdjFieldType>::Nc;
   if constexpr (Nd == 4) {
@@ -46,7 +46,7 @@ void randomize_field(typename DAdjFieldType::type &field, RNG &rng) {
 }
 
 template <typename DAdjFieldType>
-void flip_sign(typename DAdjFieldType::type &field) {
+void flip_sign(typename DAdjFieldType::type& field) {
   size_t constexpr Nd = DeviceAdjFieldTypeTraits<DAdjFieldType>::Rank;
   size_t constexpr Nc = DeviceAdjFieldTypeTraits<DAdjFieldType>::Nc;
   if constexpr (Nd == 4) {
@@ -80,4 +80,4 @@ void flip_sign(typename DAdjFieldType::type &field) {
 
   Kokkos::fence();
 }
-} // namespace klft
+}  // namespace klft

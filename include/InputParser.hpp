@@ -22,25 +22,26 @@
 // different Param structs
 
 #pragma once
+#include <yaml-cpp/yaml.h>
+
 #include "GaugeObservable.hpp"
 #include "HMC_Params.hpp"
 #include "Metropolis_Params.hpp"
 #include "PTBC.hpp"
 #include "SimulationLogging.hpp"
-#include <yaml-cpp/yaml.h>
 
 namespace klft {
 
 // get MetropolisParams from input file
-inline bool parseInputFile(const std::string &filename,
-                           const std::string &output_directory,
-                           MetropolisParams &metropolisParams) {
+inline bool parseInputFile(const std::string& filename,
+                           const std::string& output_directory,
+                           MetropolisParams& metropolisParams) {
   try {
     YAML::Node config = YAML::LoadFile(filename);
 
     // Parse MetropolisParams
     if (config["MetropolisParams"]) {
-      const auto &mp = config["MetropolisParams"];
+      const auto& mp = config["MetropolisParams"];
       // general parameters
       metropolisParams.Ndims = mp["Ndims"].as<index_t>(4);
       metropolisParams.L0 = mp["L0"].as<index_t>(32);
@@ -63,22 +64,22 @@ inline bool parseInputFile(const std::string &filename,
       return false;
     }
     return true;
-  } catch (const YAML::Exception &e) {
+  } catch (const YAML::Exception& e) {
     printf("Error parsing input file: %s\n", e.what());
     return false;
   }
 }
 
 // get GaugeObservableParams from input file
-inline int parseInputFile(const std::string &filename,
-                          const std::string &output_directory,
-                          GaugeObservableParams &gaugeObservableParams) {
+inline int parseInputFile(const std::string& filename,
+                          const std::string& output_directory,
+                          GaugeObservableParams& gaugeObservableParams) {
   try {
     YAML::Node config = YAML::LoadFile(filename);
 
     // Parse GaugeObservableParams
     if (config["GaugeObservableParams"]) {
-      const auto &gp = config["GaugeObservableParams"];
+      const auto& gp = config["GaugeObservableParams"];
       // interval between measurements
       gaugeObservableParams.measurement_interval =
           gp["measurement_interval"].as<size_t>(0);
@@ -99,7 +100,7 @@ inline int parseInputFile(const std::string &filename,
 
       // pairs of (L,T) for the temporal Wilson loop
       if (gp["W_temp_L_T_pairs"]) {
-        for (const auto &pair : gp["W_temp_L_T_pairs"]) {
+        for (const auto& pair : gp["W_temp_L_T_pairs"]) {
           gaugeObservableParams.W_temp_L_T_pairs.push_back(
               IndexArray<2>({pair[0].as<index_t>(), pair[1].as<index_t>()}));
         }
@@ -107,7 +108,7 @@ inline int parseInputFile(const std::string &filename,
 
       // pairs of (mu,nu) for the mu-nu Wilson loop
       if (gp["W_mu_nu_pairs"]) {
-        for (const auto &pair : gp["W_mu_nu_pairs"]) {
+        for (const auto& pair : gp["W_mu_nu_pairs"]) {
           gaugeObservableParams.W_mu_nu_pairs.push_back(
               IndexArray<2>({pair[0].as<index_t>(), pair[1].as<index_t>()}));
         }
@@ -115,7 +116,7 @@ inline int parseInputFile(const std::string &filename,
 
       // pairs of (Lmu,Lnu) for the Wilson loop
       if (gp["W_Lmu_Lnu_pairs"]) {
-        for (const auto &pair : gp["W_Lmu_Lnu_pairs"]) {
+        for (const auto& pair : gp["W_Lmu_Lnu_pairs"]) {
           gaugeObservableParams.W_Lmu_Lnu_pairs.push_back(
               IndexArray<2>({pair[0].as<index_t>(), pair[1].as<index_t>()}));
         }
@@ -127,7 +128,7 @@ inline int parseInputFile(const std::string &filename,
 
       // Parse the WilsonFlowParams sub-node if it exists
       if (gp["WilsonFlowParams"]) {
-        const auto &wfp_node = gp["WilsonFlowParams"];
+        const auto& wfp_node = gp["WilsonFlowParams"];
 
         // Populate the single wilson_flow_params object directly
         gaugeObservableParams.wilson_flow_params.tau =
@@ -142,7 +143,7 @@ inline int parseInputFile(const std::string &filename,
                                gaugeObservableParams.wilson_flow_params.eps);
         } else {
           gaugeObservableParams.wilson_flow_params.n_steps =
-              0; // Avoid division by zero
+              0;  // Avoid division by zero
         }
       }
       // filenames for the measurements
@@ -170,22 +171,22 @@ inline int parseInputFile(const std::string &filename,
       return false;
     }
     return true;
-  } catch (const YAML::Exception &e) {
+  } catch (const YAML::Exception& e) {
     printf("(GaugeObservableParams) Error parsing input file: %s\n", e.what());
     return false;
   }
 }
 
 // get GaugeObservableParams from input file
-inline bool parseInputFile(const std::string &filename,
-                           const std::string &output_directory,
-                           PTBCParams &ptbcParams) {
+inline bool parseInputFile(const std::string& filename,
+                           const std::string& output_directory,
+                           PTBCParams& ptbcParams) {
   try {
     YAML::Node config = YAML::LoadFile(filename);
 
     // Parse GaugeObservableParams
     if (config["PTBCParams"]) {
-      const auto &pp = config["PTBCParams"];
+      const auto& pp = config["PTBCParams"];
       ptbcParams.defect_length = pp["defect_length"].as<index_t>(1);
       if (pp["defect_values"]) {
         auto defect_node = pp["defect_values"];
@@ -199,29 +200,29 @@ inline bool parseInputFile(const std::string &filename,
       } else {
         // Default: single defect value
         ptbcParams.n_sims = 1;
-        ptbcParams.defects = {1.0}; // will this error without resizing?
-      } // ...
+        ptbcParams.defects = {1.0};  // will this error without resizing?
+      }  // ...
     } else {
       printf("Error: PTBCParams not found in input file\n");
       return false;
     }
     return true;
-  } catch (const YAML::Exception &e) {
+  } catch (const YAML::Exception& e) {
     printf("(PTBCParams) Error parsing input file: %s\n", e.what());
     return false;
   }
 }
 
 // get HMCParams from input file
-inline bool parseInputFile(const std::string &filename,
-                           const std::string &output_directory,
-                           HMCParams &hmcParams) {
+inline bool parseInputFile(const std::string& filename,
+                           const std::string& output_directory,
+                           HMCParams& hmcParams) {
   try {
     YAML::Node config = YAML::LoadFile(filename);
 
     // Parse MetropolisParams
     if (config["HMCParams"]) {
-      const auto &mp = config["HMCParams"];
+      const auto& mp = config["HMCParams"];
       // general parameters
       hmcParams.Ndims = mp["Ndims"].as<index_t>(4);
       hmcParams.L0 = mp["L0"].as<index_t>(32);
@@ -240,21 +241,21 @@ inline bool parseInputFile(const std::string &filename,
       return false;
     }
     return true;
-  } catch (const YAML::Exception &e) {
+  } catch (const YAML::Exception& e) {
     printf("(HMC Params) Error parsing input file: %s\n", e.what());
     return false;
   }
 }
 
-inline int parseInputFile(const std::string &filename,
-                          const std::string &output_directory,
-                          GaugeMonomial_Params &gmparams) {
+inline int parseInputFile(const std::string& filename,
+                          const std::string& output_directory,
+                          GaugeMonomial_Params& gmparams) {
   try {
     YAML::Node config = YAML::LoadFile(filename);
 
     // Parse HMCParams
     if (config["Gauge Monomial"]) {
-      const auto &mp = config["Gauge Monomial"];
+      const auto& mp = config["Gauge Monomial"];
       gmparams.level = mp["level"].as<index_t>(1);
       gmparams.beta = mp["beta"].as<real_t>(1.0);
     } else {
@@ -263,22 +264,22 @@ inline int parseInputFile(const std::string &filename,
       // TODO: Change back
       // return false;
     }
-  } catch (const YAML::Exception &e) {
+  } catch (const YAML::Exception& e) {
     printf("(Gauge Monomial) Error parsing input file: %s\n", e.what());
     return false;
   }
   return true;
 }
 
-inline int parseInputFile(const std::string &filename,
-                          const std::string &output_directory,
-                          FermionMonomial_Params &fermionParams) {
+inline int parseInputFile(const std::string& filename,
+                          const std::string& output_directory,
+                          FermionMonomial_Params& fermionParams) {
   try {
     YAML::Node config = YAML::LoadFile(filename);
 
     // Parse FermionParams
     if (config["Fermion Monomial"]) {
-      const auto &fp = config["Fermion Monomial"];
+      const auto& fp = config["Fermion Monomial"];
       fermionParams.level = fp["level"].as<index_t>(0);
       fermionParams.fermion_type = fp["fermion"].as<std::string>("HWilson");
       fermionParams.Solver = fp["solver"].as<std::string>("CG");
@@ -291,22 +292,22 @@ inline int parseInputFile(const std::string &filename,
       return -1;
     }
     return true;
-  } catch (const YAML::Exception &e) {
+  } catch (const YAML::Exception& e) {
     printf("(Fermion Params) Error parsing input file: %s\n", e.what());
     return false;
   }
 }
 
 // get SimulationLoggingParams from input file
-inline int parseInputFile(const std::string &filename,
-                          const std::string &output_directory,
-                          SimulationLoggingParams &simParams) {
+inline int parseInputFile(const std::string& filename,
+                          const std::string& output_directory,
+                          SimulationLoggingParams& simParams) {
   try {
     YAML::Node config = YAML::LoadFile(filename);
 
     // Parse MetropolisParams
     if (config["SimulationLoggingParams"]) {
-      const auto &mp = config["SimulationLoggingParams"];
+      const auto& mp = config["SimulationLoggingParams"];
       // general parameters
       simParams.log_interval = mp["log_interval"].as<size_t>(0);
       simParams.log_filename =
@@ -323,41 +324,41 @@ inline int parseInputFile(const std::string &filename,
       return false;
     }
     return true;
-  } catch (const YAML::Exception &e) {
+  } catch (const YAML::Exception& e) {
     printf("(SimulationLoggingParams) Error parsing input file: %s\n",
            e.what());
     return false;
   }
 }
 
-inline int parseInputFile(const std::string &filename,
-                          const std::string &output_directory,
-                          Integrator_Params &intParams) {
+inline int parseInputFile(const std::string& filename,
+                          const std::string& output_directory,
+                          Integrator_Params& intParams) {
   try {
     YAML::Node config = YAML::LoadFile(filename);
 
     // Parse Integrator_Params
     if (config["Integrator"]) {
-      const auto &ip = config["Integrator"];
+      const auto& ip = config["Integrator"];
 
       intParams.tau = ip["tau"] ? ip["tau"].as<real_t>() : 0.01;
       intParams.nsteps = ip["nSteps"] ? ip["nSteps"].as<index_t>() : 10;
 
       if (ip["Monomials"]) {
-        const auto &monomials = ip["Monomials"];
+        const auto& monomials = ip["Monomials"];
         if (!monomials.IsSequence()) {
           printf("Error: 'Monomials' must be a YAML sequence\n");
           return false;
         }
 
-        for (const auto &mon : monomials) {
+        for (const auto& mon : monomials) {
           auto mono = mon.as<Integrator_Monomial_Params>();
           intParams.monomials.push_back(mono);
         }
         // Sort monomials by level (descending)
         std::sort(intParams.monomials.begin(), intParams.monomials.end(),
-                  [](const Integrator_Monomial_Params &a,
-                     const Integrator_Monomial_Params &b) {
+                  [](const Integrator_Monomial_Params& a,
+                     const Integrator_Monomial_Params& b) {
                     return a.level < b.level;
                   });
       } else {
@@ -370,22 +371,22 @@ inline int parseInputFile(const std::string &filename,
     }
 
     return true;
-  } catch (const YAML::Exception &e) {
+  } catch (const YAML::Exception& e) {
     printf("YAML Error:  %s\n", e.what());
     return false;
   }
 }
 
 // get SimulationLoggingParams from input file
-inline int parseInputFile(const std::string &filename,
-                          const std::string &output_directory,
-                          PTBCSimulationLoggingParams &simParams) {
+inline int parseInputFile(const std::string& filename,
+                          const std::string& output_directory,
+                          PTBCSimulationLoggingParams& simParams) {
   try {
     YAML::Node config = YAML::LoadFile(filename);
 
     // Parse MetropolisParams
     if (config["PTBCSimulationLoggingParams"]) {
-      const auto &mp = config["PTBCSimulationLoggingParams"];
+      const auto& mp = config["PTBCSimulationLoggingParams"];
       // general parameters
       simParams.log_interval = mp["log_interval"].as<size_t>(0);
       simParams.log_filename =
@@ -402,16 +403,16 @@ inline int parseInputFile(const std::string &filename,
       return false;
     }
     return true;
-  } catch (const YAML::Exception &e) {
+  } catch (const YAML::Exception& e) {
     printf("(PTBCSimulationLoggingParams) Error parsing input file: %s\n",
            e.what());
     return false;
   }
 }
 
-inline int parseSanityChecks(const Integrator_Params &iparams,
-                             const GaugeMonomial_Params &gmparams,
-                             const FermionMonomial_Params &fparams,
+inline int parseSanityChecks(const Integrator_Params& iparams,
+                             const GaugeMonomial_Params& gmparams,
+                             const FermionMonomial_Params& fparams,
                              const int resParsef) {
   // Check if the integrator has at least one monomial
   if (iparams.monomials.empty()) {
@@ -439,9 +440,10 @@ inline int parseSanityChecks(const Integrator_Params &iparams,
     }
     // Check for correct solver
     if (!(fparams.Solver == "CG" && fparams.fermion_type == "HWilson")) {
-      printf("Error: Unsupported Fermion Monomial solver: %s for Fermion Type: "
-             "%s\n",
-             fparams.Solver.c_str(), fparams.fermion_type.c_str());
+      printf(
+          "Error: Unsupported Fermion Monomial solver: %s for Fermion Type: "
+          "%s\n",
+          fparams.Solver.c_str(), fparams.fermion_type.c_str());
       return false;
     }
 
@@ -460,11 +462,12 @@ inline int parseSanityChecks(const Integrator_Params &iparams,
   //
 }
 
-} // namespace klft
+}  // namespace klft
 
 namespace YAML {
-template <> struct convert<klft::Integrator_Monomial_Params> {
-  static int decode(const Node &node, klft::Integrator_Monomial_Params &rhs) {
+template <>
+struct convert<klft::Integrator_Monomial_Params> {
+  static int decode(const Node& node, klft::Integrator_Monomial_Params& rhs) {
     if (!node["level"]) {
       printf("Monomial missing required field 'level'\n");
       return false;
@@ -475,4 +478,4 @@ template <> struct convert<klft::Integrator_Monomial_Params> {
     return true;
   }
 };
-} // namespace YAML
+}  // namespace YAML

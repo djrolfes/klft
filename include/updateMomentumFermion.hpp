@@ -49,7 +49,7 @@ class UpdateMomentumWilson : public UpdateMomentum {
   using DiracOp = DiracOperator<DiracOpT, DSpinorFieldType, DGaugeFieldType>;
   using Solver = _Solver<DiracOpT, DSpinorFieldType, DGaugeFieldType>;
 
-public:
+ public:
   using FermionField = typename DSpinorFieldType::type;
   using GaugeFieldType = typename DeviceGaugeFieldType<rank, Nc>::type;
   using AdjFieldType = typename DeviceAdjFieldType<rank, Nc>::type;
@@ -67,12 +67,17 @@ public:
   UpdateMomentumWilson() = delete;
   ~UpdateMomentumWilson() = default;
 
-  UpdateMomentumWilson(FermionField &phi_, const GaugeFieldType &gauge_field_,
-                       AdjFieldType &adjoint_field_,
-                       const diracParams<rank, RepDim> &params_,
-                       const real_t &tol_)
-      : UpdateMomentum(0), phi(phi_), gauge_field(gauge_field_),
-        momentum(adjoint_field_), params(params_), eps(0.0), tol(tol_) {}
+  UpdateMomentumWilson(FermionField& phi_, const GaugeFieldType& gauge_field_,
+                       AdjFieldType& adjoint_field_,
+                       const diracParams<rank, RepDim>& params_,
+                       const real_t& tol_)
+      : UpdateMomentum(0),
+        phi(phi_),
+        gauge_field(gauge_field_),
+        momentum(adjoint_field_),
+        params(params_),
+        eps(0.0),
+        tol(tol_) {}
 
   // Implemntation of the force correspondig to the Hermitian Wilson dirac
   // Operator
@@ -154,4 +159,4 @@ public:
   }
 };
 
-} // namespace klft
+}  // namespace klft

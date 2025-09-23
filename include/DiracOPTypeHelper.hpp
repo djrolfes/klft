@@ -19,7 +19,8 @@
 #pragma once
 #include "DiracOperator.hpp"
 namespace klft {
-template <typename T> struct DiracOpFieldTypeTraits;
+template <typename T>
+struct DiracOpFieldTypeTraits;
 template <template <typename, typename> class _Derived,
           typename _DSpinorFieldType, typename _DGaugeFieldType>
 struct DiracOpFieldTypeTraits<
@@ -43,4 +44,4 @@ struct DiracOpFieldTypeTraits<
   using DGaugeFieldType = _DGaugeFieldType;
 };
 
-} // namespace klft
+}  // namespace klft

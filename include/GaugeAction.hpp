@@ -18,4 +18,4 @@ real_t WilsonAction(typename DGaugeFieldType::type deviceGaugeField,
   real_t plaq = GaugePlaquette<Nd, Nc, k>(deviceGaugeField, false);
   return -(beta / static_cast<real_t>(Nc)) * plaq;
 }
-} // namespace klft
+}  // namespace klft

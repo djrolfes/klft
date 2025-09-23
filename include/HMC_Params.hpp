@@ -26,21 +26,21 @@ namespace klft {
 
 struct HMCParams {
   // general parameters
-  index_t Ndims; // number of dimensions of the simulated system
-  index_t L0;    // length of the first dimension
-  index_t L1;    // length of the second dimension
-  index_t L2;    // length of the third dimension
-  index_t L3;    // length of the fourth dimension
+  index_t Ndims;  // number of dimensions of the simulated system
+  index_t L0;     // length of the first dimension
+  index_t L1;     // length of the second dimension
+  index_t L2;     // length of the third dimension
+  index_t L3;     // length of the fourth dimension
   // hard cutoff at 4 for now, since we have not
   // implemented any 5D cases yet
   // more dimensions can and will be added when necessary
-  real_t rngDelta; // integration "time" for the hmc
-  index_t seed;    // seed for the random number generator
+  real_t rngDelta;  // integration "time" for the hmc
+  index_t seed;     // seed for the random number generator
   bool coldStart;
 
   // parameters specific to the GaugeField
-  size_t Nd; // number of mu degrees of freedom
-  size_t Nc; // number of color degrees of freedom
+  size_t Nd;  // number of mu degrees of freedom
+  size_t Nc;  // number of color degrees of freedom
 
   // add more parameters above this line as needed
   // ...
@@ -89,7 +89,7 @@ struct HMCParams {
 
 struct GaugeMonomial_Params {
   real_t beta;
-  index_t level; // level of integration
+  index_t level;  // level of integration
   // GaugeMonomial_Params(real_t _beta = 1.0) : beta(_beta) {}
   GaugeMonomial_Params() = default;
   void print() const {
@@ -106,8 +106,8 @@ struct GaugeMonomial_Params {
 };
 
 struct FermionMonomial_Params {
-  index_t level;            // level of integration
-  std::string fermion_type; // type of fermion, e.g. Wilson, Staggered
+  index_t level;             // level of integration
+  std::string fermion_type;  // type of fermion, e.g. Wilson, Staggered
   std::string Solver;
   size_t RepDim;
   real_t kappa;
@@ -136,9 +136,9 @@ struct FermionMonomial_Params {
 struct Integrator_Monomial_Params {
   // defines Kind of monomial, i.e. gauge, fermions
   std::string
-      type;      // defines the type of integrator to use for now only Leapfrog
-  index_t level; // level of integration
-  index_t steps; // num of steps
+      type;       // defines the type of integrator to use for now only Leapfrog
+  index_t level;  // level of integration
+  index_t steps;  // num of steps
   // Integrator_Monomial_Params(const std::string& _Kind,
   //                            const std::string& _type = "Leapfrog",
   //                            index_t _level = 0, index_t _steps = 20)
@@ -147,8 +147,8 @@ struct Integrator_Monomial_Params {
 };
 
 struct Integrator_Params {
-  real_t tau;     // integration "time" for the hmc
-  index_t nsteps; // number of hmc steps
+  real_t tau;      // integration "time" for the hmc
+  index_t nsteps;  // number of hmc steps
   std::vector<Integrator_Monomial_Params> monomials;
 
   // Integrator_Params(real_t _tau = 1.0, index_t _nsteps = 10,
@@ -161,7 +161,7 @@ struct Integrator_Params {
       printf("Integrator Parameters:\n");
       printf("  tau: %.3f\n", tau);
       printf("  nsteps: %d\n", nsteps);
-      for (auto &monomial : monomials) {
+      for (auto& monomial : monomials) {
         printf("  Monomial:\n");
         printf("    Type: %s\n", monomial.type.c_str());
         printf("    Level: %d\n", monomial.level);
@@ -170,4 +170,4 @@ struct Integrator_Params {
     }
   }
 };
-} // namespace klft
+}  // namespace klft

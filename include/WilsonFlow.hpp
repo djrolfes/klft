@@ -26,7 +26,8 @@ struct WilsonFlowParams {
   }
 };
 
-template <typename DGaugeFieldType> struct WilsonFlow {
+template <typename DGaugeFieldType>
+struct WilsonFlow {
   // implement the Wilson flow, for now the field will not be copied, but it
   // will be flown in place -> copying needs to be done before
   constexpr static const size_t rank =
@@ -35,7 +36,7 @@ template <typename DGaugeFieldType> struct WilsonFlow {
       DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc;
   constexpr static const GaugeFieldKind Kind =
       DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Kind;
-  static_assert(rank == 4); // The wilson flow is only defined for 4D Fields
+  static_assert(rank == 4);  // The wilson flow is only defined for 4D Fields
   WilsonFlowParams params;
 
   // get the correct deviceGaugeFieldType
@@ -47,7 +48,7 @@ template <typename DGaugeFieldType> struct WilsonFlow {
 
   WilsonFlow() = delete;
 
-  WilsonFlow(const GaugeFieldT &_field, WilsonFlowParams &_params)
+  WilsonFlow(const GaugeFieldT& _field, WilsonFlowParams& _params)
       : params(_params), field(_field.field), tmp_staple(_field.field) {
     const IndexArray<rank> dims = _field.dimensions;
     Kokkos::realloc(Kokkos::WithoutInitializing, tmp_Z, dims[0], dims[1],
@@ -62,10 +63,9 @@ template <typename DGaugeFieldType> struct WilsonFlow {
   }
 
   // execute the wilson flow
-  void flow() { // todo: check this once by saving a staple field and once by
-                // locally calculating the staple
+  void flow() {  // todo: check this once by saving a staple field and once by
+                 // locally calculating the staple
     for (int step = 0; step < params.n_steps; ++step) {
-
 #pragma unroll
       for (index_t fstep = 0; fstep < 3; ++fstep) {
         this->current_step = fstep;
@@ -87,8 +87,8 @@ template <typename DGaugeFieldType> struct WilsonFlow {
     //                  (tmp_staple.field(i0, i1, i2, i3, mu));
     SUN<Nc> Z0_SUN = (tmp_staple.field(i0, i1, i2, i3, mu) *
                       conj(field.field(i0, i1, i2, i3, mu)));
-    SUNAdj<Nc> Z0 = traceT(Z0_SUN); //* (Nc / params.beta);
-    tmp_Z(i0, i1, i2, i3, mu) = Z0; // does this need to be deep copied?
+    SUNAdj<Nc> Z0 = traceT(Z0_SUN);  //* (Nc / params.beta);
+    tmp_Z(i0, i1, i2, i3, mu) = Z0;  // does this need to be deep copied?
     field.field(i0, i1, i2, i3, mu) =
         expoSUN(Z0 * -0.25 * params.eps) * field.field(i0, i1, i2, i3, mu);
     // restoreSUN(field.field(i0, i1, i2, i3, mu));
@@ -101,7 +101,7 @@ template <typename DGaugeFieldType> struct WilsonFlow {
     //                  (tmp_staple.field(i0, i1, i2, i3, mu));
     SUN<Nc> Z1_SUN = (tmp_staple.field(i0, i1, i2, i3, mu) *
                       conj(field.field(i0, i1, i2, i3, mu)));
-    SUNAdj<Nc> Z1 = traceT(Z1_SUN); // * (Nc / params.beta);
+    SUNAdj<Nc> Z1 = traceT(Z1_SUN);  // * (Nc / params.beta);
     SUNAdj<Nc> Z0 = tmp_Z(i0, i1, i2, i3, mu);
     Z1 = Z1 * static_cast<real_t>(8.0 / 9.0) -
          Z0 * static_cast<real_t>(17.0 / 36.0);
@@ -118,7 +118,7 @@ template <typename DGaugeFieldType> struct WilsonFlow {
     //                  (tmp_staple.field(i0, i1, i2, i3, mu));
     SUN<Nc> Z2_SUN = (tmp_staple.field(i0, i1, i2, i3, mu) *
                       conj(field.field(i0, i1, i2, i3, mu)));
-    SUNAdj<Nc> Z2 = traceT(Z2_SUN); // * (Nc / params.beta);
+    SUNAdj<Nc> Z2 = traceT(Z2_SUN);  // * (Nc / params.beta);
     SUNAdj<Nc> Z_old = tmp_Z(i0, i1, i2, i3, mu);
     Z2 = (Z2 * 0.75 - Z_old);
     // SUNAdj<Nc> tmp = (Z2);
@@ -134,18 +134,18 @@ template <typename DGaugeFieldType> struct WilsonFlow {
 #pragma unroll
     for (index_t mu = 0; mu < 4; ++mu) {
       switch (this->current_step) {
-      case 0:
-        stepW1(i0, i1, i2, i3, mu);
-        break;
-      case 1:
-        stepW2(i0, i1, i2, i3, mu);
-        break;
-      case 2:
-        stepV(i0, i1, i2, i3, mu);
-        break;
+        case 0:
+          stepW1(i0, i1, i2, i3, mu);
+          break;
+        case 1:
+          stepW2(i0, i1, i2, i3, mu);
+          break;
+        case 2:
+          stepV(i0, i1, i2, i3, mu);
+          break;
       }
     }
   }
 };
 
-} // namespace klft
+}  // namespace klft
