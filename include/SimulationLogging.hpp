@@ -124,7 +124,7 @@ inline void forceflushSimulationLogs(SimulationLoggingParams& params,
   }
   // open the log file
   std::ofstream file(params.log_filename, std::ios::app);
-  std::ofstream file(params.log_filename, std::ios::app);
+
   if (!file.is_open()) {
     printf("Error: could not open log file %s\n", params.log_filename.c_str());
     return;

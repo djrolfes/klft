@@ -73,7 +73,6 @@ inline bool parseInputFile(const std::string& filename,
 // get GaugeObservableParams from input file
 inline int parseInputFile(const std::string& filename,
                           const std::string& output_directory,
-                          const std::string& output_directory,
                           GaugeObservableParams& gaugeObservableParams) {
   try {
     YAML::Node config = YAML::LoadFile(filename);
@@ -252,7 +251,6 @@ inline bool parseInputFile(const std::string& filename,
 
 inline int parseInputFile(const std::string& filename,
                           const std::string& output_directory,
-                          const std::string& output_directory,
                           GaugeMonomial_Params& gmparams) {
   try {
     YAML::Node config = YAML::LoadFile(filename);
@@ -276,7 +274,6 @@ inline int parseInputFile(const std::string& filename,
 }
 
 inline int parseInputFile(const std::string& filename,
-                          const std::string& output_directory,
                           const std::string& output_directory,
                           FermionMonomial_Params& fermionParams) {
   try {
@@ -337,7 +334,6 @@ inline int parseInputFile(const std::string& filename,
 }
 
 inline int parseInputFile(const std::string& filename,
-                          const std::string& output_directory,
                           const std::string& output_directory,
                           Integrator_Params& intParams) {
   try {

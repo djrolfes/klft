@@ -92,7 +92,19 @@ template <size_t Nc>
 struct DeviceGaugeFieldType<2, Nc, GaugeFieldKind::PTBC> {
   using type = devicePTBCGaugeField2D<2, Nc>;
 };
+template <typename T>
+struct DeviceGaugeFieldConverter;
 
+template <size_t rank, size_t Nc>
+struct DeviceGaugeFieldConverter<
+    DeviceGaugeFieldType<rank, Nc, GaugeFieldKind::PTBC>> {
+  using type = DeviceGaugeFieldType<rank, Nc, GaugeFieldKind::Standard>;
+};
+template <size_t rank, size_t Nc>
+struct DeviceGaugeFieldConverter<
+    DeviceGaugeFieldType<rank, Nc, GaugeFieldKind::Standard>> {
+  using type = DeviceGaugeFieldType<rank, Nc, GaugeFieldKind::Standard>;
+};
 // define Traits to extract the rank, Nc and GaugeFieldKind at a later point
 template <typename T>
 struct DeviceGaugeFieldTypeTraits;

@@ -115,8 +115,9 @@
             "displayName": "GCC Release CUDA",
             "description": "Using compilers: C = /usr/bin/gcc, CXX = /usr/bin/g++",
             "cacheVariables": {
-                "CMAKE_C_COMPILER": "/usr/bin/gcc",
-                "CMAKE_CXX_COMPILER": "/usr/bin/g++",
+                "CMAKE_C_COMPILER": "mpicc",
+                "CMAKE_CXX_COMPILER": "mpicxx",
+                "CMAKE_CUDA_COMPILER": "/usr/local/cuda/bin/nvcc",
                 "Kokkos_ENABLE_SERIAL": "OFF",
                 "Kokkos_ENABLE_OPENMP": "ON",
                 "Kokkos_ENABLE_CUDA": "ON",

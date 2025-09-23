@@ -68,7 +68,7 @@ class UpdateMomentumWilson : public UpdateMomentum {
   UpdateMomentumWilson() = delete;
   ~UpdateMomentumWilson() = default;
 
-  UpdateMomentumWilson(FermionField& phi_, GaugeFieldType& gauge_field_,
+  UpdateMomentumWilson(FermionField& phi_, const GaugeFieldType& gauge_field_,
                        AdjFieldType& adjoint_field_, const diracParams& params_,
                        const real_t& tol_)
       : UpdateMomentum(0),

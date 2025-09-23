@@ -1,9 +1,12 @@
 
 #include "wilsonflow_sp_test.hpp"
+
+#include <getopt.h>
+
+#include <filesystem>
+
 #include "InputParser.hpp"
 #include "PTBC.hpp"
-#include <filesystem>
-#include <getopt.h>
 
 using namespace klft;
 
@@ -14,11 +17,11 @@ using namespace klft;
 
 using RNGType = Kokkos::Random_XorShift64_Pool<Kokkos::DefaultExecutionSpace>;
 
-#define HLINE                                                                  \
+#define HLINE \
   "====================================================================\n"
 
-int parse_args(int argc, char **argv, std::string &input_file,
-               std::string &output_directory) {
+int parse_args(int argc, char** argv, std::string& input_file,
+               std::string& output_directory) {
   // Defaults
   input_file = "../../../input.yaml";
   output_directory = "./";
@@ -46,33 +49,33 @@ int parse_args(int argc, char **argv, std::string &input_file,
   while ((c = getopt_long(argc, argv, "f:o:h", long_options, &option_index)) !=
          -1)
     switch (c) {
-    case 'f':
-      input_file = optarg;
-      break;
-    case 'o':
-      output_directory = optarg;
-      if (output_directory.back() != '/') {
-        output_directory += '/';
-      }
-      if (!std::filesystem::exists(output_directory)) {
-        std::filesystem::create_directories(output_directory);
-      }
-      break;
-    case 'h':
-      printf("%s", help_string.c_str());
-      return -2;
-      break;
-    case 0:
-      break;
-    default:
-      printf("%s", help_string.c_str());
-      return -1;
-      break;
+      case 'f':
+        input_file = optarg;
+        break;
+      case 'o':
+        output_directory = optarg;
+        if (output_directory.back() != '/') {
+          output_directory += '/';
+        }
+        if (!std::filesystem::exists(output_directory)) {
+          std::filesystem::create_directories(output_directory);
+        }
+        break;
+      case 'h':
+        printf("%s", help_string.c_str());
+        return -2;
+        break;
+      case 0:
+        break;
+      default:
+        printf("%s", help_string.c_str());
+        return -1;
+        break;
     }
   return 0;
 }
 
-std::string ranked_filename(const std::string &base_filename, int rank) {
+std::string ranked_filename(const std::string& base_filename, int rank) {
   auto pos = base_filename.rfind('.');
   if (pos == std::string::npos) {
     // No extension → just append
@@ -84,9 +87,8 @@ std::string ranked_filename(const std::string &base_filename, int rank) {
   }
 }
 
-int test_wilsonflow_sp(const std::string &input_file,
-                       const std::string &output_directory) {
-
+int test_wilsonflow_sp(const std::string& input_file,
+                       const std::string& output_directory) {
   PTBCParams ptbcParams;
   HMCParams hmcParams;
   GaugeObservableParams gaugeObsParams;
@@ -143,8 +145,8 @@ int test_wilsonflow_sp(const std::string &input_file,
   hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
   hmc.add_kinetic_monomial(0);
   if (resParsef > 0) {
-    auto diracParams = getDiracParams<4>(g_4_SU2.dimensions, fermionParams);
-    hmc.add_fermion_monomial<CGSolver, HWilsonDiracOperator, DSpinorFieldType>(
+    auto diracParams = getDiracParams(fermionParams);
+    hmc.add_fermion_monomial<CGSolver, WilsonDiracOperator, DSpinorFieldType>(
         s_4_SU2, diracParams, fermionParams.tol, rng, 0);
   }
 
@@ -156,7 +158,7 @@ int test_wilsonflow_sp(const std::string &input_file,
   if (!output_file_topologicalcharge.is_open()) {
     fprintf(stderr, "Error: Could not open output file %s\n",
             output_filename.c_str());
-    return -1; // Or handle the error as appropriate
+    return -1;  // Or handle the error as appropriate
   }
 
   std::string output_filename_action_density =
@@ -166,7 +168,7 @@ int test_wilsonflow_sp(const std::string &input_file,
   if (!output_file_actiondensity.is_open()) {
     fprintf(stderr, "Error: Could not open output file %s\n",
             output_filename_action_density.c_str());
-    return -1; // Or handle the error as appropriate
+    return -1;  // Or handle the error as appropriate
   }
 
   std::string output_filename_sp_dist =
@@ -176,7 +178,7 @@ int test_wilsonflow_sp(const std::string &input_file,
   if (!output_file_sp_dist.is_open()) {
     fprintf(stderr, "Error: Could not open output file %s\n",
             output_filename_sp_dist.c_str());
-    return -1; // Or handle the error as appropriate
+    return -1;  // Or handle the error as appropriate
   }
 
   std::string output_filename_sp_max = output_directory + "sp_max.txt";
@@ -185,7 +187,7 @@ int test_wilsonflow_sp(const std::string &input_file,
   if (!output_file_sp_max.is_open()) {
     fprintf(stderr, "Error: Could not open output file %s\n",
             output_filename_sp_max.c_str());
-    return -1; // Or handle the error as appropriate
+    return -1;  // Or handle the error as appropriate
   }
 
   // Set precision for floating point numbers in the output file
@@ -240,7 +242,7 @@ int test_wilsonflow_sp(const std::string &input_file,
     output_file_actiondensity << "hmc_step";
     output_file_sp_dist << "hmc_step";
     output_file_sp_max << "hmc_step";
-    for (const auto &t : flow_times) {
+    for (const auto& t : flow_times) {
       output_file_topologicalcharge << "," << t;
       output_file_actiondensity << "," << t;
       output_file_sp_max << "," << t;
@@ -259,24 +261,24 @@ int test_wilsonflow_sp(const std::string &input_file,
 
   // Write the data for the current step
   output_file_topologicalcharge << 0;
-  for (const auto &charge : topological_charges) {
+  for (const auto& charge : topological_charges) {
     output_file_topologicalcharge << "," << charge;
   }
   output_file_topologicalcharge << "\n";
   output_file_actiondensity << 0;
-  for (const auto &density : action_densities) {
+  for (const auto& density : action_densities) {
     output_file_actiondensity << "," << density;
   }
   output_file_actiondensity << "\n";
 
   output_file_sp_dist << 0;
-  for (const auto &dist : sp_dist) {
+  for (const auto& dist : sp_dist) {
     output_file_sp_dist << "," << dist;
   }
   output_file_sp_dist << "\n";
 
   output_file_sp_max << 0;
-  for (const auto &max : sp_max) {
+  for (const auto& max : sp_max) {
     output_file_sp_max << "," << max;
   }
   output_file_sp_max << "\n";
@@ -303,7 +305,6 @@ int test_wilsonflow_sp(const std::string &input_file,
     }
 
     if (accept) {
-
       WilsonFlow<DGaugeFieldType> wilson_flow(
           hamiltonian_field.gauge_field, gaugeObsParams.wilson_flow_params);
       flow_times.push_back(0.0);
@@ -345,22 +346,22 @@ int test_wilsonflow_sp(const std::string &input_file,
 
       // Write the data for the current step
       output_file_topologicalcharge << step;
-      for (const auto &charge : topological_charges) {
+      for (const auto& charge : topological_charges) {
         output_file_topologicalcharge << "," << charge;
       }
       output_file_topologicalcharge << "\n";
       output_file_actiondensity << step;
-      for (const auto &density : action_densities) {
+      for (const auto& density : action_densities) {
         output_file_actiondensity << "," << density;
       }
       output_file_actiondensity << "\n";
       output_file_sp_dist << step;
-      for (const auto &dist : sp_dist) {
+      for (const auto& dist : sp_dist) {
         output_file_sp_dist << "," << dist;
       }
       output_file_sp_dist << "\n";
       output_file_sp_max << step;
-      for (const auto &max : sp_max) {
+      for (const auto& max : sp_max) {
         output_file_sp_max << "," << max;
       }
       output_file_sp_max << "\n";
@@ -369,7 +370,7 @@ int test_wilsonflow_sp(const std::string &input_file,
   return 0;
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
   printf(HLINE);
   printf("HMC for SU(N) gauge fields\n");
   printf(HLINE);

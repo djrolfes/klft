@@ -1,3 +1,9 @@
+#include <getopt.h>
+
+#include <cassert>
+#include <cstddef>
+#include <memory>
+
 #include "AdjointSUN.hpp"
 #include "FieldTypeHelper.hpp"
 #include "GLOBAL.hpp"
@@ -9,10 +15,6 @@
 #include "SimulationLogging.hpp"
 #include "UpdateMomentum.hpp"
 #include "UpdatePosition.hpp"
-#include <cassert>
-#include <cstddef>
-#include <getopt.h>
-#include <memory>
 
 using namespace klft;
 
@@ -20,10 +22,10 @@ using namespace klft;
 
 using RNGType = Kokkos::Random_XorShift64_Pool<Kokkos::DefaultExecutionSpace>;
 
-#define HLINE                                                                  \
+#define HLINE \
   "====================================================================\n"
 
-int parse_args(int argc, char **argv, std::string &input_file) {
+int parse_args(int argc, char** argv, std::string& input_file) {
   // Defaults
   input_file = "input.yaml";
 
@@ -46,26 +48,25 @@ int parse_args(int argc, char **argv, std::string &input_file) {
   while ((c = getopt_long(argc, argv, "f:h", long_options, &option_index)) !=
          -1)
     switch (c) {
-    case 'f':
-      input_file = optarg;
-      break;
-    case 'h':
-      printf("%s", help_string.c_str());
-      return -2;
-      break;
-    case 0:
-      break;
-    default:
-      printf("%s", help_string.c_str());
-      return -1;
-      break;
+      case 'f':
+        input_file = optarg;
+        break;
+      case 'h':
+        printf("%s", help_string.c_str());
+        return -2;
+        break;
+      case 0:
+        break;
+      default:
+        printf("%s", help_string.c_str());
+        return -1;
+        break;
     }
   return 0;
 }
 
-int test_reversability(const std::string &input_file,
-                       const std::string &output_directory) {
-
+int test_reversability(const std::string& input_file,
+                       const std::string& output_directory) {
   PTBCParams ptbcParams;
   HMCParams hmcParams;
   GaugeObservableParams gaugeObsParams;
@@ -122,13 +123,12 @@ int test_reversability(const std::string &input_file,
   hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
   hmc.add_kinetic_monomial(0);
   if (resParsef > 0) {
-    auto diracParams = getDiracParams<4>(g_4_SU2.dimensions, fermionParams);
+    auto diracParams = getDiracParams(fermionParams);
     hmc.add_fermion_monomial<CGSolver, HWilsonDiracOperator, DSpinorFieldType>(
         s_4_SU2, diracParams, fermionParams.tol, rng, 0);
   }
 
   for (size_t step = 0; step < integratorParams.nsteps; ++step) {
-
     // perform hmc_step
     bool accept = hmc.hmc_step(true);
   }
@@ -136,7 +136,7 @@ int test_reversability(const std::string &input_file,
   return 0;
 }
 // for now, the test only allows for Nd=4
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
   printf(HLINE);
   printf("HMC for SU(N) gauge fields\n");
   printf(HLINE);

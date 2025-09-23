@@ -32,8 +32,7 @@ namespace klft {
 
 template <size_t Nc>
 KOKKOS_FORCEINLINE_FUNCTION void print_SUNAdj(
-    const SUNAdj<Nc>& a,
-    const std::string& name = "SUNAdj:") {
+    const SUNAdj<Nc>& a, const std::string& name = "SUNAdj:") {
   printf("%s\n", name.c_str());
   for (size_t i = 0; i < Nc * Nc - 1; ++i) {
     printf("    [%zu] = (% .20f)\n", i, a[i]);
@@ -297,7 +296,7 @@ SUN<3> expoSUN(const SUNAdj<3>& a) {
   real_t d = imag_det_SU3(a_tmp);
 
   // printf("D: %f\n", d);
-  size_t test_var = n_iter_expoSU3;
+
   // now we can compute the exponential
   // q_{N,0} = c_N
   complex_t p0 = coeffs_expoSU3[n_iter_expoSU3];

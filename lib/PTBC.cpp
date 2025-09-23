@@ -125,8 +125,7 @@ int PTBC_execute(const std::string& input_file,
         hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
         hmc.add_kinetic_monomial(0);
         if (resParsef > 0) {
-          auto diracParams =
-              getDiracParams<4>(g_4_U1.dimensions, fermionParams);
+          auto diracParams = getDiracParams(fermionParams);
           hmc.add_fermion_monomial<CGSolver, HWilsonDiracOperator,
                                    DSpinorFieldType>(s_4_U1, diracParams,
                                                      fermionParams.tol, rng, 0);
@@ -163,8 +162,7 @@ int PTBC_execute(const std::string& input_file,
         hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
         hmc.add_kinetic_monomial(0);
         if (resParsef > 0) {
-          auto diracParams =
-              getDiracParams<4>(g_4_SU2.dimensions, fermionParams);
+          auto diracParams = getDiracParams(fermionParams);
           hmc.add_fermion_monomial<CGSolver, HWilsonDiracOperator,
                                    DSpinorFieldType>(s_4_SU2, diracParams,
                                                      fermionParams.tol, rng, 0);
@@ -208,7 +206,7 @@ int PTBC_execute(const std::string& input_file,
         // hmc.add_kinetic_monomial(0);
         // if (resParsef > 0) {
         //   auto diracParams =
-        //       getDiracParams<4>(g_4_U1.dimensions, fermionParams);
+        //       getDiracParams( fermionParams);
         //   hmc.add_fermion_monomial<CGSolver, HWilsonDiracOperator,
         //                            DSpinorFieldType>(s_4_U1, diracParams,
         //                                              fermionParams.tol, rng,
@@ -256,8 +254,7 @@ int PTBC_execute(const std::string& input_file,
         hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
         hmc.add_kinetic_monomial(0);
         if (resParsef > 0) {
-          auto diracParams =
-              getDiracParams<3>(g_3_U1.dimensions, fermionParams);
+          auto diracParams = getDiracParams(fermionParams);
           hmc.add_fermion_monomial<CGSolver, HWilsonDiracOperator,
                                    DSpinorFieldType>(s_3_U1, diracParams,
                                                      fermionParams.tol, rng, 0);
@@ -293,8 +290,7 @@ int PTBC_execute(const std::string& input_file,
         hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
         hmc.add_kinetic_monomial(0);
         if (resParsef > 0) {
-          auto diracParams =
-              getDiracParams<3>(g_3_SU2.dimensions, fermionParams);
+          auto diracParams = getDiracParams(fermionParams);
           hmc.add_fermion_monomial<CGSolver, HWilsonDiracOperator,
                                    DSpinorFieldType>(s_3_SU2, diracParams,
                                                      fermionParams.tol, rng, 0);
@@ -375,8 +371,7 @@ int PTBC_execute(const std::string& input_file,
         hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
         hmc.add_kinetic_monomial(0);
         if (resParsef > 0) {
-          auto diracParams =
-              getDiracParams<2>(g_2_U1.dimensions, fermionParams);
+          auto diracParams = getDiracParams(fermionParams);
           hmc.add_fermion_monomial<CGSolver, HWilsonDiracOperator,
                                    DSpinorFieldType>(s_2_U1, diracParams,
                                                      fermionParams.tol, rng, 0);
@@ -410,8 +405,7 @@ int PTBC_execute(const std::string& input_file,
         hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
         hmc.add_kinetic_monomial(0);
         if (resParsef > 0) {
-          auto diracParams =
-              getDiracParams<2>(g_2_SU2.dimensions, fermionParams);
+          auto diracParams = getDiracParams(fermionParams);
           hmc.add_fermion_monomial<CGSolver, HWilsonDiracOperator,
                                    DSpinorFieldType>(s_2_SU2, diracParams,
                                                      fermionParams.tol, rng, 0);
@@ -491,8 +485,7 @@ int PTBC_execute(const std::string& input_file,
         hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
         hmc.add_kinetic_monomial(0);
         if (resParsef > 0) {
-          auto diracParams =
-              getDiracParams<4>(g_4_U1.dimensions, fermionParams);
+          auto diracParams = getDiracParams(fermionParams);
           hmc.add_fermion_monomial<CGSolver, HWilsonDiracOperator,
                                    DSpinorFieldType>(s_4_U1, diracParams,
                                                      fermionParams.tol, rng, 0);
@@ -528,8 +521,7 @@ int PTBC_execute(const std::string& input_file,
         hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
         hmc.add_kinetic_monomial(0);
         if (resParsef > 0) {
-          auto diracParams =
-              getDiracParams<4>(g_4_SU2.dimensions, fermionParams);
+          auto diracParams = getDiracParams(fermionParams);
           hmc.add_fermion_monomial<CGSolver, HWilsonDiracOperator,
                                    DSpinorFieldType>(s_4_SU2, diracParams,
                                                      fermionParams.tol, rng, 0);
@@ -585,8 +577,7 @@ int PTBC_execute(const std::string& input_file,
         hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
         hmc.add_kinetic_monomial(0);
         if (resParsef > 0) {
-          auto diracParams =
-              getDiracParams<3>(g_3_U1.dimensions, fermionParams);
+          auto diracParams = getDiracParams(fermionParams);
           hmc.add_fermion_monomial<CGSolver, HWilsonDiracOperator,
                                    DSpinorFieldType>(s_3_U1, diracParams,
                                                      fermionParams.tol, rng, 0);
@@ -621,8 +612,7 @@ int PTBC_execute(const std::string& input_file,
         hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
         hmc.add_kinetic_monomial(0);
         if (resParsef > 0) {
-          auto diracParams =
-              getDiracParams<3>(g_3_SU2.dimensions, fermionParams);
+          auto diracParams = getDiracParams(fermionParams);
           hmc.add_fermion_monomial<CGSolver, HWilsonDiracOperator,
                                    DSpinorFieldType>(s_3_SU2, diracParams,
                                                      fermionParams.tol, rng, 0);
@@ -668,8 +658,7 @@ int PTBC_execute(const std::string& input_file,
         hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
         hmc.add_kinetic_monomial(0);
         if (resParsef > 0) {
-          auto diracParams =
-              getDiracParams<2>(g_2_U1.dimensions, fermionParams);
+          auto diracParams = getDiracParams(fermionParams);
           hmc.add_fermion_monomial<CGSolver, HWilsonDiracOperator,
                                    DSpinorFieldType>(s_2_U1, diracParams,
                                                      fermionParams.tol, rng, 0);
@@ -702,8 +691,7 @@ int PTBC_execute(const std::string& input_file,
         hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
         hmc.add_kinetic_monomial(0);
         if (resParsef > 0) {
-          auto diracParams =
-              getDiracParams<2>(g_2_SU2.dimensions, fermionParams);
+          auto diracParams = getDiracParams(fermionParams);
           hmc.add_fermion_monomial<CGSolver, HWilsonDiracOperator,
                                    DSpinorFieldType>(s_2_SU2, diracParams,
                                                      fermionParams.tol, rng, 0);

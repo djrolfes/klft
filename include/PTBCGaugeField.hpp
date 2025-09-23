@@ -80,7 +80,9 @@ struct devicePTBCGaugeField {
   operator deviceGaugeField<Nd, Nc>() const {
     return deviceGaugeField<Nd, Nc>(this->field, this->dimensions);
   }
-
+  operator deviceGaugeField<Nd, Nc>() {
+    return deviceGaugeField<Nd, Nc>(this->field, this->dimensions);
+  }
   // should defect_length and cr be encompassed in a defect struct?
   devicePTBCGaugeField(const index_t L0, const index_t L1, const index_t L2,
                        const index_t L3, const complex_t init,
@@ -690,10 +692,10 @@ struct devicePTBCGaugeField3D {
   // define accessors for the field
   template <typename indexType>  // why do we template indexType here, when it
                                  // is defined in GLOBAL.hpp?
-                                 KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> operator()(
-                                     const indexType i, const indexType j,
-                                     const indexType k,
-                                     const index_t mu) const {
+  KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> operator()(const indexType i,
+                                                 const indexType j,
+                                                 const indexType k,
+                                                 const index_t mu) const {
     return field(i, j, k, mu) * defectField(i, j, k, mu);
   }
 
