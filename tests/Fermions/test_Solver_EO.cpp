@@ -60,7 +60,7 @@ int main(int argc, char* argv[]) {
         0.707106781186547524400844362104849039284835937688474036588339868995366239231053519425193767163820786367506);
 
     printf("Generating Random Gauge Config\n");
-    deviceGaugeField<4, N> gauge(L0, L1, L2, L3, random_pool1, 0.001);
+    deviceGaugeField<4, N> gauge(L0, L1, L2, L3, random_pool1, 1);
     EOWilsonDiracOperator<DSpinorFieldType, DeviceGaugeFieldType<4, N>> D_pre(
         gauge, params);
     EOWilsonDiracOperator<DSpinorFieldType, DeviceGaugeFieldType<4, N>> D_pre2(
@@ -73,7 +73,7 @@ int main(int argc, char* argv[]) {
 
     // D_pre.s_in_same_parity = odd_true;
     // auto odd_b = D_pre.template apply<Tags::TagDdagger>(even_true);
-    auto even_b = D_pre.template apply<Tags::TagSe>(even_true);
+    auto even_b = D_pre.template apply<Tags::TagDDdagger>(even_true);
     // D_pre.s_in_same_parity = even_b_1;
     // auto even_b = D_pre.template apply<Tags::TagD>(odd_b_1);
 
@@ -82,10 +82,12 @@ int main(int argc, char* argv[]) {
     // axpy<DSpinorFieldType>(-1, odd_b, odd_true, odd_b);
     // Construct Solver:
     SpinorFieldType x(L0 / 2, L1, L2, L3, complex_t(0.0, 0.0));
+    SpinorFieldType x2(L0 / 2, L1, L2, L3, complex_t(0.0, 0.0));
 
     CGSolver<EOWilsonDiracOperator, DSpinorFieldType,
              DeviceGaugeFieldType<4, N>>
         solver(even_b, x, D_pre);
+
     // Construct RHS of Prblem to solve
     // auto out_even_from_odd_b = D_pre.template apply<Tags::TagHeo>(odd_b);
     // axpy<DSpinorFieldType>(1.0, out_even_from_odd_b, even_b,
@@ -94,6 +96,7 @@ int main(int argc, char* argv[]) {
 
     // Solver fields
     SpinorFieldType x0(L0 / 2, L1, L2, L3, complex_t(0.0, 0.0));
+    SpinorFieldType x02(L0 / 2, L1, L2, L3, complex_t(0.0, 0.0));
 
     printf("Apply Solver...\n");
     auto eps = 1e-13;
@@ -101,6 +104,10 @@ int main(int argc, char* argv[]) {
 
     real_t diracTime = std::numeric_limits<real_t>::max();
     solver.solve<Tags::TagSe>(x0, eps);
+    CGSolver<EOWilsonDiracOperator, DSpinorFieldType,
+             DeviceGaugeFieldType<4, N>>
+        solver2(solver.x, x2, D_pre);
+    solver2.solve<Tags::TagSe>(x02, eps);
     auto diracTime1 = std::min(diracTime, timer.seconds());
     printf("Solver Time:     %11.4e s\n", diracTime1);
     timer.reset();
@@ -112,7 +119,7 @@ int main(int argc, char* argv[]) {
     printf("Comparing Solver result to expected result...\n");
 
     auto res_norm =
-        spinor_norm<4, N, 4>(axpy<DSpinorFieldType>(-1, solver.x, even_true));
+        spinor_norm<4, N, 4>(axpy<DSpinorFieldType>(-1, solver2.x, even_true));
     auto norm = spinor_norm<4, N, 4>(even_true);
 
     printf("Norm of Residual of the even field: %.20f\n", res_norm / norm);

@@ -45,7 +45,8 @@ struct TagSo {};
 }  // namespace Tags
 
 template <template <typename, typename> class _Derived,
-          typename DSpinorFieldType, typename DGaugeFieldType>
+          typename DSpinorFieldType,
+          typename DGaugeFieldType>
 class DiracOperator {
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
   static_assert(isDeviceFermionFieldType<DSpinorFieldType>::value);
@@ -223,7 +224,8 @@ class DiracOperator {
 };
 // intermidiate base class for EO Precon. Dirac Operators
 template <template <typename, typename> class _Derived,
-          typename DSpinorFieldType, typename DGaugeFieldType>
+          typename DSpinorFieldType,
+          typename DGaugeFieldType>
 class EODiracOperator
     : public DiracOperator<_Derived, DSpinorFieldType, DGaugeFieldType> {
   using SpinorFieldType = typename DSpinorFieldType::type;
@@ -233,11 +235,13 @@ class EODiracOperator
 
  public:
   SpinorFieldType s_in_same_parity;
+  SpinorFieldType temp;
+
   struct Tag1minusHeo {};
   struct Tag1minusHoe {};
   int test = 0;
-  using DiracOperator<_Derived, DSpinorFieldType,
-                      DGaugeFieldType>::DiracOperator;
+  using DiracOperator<_Derived, DSpinorFieldType, DGaugeFieldType>::
+      DiracOperator;
 
   SpinorFieldType apply_(Tags::TagHeo) {
     // this->s_out = SpinorFieldType(this->this->s_in.dimensions, complex_t(0.0,
@@ -285,7 +289,11 @@ class EODiracOperator
     return this->s_out;
   }
   SpinorFieldType apply_(Tags::TagDDdagger, const SpinorFieldType& s_out) {
-    auto temp = SpinorFieldType(this->s_in.dimensions, 0);
+    if (!temp.field.is_allocated()) {
+      this->temp = SpinorFieldType(this->s_in.dimensions, 0);
+      printf("instatinated temp\n");
+    }
+
     auto cached_s_out = this->s_out;
     apply_(Tags::TagSe{}, temp);
     this->s_in = temp;

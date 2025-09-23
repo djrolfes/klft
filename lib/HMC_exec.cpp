@@ -38,14 +38,17 @@ using RNGType = Kokkos::Random_XorShift64_Pool<Kokkos::DefaultExecutionSpace>;
 namespace klft {
 
 // Still need to add check for different Dirac Operators
-template <typename DGaugeFieldType, typename DAdjFieldType,
+template <typename DGaugeFieldType,
+          typename DAdjFieldType,
           typename DSpinorFieldType>
 std::shared_ptr<Integrator> createIntegrator(
-    typename DGaugeFieldType::type& g_in, typename DAdjFieldType::type& a_in,
+    typename DGaugeFieldType::type& g_in,
+    typename DAdjFieldType::type& a_in,
     typename DSpinorFieldType::type& s_in,
     const Integrator_Params& integratorParams,
     const GaugeMonomial_Params& gaugeMonomialParams,
-    const FermionMonomial_Params& fermionParams, const int& resParsef) {
+    const FermionMonomial_Params& fermionParams,
+    const int& resParsef) {
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
   static_assert(isDeviceAdjFieldType<DAdjFieldType>::value);
   constexpr static size_t rank =
@@ -234,7 +237,7 @@ int build_and_run_HMC(const std::string& input_file,
   setVerbosity(verbosity);
   // get tuning from environment
   const int tuning =
-      std::getenv("KLFT_TUNING") ? std::atoi(std::getenv("KLFT_TUNING")) : 1;
+      std::getenv("KLFT_TUNING") ? std::atoi(std::getenv("KLFT_TUNING")) : 0;
   setTuning(tuning);
   // if tuning is enbled, check if the user has set the
   // KLFT_CACHE_FILE environment variable
@@ -303,9 +306,7 @@ int build_and_run_HMC(const std::string& input_file,
   // Start building the Fields
   SpinorFieldLayout layout = SpinorFieldLayout::FULL;
   SpinorFieldKind spinorKind = SpinorFieldKind::Standard;
-  if (fermionParams.preconditioning) {
-    layout = SpinorFieldLayout::Checkerboard;
-  }
+
   if (hmcParams.coldStart) {
     if (hmcParams.Ndims == 4) {
       if (hmcParams.Nc == 1) {
@@ -321,7 +322,7 @@ int build_and_run_HMC(const std::string& input_file,
           typename DAdjFieldType::type a_4_U1(hmcParams.L0, hmcParams.L1,
                                               hmcParams.L2, hmcParams.L3,
                                               traceT(identitySUN<1>()));
-          typename DSpinorFieldType::type s_4_U1(hmcParams.L0, hmcParams.L1,
+          typename DSpinorFieldType::type s_4_U1(hmcParams.L0 / 2, hmcParams.L1,
                                                  hmcParams.L2, hmcParams.L3, 0);
           auto integrator = createIntegrator<DGaugeFieldType, DAdjFieldType,
                                              DSpinorFieldType>(
@@ -394,7 +395,7 @@ int build_and_run_HMC(const std::string& input_file,
                                                hmcParams.L2, hmcParams.L3,
                                                traceT(identitySUN<2>()));
           typename DSpinorFieldType::type s_4_SU2(
-              hmcParams.L0, hmcParams.L1, hmcParams.L2, hmcParams.L3, 0);
+              hmcParams.L0 / 2, hmcParams.L1, hmcParams.L2, hmcParams.L3, 0);
           auto integrator = createIntegrator<DGaugeFieldType, DAdjFieldType,
                                              DSpinorFieldType>(
               g_4_SU2, a_4_SU2, s_4_SU2, integratorParams, gaugeMonomialParams,
@@ -467,7 +468,7 @@ int build_and_run_HMC(const std::string& input_file,
         //                                        hmcParams.L2, hmcParams.L3,
         //                                        traceT(identitySUN<3>()));
         //   typename DSpinorFieldType::type s_4_SU3(
-        //       hmcParams.L0, hmcParams.L1, hmcParams.L2, hmcParams.L3, 0);
+        //       hmcParams.L0/2, hmcParams.L1, hmcParams.L2, hmcParams.L3, 0);
         //   auto integrator = createIntegrator<DGaugeFieldType, DAdjFieldType,
         //                                      DSpinorFieldType>(
         //       g_4_SU3, a_4_SU3, s_4_SU3, integratorParams,
@@ -742,7 +743,7 @@ int build_and_run_HMC(const std::string& input_file,
           typename DAdjFieldType::type a_4_U1(hmcParams.L0, hmcParams.L1,
                                               hmcParams.L2, hmcParams.L3,
                                               traceT(identitySUN<1>()));
-          typename DSpinorFieldType::type s_4_U1(hmcParams.L0, hmcParams.L1,
+          typename DSpinorFieldType::type s_4_U1(hmcParams.L0 / 2, hmcParams.L1,
                                                  hmcParams.L2, hmcParams.L3, 0);
           auto integrator = createIntegrator<DGaugeFieldType, DAdjFieldType,
                                              DSpinorFieldType>(
@@ -817,7 +818,7 @@ int build_and_run_HMC(const std::string& input_file,
                                                hmcParams.L2, hmcParams.L3,
                                                traceT(identitySUN<2>()));
           typename DSpinorFieldType::type s_4_SU2(
-              hmcParams.L0, hmcParams.L1, hmcParams.L2, hmcParams.L3, 0);
+              hmcParams.L0 / 2, hmcParams.L1, hmcParams.L2, hmcParams.L3, 0);
           auto integrator = createIntegrator<DGaugeFieldType, DAdjFieldType,
                                              DSpinorFieldType>(
               g_4_SU2, a_4_SU2, s_4_SU2, integratorParams, gaugeMonomialParams,
@@ -890,7 +891,8 @@ int build_and_run_HMC(const std::string& input_file,
         //   typename DAdjFieldType::type a_4_SU3(hmcParams.L0, hmcParams.L1,
         //                                       hmcParams.L2, hmcParams.L3,
         //                                       traceT(identitySUN<3>()));
-        //   typename DSpinorFieldType::type s_4_SU3(hmcParams.L0, hmcParams.L1,
+        //   typename DSpinorFieldType::type s_4_SU3(hmcParams.L0/2,
+        //   hmcParams.L1,
         //                                          hmcParams.L2, hmcParams.L3,
         //                                          0);
         //   auto integrator = createIntegrator<DGaugeFieldType, DAdjFieldType,

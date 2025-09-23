@@ -26,9 +26,11 @@
 
 namespace klft {
 
-template <typename DSpinorFieldType, typename DGaugeFieldType,
+template <typename DSpinorFieldType,
+          typename DGaugeFieldType,
           typename DAdjFieldType,
-          template <template <typename, typename> class DiracOpT, typename,
+          template <template <typename, typename> class DiracOpT,
+                    typename,
                     typename> class _Solver,
           template <typename, typename> class DiracOpT>
 class UpdateMomentumWilsonEO : public UpdateMomentum {
@@ -75,9 +77,11 @@ class UpdateMomentumWilsonEO : public UpdateMomentum {
   UpdateMomentumWilsonEO() = delete;
   ~UpdateMomentumWilsonEO() = default;
 
-  UpdateMomentumWilsonEO(FermionField& phi_, GaugeFieldType& gauge_field_,
+  UpdateMomentumWilsonEO(FermionField& phi_,
+                         GaugeFieldType& gauge_field_,
                          AdjFieldType& adjoint_field_,
-                         const diracParams& params_, const real_t& tol_)
+                         const diracParams& params_,
+                         const real_t& tol_)
       : UpdateMomentum(0),
         phi(phi_),
         gauge_field(gauge_field_),
@@ -125,7 +129,9 @@ class UpdateMomentumWilsonEO : public UpdateMomentum {
           auto xp = shift_index_plus_bc<rank, size_t>(
               Kokkos::Array<size_t, rank>{Idcs...}, mu, 1, 3, -1,
               this->gauge_field.dimensions);  // odd
-          auto X_proj = project(mu, -1, this->sigma(xp.first));
+          auto xp_half = index_full_to_half(xp.first);
+          KOKKOS_ASSERT(xp_half.second == 1);
+          auto X_proj = project(mu, -1, this->sigma(xp_half.first));
           // minus sign in the projector comes from the derivative of D
           auto Xplus =
               (-1 * this->params.kappa * this->params.kappa * xp.second) *
@@ -133,11 +139,11 @@ class UpdateMomentumWilsonEO : public UpdateMomentum {
           auto temp1 = reconstruct(mu, -1, gauge_field(Idcs..., mu) * Xplus);
           auto deriv = temp1 * (conj(this->chi(x_half.first)));
 
-          auto Y_proj = project_alt(mu, -1, conj(this->rho(xp.first)));
+          auto Y_proj = project_alt(mu, 1, conj(this->rho(xp_half.first)));
           auto YPlus =
               (this->params.kappa * this->params.kappa * xp.second) * Y_proj;
           auto temp3 = reconstruct_alt(
-              mu, -1, YPlus * conj(this->gauge_field(Idcs..., mu)));
+              mu, 1, YPlus * conj(this->gauge_field(Idcs..., mu)));
           deriv += this->y(x_half.first) * temp3;
 
           momentum(Idcs..., mu) -= 2 * eps *
@@ -149,23 +155,25 @@ class UpdateMomentumWilsonEO : public UpdateMomentum {
       case 1:  // Odd:
         for (size_t mu = 0; mu < rank; ++mu) {
           // X = chi , Y = chi_alt
-          // (1-gamma_mu) correct? dnt think so
+          // Ned to go back to half index
           auto xp = shift_index_plus_bc<rank, size_t>(
               Kokkos::Array<size_t, rank>{Idcs...}, mu, 1, 3, -1,
               this->gauge_field.dimensions);  // even
-          auto X_proj = project(mu, -1, this->y(xp.first));
+          auto xp_half = index_full_to_half(xp.first);
+          KOKKOS_ASSERT(xp_half.second == 0);
+          auto X_proj = project(mu, -1, this->y(xp_half.first));
           // minus sign in the projector comes from the derivative of D
-          auto Xplus = (-1 * this->params.kappa * this->params.kappa *
-                        this->params.kappa * xp.second) *
-                       X_proj;
+          auto Xplus =
+              (-1 * this->params.kappa * this->params.kappa * xp.second) *
+              X_proj;
           auto temp1 = reconstruct(mu, -1, gauge_field(Idcs..., mu) * Xplus);
           auto deriv = temp1 * (conj(this->rho(x_half.first)));
 
-          auto Y_proj = project_alt(mu, -1, conj(this->chi(xp.first)));
+          auto Y_proj = project_alt(mu, 1, conj(this->chi(xp_half.first)));
           auto YPlus =
               (this->params.kappa * this->params.kappa * xp.second) * Y_proj;
           auto temp3 = reconstruct_alt(
-              mu, -1, YPlus * conj(this->gauge_field(Idcs..., mu)));
+              mu, 1, YPlus * conj(this->gauge_field(Idcs..., mu)));
           deriv += this->sigma(x_half.first) * temp3;
 
           momentum(Idcs..., mu) -= 2 * eps *
@@ -197,19 +205,22 @@ class UpdateMomentumWilsonEO : public UpdateMomentum {
     solver.template solve<Tags::TagSe>(x0, this->tol);
 
     this->y = solver.x;  // y = S_e^-1 phi
-    solver.x = x2;
-    solver.b = this->y;
-    solver.template solve<Tags::TagSe>(
-        x0, this->tol);    // solve chi = S_e^-1 y = S_e^-1 S_e^-1 phi
-    this->chi = solver.x;  // X
+    Solver solver2(y, x2, D);
+
+    solver2.template solve<Tags::TagSe>(
+        x0, this->tol);     // solve chi = S_e^-1 y = S_e^-1 S_e^-1 phi
+    this->chi = solver2.x;  // X
     D.template apply<Tags::TagHoe>(this->chi, this->rho);
     D.template apply<Tags::TagHoe>(this->y, this->sigma);
     for (size_t i = 0; i < rank; ++i) {
       start[i] = 0;
     }
+    print_SUNAdj(momentum(1, 0, 0, 0, 0), "Before Update Momentum");
     // launch the kernel
     tune_and_launch_for<rank>("UpdateMomentumWilson", start,
                               gauge_field.dimensions, *this);
+    print_SUNAdj(momentum(1, 0, 0, 0, 0), "After Update Momentum");
+
     Kokkos::fence();
   }
 };

@@ -116,7 +116,7 @@ int main(int argc, char* argv[]) {
         },
         Kokkos::Sum<real_t>(result));
     printf("Total difference: %.16f\n", result);
-    printf("Checking applying composit operator...\n");
+    printf("<=== Checking applying composit operator ===>\n ");
     EOWilsonDiracOperator<
         DeviceSpinorFieldType<4, 2, 4, SpinorFieldKind::Standard,
                               SpinorFieldLayout::Checkerboard>,
@@ -124,19 +124,20 @@ int main(int argc, char* argv[]) {
         D_pre_alt(gauge, params);
     deviceSpinorField<2, 4> u_eo_temp(L0 / 2, L1, L2, L3, 0);
     // deviceSpinorField<2, 4> out_comp(L0 / 2, L1, L2, L3, 0);
-    auto out_comp = D_pre_alt.template apply<Tags::TagSe>(u_for_eo);
+    auto out_comp = D_pre_alt.template apply<Tags::TagDDdagger>(u_for_eo);
     // build it manually:
-    auto temp1 = D_pre.template apply<Tags::TagHoe>(u_for_eo);
-    auto temp2 = D_pre.template apply<Tags::TagHeo>(temp1);
-    auto out_man =
-        axpy<DeviceSpinorFieldType<4, 2, 4, SpinorFieldKind::Standard,
-                                   SpinorFieldLayout::Checkerboard>>(-1, temp2,
-                                                                     u_for_eo);
+    auto temp1 = D_pre.template apply<Tags::TagSe>(u_for_eo);
+    auto out_man = D_pre.template apply<Tags::TagSe>(temp1);
+    // auto out_man =
+    //     axpy<DeviceSpinorFieldType<4, 2, 4, SpinorFieldKind::Standard,
+    //                                SpinorFieldLayout::Checkerboard>>(-1,
+    //                                temp2,
+    //                                                                  u_for_eo);
     // built it completla maually
-    auto temp3 = D.template apply<Tags::TagD>(u_for_normal);
-    auto temp4 = D.template apply<Tags::TagD>(temp3);
-    auto out_nor =
-        axpy<DeviceSpinorFieldType<4, 2, 4>>(-1, temp4, u_for_normal);
+    // auto temp3 = D.template apply<Tags::TagD>(u_for_normal);
+    // auto temp4 = D.template apply<Tags::TagD>(temp3);
+    // auto out_nor =
+    //     axpy<DeviceSpinorFieldType<4, 2, 4>>(-1, temp4, u_for_normal);
 
     // print_spinor_int(out_man(0, 0, 0, 0), "Manually build");
     // print_spinor_int(out_comp(0, 0, 0, 0), "Composit");
@@ -149,7 +150,7 @@ int main(int argc, char* argv[]) {
     // printf("temp2 == out_nor @(0,0,0,0) is equal: %i\n",
     //        out_man(1, 0, 0, 0) == out_nor(2, 0, 0, 0));
 
-    result = 0;
+    result = -999;
     Kokkos::parallel_reduce(
         "Reduction", Policy<4>({0, 0, 0, 0}, {L0 / 2, L1, L2, L3}),
         KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2,
@@ -163,19 +164,19 @@ int main(int argc, char* argv[]) {
         },
         Kokkos::Sum<real_t>(result));
     printf("Total difference comp to EO manually: %.16f\n", result);
-    result = 0;
-    Kokkos::parallel_reduce(
-        "Reduction", Policy<4>({0, 0, 0, 0}, {L0, L1, L2, L3}),
-        KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2,
-                      const index_t i3, real_t& lsum) {
-          auto idx = index_full_to_half(Kokkos::Array<int, 4>{i0, i1, i2, i3});
-          if (idx.second == 0) {
-            lsum = sqnorm(out_nor(i0, i1, i2, i3)) -
-                   //  sqnorm(u_for_normal(i0, i1, i2, i3)) -
-                   sqnorm(out_comp(idx.first));
-          }
-        },
-        Kokkos::Sum<real_t>(result));
+    result = -9999;
+    // Kokkos::parallel_reduce(
+    //     "Reduction", Policy<4>({0, 0, 0, 0}, {L0, L1, L2, L3}),
+    //     KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2,
+    //                   const index_t i3, real_t& lsum) {
+    //       auto idx = index_full_to_half(Kokkos::Array<int, 4>{i0, i1, i2,
+    //       i3}); if (idx.second == 0) {
+    //         lsum = sqnorm(out_nor(i0, i1, i2, i3)) -
+    //                //  sqnorm(u_for_normal(i0, i1, i2, i3)) -
+    //                sqnorm(out_comp(idx.first));
+    //       }
+    //     },
+    //     Kokkos::Sum<real_t>(result));
     printf("Total difference comp to normal manual: %.16f\n", result);
 
     printf("Checking positivity: \n\n");
