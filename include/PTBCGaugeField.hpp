@@ -38,10 +38,10 @@ struct defectParams {
 
 template <size_t Nd, size_t Nc>
 struct devicePTBCGaugeField {
-  devicePTBCGaugeField() = delete;
+  devicePTBCGaugeField() = default;
 
   GaugeField<Nd, Nc> field;
-  const IndexArray<Nd> dimensions;
+  IndexArray<Nd> dimensions;
   LinkScalarField<Nd> defectField;
   using deviceDefectParams = defectParams<Nd>;
   deviceDefectParams dParams;
@@ -84,8 +84,11 @@ struct devicePTBCGaugeField {
     return deviceGaugeField<Nd, Nc>(this->field, this->dimensions);
   }
   // should defect_length and cr be encompassed in a defect struct?
-  devicePTBCGaugeField(const index_t L0, const index_t L1, const index_t L2,
-                       const index_t L3, const complex_t init,
+  devicePTBCGaugeField(const index_t L0,
+                       const index_t L1,
+                       const index_t L2,
+                       const index_t L3,
+                       const complex_t init,
                        const deviceDefectParams dParam)
       : dimensions({L0, L1, L2, L3}) {
     do_init(field, init);
@@ -93,8 +96,11 @@ struct devicePTBCGaugeField {
   }
 
   // initialize all links to a given SUN matrix
-  devicePTBCGaugeField(const index_t L0, const index_t L1, const index_t L2,
-                       const index_t L3, const SUN<Nc>& init,
+  devicePTBCGaugeField(const index_t L0,
+                       const index_t L1,
+                       const index_t L2,
+                       const index_t L3,
+                       const SUN<Nc>& init,
                        const deviceDefectParams dParam)
       : dimensions({L0, L1, L2, L3}) {
     do_init(field, init);
@@ -103,8 +109,12 @@ struct devicePTBCGaugeField {
 
   // initialize all links randomized with a given delta
   template <class RNG>
-  devicePTBCGaugeField(const index_t L0, const index_t L1, const index_t L2,
-                       const index_t L3, RNG& rng, const real_t delta,
+  devicePTBCGaugeField(const index_t L0,
+                       const index_t L1,
+                       const index_t L2,
+                       const index_t L3,
+                       RNG& rng,
+                       const real_t delta,
                        const deviceDefectParams dParam)
       : dimensions({L0, L1, L2, L3}) {
     do_init(L0, L1, L2, L3, field, rng, delta);
@@ -113,8 +123,11 @@ struct devicePTBCGaugeField {
 
   // initialize all links randomized
   template <class RNG>
-  devicePTBCGaugeField(const index_t L0, const index_t L1, const index_t L2,
-                       const index_t L3, RNG& rng,
+  devicePTBCGaugeField(const index_t L0,
+                       const index_t L1,
+                       const index_t L2,
+                       const index_t L3,
+                       RNG& rng,
                        const deviceDefectParams dParam)
       : dimensions({L0, L1, L2, L3}) {
     do_init(L0, L1, L2, L3, field, rng);
@@ -205,8 +218,12 @@ struct devicePTBCGaugeField {
   }
 
   template <class RNG>
-  void do_init(const index_t L0, const index_t L1, const index_t L2,
-               const index_t L3, GaugeField<Nd, Nc>& V, RNG& rng,
+  void do_init(const index_t L0,
+               const index_t L1,
+               const index_t L2,
+               const index_t L3,
+               GaugeField<Nd, Nc>& V,
+               RNG& rng,
                const real_t delta) {
     Kokkos::realloc(Kokkos::WithoutInitializing, V, L0, L1, L2, L3);
     tune_and_launch_for<4>(
@@ -225,8 +242,12 @@ struct devicePTBCGaugeField {
   }
 
   template <class RNG>
-  void do_init(const index_t L0, const index_t L1, const index_t L2,
-               const index_t L3, GaugeField<Nd, Nc>& V, RNG& rng) {
+  void do_init(const index_t L0,
+               const index_t L1,
+               const index_t L2,
+               const index_t L3,
+               GaugeField<Nd, Nc>& V,
+               RNG& rng) {
     if (!V.is_allocated()) {
       V = GaugeField<Nd, Nc>("gauge_field_tmp", 0, 0, 0, 0);
     }
@@ -350,8 +371,8 @@ struct devicePTBCGaugeField {
   };
   // READ (const): return value = field * defect
   template <typename I>
-  KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> operator()(I i, I j, I k, I l,
-                                                 index_t mu) const {
+  KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> operator()(I i, I j, I k, I l, index_t mu)
+      const {
     return field(i, j, k, l, mu) * defectField(i, j, k, l, mu);
   }
 
@@ -375,8 +396,10 @@ struct devicePTBCGaugeField {
   }
 
   template <typename indexType>
-  KOKKOS_FORCEINLINE_FUNCTION void set(const indexType i, const indexType j,
-                                       const indexType k, const indexType l,
+  KOKKOS_FORCEINLINE_FUNCTION void set(const indexType i,
+                                       const indexType j,
+                                       const indexType k,
+                                       const indexType l,
                                        const index_t mu,
                                        const SUN<Nc>& value) const {
     field(i, j, k, l, mu) = (value);  // raw write
@@ -384,7 +407,8 @@ struct devicePTBCGaugeField {
 
   template <typename indexType>
   KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> staple(
-      const Kokkos::Array<indexType, 4> site, const index_t mu) const {
+      const Kokkos::Array<indexType, 4> site,
+      const index_t mu) const {
     // this only works if Nd == 4
     assert(Nd == 4);
     // get the indices
@@ -403,7 +427,8 @@ struct devicePTBCGaugeField {
 #pragma unroll
     for (index_t nu = 0; nu < Nd; ++nu) {  // loop over nu
       // do nothing for mu = nu
-      if (nu == mu) continue;
+      if (nu == mu)
+        continue;
       // get the x + nu indices
       const indexType i0pnu = nu == 0 ? (i0 + 1) % dimensions[0] : i0;
       const indexType i1pnu = nu == 1 ? (i1 + 1) % dimensions[1] : i1;
@@ -419,7 +444,8 @@ struct devicePTBCGaugeField {
 #pragma unroll
     for (index_t nu = 0; nu < Nd; ++nu) {  // loop over nu
       // do nothing for mu = nu
-      if (nu == mu) continue;
+      if (nu == mu)
+        continue;
       // get the x + mu - nu indices
       const indexType i0pmu_mnu =
           nu == 0 ? (i0pmu - 1 + dimensions[0]) % dimensions[0] : i0pmu;
@@ -451,10 +477,10 @@ struct devicePTBCGaugeField {
 
 template <size_t Nd, size_t Nc>
 struct devicePTBCGaugeField3D {
-  devicePTBCGaugeField3D() = delete;
+  devicePTBCGaugeField3D() = default;
 
   GaugeField3D<Nd, Nc> field;
-  const IndexArray<Nd> dimensions;
+  IndexArray<Nd> dimensions;
   LinkScalarField3D<Nd> defectField;
   using deviceDefectParams = defectParams<Nd>;
   deviceDefectParams dParams;
@@ -477,8 +503,11 @@ struct devicePTBCGaugeField3D {
   // }
 
   // should defect_length and cr be encompassed in a defect struct?
-  devicePTBCGaugeField3D(const index_t L0, const index_t L1, const index_t L2,
-                         const complex_t init, const deviceDefectParams dParam)
+  devicePTBCGaugeField3D(const index_t L0,
+                         const index_t L1,
+                         const index_t L2,
+                         const complex_t init,
+                         const deviceDefectParams dParam)
       : dimensions({L0, L1, L2}) {
     do_init(field, init);
     do_init_defect(defectField, dParam);
@@ -512,8 +541,11 @@ struct devicePTBCGaugeField3D {
   }
 
   // initialize all links to a given SUN matrix
-  devicePTBCGaugeField3D(const index_t L0, const index_t L1, const index_t L2,
-                         const SUN<Nc>& init, const deviceDefectParams dParam)
+  devicePTBCGaugeField3D(const index_t L0,
+                         const index_t L1,
+                         const index_t L2,
+                         const SUN<Nc>& init,
+                         const deviceDefectParams dParam)
       : dimensions({L0, L1, L2}) {
     printf("[DEBUG] Initializing PTBCGaugeField with SUN init Nd=3\n");
     do_init(field, init);
@@ -522,8 +554,11 @@ struct devicePTBCGaugeField3D {
 
   // initialize all links randomized with a given delta
   template <class RNG>
-  devicePTBCGaugeField3D(const index_t L0, const index_t L1, const index_t L2,
-                         RNG& rng, const real_t delta,
+  devicePTBCGaugeField3D(const index_t L0,
+                         const index_t L1,
+                         const index_t L2,
+                         RNG& rng,
+                         const real_t delta,
                          const deviceDefectParams dParam)
       : dimensions({L0, L1, L2}) {
     printf("[DEBUG] Initializing PTBCGaugeField with RNG Nd=3\n");
@@ -533,8 +568,11 @@ struct devicePTBCGaugeField3D {
 
   // initialize all links randomized
   template <class RNG>
-  devicePTBCGaugeField3D(const index_t L0, const index_t L1, const index_t L2,
-                         RNG& rng, const deviceDefectParams dParam)
+  devicePTBCGaugeField3D(const index_t L0,
+                         const index_t L1,
+                         const index_t L2,
+                         RNG& rng,
+                         const deviceDefectParams dParam)
       : dimensions({L0, L1, L2}) {
     do_init(L0, L1, L2, field, rng);
     do_init_defect(defectField, dParam);
@@ -607,8 +645,12 @@ struct devicePTBCGaugeField3D {
   }
 
   template <class RNG>
-  void do_init(const index_t L0, const index_t L1, const index_t L2,
-               GaugeField3D<Nd, Nc>& V, RNG& rng, const real_t delta) {
+  void do_init(const index_t L0,
+               const index_t L1,
+               const index_t L2,
+               GaugeField3D<Nd, Nc>& V,
+               RNG& rng,
+               const real_t delta) {
     if (!V.is_allocated()) {
       V = GaugeField3D<Nd, Nc>("gauge_field_tmp", 0, 0, 0);
     }
@@ -628,8 +670,11 @@ struct devicePTBCGaugeField3D {
   }
 
   template <class RNG>
-  void do_init(const index_t L0, const index_t L1, const index_t L2,
-               GaugeField3D<Nd, Nc>& V, RNG& rng) {
+  void do_init(const index_t L0,
+               const index_t L1,
+               const index_t L2,
+               GaugeField3D<Nd, Nc>& V,
+               RNG& rng) {
     if (!V.is_allocated()) {
       V = GaugeField3D<Nd, Nc>("gauge_field_tmp", 0, 0, 0);
     }
@@ -710,28 +755,33 @@ struct devicePTBCGaugeField3D {
   // define accessors with 4D Kokkos array
   template <typename indexType>
   KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> operator()(
-      const Kokkos::Array<indexType, 3> site, const index_t mu) const {
+      const Kokkos::Array<indexType, 3> site,
+      const index_t mu) const {
     return field(site[0], site[1], site[2], mu) *
            defectField(site[0], site[1], site[2], mu);
   }
 
   template <typename indexType>
   KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> operator()(
-      const Kokkos::Array<indexType, 3> site, const index_t mu) {
+      const Kokkos::Array<indexType, 3> site,
+      const index_t mu) {
     return field(site[0], site[1], site[2], mu) *
            defectField(site[0], site[1], site[2], mu);
   }
 
   template <typename indexType>
-  KOKKOS_FORCEINLINE_FUNCTION void set(const indexType i, const indexType j,
-                                       const indexType k, const index_t mu,
+  KOKKOS_FORCEINLINE_FUNCTION void set(const indexType i,
+                                       const indexType j,
+                                       const indexType k,
+                                       const index_t mu,
                                        const SUN<Nc>& value) const {
     field(i, j, k, mu) = restoreSUN(value);  // raw write
   }
 
   template <typename indexType>
   KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> staple(
-      const Kokkos::Array<indexType, 3> site, const index_t mu) const {
+      const Kokkos::Array<indexType, 3> site,
+      const index_t mu) const {
     // this only works if Nd == 3
     assert(Nd == 3);
     // get the indices
@@ -748,7 +798,8 @@ struct devicePTBCGaugeField3D {
 // positive directions
 #pragma unroll
     for (index_t nu = 0; nu < Nd; ++nu) {  // loop over nu
-      if (nu == mu) continue;              // skip if mu == nu
+      if (nu == mu)
+        continue;  // skip if mu == nu
       const indexType i0pnu = nu == 0 ? (i0 + 1) % dimensions[0] : i0;
       const indexType i1pnu = nu == 1 ? (i1 + 1) % dimensions[1] : i1;
       const indexType i2pnu = nu == 2 ? (i2 + 1) % dimensions[2] : i2;
@@ -761,7 +812,8 @@ struct devicePTBCGaugeField3D {
 // negative directions
 #pragma unroll
     for (index_t nu = 0; nu < Nd; ++nu) {  // loop over nu
-      if (nu == mu) continue;              // skip if mu == nu
+      if (nu == mu)
+        continue;  // skip if mu == nu
       const indexType i0pmu_mnu =
           nu == 0 ? (i0pmu - 1 + dimensions[0]) % dimensions[0] : i0pmu;
       const indexType i1pmu_mnu =
@@ -788,11 +840,11 @@ struct devicePTBCGaugeField3D {
 
 template <size_t Nd, size_t Nc>
 struct devicePTBCGaugeField2D {
-  devicePTBCGaugeField2D() = delete;
+  devicePTBCGaugeField2D() = default;
 
   GaugeField2D<Nd, Nc> field;
   constGaugeField2D<Nd, Nc> cfield;
-  const IndexArray<Nd> dimensions;
+  IndexArray<Nd> dimensions;
   LinkScalarField2D<Nd> defectField;
   using deviceDefectParams = defectParams<Nd>;
   deviceDefectParams dParams;
@@ -808,7 +860,8 @@ struct devicePTBCGaugeField2D {
 
   // 'copy' constructor from a given deviceGaugeField
   devicePTBCGaugeField2D(const GaugeField2D<Nd, Nc>& f_in)
-      : field("gauge_field", f_in.extent(0),
+      : field("gauge_field",
+              f_in.extent(0),
               f_in.extent(1)),  // Allocate directly in constructor
         dimensions({static_cast<index_t>(f_in.extent(0)),
                     static_cast<index_t>(f_in.extent(1))}) {
@@ -816,16 +869,20 @@ struct devicePTBCGaugeField2D {
   }
 
   // should defect_length and cr be encompassed in a defect struct?
-  devicePTBCGaugeField2D(const index_t L0, const index_t L1,
-                         const complex_t init, const deviceDefectParams dParam)
+  devicePTBCGaugeField2D(const index_t L0,
+                         const index_t L1,
+                         const complex_t init,
+                         const deviceDefectParams dParam)
       : dimensions({L0, L1}) {
     do_init(field, init);
     do_init_defect(defectField, dParam);
   }
 
   // initialize all links to a given SUN matrix
-  devicePTBCGaugeField2D(const index_t L0, const index_t L1,
-                         const SUN<Nc>& init, const deviceDefectParams dParam)
+  devicePTBCGaugeField2D(const index_t L0,
+                         const index_t L1,
+                         const SUN<Nc>& init,
+                         const deviceDefectParams dParam)
       : dimensions({L0, L1}) {
     printf("[DEBUG] Initializing PTBCGaugeField with SUN init Nd=2\n");
     do_init(field, init);
@@ -846,8 +903,11 @@ struct devicePTBCGaugeField2D {
 
   // initialize all links randomized with a given delta
   template <class RNG>
-  devicePTBCGaugeField2D(const index_t L0, const index_t L1, RNG& rng,
-                         const real_t delta, const deviceDefectParams dParam)
+  devicePTBCGaugeField2D(const index_t L0,
+                         const index_t L1,
+                         RNG& rng,
+                         const real_t delta,
+                         const deviceDefectParams dParam)
       : dimensions({L0, L1}) {
     printf("[DEBUG] Initializing PTBCGaugeField with RNG Nd=2\n");
     do_init(L0, L1, field, rng, delta);
@@ -856,7 +916,9 @@ struct devicePTBCGaugeField2D {
 
   // initialize all links randomized
   template <class RNG>
-  devicePTBCGaugeField2D(const index_t L0, const index_t L1, RNG& rng,
+  devicePTBCGaugeField2D(const index_t L0,
+                         const index_t L1,
+                         RNG& rng,
                          const deviceDefectParams dParam)
       : dimensions({L0, L1}) {
     do_init(L0, L1, field, rng);
@@ -930,8 +992,11 @@ struct devicePTBCGaugeField2D {
   }
 
   template <class RNG>
-  void do_init(const index_t L0, const index_t L1, GaugeField2D<Nd, Nc>& V,
-               RNG& rng, const real_t delta) {
+  void do_init(const index_t L0,
+               const index_t L1,
+               GaugeField2D<Nd, Nc>& V,
+               RNG& rng,
+               const real_t delta) {
     if (!V.is_allocated()) {
       V = GaugeField2D<Nd, Nc>("gauge_field", 0, 0);
     }
@@ -950,7 +1015,9 @@ struct devicePTBCGaugeField2D {
   }
 
   template <class RNG>
-  void do_init(const index_t L0, const index_t L1, GaugeField2D<Nd, Nc>& V,
+  void do_init(const index_t L0,
+               const index_t L1,
+               GaugeField2D<Nd, Nc>& V,
                RNG& rng) {
     if (!V.is_allocated()) {
       V = GaugeField2D<Nd, Nc>("gauge_field", 0, 0);
@@ -1031,18 +1098,21 @@ struct devicePTBCGaugeField2D {
   // define accessors with 4D Kokkos array
   template <typename indexType>
   KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> operator()(
-      const Kokkos::Array<indexType, 2> site, const index_t mu) const {
+      const Kokkos::Array<indexType, 2> site,
+      const index_t mu) const {
     return field(site[0], site[1], mu) * defectField(site[0], site[1], mu);
   }
 
   template <typename indexType>
   KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> operator()(
-      const Kokkos::Array<indexType, 2> site, const index_t mu) {
+      const Kokkos::Array<indexType, 2> site,
+      const index_t mu) {
     return field(site[0], site[1], mu) * defectField(site[0], site[1], mu);
   }
 
   template <typename indexType>
-  KOKKOS_FORCEINLINE_FUNCTION void set(const indexType i, const indexType j,
+  KOKKOS_FORCEINLINE_FUNCTION void set(const indexType i,
+                                       const indexType j,
                                        const index_t mu,
                                        const SUN<Nc>& value) const {
     field(i, j, mu) = restoreSUN(value);  // raw write
@@ -1050,7 +1120,8 @@ struct devicePTBCGaugeField2D {
 
   template <typename indexType>
   KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> staple(
-      const Kokkos::Array<indexType, 2> site, const index_t mu) const {
+      const Kokkos::Array<indexType, 2> site,
+      const index_t mu) const {
     // this only works if Nd == 2
     assert(Nd == 2);
     // get the indices
@@ -1065,7 +1136,8 @@ struct devicePTBCGaugeField2D {
 // positive directions
 #pragma unroll
     for (index_t nu = 0; nu < Nd; ++nu) {  // loop over nu
-      if (nu == mu) continue;              // skip if mu == nu
+      if (nu == mu)
+        continue;  // skip if mu == nu
       const indexType i0pnu = nu == 0 ? (i0 + 1) % dimensions[0] : i0;
       const indexType i1pnu = nu == 1 ? (i1 + 1) % dimensions[1] : i1;
 
@@ -1077,7 +1149,8 @@ struct devicePTBCGaugeField2D {
 // negative directions
 #pragma unroll
     for (index_t nu = 0; nu < Nd; ++nu) {  // loop over nu
-      if (nu == mu) continue;              // skip if mu == nu
+      if (nu == mu)
+        continue;  // skip if mu == nu
       const indexType i0pmu_mnu =
           nu == 0 ? (i0pmu - 1 + dimensions[0]) % dimensions[0] : i0pmu;
       const indexType i1pmu_mnu =

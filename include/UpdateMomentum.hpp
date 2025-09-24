@@ -71,22 +71,27 @@ class UpdateMomentumGauge : public UpdateMomentum {
   using GaugeFieldType = typename DGaugeFieldType::type;
   using AdjFieldType = typename DAdjFieldType::type;
   GaugeFieldType gauge_field;
+  GaugeFieldType staple_field;
   AdjFieldType adjoint_field;
   real_t beta;
 
   real_t eps;
-  ConstGaugeFieldType<rank, Nc> staple_field;
+  // ConstGaugeFieldType<rank, Nc> staple_field;
 
   UpdateMomentumGauge() = delete;
   ~UpdateMomentumGauge() = default;
 
   UpdateMomentumGauge(GaugeFieldType& gauge_field_,
-                      AdjFieldType& adjoint_field_, const real_t& beta_)
+                      AdjFieldType& adjoint_field_,
+                      const real_t& beta_)
       : UpdateMomentum(0),
         gauge_field(gauge_field_),
         adjoint_field(adjoint_field_),
         beta(beta_),
-        eps(0.0) {}
+        eps(0.0) {
+    this->staple_field =
+        GaugeFieldType(gauge_field.dimensions, complex_t(0.0, 0.0));
+  }
   // todo: Add Force as a function instead of it being incorporated into the
   // functor.
 
@@ -112,7 +117,7 @@ class UpdateMomentumGauge : public UpdateMomentum {
     }
 
     // launch the kernels
-    staple_field = stapleField<DGaugeFieldType>(gauge_field);
+    stapleField<DGaugeFieldType>(gauge_field, staple_field);
     Kokkos::fence();
     tune_and_launch_for<rank>("UpdateMomentumGauge", start,
                               gauge_field.dimensions, *this);
