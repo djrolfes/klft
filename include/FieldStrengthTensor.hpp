@@ -87,6 +87,21 @@ imag(const SUN<N> &in) {
   return out;
 }
 
+// get the real parts of an SUN matrix
+template <size_t N>
+KOKKOS_FORCEINLINE_FUNCTION Kokkos::Array<Kokkos::Array<real_t, N>, N>
+real(const SUN<N> &in) {
+  Kokkos::Array<Kokkos::Array<real_t, N>, N> out{0};
+#pragma unroll
+  for (int i = 0; i < N; ++i) {
+#pragma unroll
+    for (int j = 0; j < N; ++j) {
+      out[i][j] = in[i][j].real();
+    }
+  }
+  return out;
+}
+
 // return the trace of a RealMatrix
 template <size_t N>
 KOKKOS_FORCEINLINE_FUNCTION real_t
@@ -138,7 +153,7 @@ template <typename DGaugeFieldType> struct FieldStrengthTensor {
 
     // Helper lambda for modular arithmetic
     auto mod = [&](index_t s, index_t dir) {
-      return (s + this->dimensions[dir]);
+      return (s + this->dimensions[dir]) % this->dimensions[dir];
     };
 
     // 1. Plaquette in (+mu, +nu) plane starting at x
@@ -151,27 +166,27 @@ template <typename DGaugeFieldType> struct FieldStrengthTensor {
 
     // 2. Plaquette in (+mu, -nu) plane starting at x
     IndexArray<Nd> x_m_nu = x;
-    x_m_nu[nu] = mod(x[nu] - 1, nu) % dimensions[nu];
-    IndexArray<Nd> x_p_mu_m_nu = x_p_mu;
-    x_p_mu_m_nu[nu] = mod(x_p_mu[nu] - 1, nu) % dimensions[nu];
-    P_munu += g_in(x, mu) * conj(g_in(x_p_mu_m_nu, nu)) *
-              conj(g_in(x_m_nu, mu)) * g_in(x_m_nu, nu);
+    x_m_nu[nu] = mod(x[nu] - 1, nu);
+    IndexArray<Nd> x_m_mu = x;
+    x_m_mu[mu] = mod(x[mu] - 1, mu);
+    IndexArray<Nd> x_m_mu_p_nu = x_m_mu;
+    x_m_mu_p_nu[nu] = mod(x_m_mu[nu] + 1, nu);
+    P_munu += g_in(x, nu) * conj(g_in(x_m_mu_p_nu, mu)) *
+              conj(g_in(x_m_nu, nu)) * g_in(x_m_nu, mu);
 
     // 3. Plaquette in (-mu, +nu) plane starting at x
-    IndexArray<Nd> x_m_mu = x;
-    x_m_mu[mu] = mod(x[mu] - 1, mu) % dimensions[mu];
-    IndexArray<Nd> x_m_mu_p_nu = x_m_mu;
-    x_m_mu_p_nu[nu] = (x_m_mu[nu] + 1) % dimensions[nu];
-    P_munu += conj(g_in(x_m_mu, mu)) * g_in(x_m_mu, nu) *
-              g_in(x_m_mu_p_nu, mu) * conj(g_in(x, nu));
+    IndexArray<Nd> x_p_mu_m_nu = x_m_nu;
+    x_p_mu_m_nu[mu] = (x_m_nu[mu] + 1) % dimensions[mu];
+    P_munu += conj(g_in(x_m_mu, nu)) * g_in(x_m_mu, mu) *
+              g_in(x_p_mu_m_nu, nu) * conj(g_in(x, mu));
 
     // 4. Plaquette in (-mu, -nu) plane starting at x
     IndexArray<Nd> x_m_mu_m_nu = x_m_mu;
-    x_m_mu_m_nu[nu] = mod(x_m_mu[nu] - 1, nu) % dimensions[nu];
+    x_m_mu_m_nu[nu] = mod(x_m_mu[nu] - 1, nu);
     P_munu += conj(g_in(x_m_mu, mu)) * conj(g_in(x_m_mu_m_nu, nu)) *
               g_in(x_m_mu_m_nu, mu) * g_in(x_m_nu, nu);
 
-    return imag(P_munu) * 0.25;
+    return real(P_munu) * 0.25 * 0.25;
   }
 };
 
