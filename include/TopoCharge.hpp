@@ -64,23 +64,19 @@ struct TopoCharge {
   KOKKOS_FORCEINLINE_FUNCTION
   constexpr int epsilon4(int mu, int nu, int rho, int sigma) const {
     // repeats -> 0
-    if (mu == nu || mu == rho || mu == sigma || nu == rho || nu == sigma ||
-        rho == sigma) {
-      return 0;
-    }
-    // pack into array
-    constexpr int N = 4;
-    IndexArray<N> idx{mu, nu, rho, sigma};
-    // count inversions
-    int inv = 0;
-    for (int i = 0; i < N; ++i) {
-      for (int j = i + 1; j < N; ++j) {
-        if (idx[i] > idx[j])
-          ++inv;
-      }
-    }
+    // if (mu == nu || mu == rho || mu == sigma || nu == rho || nu == sigma ||
+    //     rho == sigma) {
+    //   return 0;
+    // }
+    mu++;
+    nu++;
+    rho++;
+    sigma++;
+    index_t parity = (mu - nu) * (mu - rho) * (mu - sigma) * (nu - rho) *
+                     (nu - sigma) * (rho - sigma);
+
     // parity of inversion count gives sign
-    return (inv % 2 == 0 ? +1 : -1);
+    return parity > 0 ? (parity == 0 ? 0 : 1) : -1;
   }
 
   // TODO: make epsilon resolve at compiletime for the relevant combinations
@@ -127,12 +123,6 @@ struct TopoCharge {
               continue;
             local_charge += epsilon4(mu, nu, rho, sigma) *
                             trace(C[mu][nu] * C[rho][sigma]); //
-            local_charge +=
-                epsilon4(nu, mu, rho, sigma) * trace(C[nu][mu] * C[rho][sigma]);
-            local_charge +=
-                epsilon4(mu, nu, sigma, rho) * trace(C[mu][nu] * C[sigma][rho]);
-            local_charge +=
-                epsilon4(nu, mu, sigma, rho) * trace(C[nu][mu] * C[sigma][rho]);
           }
         }
       }
@@ -207,7 +197,7 @@ real_t get_topological_charge(const typename DGaugeFieldType::type g_in) {
                           g_in.dimensions, TCharge);
   Kokkos::fence();
 
-  real_t charge = TCharge.charge_per_site.sum();
+  real_t charge = -4.0 * TCharge.charge_per_site.sum();
   Kokkos::fence();
   // charge /= 32 * PI * PI;
 
