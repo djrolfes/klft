@@ -95,22 +95,48 @@ struct TopoCharge {
     RealMatrix C1, C2;
     Kokkos::Array<Kokkos::Array<RealMatrix, Nd>, Nd> C;
 
-    // for (int mu = 0; mu < Nd; ++mu) {
-    //   for (int nu = mu + 1; nu < Nd; ++nu) {
-    //     // get the clover C_munu
-    //     C[mu][nu] = (fst(FSTTag{}, i0, i1, i2, i3, mu, nu));
-    //     C[nu][mu] = (fst(FSTTag{}, i0, i1, i2, i3, nu, mu));
-    //   }
-    // }
+    for (int mu = 0; mu < Nd; ++mu) {
+      for (int nu = mu + 1; nu < Nd; ++nu) {
+        // get the clover C_munu
+        C[mu][nu] = (fst(FSTTag{}, i0, i1, i2, i3, mu, nu));
+        C[nu][mu] = (fst(FSTTag{}, i0, i1, i2, i3, nu, mu));
+      }
+    }
 
     // TODO 12.05.: implement this according to 1708.00696
-    local_charge += (trace(fst(FSTTag{}, i0, i1, i2, i3, 0, 1) *
-                           fst(FSTTag{}, i0, i1, i2, i3, 2, 3)) +
-                     trace(fst(FSTTag{}, i0, i1, i2, i3, 0, 2) *
-                           fst(FSTTag{}, i0, i1, i2, i3, 3, 1)) +
-                     trace(fst(FSTTag{}, i0, i1, i2, i3, 0, 3) *
-                           fst(FSTTag{}, i0, i1, i2, i3, 1, 2)));
+    // local_charge += (trace(fst(FSTTag{}, i0, i1, i2, i3, 0, 1) *
+    //                        fst(FSTTag{}, i0, i1, i2, i3, 2, 3)) +
+    //                  trace(fst(FSTTag{}, i0, i1, i2, i3, 0, 2) *
+    //                        fst(FSTTag{}, i0, i1, i2, i3, 3, 1)) +
+    //                  trace(fst(FSTTag{}, i0, i1, i2, i3, 0, 3) *
+    //                        fst(FSTTag{}, i0, i1, i2, i3, 1, 2)));
     charge_per_site(i0, i1, i2, i3) = local_charge;
+#pragma unroll
+    for (int mu = 0; mu < Nd - 1; ++mu) {
+#pragma unroll
+      for (int nu = mu + 1; nu < Nd; ++nu) {
+        if (mu == nu)
+          continue;
+#pragma unroll
+        for (int rho = 0; rho < Nd - 1; ++rho) {
+          if (rho == mu || rho == nu)
+            continue;
+#pragma unroll
+          for (int sigma = rho + 1; sigma < Nd; ++sigma) {
+            if (sigma == mu || sigma == nu)
+              continue;
+            local_charge += epsilon4(mu, nu, rho, sigma) *
+                            trace(C[mu][nu] * C[rho][sigma]); //
+            local_charge +=
+                epsilon4(nu, mu, rho, sigma) * trace(C[nu][mu] * C[rho][sigma]);
+            local_charge +=
+                epsilon4(mu, nu, sigma, rho) * trace(C[mu][nu] * C[sigma][rho]);
+            local_charge +=
+                epsilon4(nu, mu, sigma, rho) * trace(C[nu][mu] * C[sigma][rho]);
+          }
+        }
+      }
+    }
     // charge_per_site(i0, i1, i2, i3) = local_charge / 16;
   }
 
@@ -185,6 +211,6 @@ real_t get_topological_charge(const typename DGaugeFieldType::type g_in) {
   Kokkos::fence();
   // charge /= 32 * PI * PI;
 
-  return charge / (8 * PI * PI);
+  return charge / (32 * PI * PI);
 }
 } // namespace klft
