@@ -131,9 +131,8 @@ int parse_args(int argc, char **argv, size_t &seed) {
 }
 
 int main(int argc, char *argv[]) {
-  int rc;
   size_t seed;
-  rc = parse_args(argc, argv, seed);
+  parse_args(argc, argv, seed);
   Kokkos::initialize(argc, argv);
   testConversionAccuracy<1>(seed);
   testConversionAccuracy<2>(seed);

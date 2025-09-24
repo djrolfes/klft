@@ -214,8 +214,9 @@ constexpr size_t n_iter_expoSU3 = []() {
 }();
 // we also need to setup the expansion coefficients
 // static such that cuda dosnt complain when compiling with gcc
-static constexpr Kokkos::Array<real_t, n_iter_expoSU3 + 1> coeffs_expoSU3 =
-    []() {
+static KOKKOS_FORCEINLINE_FUNCTION constexpr Kokkos::Array<real_t,
+                                                           n_iter_expoSU3 + 1>
+    coeffs_expoSU3 = []() {
       Kokkos::Array<real_t, n_iter_expoSU3 + 1> coeffs{};
       coeffs[0] = 1.0;
 
@@ -293,8 +294,6 @@ SUN<3> expoSUN(const SUNAdj<3> &a) {
   // d = i det(X)
   real_t d = imag_det_SU3(a_tmp);
 
-  // printf("D: %f\n", d);
-  size_t test_var = n_iter_expoSU3;
   // now we can compute the exponential
   // q_{N,0} = c_N
   complex_t p0 = coeffs_expoSU3[n_iter_expoSU3];
