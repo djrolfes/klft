@@ -196,14 +196,17 @@ auto stapleField(const typename DGaugeFieldType::type g_in) {
   constexpr static size_t Nd =
       DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank;
   constexpr static size_t Nc = DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc;
-  typename DGaugeFieldType::type g_out(g_in.dimensions, 0);
+  typename DeviceGaugeFieldType<Nd, Nc>::type g_out(g_in.dimensions, 0);
   stapleField(g_in, g_out);
   return ConstGaugeFieldType<Nd, Nc>(g_out.field);
 }
 // calculate staple per site and store in another gauge
 template <typename DGaugeFieldType>
-void stapleField(const typename DGaugeFieldType::type g_in,
-                 typename DGaugeFieldType::type& g_out)
+void stapleField(
+    const typename DGaugeFieldType::type g_in,
+    typename DeviceGaugeFieldType<
+        DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank,
+        DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc>::type g_out)
 // -> ConstGaugeFieldType<DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank,
 //                        DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc>
 {
@@ -211,7 +214,8 @@ void stapleField(const typename DGaugeFieldType::type g_in,
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
   constexpr static size_t Nd =
       DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank;
-  constexpr static size_t Nc = DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc;
+  constexpr static size_t Nc =
+      DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank;
 
   // typename DGaugeFieldType::type g_out(g_in.dimensions, 0);
 

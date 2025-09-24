@@ -71,7 +71,7 @@ class UpdateMomentumGauge : public UpdateMomentum {
   using GaugeFieldType = typename DGaugeFieldType::type;
   using AdjFieldType = typename DAdjFieldType::type;
   GaugeFieldType gauge_field;
-  GaugeFieldType staple_field;
+  typename DeviceGaugeFieldType<rank, Nc>::type staple_field;
   AdjFieldType adjoint_field;
   real_t beta;
 
@@ -89,8 +89,8 @@ class UpdateMomentumGauge : public UpdateMomentum {
         adjoint_field(adjoint_field_),
         beta(beta_),
         eps(0.0) {
-    this->staple_field =
-        GaugeFieldType(gauge_field.dimensions, complex_t(0.0, 0.0));
+    this->staple_field = typename DeviceGaugeFieldType<rank, Nc>::type(
+        gauge_field.dimensions, complex_t(0.0, 0.0));
   }
   // todo: Add Force as a function instead of it being incorporated into the
   // functor.
