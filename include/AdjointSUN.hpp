@@ -214,9 +214,8 @@ constexpr size_t n_iter_expoSU3 = []() {
 }();
 // we also need to setup the expansion coefficients
 // static such that cuda dosnt complain when compiling with gcc
-static KOKKOS_FORCEINLINE_FUNCTION constexpr Kokkos::Array<real_t,
-                                                           n_iter_expoSU3 + 1>
-    coeffs_expoSU3 = []() {
+static constexpr Kokkos::Array<real_t, n_iter_expoSU3 + 1> coeffs_expoSU3 =
+    []() {
       Kokkos::Array<real_t, n_iter_expoSU3 + 1> coeffs{};
       coeffs[0] = 1.0;
 

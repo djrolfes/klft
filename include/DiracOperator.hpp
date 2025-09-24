@@ -63,17 +63,14 @@ public:
       : g_in(g_in), params(params) {}
   ~DiracOperator() = default;
   // Define callabale apply functions
-  template <typename Tag>
-  KOKKOS_FORCEINLINE_FUNCTION SpinorFieldType
-  apply(const SpinorFieldType &s_in) {
+  template <typename Tag> SpinorFieldType apply(const SpinorFieldType &s_in) {
     this->s_in = s_in;
     this->s_out = SpinorFieldType(params.dimensions, complex_t(0.0, 0.0));
     // Apply the operator
     return this->apply(Tag{});
   }
   template <typename Tag>
-  KOKKOS_FORCEINLINE_FUNCTION void apply(const SpinorFieldType &s_in,
-                                         const SpinorFieldType &s_out) {
+  void apply(const SpinorFieldType &s_in, const SpinorFieldType &s_out) {
     this->s_in = s_in;
     this->s_out = s_out;
     // Apply the operator
