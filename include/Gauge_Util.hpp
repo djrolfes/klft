@@ -202,7 +202,7 @@ auto stapleField(const typename DGaugeFieldType::type g_in) {
 }
 // calculate staple per site and store in another gauge
 template <typename DGaugeFieldType>
-auto stapleField(const typename DGaugeFieldType::type g_in,
+void stapleField(const typename DGaugeFieldType::type g_in,
                  typename DGaugeFieldType::type& g_out)
 // -> ConstGaugeFieldType<DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank,
 //                        DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc>
