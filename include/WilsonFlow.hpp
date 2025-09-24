@@ -52,12 +52,6 @@ template <typename DGaugeFieldType> struct WilsonFlow {
     const IndexArray<rank> dims = _field.dimensions;
     Kokkos::realloc(Kokkos::WithoutInitializing, tmp_Z, dims[0], dims[1],
                     dims[2], dims[3]);
-    // Kokkos::realloc(Kokkos::WithoutInitializing, tmp_staple, dims[0],
-    // dims[1],
-    //                 dims[2], dims[3]);
-
-    //            Kokkos::deep_copy(_field.field, tmp_stap);
-    //            Kokkos::deep_copy(_field.field, tmp_Z);
     Kokkos::fence();
   }
 
@@ -87,8 +81,8 @@ template <typename DGaugeFieldType> struct WilsonFlow {
     //                  (tmp_staple.field(i0, i1, i2, i3, mu));
     SUN<Nc> Z0_SUN = (tmp_staple.field(i0, i1, i2, i3, mu) *
                       conj(field.field(i0, i1, i2, i3, mu)));
-    SUNAdj<Nc> Z0 = traceT(Z0_SUN); //* (Nc / params.beta);
-    tmp_Z(i0, i1, i2, i3, mu) = Z0; // does this need to be deep copied?
+    SUNAdj<Nc> Z0 = 2.0 * traceT(Z0_SUN); //* (Nc / params.beta);
+    tmp_Z(i0, i1, i2, i3, mu) = Z0;       // does this need to be deep copied?
     field.field(i0, i1, i2, i3, mu) =
         expoSUN(Z0 * -0.25 * params.eps) * field.field(i0, i1, i2, i3, mu);
     // restoreSUN(field.field(i0, i1, i2, i3, mu));
@@ -101,7 +95,7 @@ template <typename DGaugeFieldType> struct WilsonFlow {
     //                  (tmp_staple.field(i0, i1, i2, i3, mu));
     SUN<Nc> Z1_SUN = (tmp_staple.field(i0, i1, i2, i3, mu) *
                       conj(field.field(i0, i1, i2, i3, mu)));
-    SUNAdj<Nc> Z1 = traceT(Z1_SUN); // * (Nc / params.beta);
+    SUNAdj<Nc> Z1 = 2.0 * traceT(Z1_SUN); // * (Nc / params.beta);
     SUNAdj<Nc> Z0 = tmp_Z(i0, i1, i2, i3, mu);
     Z1 = Z1 * static_cast<real_t>(8.0 / 9.0) -
          Z0 * static_cast<real_t>(17.0 / 36.0);
@@ -118,7 +112,7 @@ template <typename DGaugeFieldType> struct WilsonFlow {
     //                  (tmp_staple.field(i0, i1, i2, i3, mu));
     SUN<Nc> Z2_SUN = (tmp_staple.field(i0, i1, i2, i3, mu) *
                       conj(field.field(i0, i1, i2, i3, mu)));
-    SUNAdj<Nc> Z2 = traceT(Z2_SUN); // * (Nc / params.beta);
+    SUNAdj<Nc> Z2 = 2.0 * traceT(Z2_SUN); // * (Nc / params.beta);
     SUNAdj<Nc> Z_old = tmp_Z(i0, i1, i2, i3, mu);
     Z2 = (Z2 * 0.75 - Z_old);
     // SUNAdj<Nc> tmp = (Z2);
