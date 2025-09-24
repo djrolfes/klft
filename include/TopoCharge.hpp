@@ -123,10 +123,17 @@ struct TopoCharge {
               continue;
             local_charge += epsilon4(mu, nu, rho, sigma) *
                             trace(C[mu][nu] * C[rho][sigma]); //
+            local_charge +=
+                epsilon4(nu, mu, rho, sigma) * trace(C[nu][mu] * C[rho][sigma]);
+            local_charge +=
+                epsilon4(mu, nu, sigma, rho) * trace(C[mu][nu] * C[sigma][rho]);
+            local_charge +=
+                epsilon4(nu, mu, sigma, rho) * trace(C[nu][mu] * C[sigma][rho]);
           }
         }
       }
     }
+    charge_per_site(i0, i1, i2, i3) = local_charge / 16;
     // charge_per_site(i0, i1, i2, i3) = local_charge / 16;
   }
 
@@ -197,10 +204,10 @@ real_t get_topological_charge(const typename DGaugeFieldType::type g_in) {
                           g_in.dimensions, TCharge);
   Kokkos::fence();
 
-  real_t charge = -4.0 * TCharge.charge_per_site.sum();
+  real_t charge = TCharge.charge_per_site.sum();
   Kokkos::fence();
   // charge /= 32 * PI * PI;
 
-  return charge / (32 * PI * PI);
+  return charge / (-32 * PI * PI);
 }
 } // namespace klft
