@@ -1,5 +1,6 @@
 #pragma once
 #include "FieldStrengthTensor.hpp"
+#include "GaugePlaquette.hpp"
 
 namespace klft {
 
@@ -63,21 +64,23 @@ real_t getActionDensity(const typename DGaugeFieldType::type g_in) {
                 "action density requires a device gauge field type.");
   constexpr static const size_t Nd =
       DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank;
-  // constexpr static const size_t Nc =
-  //     DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc;
-  // constexpr static const GaugeFieldKind kind =
-  //     DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Kind;
+  constexpr static const size_t Nc =
+      DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc;
+  constexpr static const GaugeFieldKind kind =
+      DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Kind;
 
   using FieldType = typename DeviceFieldType<Nd>::type;
-  ActionDensityFunctor<DGaugeFieldType> ADFunctor(g_in);
+  FieldType plaq_per_site(g_in.dimensions, complex_t(0.0, 0.0));
+  GaugePlaq<Nd, Nc, kind> gaugePlaquette(g_in, plaq_per_site, g_in.dimensions);
   // define the functor
-  tune_and_launch_for<Nd>("Calculate densityESym", IndexArray<Nd>{0},
-                          g_in.dimensions, ADFunctor);
+  tune_and_launch_for<Nd>("Calculate GaugePlaquette", IndexArray<Nd>{0},
+                          g_in.dimensions, gaugePlaquette);
   Kokkos::fence();
 
-  real_t density = Kokkos::real(ADFunctor.density_per_site.avg());
+  real_t density = -2.0 * Kokkos::real(plaq_per_site.sum());
   Kokkos::fence();
 
   return density;
 }
+
 } // namespace klft
