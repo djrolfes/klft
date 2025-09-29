@@ -19,6 +19,7 @@ struct ActionDensityFunctor {
   using FieldType = typename DeviceFieldType<rank>::type;
 
   using RealMatrix = Kokkos::Array<Kokkos::Array<real_t, Nc>, Nc>;
+  using ComplexMatrix = Kokkos::Array<Kokkos::Array<complex_t, Nc>, Nc>;
 
   GaugeField gauge_field;
   FieldType density_per_site;
@@ -33,7 +34,7 @@ struct ActionDensityFunctor {
   KOKKOS_FORCEINLINE_FUNCTION void
   operator()(const indexType i0, const indexType i1, const indexType i2,
              const indexType i3) const {
-    Kokkos::Array<Kokkos::Array<RealMatrix, Nd>, Nd> C;
+    Kokkos::Array<Kokkos::Array<ComplexMatrix, Nd>, Nd> C;
 
     for (int mu = 0; mu < Nd; ++mu) {
       for (int nu = mu + 1; nu < Nd; ++nu) {
@@ -48,7 +49,8 @@ struct ActionDensityFunctor {
     for (int mu = 0; mu < Nd; ++mu) {
 #pragma unroll
       for (int nu = mu + 1; nu < Nd; ++nu) {
-        density_per_site(i0, i1, i2, i3) += trace(C[mu][nu] * C[mu][nu]);
+        density_per_site(i0, i1, i2, i3) += retrace(C[mu][nu] * C[mu][nu]);
+        density_per_site(i0, i1, i2, i3) += retrace(C[nu][mu] * C[nu][mu]);
       }
     }
   }
@@ -70,11 +72,11 @@ real_t getActionDensity(const typename DGaugeFieldType::type g_in) {
   using FieldType = typename DeviceFieldType<Nd>::type;
   ActionDensityFunctor<DGaugeFieldType> ADFunctor(g_in);
   // define the functor
-  tune_and_launch_for<Nd>("Calculate densityEAsym", IndexArray<Nd>{0},
+  tune_and_launch_for<Nd>("Calculate densityESym", IndexArray<Nd>{0},
                           g_in.dimensions, ADFunctor);
   Kokkos::fence();
 
-  real_t density = 0.5 * Kokkos::real(ADFunctor.density_per_site.avg());
+  real_t density = Kokkos::real(ADFunctor.density_per_site.avg());
   Kokkos::fence();
 
   return density;

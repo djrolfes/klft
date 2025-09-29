@@ -102,6 +102,35 @@ real(const SUN<N> &in) {
   return out;
 }
 
+template <size_t N>
+KOKKOS_FORCEINLINE_FUNCTION Kokkos::Array<Kokkos::Array<real_t, N>, N>
+imag(const Kokkos::Array<Kokkos::Array<complex_t, N>, N> &in) {
+  Kokkos::Array<Kokkos::Array<real_t, N>, N> out{0};
+#pragma unroll
+  for (int i = 0; i < N; ++i) {
+#pragma unroll
+    for (int j = 0; j < N; ++j) {
+      out[i][j] = in[i][j].imag();
+    }
+  }
+  return out;
+}
+
+// get the real parts of an SUN matrix
+template <size_t N>
+KOKKOS_FORCEINLINE_FUNCTION Kokkos::Array<Kokkos::Array<real_t, N>, N>
+real(const Kokkos::Array<Kokkos::Array<complex_t, N>, N> &in) {
+  Kokkos::Array<Kokkos::Array<real_t, N>, N> out{0};
+#pragma unroll
+  for (int i = 0; i < N; ++i) {
+#pragma unroll
+    for (int j = 0; j < N; ++j) {
+      out[i][j] = in[i][j].real();
+    }
+  }
+  return out;
+}
+
 // return the trace of a RealMatrix
 template <size_t N>
 KOKKOS_FORCEINLINE_FUNCTION real_t
@@ -112,6 +141,39 @@ trace(const Kokkos::Array<Kokkos::Array<real_t, N>, N> &in) {
     out += in[i][i];
   }
   return out;
+}
+
+template <size_t N>
+KOKKOS_FORCEINLINE_FUNCTION complex_t
+trace(const Kokkos::Array<Kokkos::Array<complex_t, N>, N> &in) {
+  complex_t out{0};
+#pragma unroll
+  for (int i = 0; i < N; ++i) {
+    out += in[i][i];
+  }
+  return out;
+}
+
+template <size_t N>
+KOKKOS_FORCEINLINE_FUNCTION real_t
+retrace(const Kokkos::Array<Kokkos::Array<complex_t, N>, N> &in) {
+  complex_t out{0};
+#pragma unroll
+  for (int i = 0; i < N; ++i) {
+    out += in[i][i];
+  }
+  return out.real();
+}
+
+template <size_t N>
+KOKKOS_FORCEINLINE_FUNCTION real_t
+imtrace(const Kokkos::Array<Kokkos::Array<complex_t, N>, N> &in) {
+  complex_t out{0};
+#pragma unroll
+  for (int i = 0; i < N; ++i) {
+    out += in[i][i];
+  }
+  return out.imag();
 }
 
 template <typename DGaugeFieldType> struct FieldStrengthTensor {
@@ -134,6 +196,7 @@ template <typename DGaugeFieldType> struct FieldStrengthTensor {
   struct CloverDef {};
 
   using RealMatrix = Kokkos::Array<Kokkos::Array<real_t, Nc>, Nc>;
+  using ComplexMatrix = Kokkos::Array<Kokkos::Array<complex_t, Nc>, Nc>;
 
   // define the dimensions of the given Field
   const IndexArray<Nd> dimensions;
@@ -142,8 +205,57 @@ template <typename DGaugeFieldType> struct FieldStrengthTensor {
       : g_in(g_in), dimensions(g_in.dimensions) {}
 
   // return the clover C_munu
+  // template <typename indexType>
+  // KOKKOS_FORCEINLINE_FUNCTION RealMatrix operator()(
+  //     CloverDef, const indexType i0, const indexType i1, const indexType i2,
+  //     const indexType i3, index_t mu, index_t nu) const {
+  //
+  //   SUN<Nc> P_munu = zeroSUN<Nc>();
+  //   const IndexArray<Nd> x{static_cast<index_t>(i0),
+  //   static_cast<index_t>(i1),
+  //                          static_cast<index_t>(i2),
+  //                          static_cast<index_t>(i3)};
+  //
+  //   // Helper lambda for modular arithmetic
+  //   auto mod = [&](index_t s, index_t dir) {
+  //     return (s + this->dimensions[dir]) % this->dimensions[dir];
+  //   };
+  //
+  //   // 1. Plaquette in (+mu, +nu) plane starting at x
+  //   IndexArray<Nd> x_p_mu = x;
+  //   x_p_mu[mu] = (x[mu] + 1) % dimensions[mu];
+  //   IndexArray<Nd> x_p_nu = x;
+  //   x_p_nu[nu] = (x[nu] + 1) % dimensions[nu];
+  //   P_munu += g_in(x, mu) * g_in(x_p_mu, nu) * conj(g_in(x_p_nu, mu)) *
+  //             conj(g_in(x, nu));
+  //
+  //   // 2. Plaquette in (+mu, -nu) plane starting at x
+  //   IndexArray<Nd> x_m_nu = x;
+  //   x_m_nu[nu] = mod(x[nu] - 1, nu);
+  //   IndexArray<Nd> x_m_mu = x;
+  //   x_m_mu[mu] = mod(x[mu] - 1, mu);
+  //   IndexArray<Nd> x_m_mu_p_nu = x_m_mu;
+  //   x_m_mu_p_nu[nu] = mod(x_m_mu[nu] + 1, nu);
+  //   P_munu += g_in(x, nu) * conj(g_in(x_m_mu_p_nu, mu)) *
+  //             conj(g_in(x_m_nu, nu)) * g_in(x_m_nu, mu);
+  //
+  //   // 3. Plaquette in (-mu, +nu) plane starting at x
+  //   IndexArray<Nd> x_p_mu_m_nu = x_m_nu;
+  //   x_p_mu_m_nu[mu] = (x_m_nu[mu] + 1) % dimensions[mu];
+  //   P_munu += conj(g_in(x_m_mu, nu)) * g_in(x_m_mu, mu) *
+  //             g_in(x_p_mu_m_nu, nu) * conj(g_in(x, mu));
+  //
+  //   // 4. Plaquette in (-mu, -nu) plane starting at x
+  //   IndexArray<Nd> x_m_mu_m_nu = x_m_mu;
+  //   x_m_mu_m_nu[nu] = mod(x_m_mu[nu] - 1, nu);
+  //   P_munu += conj(g_in(x_m_mu, mu)) * conj(g_in(x_m_mu_m_nu, nu)) *
+  //             g_in(x_m_mu_m_nu, mu) * g_in(x_m_nu, nu);
+  //
+  //   return real(P_munu) * 0.25;
+  // }
+
   template <typename indexType>
-  KOKKOS_FORCEINLINE_FUNCTION RealMatrix operator()(
+  KOKKOS_FORCEINLINE_FUNCTION ComplexMatrix operator()(
       CloverDef, const indexType i0, const indexType i1, const indexType i2,
       const indexType i3, index_t mu, index_t nu) const {
 
@@ -186,7 +298,7 @@ template <typename DGaugeFieldType> struct FieldStrengthTensor {
     P_munu += conj(g_in(x_m_mu, mu)) * conj(g_in(x_m_mu_m_nu, nu)) *
               g_in(x_m_mu_m_nu, mu) * g_in(x_m_nu, nu);
 
-    return real(P_munu) * 0.25;
+    return P_munu * 0.25;
   }
 };
 

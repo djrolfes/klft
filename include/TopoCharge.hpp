@@ -50,6 +50,7 @@ struct TopoCharge {
   const FieldStrengthTensor<DGaugeFieldType> fst;
 
   using RealMatrix = Kokkos::Array<Kokkos::Array<real_t, Nc>, Nc>;
+  using ComplexMatrix = Kokkos::Array<Kokkos::Array<complex_t, Nc>, Nc>;
 
   // define the dimensions of the given Field
   const IndexArray<Nd> dimensions;
@@ -88,8 +89,8 @@ struct TopoCharge {
   operator()(const indexType i0, const indexType i1, const indexType i2,
              const indexType i3) const {
     real_t local_charge{0.0};
-    RealMatrix C1, C2;
-    Kokkos::Array<Kokkos::Array<RealMatrix, Nd>, Nd> C;
+    ComplexMatrix C1, C2;
+    Kokkos::Array<Kokkos::Array<ComplexMatrix, Nd>, Nd> C;
 
     for (int mu = 0; mu < Nd; ++mu) {
       for (int nu = mu + 1; nu < Nd; ++nu) {
@@ -122,13 +123,13 @@ struct TopoCharge {
             if (sigma == mu || sigma == nu)
               continue;
             local_charge += epsilon4(mu, nu, rho, sigma) *
-                            trace(C[mu][nu] * C[rho][sigma]); //
-            local_charge +=
-                epsilon4(nu, mu, rho, sigma) * trace(C[nu][mu] * C[rho][sigma]);
-            local_charge +=
-                epsilon4(mu, nu, sigma, rho) * trace(C[mu][nu] * C[sigma][rho]);
-            local_charge +=
-                epsilon4(nu, mu, sigma, rho) * trace(C[nu][mu] * C[sigma][rho]);
+                            retrace(C[mu][nu] * C[rho][sigma]); //
+            local_charge += epsilon4(nu, mu, rho, sigma) *
+                            retrace(C[nu][mu] * C[rho][sigma]);
+            local_charge += epsilon4(mu, nu, sigma, rho) *
+                            retrace(C[mu][nu] * C[sigma][rho]);
+            local_charge += epsilon4(nu, mu, sigma, rho) *
+                            retrace(C[nu][mu] * C[sigma][rho]);
           }
         }
       }
