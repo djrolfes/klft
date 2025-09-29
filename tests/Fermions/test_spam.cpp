@@ -123,9 +123,14 @@ int main(int argc, char* argv[]) {
                       const index_t i3, real_t& lsum) {
           auto idx = index_full_to_half(Kokkos::Array<int, 4>{i0, i1, i2, i3});
           if (idx.second == 1) {
-            lsum = sqnorm(out_normal(i0, i1, i2, i3) -
-                          //  sqnorm(u_for_normal(i0, i1, i2, i3)) -
-                          out_o(idx.first));
+            lsum += sqnorm(out_normal(i0, i1, i2, i3) -
+                           //  sqnorm(u_for_normal(i0, i1, i2, i3)) -
+                           out_o(idx.first));
+          }
+          if (idx.second == 0) {
+            lsum += sqnorm(out_normal(i0, i1, i2, i3) -
+                           //  sqnorm(u_for_normal(i0, i1, i2, i3)) -
+                           out_e(idx.first));
           }
         },
         Kokkos::Sum<real_t>(result));
@@ -171,9 +176,9 @@ int main(int argc, char* argv[]) {
                       const index_t i3, real_t& lsum) {
           // auto idx = index_full_to_half(Kokkos::Array<int, 4>{i0, i1, i2,
           // i3}); if (idx.second == 0) {
-          lsum = sqnorm(out_man(i0, i1, i2, i3) -
-                        //  sqnorm(u_for_normal(i0, i1, i2, i3)) -
-                        out_comp(i0, i1, i2, i3));
+          lsum += sqnorm(out_man(i0, i1, i2, i3) -
+                         //  sqnorm(u_for_normal(i0, i1, i2, i3)) -
+                         out_comp(i0, i1, i2, i3));
           // }
         },
         Kokkos::Sum<real_t>(result));
