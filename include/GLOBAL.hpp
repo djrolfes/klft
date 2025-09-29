@@ -190,8 +190,57 @@ using SUN = Wrapper<Kokkos::Array<Kokkos::Array<complex_t, Nc>, Nc>>;
 // define Spinor Type
 // info correct dispatch is only guaranteed for    Nd != Nc ! -> Conflicts with
 // SUN.hpp version Maybe via class to make it safe
+template <typename T> struct WrapperSpinor {
+  T data;
+
+  // Implicit conversion to T&
+  KOKKOS_INLINE_FUNCTION
+  operator T &() { return data; }
+
+  KOKKOS_INLINE_FUNCTION
+  operator const T &() const { return data; }
+
+  // Optional: pointer-style access (if T is a View or Array)
+  KOKKOS_INLINE_FUNCTION
+  auto operator->() { return &data; }
+
+  KOKKOS_INLINE_FUNCTION
+  auto operator->() const { return &data; }
+
+  // Add custom operations
+  // KOKKOS_INLINE_FUNCTION
+  // Wrapper operator+(const Wrapper& other) const {
+  //     Wrapper result;
+  //     result.data = this->data + other.data; // requires T supports +
+  //     return result;
+  // }
+
+  // operator[] forwarding
+  template <typename Index>
+  constexpr KOKKOS_INLINE_FUNCTION auto &operator[](Index i) {
+    return data[i];
+  }
+
+  template <typename Index>
+  KOKKOS_INLINE_FUNCTION constexpr const auto &operator[](Index i) const {
+    return data[i];
+  }
+
+  // Optional: operator() forwarding (for Views)
+  template <typename... Indices>
+  KOKKOS_INLINE_FUNCTION auto operator()(Indices... indices)
+      -> decltype(data(indices...)) {
+    return data(indices...);
+  }
+
+  template <typename... Indices>
+  KOKKOS_INLINE_FUNCTION auto operator()(Indices... indices) const
+      -> decltype(data(indices...)) {
+    return data(indices...);
+  }
+};
 template <size_t Nc, size_t Nd>
-using Spinor = Kokkos::Array<Kokkos::Array<complex_t, Nd>, Nc>;
+using Spinor = WrapperSpinor<Kokkos::Array<Kokkos::Array<complex_t, Nc>, Nd>>;
 
 // define field view types
 // by default all views are 4D
