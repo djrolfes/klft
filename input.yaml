@@ -18,10 +18,10 @@ Integrator:
   Monomials:
     - Type: "Leapfrog"
       level: 0
-      steps: 100
+      steps: 50
     - Type: "Leapfrog"
       level: 1
-      steps: 20
+      steps: 10
 Gauge Monomial:
   level: 0
   beta: 2.12
@@ -53,7 +53,7 @@ GaugeObservableParams:
     - [2, 2]
     - [3, 3]
 
-  plaquette_filename: "plaquette_output20.txt"
+  plaquette_filename: "plaquette_output_EO.txt"
   W_temp_filename: "wilson_temp_output20.txt"
   W_mu_nu_filename: "wilson_mu_nu_output20.txt"
 

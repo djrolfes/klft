@@ -97,9 +97,13 @@ class FermionMonomialEO : public Monomial<DGaugeFieldType, DAdjFieldType> {
 
     solver.template solve<Tags::TagSe>(x0, this->tol);  // chi = S_e^-1 phi
     const FermionField chi = solver.x;
+    FermionField x2(this->phi.dimensions, complex_t(0.0, 0.0));
+    Solver solver2(chi, x2, dirac_op);
+
+    solver2.template solve<Tags::TagSe>(x0, this->tol);
 
     Monomial<DGaugeFieldType, DAdjFieldType>::H_new =
-        spinor_dot_product<rank, Nc, RepDim>(chi, chi)
+        spinor_dot_product<rank, Nc, RepDim>(chi, this->phi)
             .real();  // S_F = chi^dagger chi = phi^dagger S_e^-1 S_e^-1 phi
   }
   void print() override {
