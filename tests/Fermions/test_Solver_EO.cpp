@@ -38,7 +38,7 @@ int main(int argc, char* argv[]) {
     printf("\n=== Testing DiracOperator SU(3)  ===\n");
     printf("\n= Testing hermiticity =\n");
     index_t L0 = 32, L1 = 32, L2 = 32, L3 = 32;
-    diracParams params(0.13);
+    diracParams params(0.15);
     printf("Lattice Dimension %ix%ix%ix%i \n", L0, L1, L2, L3);
     printf("Generate SpinorFields...\n");
     using DSpinorFieldType =
@@ -73,7 +73,7 @@ int main(int argc, char* argv[]) {
 
     // D_pre.s_in_same_parity = odd_true;
     // auto odd_b = D_pre.template apply<Tags::TagDdagger>(even_true);
-    auto even_b = D_pre.template apply<Tags::TagDDdagger>(even_true);
+    auto even_b = D_pre.template apply<Tags::TagDdaggerD>(even_true);
     // D_pre.s_in_same_parity = even_b_1;
     // auto even_b = D_pre.template apply<Tags::TagD>(odd_b_1);
 
@@ -103,11 +103,11 @@ int main(int argc, char* argv[]) {
     Kokkos::Timer timer;
 
     real_t diracTime = std::numeric_limits<real_t>::max();
-    solver.solve<Tags::TagSe>(x0, eps);
-    CGSolver<EOWilsonDiracOperator, DSpinorFieldType,
-             DeviceGaugeFieldType<4, N>>
-        solver2(solver.x, x2, D_pre);
-    solver2.solve<Tags::TagSe>(x02, eps);
+    solver.solve<Tags::TagDdaggerD>(x0, eps);
+    // CGSolver<EOWilsonDiracOperator, DSpinorFieldType,
+    //          DeviceGaugeFieldType<4, N>>
+    // solver2(solver.x, x2, D_pre);
+    // solver2.solve<Tags::TagSe>(x02, eps);
     auto diracTime1 = std::min(diracTime, timer.seconds());
     printf("Solver Time:     %11.4e s\n", diracTime1);
     timer.reset();
@@ -119,7 +119,7 @@ int main(int argc, char* argv[]) {
     printf("Comparing Solver result to expected result...\n");
 
     auto res_norm =
-        spinor_norm<4, N, 4>(axpy<DSpinorFieldType>(-1, solver2.x, even_true));
+        spinor_norm<4, N, 4>(axpy<DSpinorFieldType>(-1, solver.x, even_true));
     auto norm = spinor_norm<4, N, 4>(even_true);
 
     printf("Norm of Residual of the even field: %.20f\n", res_norm / norm);
