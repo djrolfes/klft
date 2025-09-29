@@ -47,8 +47,10 @@ int main(int argc, char* argv[]) {
     // print_spinor_int(u_for_normal(0, 0, 0, 0), "u_for_normal");
 
     Kokkos::Random_XorShift64_Pool<> random_pool1(/*seed=*/1234);
-    deviceSpinorField<2, 4> u_for_eo(L0 / 2, L1, L2, L3, random_pool1, 0,
-                                     1.0 / 1.41);
+    deviceSpinorField<2, 4> u_even(L0 / 2, L1, L2, L3, random_pool1, 0,
+                                   1.0 / 1.41);
+    deviceSpinorField<2, 4> u_odd(L0 / 2, L1, L2, L3, random_pool1, 0,
+                                  1.0 / 1.41);
     printf("Populate normal field\n\n\n");
     tune_and_launch_for<4>(
         "init_deviceSpinorField", IndexArray<4>{0, 0, 0, 0},
@@ -62,13 +64,21 @@ int main(int argc, char* argv[]) {
             // idx.first[1],
             //        idx.first[2], idx.first[3]);
 
-            u_for_normal(i0, i1, i2, i3) = u_for_eo(idx.first);
+            u_for_normal(i0, i1, i2, i3) = u_even(idx.first);
+          }
+          if (idx.second == 1) {
+            // printf("Iteration Index: [%i,%i,%i,%i]\n", i0, i1, i2, i3);
+            // printf("half index: [%i,%i,%i,%i] \n", idx.first[0],
+            // idx.first[1],
+            //        idx.first[2], idx.first[3]);
+
+            u_for_normal(i0, i1, i2, i3) = u_odd(idx.first);
           }
         });
     auto test_idx = Kokkos::Array<int, 4>({2, 0, 0, 0});
     // printf(
-    //     "u_for_eo == u_for_normal @(0,0,0,0) is equal: %i\n",
-    //     u_for_eo(index_full_to_half(test_idx).first) ==
+    //     "u_even == u_for_normal @(0,0,0,0) is equal: %i\n",
+    //     u_even(index_full_to_half(test_idx).first) ==
     //     u_for_normal(test_idx));
 
     // deviceSpinorField<2, 4> Mu(L0 / 2, L1 / 2, L2 / 2, L3 / 2, 0);
@@ -88,12 +98,16 @@ int main(int argc, char* argv[]) {
 
     real_t diracTime = std::numeric_limits<real_t>::max();
     // for (size_t i = 0; i < count; i++) {
-    auto out_eo = D_pre.template apply<Tags::TagHoe>(u_for_eo);
+    D_pre.s_in_same_parity = u_odd;
+    auto out_o = D_pre.template apply<Tags::TagDdagger>(u_even);
+    D_pre.s_in_same_parity = u_even;
+
+    auto out_e = D_pre.template apply<Tags::TagD>(u_odd);
     auto diracTime1 = std::min(diracTime, timer.seconds());
     printf("D^ Precondition Kernel Time:     %11.4e s\n", diracTime1);
     timer.reset();
-    auto out_normal1 = D.template apply<Tags::TagD>(u_for_normal);
-    auto out_normal = D.template apply<Tags::TagD>(out_normal1);
+    auto out_normal = D.template apply<Tags::TagD>(u_for_normal);
+    // auto out_normal = D.template apply<Tags::TagD>(out_normal1);
     // }
     diracTime1 = std::min(diracTime, timer.seconds());
     printf("D^ Kernel Time:     %11.4e s\n", diracTime1);
@@ -108,10 +122,10 @@ int main(int argc, char* argv[]) {
         KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2,
                       const index_t i3, real_t& lsum) {
           auto idx = index_full_to_half(Kokkos::Array<int, 4>{i0, i1, i2, i3});
-          if (idx.second == 0) {
-            lsum = sqnorm(out_normal(i0, i1, i2, i3)) -
-                   //  sqnorm(u_for_normal(i0, i1, i2, i3)) -
-                   sqnorm(out_eo(idx.first));
+          if (idx.second == 1) {
+            lsum = sqnorm(out_normal(i0, i1, i2, i3) -
+                          //  sqnorm(u_for_normal(i0, i1, i2, i3)) -
+                          out_o(idx.first));
           }
         },
         Kokkos::Sum<real_t>(result));
@@ -124,15 +138,15 @@ int main(int argc, char* argv[]) {
         D_pre_alt(gauge, params);
     deviceSpinorField<2, 4> u_eo_temp(L0 / 2, L1, L2, L3, 0);
     // deviceSpinorField<2, 4> out_comp(L0 / 2, L1, L2, L3, 0);
-    auto out_comp = D_pre_alt.template apply<Tags::TagDDdagger>(u_for_eo);
+    auto out_comp = D_pre_alt.template apply<Tags::TagDDdagger>(u_even);
     // build it manually:
-    auto temp1 = D_pre.template apply<Tags::TagSe>(u_for_eo);
+    auto temp1 = D_pre.template apply<Tags::TagSe>(u_even);
     auto out_man = D_pre.template apply<Tags::TagSe>(temp1);
     // auto out_man =
     //     axpy<DeviceSpinorFieldType<4, 2, 4, SpinorFieldKind::Standard,
     //                                SpinorFieldLayout::Checkerboard>>(-1,
     //                                temp2,
-    //                                                                  u_for_eo);
+    //                                                                  u_even);
     // built it completla maually
     // auto temp3 = D.template apply<Tags::TagD>(u_for_normal);
     // auto temp4 = D.template apply<Tags::TagD>(temp3);
