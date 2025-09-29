@@ -69,18 +69,12 @@ struct TopoCharge {
     //     rho == sigma) {
     //   return 0;
     // }
-    mu++;
-    nu++;
-    rho++;
-    sigma++;
     index_t parity = (mu - nu) * (mu - rho) * (mu - sigma) * (nu - rho) *
                      (nu - sigma) * (rho - sigma);
 
     // parity of inversion count gives sign
     return parity > 0 ? (parity == 0 ? 0 : 1) : -1;
   }
-
-  // TODO: make epsilon resolve at compiletime for the relevant combinations
 
   // now define the topological charge calculation for a single site (should
   // this also be parallized over some directions?)
