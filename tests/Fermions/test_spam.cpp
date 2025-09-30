@@ -75,7 +75,7 @@ int main(int argc, char* argv[]) {
             u_for_normal(i0, i1, i2, i3) = u_odd(idx.first);
           }
         });
-    auto test_idx = Kokkos::Array<int, 4>({2, 0, 0, 0});
+    // auto test_idx = Kokkos::Array<int, 4>({2, 0, 0, 0});
     // printf(
     //     "u_even == u_for_normal @(0,0,0,0) is equal: %i\n",
     //     u_even(index_full_to_half(test_idx).first) ==
