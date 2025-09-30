@@ -291,7 +291,7 @@ class EODiracOperator
   SpinorFieldType apply_(Tags::TagDDdagger, const SpinorFieldType& s_out) {
     if (!temp.field.is_allocated()) {
       this->temp = SpinorFieldType(this->s_in.dimensions, 0);
-      printf("instatinated temp\n");
+      // printf("instatinated temp\n");
     }
 
     auto cached_s_out = this->s_out;

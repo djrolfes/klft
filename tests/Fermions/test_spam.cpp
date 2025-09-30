@@ -202,7 +202,7 @@ int main(int argc, char* argv[]) {
     Kokkos::Random_XorShift64_Pool<> random_pool2(/*seed=*/1233464);
 
     deviceSpinorField<2, 4> x(L0 / 2, L1, L2, L3, random_pool2, 0, 1.0 / 1.41);
-    auto temp_x = D_pre_alt.template apply<Tags::TagSe>(x);
+    auto temp_x = D_pre_alt.template apply<Tags::TagDdaggerD>(x);
     auto res = spinor_dot_product<4, 2, 4>(x, temp_x);
     printf("Positivity test: %f+i%f.\n ", res.real(), res.imag());
     printf("Check for hermicity:\n\n");
@@ -213,8 +213,8 @@ int main(int argc, char* argv[]) {
     norm = Kokkos::sqrt(norm);
     deviceSpinorField<2, 4> Mu(L0 / 2, L1, L2, L3, complex_t(0.0, 0.0));
     deviceSpinorField<2, 4> Mv(L0 / 2, L1, L2, L3, complex_t(0.0, 0.0));
-    D_pre_alt.template apply<Tags::TagSe>(u, Mu);
-    D_pre_alt.template apply<Tags::TagSe>(v, Mv);
+    D_pre_alt.template apply<Tags::TagDdaggerD>(u, Mu);
+    D_pre_alt.template apply<Tags::TagDdaggerD>(v, Mv);
     printf("Calculate Scalarproducts...\n");
     auto r1 = spinor_dot_product<4, 2, 4>(u, Mv);
     auto r2 = spinor_dot_product<4, 2, 4>(Mu, v);

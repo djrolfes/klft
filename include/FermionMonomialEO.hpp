@@ -26,9 +26,12 @@
 #define SQRT2INV \
   0.707106781186547524400844362104849039284835937688474036588339868995366239231053519425193767163820786367506  // Oeis A010503
 namespace klft {
-template <class RNGType, typename DSpinorFieldType, typename DGaugeFieldType,
+template <class RNGType,
+          typename DSpinorFieldType,
+          typename DGaugeFieldType,
           typename DAdjFieldType,
-          template <template <typename, typename> class DiracOpT, typename,
+          template <template <typename, typename> class DiracOpT,
+                    typename,
                     typename> class _Solver,
           template <typename, typename> class DiracOpT>
 class FermionMonomialEO : public Monomial<DGaugeFieldType, DAdjFieldType> {
@@ -61,8 +64,11 @@ class FermionMonomialEO : public Monomial<DGaugeFieldType, DAdjFieldType> {
   const diracParams params;
   const real_t tol;
   RNGType rng;
-  FermionMonomialEO(FermionField& _phi, const diracParams& params_,
-                    const real_t& tol_, RNGType& RNG_, unsigned int _time_scale)
+  FermionMonomialEO(FermionField& _phi,
+                    const diracParams& params_,
+                    const real_t& tol_,
+                    RNGType& RNG_,
+                    unsigned int _time_scale)
       : Monomial<DGaugeFieldType, DAdjFieldType>(_time_scale),
         phi(_phi),
         params(params_),
@@ -95,12 +101,9 @@ class FermionMonomialEO : public Monomial<DGaugeFieldType, DAdjFieldType> {
       printf("Solving inside Fermion Monomial accept:");
     }
 
-    solver.template solve<Tags::TagSe>(x0, this->tol);  // chi = S_e^-1 phi
+    solver.template solve<Tags::TagDdaggerD>(x0,
+                                             this->tol);  // chi = S_e^-1 phi
     const FermionField chi = solver.x;
-    FermionField x2(this->phi.dimensions, complex_t(0.0, 0.0));
-    Solver solver2(chi, x2, dirac_op);
-
-    solver2.template solve<Tags::TagSe>(x0, this->tol);
 
     Monomial<DGaugeFieldType, DAdjFieldType>::H_new =
         spinor_dot_product<rank, Nc, RepDim>(chi, this->phi)

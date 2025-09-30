@@ -26,9 +26,11 @@
 
 namespace klft {
 
-template <typename DSpinorFieldType, typename DGaugeFieldType,
+template <typename DSpinorFieldType,
+          typename DGaugeFieldType,
           typename DAdjFieldType,
-          template <template <typename, typename> class DiracOpT, typename,
+          template <template <typename, typename> class DiracOpT,
+                    typename,
                     typename> class _Solver,
           template <typename, typename> class DiracOpT>
 class UpdateMomentumWilsonEO : public UpdateMomentum {
@@ -75,9 +77,11 @@ class UpdateMomentumWilsonEO : public UpdateMomentum {
   UpdateMomentumWilsonEO() = delete;
   ~UpdateMomentumWilsonEO() = default;
 
-  UpdateMomentumWilsonEO(FermionField& phi_, GaugeFieldType& gauge_field_,
+  UpdateMomentumWilsonEO(FermionField& phi_,
+                         GaugeFieldType& gauge_field_,
                          AdjFieldType& adjoint_field_,
-                         const diracParams& params_, const real_t& tol_)
+                         const diracParams& params_,
+                         const real_t& tol_)
       : UpdateMomentum(0),
         phi(phi_),
         gauge_field(gauge_field_),
@@ -87,6 +91,7 @@ class UpdateMomentumWilsonEO : public UpdateMomentum {
         tol(tol_) {
     rho = FermionField(phi.dimensions, 0);
     sigma = FermionField(phi.dimensions, 0);
+    y = FermionField(phi.dimensions, 0);
   }
 
   // Implemntation of the force correspondig to the Hermitian Wilson dirac
@@ -133,13 +138,14 @@ class UpdateMomentumWilsonEO : public UpdateMomentum {
               (-1 * this->params.kappa * this->params.kappa * xp.second) *
               X_proj;
           auto temp1 = reconstruct(mu, -1, gauge_field(Idcs..., mu) * Xplus);
-          auto deriv = temp1 * (conj(this->chi(x_half.first)));
+          auto deriv = temp1 * gamma5(conj(this->chi(x_half.first)));
 
-          auto Y_proj = project_alt(mu, -1, conj(this->rho(xp_half.first)));
+          auto Y_proj =
+              project_alt(mu, 1, gamma5(conj(this->rho(xp_half.first))));
           auto YPlus =
               (this->params.kappa * this->params.kappa * xp.second) * Y_proj;
-          auto temp3 = reconstruct_alt(
-              mu, -1, YPlus * conj(this->gauge_field(Idcs..., mu)));
+          auto temp3 = (reconstruct_alt(
+              mu, 1, YPlus * conj(this->gauge_field(Idcs..., mu))));
           deriv += this->y(x_half.first) * temp3;
 
           momentum(Idcs..., mu) -= 2 * eps *
@@ -157,19 +163,20 @@ class UpdateMomentumWilsonEO : public UpdateMomentum {
               this->gauge_field.dimensions);  // even
           auto xp_half = index_full_to_half(xp.first);
           KOKKOS_ASSERT(xp_half.second == 0);
-          auto X_proj = project(mu, 1, this->y(xp_half.first));
+          auto X_proj = project(mu, -1, this->y(xp_half.first));
           // minus sign in the projector comes from the derivative of D
           auto Xplus =
               (-1 * this->params.kappa * this->params.kappa * xp.second) *
               X_proj;
-          auto temp1 = reconstruct(mu, 1, gauge_field(Idcs..., mu) * Xplus);
-          auto deriv = temp1 * (conj(this->rho(x_half.first)));
+          auto temp1 = reconstruct(mu, -1, gauge_field(Idcs..., mu) * Xplus);
+          auto deriv = temp1 * gamma5(conj(this->rho(x_half.first)));
 
-          auto Y_proj = project_alt(mu, 1, conj(this->chi(xp_half.first)));
+          auto Y_proj =
+              project_alt(mu, 1, gamma5(conj(this->chi(xp_half.first))));
           auto YPlus =
               (this->params.kappa * this->params.kappa * xp.second) * Y_proj;
-          auto temp3 = reconstruct_alt(
-              mu, 1, YPlus * conj(this->gauge_field(Idcs..., mu)));
+          auto temp3 = (reconstruct_alt(
+              mu, 1, YPlus * conj(this->gauge_field(Idcs..., mu))));
           deriv += this->sigma(x_half.first) * temp3;
 
           momentum(Idcs..., mu) -= 2 * eps *
@@ -198,14 +205,12 @@ class UpdateMomentumWilsonEO : public UpdateMomentum {
       printf("Solving insde UpdateMomentumWilson:");
     }
 
-    solver.template solve<Tags::TagSe>(x0, this->tol);
+    solver.template solve<Tags::TagDdaggerD>(x0, this->tol);
 
-    this->y = solver.x;  // y = S_e^-1 phi
-    Solver solver2(y, x2, D);
+    this->chi = solver.x;  // chi = S_e^-1 S_e^-1 phi
 
-    solver2.template solve<Tags::TagSe>(
-        x0, this->tol);     // solve chi = S_e^-1 y = S_e^-1 S_e^-1 phi
-    this->chi = solver2.x;  // X
+    D.template apply<Tags::TagSe>(this->chi, this->y);  // y = S_e^-1 phi
+
     D.template apply<Tags::TagHoe>(this->chi, this->rho);
     D.template apply<Tags::TagHoe>(this->y, this->sigma);
     for (size_t i = 0; i < rank; ++i) {

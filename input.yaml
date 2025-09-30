@@ -21,7 +21,7 @@ Integrator:
       steps: 50
     - Type: "Leapfrog"
       level: 1
-      steps: 10
+      steps: 20
 Gauge Monomial:
   level: 0
   beta: 2.12
@@ -31,7 +31,7 @@ Fermion Monomial:
   fermion: "Wilson"
   solver: "CG"
   RepDim: 4
-  kappa: 0.12
+  kappa: 0.15
   tol: 1e-10
   preconditioning: true
 GaugeObservableParams:
