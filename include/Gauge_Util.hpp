@@ -310,6 +310,70 @@ void stapleField(const typename DGaugeFieldType::type g_in,
   // return the output field
 }
 
+// calculate staple per site and store in another gauge
+// this uses the Flow action
+// S_flow = c_0*S_plaq + c_1*S_rect
+// with the convention that c_0 + 8*c_1 = 1
+// (https://journals.aps.org/prd/pdf/10.1103/53vh-wm6v)
+template <typename DGaugeFieldType>
+void stapleField(const typename DGaugeFieldType::type g_in,
+                 typename DGaugeFieldType::type &g_out, real_t c1) {
+  // initialize the output field
+  static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
+  constexpr static size_t Nd =
+      DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank;
+  static_assert(Nd == 4); // too lazy to implement for other Nd for now
+  // constexpr static size_t Nc =
+  // DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc;
+  real_t c0 = 1.0 - 8.0 * c1;
+
+  // get the start and end indices
+  const auto &dimensions = g_in.field.layout().dimension;
+  IndexArray<Nd> start;
+  IndexArray<Nd> end;
+  for (index_t i = 0; i < Nd; ++i) {
+    start[i] = 0;
+    end[i] = dimensions[i];
+  }
+
+  // It would be trivial to add a stapleField return into each
+  // DeviceGaugeFieldType, though as already done with .staple, shouldn't the
+  // definition and calculations be seperated?
+  if constexpr (Nd == 4) {
+    tune_and_launch_for<4>(
+        "stapleField_GaugeField", start, end,
+        KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2,
+                      const index_t i3) {
+          for (index_t mu = 0; mu < Nd; ++mu) {
+            g_out.field(i0, i1, i2, i3, mu) =
+                c0 * g_in.staple(IndexArray<4>{i0, i1, i2, i3}, mu) +
+                c1 * g_in.staple_rect(IndexArray<4>{i0, i1, i2, i3}, mu);
+          }
+        });
+  } else if constexpr (Nd == 3) {
+    tune_and_launch_for<3>(
+        "stapleField_GaugeField3D", start, end,
+        KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2) {
+          for (index_t mu = 0; mu < Nd; ++mu) {
+            g_out.field(i0, i1, i2, mu) =
+                g_in.staple(IndexArray<3>{i0, i1, i2}, mu);
+          }
+        });
+  } else if constexpr (Nd == 2) {
+    tune_and_launch_for<2>(
+        "stapleField_GaugeField3D", start, end,
+        KOKKOS_LAMBDA(const index_t i0, const index_t i1) {
+          for (index_t mu = 0; mu < Nd; ++mu) {
+            g_out.field(i0, i1, mu) = g_in.staple(IndexArray<2>{i0, i1}, mu);
+          }
+        });
+  } else {
+    static_assert(Nd == 2 || Nd == 3 || Nd == 4, "Unsupported Nd");
+  }
+  Kokkos::fence();
+  // return the output field
+}
+
 template <typename DGaugeFieldType> struct restoreSUNFunctor {
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
   constexpr static size_t rank =

@@ -74,6 +74,25 @@ template <typename DGaugeFieldType> struct WilsonFlow {
     }
   }
 
+  void
+  flow_DBW2() { // todo: check this once by saving a staple field and once by
+                // locally calculating the staple
+    for (int step = 0; step < params.n_steps; ++step) {
+
+#pragma unroll
+      for (index_t fstep = 0; fstep < 3; ++fstep) {
+        this->current_step = fstep;
+        stapleField<DGaugeFieldType>(this->field, this->tmp_staple, -1.4088);
+        Kokkos::fence();
+
+        tune_and_launch_for<rank>("Wilsonflow-flow",
+                                  IndexArray<rank>{0, 0, 0, 0},
+                                  field.dimensions, *this);
+        Kokkos::fence();
+      }
+    }
+  }
+
   template <typename indexType>
   KOKKOS_INLINE_FUNCTION void stepW1(indexType i0, indexType i1, indexType i2,
                                      indexType i3, index_t mu) const {
