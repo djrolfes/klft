@@ -6,74 +6,75 @@
 #include "Kokkos_Atomic.hpp"
 
 namespace klft {
-template <typename DGaugeFieldType>
-void get_sp_distribution(const typename DGaugeFieldType::type gauge_field,
-                         std::vector<real_t> &rtn, real_t max = 0.1,
-                         real_t bin_width = 0.001) {
-  static const size_t Nd = DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank;
-  static_assert(Nd == 4);
-  static const size_t Nc = DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc;
-  static const GaugeFieldKind k =
-      DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Kind;
-  using GaugeFieldType = typename DGaugeFieldType::type;
-  using FieldType = typename DeviceFieldType<Nd>::type;
-  FieldType plaq_per_site(gauge_field.dimensions, complex_t(0.0, 0.0));
-
-  // number of bins
-  size_t nbins = static_cast<size_t>(max / bin_width);
-  rtn.resize(nbins, 0.0);
-
-  // 1. Create a Kokkos View on the device for the histogram.
-  // Initialize it to zeros.
-  Kokkos::View<real_t *> rtn_d("rtn_d", nbins);
-  Kokkos::deep_copy(rtn_d, 0.0);
-
-  GaugePlaq<Nd, Nc, k> GPlaq(gauge_field, plaq_per_site,
-                             gauge_field.dimensions);
-
-  // tune_and_launch_for<Nd>("compute plaq_per_site", IndexArray<Nd>{0},
-  //                         gauge_field.dimensions, GPlaq);
-  // Kokkos::fence();
-
-  tune_and_launch_for<Nd>(
-      "binning sp's", IndexArray<Nd>{0}, gauge_field.dimensions,
-      KOKKOS_LAMBDA(size_t i0, size_t i1, size_t i2, size_t i3) {
-        for (index_t mu = 0; mu < Nd; ++mu) {
-          for (index_t nu = 0; nu < Nd; ++nu) {
-            if (nu > mu) {
-              real_t s = Kokkos::real(2.0 - GPlaq(mu, nu, i0, i1, i2, i3));
-              // now find the end bin:
-              index_t endbin =
-                  static_cast<index_t>(nbins * Kokkos::min(1.0, s / max));
-              endbin = endbin =
-                  0 ? 1 : endbin; // ensure at least one bin is filled
-              for (index_t i = 0; i < endbin; i++) {
-                Kokkos::atomic_inc(&rtn_d[i]);
-              }
-            }
-          }
-        }
-      });
-  Kokkos::fence();
-
-  Kokkos::View<real_t *>::HostMirror rtn_h = Kokkos::create_mirror_view(rtn_d);
-
-  // Perform the device-to-host copy.
-  Kokkos::deep_copy(rtn_h, rtn_d);
-
-  // 4. Copy data from the host mirror into the final std::vector.
-  for (size_t i = 0; i < nbins; ++i) {
-    rtn[i] = rtn_h(i);
-  }
-
-  auto volume = Nd * Nd;
-  for (size_t vol : gauge_field.dimensions) {
-    volume *= vol;
-  }
-  for (index_t i = 0; i < size(rtn); i++) {
-    rtn[i] /= volume;
-  }
-}
+// template <typename DGaugeFieldType>
+// void get_sp_distribution(const typename DGaugeFieldType::type gauge_field,
+//                          std::vector<real_t> &rtn, real_t max = 0.1,
+//                          real_t bin_width = 0.001) {
+//   static const size_t Nd = DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank;
+//   static_assert(Nd == 4);
+//   static const size_t Nc = DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc;
+//   static const GaugeFieldKind k =
+//       DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Kind;
+//   using GaugeFieldType = typename DGaugeFieldType::type;
+//   using FieldType = typename DeviceFieldType<Nd>::type;
+//   FieldType plaq_per_site(gauge_field.dimensions, complex_t(0.0, 0.0));
+//
+//   // number of bins
+//   size_t nbins = static_cast<size_t>(max / bin_width);
+//   rtn.resize(nbins, 0.0);
+//
+//   // 1. Create a Kokkos View on the device for the histogram.
+//   // Initialize it to zeros.
+//   Kokkos::View<real_t *> rtn_d("rtn_d", nbins);
+//   Kokkos::deep_copy(rtn_d, 0.0);
+//
+//   GaugePlaq<Nd, Nc, k> GPlaq(gauge_field, plaq_per_site,
+//                              gauge_field.dimensions);
+//
+//   // tune_and_launch_for<Nd>("compute plaq_per_site", IndexArray<Nd>{0},
+//   //                         gauge_field.dimensions, GPlaq);
+//   // Kokkos::fence();
+//
+//   tune_and_launch_for<Nd>(
+//       "binning sp's", IndexArray<Nd>{0}, gauge_field.dimensions,
+//       KOKKOS_LAMBDA(size_t i0, size_t i1, size_t i2, size_t i3) {
+//         for (index_t mu = 0; mu < Nd; ++mu) {
+//           for (index_t nu = 0; nu < Nd; ++nu) {
+//             if (nu > mu) {
+//               real_t s = Kokkos::real(2.0 - GPlaq(mu, nu, i0, i1, i2, i3));
+//               // now find the end bin:
+//               index_t endbin =
+//                   static_cast<index_t>(nbins * Kokkos::min(1.0, s / max));
+//               endbin = endbin =
+//                   0 ? 1 : endbin; // ensure at least one bin is filled
+//               for (index_t i = 0; i < endbin; i++) {
+//                 Kokkos::atomic_inc(&rtn_d[i]);
+//               }
+//             }
+//           }
+//         }
+//       });
+//   Kokkos::fence();
+//
+//   Kokkos::View<real_t *>::HostMirror rtn_h =
+//   Kokkos::create_mirror_view(rtn_d);
+//
+//   // Perform the device-to-host copy.
+//   Kokkos::deep_copy(rtn_h, rtn_d);
+//
+//   // 4. Copy data from the host mirror into the final std::vector.
+//   for (size_t i = 0; i < nbins; ++i) {
+//     rtn[i] = rtn_h(i);
+//   }
+//
+//   auto volume = Nd * Nd;
+//   for (size_t vol : gauge_field.dimensions) {
+//     volume *= vol;
+//   }
+//   for (index_t i = 0; i < size(rtn); i++) {
+//     rtn[i] /= volume;
+//   }
+// }
 
 template <typename DGaugeFieldType>
 real_t get_spmax(const typename DGaugeFieldType::type gauge_field) {
@@ -118,6 +119,51 @@ real_t get_spmax(const typename DGaugeFieldType::type gauge_field) {
   return rtn;
 }
 
+template <typename DGaugeFieldType>
+real_t get_spavg(const typename DGaugeFieldType::type gauge_field) {
+  static const size_t Nd = DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank;
+  static_assert(Nd == 4);
+  static const size_t Nc = DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc;
+  static const GaugeFieldKind k =
+      DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Kind;
+  using GaugeFieldType = typename DGaugeFieldType::type;
+  using FieldType = typename DeviceFieldType<Nd>::type;
+  FieldType plaq_per_site(gauge_field.dimensions, complex_t(0.0, 0.0));
+
+  // number of bins
+  GaugePlaq<Nd, Nc, k> GPlaq(gauge_field, plaq_per_site,
+                             gauge_field.dimensions);
+
+  // tune_and_launch_for<Nd>("compute plaq_per_site", IndexArray<Nd>{0},
+  //                         gauge_field.dimensions, GPlaq);
+  // Kokkos::fence();
+
+  real_t rtn = 0.0;
+  auto policy = Policy<Nd>({0, 0, 0, 0}, gauge_field.dimensions);
+  Kokkos::parallel_reduce(
+      "get h (sp_max)", policy,
+      KOKKOS_LAMBDA(size_t i0, size_t i1, size_t i2, size_t i3, real_t &local) {
+        // GPlaq(i0, i1, i2, i3);
+        real_t local_avg = 0.0;
+        int tmp = 0;
+        for (index_t mu = 0; mu < Nd; ++mu) {
+          for (index_t nu = 0; nu < Nd; ++nu) {
+            if (nu > mu) {
+              local_avg += Kokkos::real(2 - GPlaq(mu, nu, i0, i1, i2, i3));
+              tmp++;
+            }
+          }
+        }
+        local += local_avg / tmp;
+      },
+      rtn);
+  Kokkos::fence();
+
+  Kokkos::printf("gaugefield size: %lu\n", gauge_field.field.size());
+
+  return rtn / gauge_field.field.size();
+}
+
 template <typename DGaugeFieldType, typename HMCType>
 index_t do_wflowtest(HMCType &hmc, GaugeObservableParams &gaugeObsParams,
                      std::string output_directory) {
@@ -143,11 +189,10 @@ index_t do_wflowtest(HMCType &hmc, GaugeObservableParams &gaugeObsParams,
     return -1; // Or handle the error as appropriate
   }
 
-  std::string output_filename_sp_dist =
-      output_directory + "sp_distribution.txt";
-  std::ofstream output_file_sp_dist(output_filename_sp_dist);
+  std::string output_filename_sp_dist = output_directory + "sp_avg.txt";
+  std::ofstream output_file_sp_avg(output_filename_sp_dist);
 
-  if (!output_file_sp_dist.is_open()) {
+  if (!output_file_sp_avg.is_open()) {
     fprintf(stderr, "Error: Could not open output file %s\n",
             output_filename_sp_dist.c_str());
     return -1; // Or handle the error as appropriate
@@ -165,7 +210,7 @@ index_t do_wflowtest(HMCType &hmc, GaugeObservableParams &gaugeObsParams,
   // Set precision for floating point numbers in the output file
   output_file_topologicalcharge << std::fixed << std::setprecision(8);
   output_file_actiondensity << std::fixed << std::setprecision(8);
-  output_file_sp_dist << std::fixed << std::setprecision(12);
+  output_file_sp_avg << std::fixed << std::setprecision(12);
   output_file_sp_max << std::fixed << std::setprecision(12);
   bool header_written = false;
 
@@ -179,7 +224,7 @@ index_t do_wflowtest(HMCType &hmc, GaugeObservableParams &gaugeObsParams,
   std::vector<real_t> flow_times;
   std::vector<real_t> topological_charges;
   std::vector<real_t> action_densities;
-  std::vector<real_t> sp_dist;
+  std::vector<real_t> sp_avg;
   std::vector<real_t> sp_max;
   real_t sp_dist_max = 0.1;
   real_t sp_dist_bin_width = 0.001;
@@ -191,8 +236,11 @@ index_t do_wflowtest(HMCType &hmc, GaugeObservableParams &gaugeObsParams,
       hmc.hamiltonian_field.gauge_field));
   action_densities.push_back(
       getActionDensity<DGaugeFieldType>(hmc.hamiltonian_field.gauge_field));
-  get_sp_distribution<DGaugeFieldType>(hmc.hamiltonian_field.gauge_field,
-                                       sp_dist, sp_dist_max, sp_dist_bin_width);
+  // get_sp_distribution<DGaugeFieldType>(hmc.hamiltonian_field.gauge_field,
+  //                                      sp_avg, sp_dist_max,
+  //                                      sp_dist_bin_width);
+  sp_avg.push_back(
+      get_spavg<DGaugeFieldType>(hmc.hamiltonian_field.gauge_field));
   sp_max.push_back(
       get_spmax<DGaugeFieldType>(hmc.hamiltonian_field.gauge_field));
 
@@ -205,6 +253,7 @@ index_t do_wflowtest(HMCType &hmc, GaugeObservableParams &gaugeObsParams,
         get_topological_charge<DGaugeFieldType>(wilson_flow.field));
     action_densities.push_back(
         getActionDensity<DGaugeFieldType>(wilson_flow.field));
+    sp_avg.push_back(get_spavg<DGaugeFieldType>(wilson_flow.field));
     sp_max.push_back(get_spmax<DGaugeFieldType>(wilson_flow.field));
 
     // measure observables
@@ -213,19 +262,15 @@ index_t do_wflowtest(HMCType &hmc, GaugeObservableParams &gaugeObsParams,
   if (!header_written) {
     output_file_topologicalcharge << "hmc_step";
     output_file_actiondensity << "hmc_step";
-    output_file_sp_dist << "hmc_step";
+    output_file_sp_avg << "hmc_step";
     output_file_sp_max << "hmc_step";
     for (const auto &t : flow_times) {
       output_file_topologicalcharge << "," << t;
       output_file_actiondensity << "," << t;
       output_file_sp_max << "," << t;
+      output_file_sp_avg << "," << t;
     }
-    real_t tmp{0.0};
-    while (tmp < sp_dist_max) {
-      output_file_sp_dist << "," << tmp;
-      tmp += sp_dist_bin_width;
-    }
-    output_file_sp_dist << "\n";
+    output_file_sp_avg << "\n";
     output_file_topologicalcharge << "\n";
     output_file_actiondensity << "\n";
     output_file_sp_max << "\n";
@@ -244,11 +289,11 @@ index_t do_wflowtest(HMCType &hmc, GaugeObservableParams &gaugeObsParams,
   }
   output_file_actiondensity << "\n";
 
-  output_file_sp_dist << 0;
-  for (const auto &dist : sp_dist) {
-    output_file_sp_dist << "," << dist;
+  output_file_sp_avg << 0;
+  for (const auto &dist : sp_avg) {
+    output_file_sp_avg << "," << dist;
   }
-  output_file_sp_dist << "\n";
+  output_file_sp_avg << "\n";
 
   output_file_sp_max << 0;
   for (const auto &max : sp_max) {
@@ -262,7 +307,7 @@ index_t do_wflowtest(HMCType &hmc, GaugeObservableParams &gaugeObsParams,
     flow_times.clear();
     topological_charges.clear();
     action_densities.clear();
-    sp_dist.clear();
+    sp_avg.clear();
     sp_max.clear();
 
     // perform hmc_step
@@ -286,9 +331,8 @@ index_t do_wflowtest(HMCType &hmc, GaugeObservableParams &gaugeObsParams,
           hmc.hamiltonian_field.gauge_field));
       action_densities.push_back(
           getActionDensity<DGaugeFieldType>(hmc.hamiltonian_field.gauge_field));
-      get_sp_distribution<DGaugeFieldType>(hmc.hamiltonian_field.gauge_field,
-                                           sp_dist, sp_dist_max,
-                                           sp_dist_bin_width);
+      sp_avg.push_back(
+          get_spavg<DGaugeFieldType>(hmc.hamiltonian_field.gauge_field));
       sp_max.push_back(
           get_spmax<DGaugeFieldType>(hmc.hamiltonian_field.gauge_field));
 
@@ -301,6 +345,7 @@ index_t do_wflowtest(HMCType &hmc, GaugeObservableParams &gaugeObsParams,
             get_topological_charge<DGaugeFieldType>(wilson_flow.field));
         action_densities.push_back(
             getActionDensity<DGaugeFieldType>(wilson_flow.field));
+        sp_avg.push_back(get_spavg<DGaugeFieldType>(wilson_flow.field));
         sp_max.push_back(get_spmax<DGaugeFieldType>(wilson_flow.field));
 
         // measure observables
@@ -317,11 +362,11 @@ index_t do_wflowtest(HMCType &hmc, GaugeObservableParams &gaugeObsParams,
         output_file_actiondensity << "," << density;
       }
       output_file_actiondensity << "\n";
-      output_file_sp_dist << step;
-      for (const auto &dist : sp_dist) {
-        output_file_sp_dist << "," << dist;
+      output_file_sp_avg << step;
+      for (const auto &dist : sp_avg) {
+        output_file_sp_avg << "," << dist;
       }
-      output_file_sp_dist << "\n";
+      output_file_sp_avg << "\n";
       output_file_sp_max << step;
       for (const auto &max : sp_max) {
         output_file_sp_max << "," << max;
