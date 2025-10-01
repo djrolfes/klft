@@ -79,18 +79,22 @@ class LeapFrog : public Integrator {  // <UpdatePosition, UpdateMomentum> {
     const real_t eps = tau / n_steps;
     for (size_t i = 0; i < n_steps - 1; ++i) {
       if (nested) {
+        Kokkos::Profiling::pushRegion("Nested Integrator Hot Loop");
         nested->integrate(eps, false);
+        Kokkos::Profiling::popRegion();
       } else {
         update_q->update(eps);
       }
       update_p->update(eps);
     }
     if (nested) {
+      Kokkos::Profiling::pushRegion("Nested Integrator");
       if (outermost) {
         nested->integrate(eps, true);
       } else {
         nested->integrate(eps, last_step);
       }
+      Kokkos::Profiling::popRegion();
     } else {
       update_q->update(eps);
     }
