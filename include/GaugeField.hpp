@@ -356,7 +356,6 @@ template <size_t Nd, size_t Nc> struct deviceGaugeField {
       if (nu == mu)
         continue;
       // first do the 1x2 rectangles
-
       temp_site1[mu] = (temp_site1[mu] + 1) % this->dimensions[mu];
       temp_site2[nu] = (temp_site2[nu] + 1) % this->dimensions[nu];
       temp_site2[mu] = (temp_site2[mu] + 1) % this->dimensions[mu];
@@ -405,6 +404,15 @@ template <size_t Nd, size_t Nc> struct deviceGaugeField {
       temp_site4 = site;
       //
       // now do the 2x1 rectangles
+      /*
+          "Forward" 2x1 (+ν)
+
+            x+ν <--U†(x+ν,μ)-- x+μ+ν <--U†(x+μ+ν,μ)-- x+2μ+ν
+            |                                          ^
+            U†(x,ν)                                 U(x+2μ,ν)
+            v                                          |
+            x ==U(x,μ)==>     x+μ  ---U(x+μ,μ)--->    x+2μ
+      */
       temp_site1[mu] = (temp_site1[mu] + 1) % this->dimensions[mu];
       temp_site2[mu] = (temp_site2[mu] + 2) % this->dimensions[mu];
       temp_site3[mu] = (temp_site3[mu] + 1) % this->dimensions[mu];
@@ -420,6 +428,13 @@ template <size_t Nd, size_t Nc> struct deviceGaugeField {
       temp_site3 = site;
       temp_site4 = site;
 
+      /*
+       U(x,μ): ==>
+        <--  <--
+       |        ^
+       v        |
+        -->  ==>
+      */
       temp_site1[mu] = (temp_site1[mu] + 1) % this->dimensions[mu];
       temp_site2[nu] = (temp_site2[nu] + 1) % this->dimensions[nu];
       temp_site3[nu] = (temp_site3[nu] + 1) % this->dimensions[nu];
@@ -435,6 +450,17 @@ template <size_t Nd, size_t Nc> struct deviceGaugeField {
       temp_site3 = site;
       temp_site4 = site;
 
+      /*
+       U(x,μ): ==>
+
+        ==>
+      ^     |
+      |     v
+
+      ^     |
+      |     v
+        <--
+*/
       temp_site1[mu] = (temp_site1[mu] + 1) % this->dimensions[mu];
       temp_site1[nu] = mod(temp_site1[nu] - 1, nu);
       temp_site2[nu] = mod(temp_site2[nu] - 2, nu);
