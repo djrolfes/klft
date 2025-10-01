@@ -355,54 +355,54 @@ template <size_t Nd, size_t Nc> struct deviceGaugeField {
       // do nothing for mu = nu
       if (nu == mu)
         continue;
-      // first do the 1x2 rectangles
-      temp_site1[mu] = (temp_site1[mu] + 1) % this->dimensions[mu];
-      temp_site2[nu] = (temp_site2[nu] + 2) % this->dimensions[nu];
-      temp_site3[mu] = (temp_site3[mu] + 1) % this->dimensions[mu];
-      temp_site3[nu] = (temp_site3[nu] + 1) % this->dimensions[nu];
-      temp_site4[nu] = (temp_site4[nu] + 1) % this->dimensions[nu];
-      temp += this->operator()(temp_site1, nu) *
-              this->operator()(temp_site2, nu) *
-              conj(this->operator()(temp_site3, mu)) *
-              conj(this->operator()(temp_site4, nu)) *
-              conj(this->operator()(site, nu));
-      temp_site1 = site;
-      temp_site2 = site;
-      temp_site3 = site;
-      temp_site4 = site;
-
-      temp_site1[nu] = (temp_site1[nu] + 1) % this->dimensions[nu];
-      temp_site2[mu] = (temp_site2[mu] + 2) % this->dimensions[mu];
-      temp_site2[nu] = mod(temp_site2[nu] - 1, nu);
-      temp_site3[mu] = (temp_site3[mu] + 1) % this->dimensions[mu];
-      temp_site3[nu] = mod(temp_site3[nu] - 1, nu);
-      temp_site4[nu] = mod(temp_site4[nu] - 1, nu);
-      temp += this->operator()(temp_site1, mu) *
-              conj(this->operator()(temp_site2, nu)) *
-              conj(this->operator()(temp_site3, mu)) *
-              conj(this->operator()(temp_site4, mu)) *
-              this->operator()(temp_site4, nu);
-      temp_site1 = site;
-      temp_site2 = site;
-      temp_site3 = site;
-      temp_site4 = site;
-
-      temp_site1[mu] = (temp_site1[mu] + 1) % this->dimensions[mu];
-      temp_site1[nu] = mod(temp_site1[nu] - 1, nu);
-      temp_site2[nu] = mod(temp_site2[nu] - 1, nu);
-      temp_site3[mu] = mod(temp_site3[mu] - 1, mu);
-      temp_site3[nu] = mod(temp_site3[nu] - 1, nu);
-      temp_site4[mu] = mod(temp_site4[mu] - 1, mu);
-      temp += conj(this->operator()(temp_site1, nu)) *
-              conj(this->operator()(temp_site2, mu)) *
-              conj(this->operator()(temp_site3, mu)) *
-              this->operator()(temp_site3, nu) *
-              this->operator()(temp_site4, mu);
-      temp_site1 = site;
-      temp_site2 = site;
-      temp_site3 = site;
-      temp_site4 = site;
-
+      // // first do the 1x2 rectangles
+      // temp_site1[mu] = (temp_site1[mu] + 1) % this->dimensions[mu];
+      // temp_site2[nu] = (temp_site2[nu] + 2) % this->dimensions[nu];
+      // temp_site3[mu] = (temp_site3[mu] + 1) % this->dimensions[mu];
+      // temp_site3[nu] = (temp_site3[nu] + 1) % this->dimensions[nu];
+      // temp_site4[nu] = (temp_site4[nu] + 1) % this->dimensions[nu];
+      // temp += this->operator()(temp_site1, nu) *
+      //         this->operator()(temp_site2, nu) *
+      //         conj(this->operator()(temp_site3, mu)) *
+      //         conj(this->operator()(temp_site4, nu)) *
+      //         conj(this->operator()(site, nu));
+      // temp_site1 = site;
+      // temp_site2 = site;
+      // temp_site3 = site;
+      // temp_site4 = site;
+      //
+      // temp_site1[nu] = (temp_site1[nu] + 1) % this->dimensions[nu];
+      // temp_site2[mu] = (temp_site2[mu] + 2) % this->dimensions[mu];
+      // temp_site2[nu] = mod(temp_site2[nu] - 1, nu);
+      // temp_site3[mu] = (temp_site3[mu] + 1) % this->dimensions[mu];
+      // temp_site3[nu] = mod(temp_site3[nu] - 1, nu);
+      // temp_site4[nu] = mod(temp_site4[nu] - 1, nu);
+      // temp += this->operator()(temp_site1, mu) *
+      //         conj(this->operator()(temp_site2, nu)) *
+      //         conj(this->operator()(temp_site3, mu)) *
+      //         conj(this->operator()(temp_site4, mu)) *
+      //         this->operator()(temp_site4, nu);
+      // temp_site1 = site;
+      // temp_site2 = site;
+      // temp_site3 = site;
+      // temp_site4 = site;
+      //
+      // temp_site1[mu] = (temp_site1[mu] + 1) % this->dimensions[mu];
+      // temp_site1[nu] = mod(temp_site1[nu] - 1, nu);
+      // temp_site2[nu] = mod(temp_site2[nu] - 1, nu);
+      // temp_site3[mu] = mod(temp_site3[mu] - 1, mu);
+      // temp_site3[nu] = mod(temp_site3[nu] - 1, nu);
+      // temp_site4[mu] = mod(temp_site4[mu] - 1, mu);
+      // temp += conj(this->operator()(temp_site1, nu)) *
+      //         conj(this->operator()(temp_site2, mu)) *
+      //         conj(this->operator()(temp_site3, mu)) *
+      //         this->operator()(temp_site3, nu) *
+      //         this->operator()(temp_site4, mu);
+      // temp_site1 = site;
+      // temp_site2 = site;
+      // temp_site3 = site;
+      // temp_site4 = site;
+      //
       // now do the 2x1 rectangles
       temp_site1[mu] = (temp_site1[mu] + 1) % this->dimensions[mu];
       temp_site2[mu] = (temp_site2[mu] + 2) % this->dimensions[mu];
@@ -450,7 +450,7 @@ template <size_t Nd, size_t Nc> struct deviceGaugeField {
       temp_site3 = site;
       temp_site4 = site;
     }
-    return temp * 0.5;
+    return temp;
   }
 };
 

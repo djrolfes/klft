@@ -74,9 +74,8 @@ template <typename DGaugeFieldType> struct WilsonFlow {
     }
   }
 
-  void
-  flow_DBW2() { // todo: check this once by saving a staple field and once by
-                // locally calculating the staple
+  void flow_DBW2() { // todo: check this once by saving a staple field and once
+                     // by locally calculating the staple
     for (int step = 0; step < params.n_steps; ++step) {
 
 #pragma unroll
