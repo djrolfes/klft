@@ -26,10 +26,12 @@
 
 namespace klft {
 
-template <template <template <typename, typename> class DiracOpT, typename,
+template <template <template <typename, typename> class DiracOpT,
+                    typename,
                     typename> class _Derived,
           template <typename, typename> class DiracOpT,
-          typename DSpinorFieldType, typename DGaugeFieldType>
+          typename DSpinorFieldType,
+          typename DGaugeFieldType>
 class Solver {
   // using DSpinorFieldType =
   //     typename DiracOpFieldTypeTraits<DiracOperator>::DSpinorFieldType;
@@ -99,7 +101,8 @@ class Solver {
 //               SpinorType::RepDim>;
 
 template <template <typename, typename> class DiracOpT,
-          typename DSpinorFieldType, typename DGaugeFieldType>
+          typename DSpinorFieldType,
+          typename DGaugeFieldType>
 class CGSolver
     : public Solver<CGSolver, DiracOpT, DSpinorFieldType, DGaugeFieldType> {
   // using DSpinorFieldType =
@@ -129,7 +132,9 @@ class CGSolver
     SpinorFieldType rk{dims, complex_t(0.0, 0.0)};
     SpinorFieldType apk{dims, complex_t(0.0, 0.0)};
     SpinorFieldType temp_D{dims, complex_t(0.0, 0.0)};
-
+    typename DeviceScalarFieldType<rank>::type norm_per_site(dims, 0.0);
+    typename DeviceFieldType<rank>::type dot_product_per_site(
+        dims, complex_t(0.0, 0.0));
     Kokkos::deep_copy(xk.field, x0.field);  // x_0
 
     axpy<DSpinorFieldType>(-1, this->dirac_op.template apply<Tag>(xk), this->b,
@@ -137,14 +142,17 @@ class CGSolver
 
     SpinorFieldType pk(dims, complex_t(0.0, 0.0));
     Kokkos::deep_copy(pk.field, rk.field);  // p_0                        // d_0
-    real_t rk_norm = spinor_norm<rank, Nc, RepDim>(rk);  //\delta_0
+    real_t rk_norm =
+        spinor_norm<rank, Nc, RepDim>(rk, norm_per_site);  //\delta_0
     int num_iter = 0;
     while (rk_norm > tol) {
       this->dirac_op.template apply<Tag>(pk, temp_D, apk);
       // z = Ad_k
-      const complex_t rkrk = spinor_dot_product<rank, Nc, RepDim>(rk, rk);
-      const complex_t alpha = (rkrk / spinor_dot_product<rank, Nc, RepDim>(
-                                          pk, apk));  // Always real
+      const complex_t rkrk =
+          spinor_dot_product<rank, Nc, RepDim>(rk, rk, dot_product_per_site);
+      const complex_t alpha =
+          (rkrk / spinor_dot_product<rank, Nc, RepDim>(
+                      pk, apk, dot_product_per_site));  // Always real
       axpy<DSpinorFieldType>(alpha, pk, xk, xk);
       // xk = spinor_add_mul<rank, Nc, RepDim>(xk, pk, alpha);
       // xk = axpy<DSpinorFieldType>(alpha, pk, xk);
@@ -152,28 +160,32 @@ class CGSolver
       // rk = axpy<DSpinorFieldType>(-alpha, apk, rk);
       // rk = spinor_sub_mul<rank, Nc, RepDim>(rk, apk, alpha);
       const complex_t beta =
-          (spinor_dot_product<rank, Nc, RepDim>(rk, rk) / rkrk);
+          (spinor_dot_product<rank, Nc, RepDim>(rk, rk, dot_product_per_site) /
+           rkrk);
       axpy<DSpinorFieldType>(beta, pk, rk, pk);
       // pk = axpy<DSpinorFieldType>(beta, pk, rk);
       // pk = spinor_add_mul<rank, Nc, RepDim>(rk, pk, beta);
       // Check if swapping is needed of pk and rk, should be correct
 
-      rk_norm = spinor_norm<rank, Nc, RepDim>(rk);
+      rk_norm = spinor_norm<rank, Nc, RepDim>(rk, norm_per_site);
       num_iter++;
       if (KLFT_VERBOSITY > 2) {
         printf("CG Iteration %d: rk_norm = %.15f\n", num_iter, rk_norm);
         if (KLFT_VERBOSITY > 3) {
           printf("Norm of (b - A*x) %.15f\n",
-                 spinor_norm<rank, Nc, RepDim>(axpy<DSpinorFieldType>(
-                     -1.0, this->dirac_op.template apply<Tag>(xk), this->b)));
+                 spinor_norm<rank, Nc, RepDim>(
+                     axpy<DSpinorFieldType>(
+                         -1.0, this->dirac_op.template apply<Tag>(xk), this->b),
+                     norm_per_site));
         }
       }
     }
     this->dirac_op.template apply<Tag>(xk, apk, temp_D);
     axpy<DSpinorFieldType>(-1, temp_D, this->b, temp_D);
-    const real_t ex_res = spinor_norm<rank, Nc, RepDim>(temp_D);
+    const real_t ex_res = spinor_norm<rank, Nc, RepDim>(temp_D, norm_per_site);
 
-    if (Kokkos::abs(ex_res / spinor_norm<rank, Nc, RepDim>(xk)) > tol) {
+    if (Kokkos::abs(ex_res / spinor_norm<rank, Nc, RepDim>(xk, norm_per_site)) >
+        tol) {
       printf(
           "EX_res: %.20f, Roundoff Error, relaunching CG solver with new "
           "initial guess\n",
@@ -189,7 +201,8 @@ class CGSolver
 };
 
 template <template <typename, typename> class DiracOpT,
-          typename DSpinorFieldType, typename DGaugeFieldType>
+          typename DSpinorFieldType,
+          typename DGaugeFieldType>
 class BiCGStab
     : public Solver<BiCGStab, DiracOpT, DSpinorFieldType, DGaugeFieldType> {
   // using DSpinorFieldType =
