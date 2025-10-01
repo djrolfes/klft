@@ -68,9 +68,9 @@ class Solver {
       : b(b), x(x), dirac_op(dirac_op) {}
   template <typename Tag>
   void solve(const SpinorFieldType& x0, const real_t& tol) {
-    KOKKOS::Profiling::pushRegion("Solver");
+    Kokkos::Profiling::pushRegion("Solver");
     static_cast<Derived*>(this)->template solve_int<Tag>(x0, tol);
-    KOKKOS::Profiling::popRegion();
+    Kokkos::Profiling::popRegion();
   }
 
   /// @brief Constructs the b vector when using an Even/Odd Precondition Field,
