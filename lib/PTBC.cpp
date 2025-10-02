@@ -31,7 +31,8 @@ int PTBC_execute(const std::string& input_file,
                             ? std::atoi(std::getenv("KLFT_VERBOSITY"))
                             : 0;
   setVerbosity(verbosity);
-  get tuning from environment const int tuning =
+  // get tuning from environment
+  const int tuning =
       std::getenv("KLFT_TUNING") ? std::atoi(std::getenv("KLFT_TUNING")) : 1;
   setTuning(tuning);
   // if tuning is enbled, check if the user has set the
