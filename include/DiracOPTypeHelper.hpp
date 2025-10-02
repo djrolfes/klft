@@ -18,6 +18,7 @@
 //******************************************************************************/
 #pragma once
 #include "DiracOperator.hpp"
+#include "WilsonDiracOperator.hpp"
 namespace klft {
 template <typename T>
 struct DiracOpFieldTypeTraits;

@@ -1,10 +1,10 @@
 
 HMCParams:
   Ndims: 4
-  L0: 8
-  L1: 8
-  L2: 8
-  L3: 8
+  L0: 32
+  L1: 32
+  L2: 32
+  L3: 32
   seed: 1234
   Nd: 4
   Nc: 2
@@ -18,7 +18,7 @@ Integrator:
   Monomials:
     - Type: "Leapfrog"
       level: 0
-      steps: 100
+      steps: 50
     - Type: "Leapfrog"
       level: 1
       steps: 20
@@ -31,9 +31,9 @@ Fermion Monomial:
   fermion: "Wilson"
   solver: "CG"
   RepDim: 4
-  kappa: 0.15
+  kappa: 0.132
   tol: 1e-10
-
+  preconditioning: true
 GaugeObservableParams:
   measurement_interval: 5
   measure_plaquette: true
@@ -53,7 +53,7 @@ GaugeObservableParams:
     - [2, 2]
     - [3, 3]
 
-  plaquette_filename: "plaquette_output20.txt"
+  plaquette_filename: "plaquette_output_EO.txt"
   W_temp_filename: "wilson_temp_output20.txt"
   W_mu_nu_filename: "wilson_mu_nu_output20.txt"
 

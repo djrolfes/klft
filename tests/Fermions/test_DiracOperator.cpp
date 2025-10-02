@@ -7,6 +7,7 @@
 #include "../../include/GammaMatrix.hpp"
 #include "../../include/SpinorField.hpp"
 #include "../../include/SpinorFieldLinAlg.hpp"
+#include "../../include/WilsonDiracOperator.hpp"
 #include "../../include/klft.hpp"
 #define HLINE "=========================================================\n"
 
@@ -41,22 +42,26 @@ int main(int argc, char* argv[]) {
     printf("Generate SpinorFields...\n");
 
     Kokkos::Random_XorShift64_Pool<> random_pool(/*seed=*/1234);
-    deviceSpinorField<2, 4> u(L0, L1, L2, L3, random_pool, 0, 1.0 / 1.41);
+    deviceSpinorField<2, 4> u(L0 / 2, L1, L2, L3, random_pool, 0, 1.0 / 1.41);
     deviceSpinorField<2, 4> Mu(L0, L1, L2, L3, 0);
     deviceSpinorField<2, 4> temp(L0, L1, L2, L3, 0);
 
     printf("Generating Random Gauge Config\n");
     deviceGaugeField<4, 2> gauge(L0, L1, L2, L3, random_pool, 1);
     printf("Instantiate DiracOperator...\n");
-    WilsonDiracOperator<DeviceSpinorFieldType<4, 2, 4>,
-                        DeviceGaugeFieldType<4, 2>>
+    EOWilsonDiracOperator<
+        DeviceSpinorFieldType<4, 2, 4, SpinorFieldKind::Standard,
+                              SpinorFieldLayout::Checkerboard>,
+        DeviceGaugeFieldType<4, 2>>
         D(gauge, params);
+    D.s_in_same_parity = u;
     printf("Apply DiracOperator...\n");
     Kokkos::Timer timer;
 
     real_t diracTime = std::numeric_limits<real_t>::max();
     for (size_t i = 0; i < count; i++) {
-      D.template apply<Tags::TagDDdagger>(u, temp, Mu);
+      auto out = D.template apply<Tags::TagDDdagger>(u);
+      axpy<DeviceSpinorFieldType<4, 2, 4>>(1, out, u, out);
     }
     auto diracTime1 = std::min(diracTime, timer.seconds());
     printf("D^ Kernel Time:     %11.4e s\n", diracTime1 / count);

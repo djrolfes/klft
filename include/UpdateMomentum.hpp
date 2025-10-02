@@ -82,8 +82,7 @@ class UpdateMomentumGauge : public UpdateMomentum {
   ~UpdateMomentumGauge() = default;
 
   UpdateMomentumGauge(GaugeFieldType& gauge_field_,
-                      AdjFieldType& adjoint_field_,
-                      const real_t& beta_)
+                      AdjFieldType& adjoint_field_, const real_t& beta_)
       : UpdateMomentum(0),
         gauge_field(gauge_field_),
         adjoint_field(adjoint_field_),
@@ -110,6 +109,7 @@ class UpdateMomentumGauge : public UpdateMomentum {
   }
 
   void update(const real_t step_size) override {
+    Kokkos::Profiling::pushRegion("updateMomentumGauge");
     eps = step_size;
     IndexArray<rank> start;
     for (size_t i = 0; i < rank; ++i) {
@@ -122,6 +122,7 @@ class UpdateMomentumGauge : public UpdateMomentum {
     tune_and_launch_for<rank>("UpdateMomentumGauge", start,
                               gauge_field.dimensions, *this);
     Kokkos::fence();
+    Kokkos::Profiling::popRegion();
   }
 };
 

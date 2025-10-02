@@ -25,43 +25,13 @@
 namespace klft {
 
 // Parameters specific to the Dirac operator
+
 struct diracParams {
   const real_t kappa;
 
-  diracParams(const real_t& _kappa)
-      :
-
-        kappa(_kappa) {}
+  diracParams(const real_t& _kappa) : kappa(_kappa) {}
 };
 
-struct FermionParams {
-  std::string fermion_type;
-  std::string Solver;
-  size_t rank;
-  size_t Nc;
-  size_t RepDim;
-  real_t kappa;
-  real_t tol;
-  FermionParams(size_t _rank, size_t _Nc, size_t _RepDim, real_t _kappa,
-                real_t _tol, const std::string& _fermion_type = "Wilson")
-      : rank(_rank),
-        Nc(_Nc),
-        RepDim(_RepDim),
-        kappa(_kappa),
-        tol(_tol),
-        fermion_type(_fermion_type) {}
-  FermionParams() = default;
-  void print() const {
-    printf("Fermion Parameter:\n");
-    printf("  Fermion Type: %s\n", fermion_type.c_str());
-    printf("  Solver: %s\n", Solver.c_str());
-    printf("  Rank: %zu\n", rank);
-    printf("  Nc: %zu\n", Nc);
-    printf("  RepDim: %zu\n", RepDim);
-    printf("  Kappa: %f\n", kappa);
-    printf("  Tolerance: %f\n", tol);
-  }
-};
 auto getDiracParams(const FermionMonomial_Params& fparams) {
   diracParams dParams(fparams.kappa);
   return dParams;

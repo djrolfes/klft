@@ -31,7 +31,7 @@ template <typename DSpinorFieldType, typename DGaugeFieldType,
           template <template <typename, typename> class DiracOpT, typename,
                     typename> class _Solver,
           template <typename, typename> class DiracOpT>
-class UpdateMomentumWilson : public UpdateMomentum {
+class UpdateMomentumWilsonEO : public UpdateMomentum {
   static_assert(isDeviceFermionFieldType<DSpinorFieldType>::value);
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
   static_assert(isDeviceAdjFieldType<DAdjFieldType>::value);
@@ -47,6 +47,11 @@ class UpdateMomentumWilson : public UpdateMomentum {
                     Nc == DeviceFermionFieldTypeTraits<DSpinorFieldType>::Nc,
                 "Rank and Nc must match between gauge, adjoint, and fermion "
                 "field types.");
+  static_assert(DeviceFermionFieldTypeTraits<DSpinorFieldType>::Layout ==
+                    SpinorFieldLayout::Checkerboard,
+                "When using Even/odd preconditioning "
+                "the spinor field layout must be "
+                "Checkerboard");
   using DiracOp = DiracOpT<DSpinorFieldType, DGaugeFieldType>;
   using Solver = _Solver<DiracOpT, DSpinorFieldType, DGaugeFieldType>;
 
@@ -59,26 +64,31 @@ class UpdateMomentumWilson : public UpdateMomentum {
   const diracParams params;
   // \phi = D R, where R gaussian random field.
   FermionField phi;
-  const Kokkos::Array<index_t, rank> dimensions;
+
+  FermionField y;
   FermionField chi;
-  FermionField chi_alt;
+  FermionField rho;
+  FermionField sigma;
   const real_t tol;
   real_t eps;
 
-  UpdateMomentumWilson() = delete;
-  ~UpdateMomentumWilson() = default;
+  UpdateMomentumWilsonEO() = delete;
+  ~UpdateMomentumWilsonEO() = default;
 
-  UpdateMomentumWilson(FermionField& phi_, const GaugeFieldType& gauge_field_,
-                       AdjFieldType& adjoint_field_, const diracParams& params_,
-                       const real_t& tol_)
+  UpdateMomentumWilsonEO(FermionField& phi_, GaugeFieldType& gauge_field_,
+                         AdjFieldType& adjoint_field_,
+                         const diracParams& params_, const real_t& tol_)
       : UpdateMomentum(0),
         phi(phi_),
         gauge_field(gauge_field_),
         momentum(adjoint_field_),
         params(params_),
         eps(0.0),
-        tol(tol_),
-        dimensions(phi_.dimensions) {}
+        tol(tol_) {
+    rho = FermionField(phi.dimensions, 0);
+    sigma = FermionField(phi.dimensions, 0);
+    y = FermionField(phi.dimensions, 0);
+  }
 
   // Implemntation of the force correspondig to the Hermitian Wilson dirac
   // Operator
@@ -99,40 +109,92 @@ class UpdateMomentumWilson : public UpdateMomentum {
   // U_\mu(z)^\dagger\delta_{z,y} <- Have to Check this
   template <typename... Indices>
   KOKKOS_FORCEINLINE_FUNCTION void operator()(const Indices... Idcs) const {
-#pragma unroll
-    for (size_t mu = 0; mu < rank; ++mu) {
-      // X = chi , Y = chi_alt
+    Kokkos::Array<size_t, rank> idx{Idcs...};
+    //     // compute parity of the site:
+    //     int parity = 0;
+    // #pragma unroll
+    //     for (index_t i = 0; i < rank; ++i) {
+    //       parity += idx[i];
+    //     }
+    //     parity &= 1;
+    auto x_half = index_full_to_half(idx);
+    switch (x_half.second) {
+      case 0:  // Even
+        for (size_t mu = 0; mu < rank; ++mu) {
+          // X = chi , Y = chi_alt
 
-      auto xp = shift_index_plus_bc<rank, size_t>(
-          Kokkos::Array<size_t, rank>{Idcs...}, mu, 1, 3, -1,
-          this->phi.dimensions);
-      auto X_proj = project(mu, -1, this->chi(xp.first));
-      // minus sign in the projector comes from the derivative of D
-      auto Xplus = (-1 * this->params.kappa * xp.second) * X_proj;
-      auto temp1 = reconstruct(mu, -1, gauge_field(Idcs..., mu) * Xplus);
-      auto deriv = temp1 * (conj(this->chi_alt(Idcs...)));
+          auto xp = shift_index_plus_bc<rank, size_t>(
+              Kokkos::Array<size_t, rank>{Idcs...}, mu, 1, 3, -1,
+              this->gauge_field.dimensions);  // odd
+          auto xp_half = index_full_to_half(xp.first);
+          KOKKOS_ASSERT(xp_half.second == 1);
+          auto X_proj = project(mu, -1, this->sigma(xp_half.first));
+          // minus sign in the projector comes from the derivative of D
+          auto Xplus =
+              (-1 * this->params.kappa * this->params.kappa * xp.second) *
+              X_proj;
+          auto temp1 = reconstruct(mu, -1, gauge_field(Idcs..., mu) * Xplus);
+          auto deriv = temp1 * gamma5(conj(this->chi(x_half.first)));
 
-      auto Y_proj = project_alt(mu, 1, conj(this->chi_alt(xp.first)));
-      auto YPlus = (this->params.kappa * xp.second) * Y_proj;
-      auto temp3 =
-          reconstruct_alt(mu, 1, YPlus * conj(this->gauge_field(Idcs..., mu)));
-      deriv += this->chi(Idcs...) * temp3;
+          auto Y_proj =
+              project_alt(mu, 1, gamma5(conj(this->rho(xp_half.first))));
+          auto YPlus =
+              (this->params.kappa * this->params.kappa * xp.second) * Y_proj;
+          auto temp3 = (reconstruct_alt(
+              mu, 1, YPlus * conj(this->gauge_field(Idcs..., mu))));
+          deriv += this->y(x_half.first) * temp3;
 
-      momentum(Idcs..., mu) -= 2 * eps *
-                               traceT(traceLessAntiHermitian(
+          momentum(Idcs..., mu) -= 2 * eps *
+                                   traceT(traceLessAntiHermitian(
 
-                                   deriv));
+                                       deriv));
+        }
+        break;
+      case 1:  // Odd:
+        for (size_t mu = 0; mu < rank; ++mu) {
+          // X = chi , Y = chi_alt
+          // Ned to go back to half index
+          auto xp = shift_index_plus_bc<rank, size_t>(
+              Kokkos::Array<size_t, rank>{Idcs...}, mu, 1, 3, -1,
+              this->gauge_field.dimensions);  // even
+          auto xp_half = index_full_to_half(xp.first);
+          KOKKOS_ASSERT(xp_half.second == 0);
+          auto X_proj = project(mu, -1, this->y(xp_half.first));
+          // minus sign in the projector comes from the derivative of D
+          auto Xplus =
+              (-1 * this->params.kappa * this->params.kappa * xp.second) *
+              X_proj;
+          auto temp1 = reconstruct(mu, -1, gauge_field(Idcs..., mu) * Xplus);
+          auto deriv = temp1 * gamma5(conj(this->rho(x_half.first)));
+
+          auto Y_proj =
+              project_alt(mu, 1, gamma5(conj(this->chi(xp_half.first))));
+          auto YPlus =
+              (this->params.kappa * this->params.kappa * xp.second) * Y_proj;
+          auto temp3 = (reconstruct_alt(
+              mu, 1, YPlus * conj(this->gauge_field(Idcs..., mu))));
+          deriv += this->sigma(x_half.first) * temp3;
+
+          momentum(Idcs..., mu) -= 2 * eps *
+                                   traceT(traceLessAntiHermitian(
+
+                                       deriv));
+        }
+        break;
     }
+    // X = chi , Y = chi_alt
+    // Checkboard 0:
   }
 
   void update(const real_t step_size) override {
-    Kokkos::Profiling::pushRegion("UpdateMomentumFermion");
+    Kokkos::Profiling::pushRegion("UpdateMomentumEO");
     eps = step_size;
 
     IndexArray<rank> start;
     DiracOp D(gauge_field, this->params);
 
     FermionField x(this->phi.dimensions, complex_t(0.0, 0.0));
+    FermionField x2(this->phi.dimensions, complex_t(0.0, 0.0));
     FermionField x0(this->phi.dimensions, complex_t(0.0, 0.0));
 
     Solver solver(this->phi, x, D);
@@ -141,15 +203,22 @@ class UpdateMomentumWilson : public UpdateMomentum {
     }
 
     solver.template solve<Tags::TagDdaggerD>(x0, this->tol);
-    this->chi = solver.x;
-    this->chi_alt = D.template apply<Tags::TagD>(this->chi);
 
+    this->chi = solver.x;  // chi = S_e^-1 S_e^-1 phi
+
+    D.template apply<Tags::TagSe>(this->chi, this->y);  // y = S_e^-1 phi
+
+    D.template apply<Tags::TagHoe>(this->chi, this->rho);
+    D.template apply<Tags::TagHoe>(this->y, this->sigma);
     for (size_t i = 0; i < rank; ++i) {
       start[i] = 0;
     }
+    // print_SUNAdj(momentum(1, 0, 0, 0, 0), "Before Update Momentum");
     // launch the kernel
-    tune_and_launch_for<rank>("UpdateMomentumWilson", start, phi.dimensions,
-                              *this);
+    tune_and_launch_for<rank>("UpdateMomentumWilson", start,
+                              gauge_field.dimensions, *this);
+    // print_SUNAdj(momentum(1, 0, 0, 0, 0), "After Update Momentum");
+
     Kokkos::fence();
     Kokkos::Profiling::popRegion();
   }

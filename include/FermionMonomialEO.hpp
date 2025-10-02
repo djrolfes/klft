@@ -31,7 +31,7 @@ template <class RNGType, typename DSpinorFieldType, typename DGaugeFieldType,
           template <template <typename, typename> class DiracOpT, typename,
                     typename> class _Solver,
           template <typename, typename> class DiracOpT>
-class FermionMonomial : public Monomial<DGaugeFieldType, DAdjFieldType> {
+class FermionMonomialEO : public Monomial<DGaugeFieldType, DAdjFieldType> {
   static_assert(isDeviceFermionFieldType<DSpinorFieldType>::value);
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
   static_assert(isDeviceAdjFieldType<DAdjFieldType>::value);
@@ -47,6 +47,11 @@ class FermionMonomial : public Monomial<DGaugeFieldType, DAdjFieldType> {
                     Nc == DeviceFermionFieldTypeTraits<DSpinorFieldType>::Nc,
                 "Rank and Nc must match between gauge, adjoint, and fermion "
                 "field types.");
+  static_assert(DeviceFermionFieldTypeTraits<DSpinorFieldType>::Layout ==
+                    SpinorFieldLayout::Checkerboard,
+                "When using Even/odd preconditioning "
+                "the spinor field layout must be "
+                "Checkerboard");
   using FermionField = typename DSpinorFieldType::type;
   using DiracOperator = DiracOpT<DSpinorFieldType, DGaugeFieldType>;
   using Solver = _Solver<DiracOpT, DSpinorFieldType, DGaugeFieldType>;
@@ -56,8 +61,8 @@ class FermionMonomial : public Monomial<DGaugeFieldType, DAdjFieldType> {
   const diracParams params;
   const real_t tol;
   RNGType rng;
-  FermionMonomial(FermionField& _phi, const diracParams& params_,
-                  const real_t& tol_, RNGType& RNG_, unsigned int _time_scale)
+  FermionMonomialEO(FermionField& _phi, const diracParams& params_,
+                    const real_t& tol_, RNGType& RNG_, unsigned int _time_scale)
       : Monomial<DGaugeFieldType, DAdjFieldType>(_time_scale),
         phi(_phi),
         params(params_),
@@ -65,24 +70,25 @@ class FermionMonomial : public Monomial<DGaugeFieldType, DAdjFieldType> {
         tol(tol_) {
     Monomial<DGaugeFieldType, DAdjFieldType>::monomial_type =
         KLFT_MONOMIAL_FERMION;
+    printf("Created Fermion Monomial EO\n");
   }
 
   void heatbath(HamiltonianField<DGaugeFieldType, DAdjFieldType> h) override {
-    Kokkos::Profiling::pushRegion("FermionHeatbath");
-    auto dims = h.gauge_field.dimensions;
+    Kokkos::Profiling::pushRegion("FermionHeatbathEO");
+    auto dims = phi.dimensions;
 
     FermionField R(dims, rng, 0, SQRT2INV);
 
     Monomial<DGaugeFieldType, DAdjFieldType>::H_old =
         spinor_norm_sq<rank, Nc, RepDim>(R);
     DiracOperator dirac_op(h.gauge_field, params);
-    dirac_op.template apply<Tags::TagDdagger>(R, this->phi);
+    dirac_op.template apply<Tags::TagSe>(R, this->phi);
     Kokkos::Profiling::popRegion();
   }
 
   void accept(HamiltonianField<DGaugeFieldType, DAdjFieldType> h) override {
-    Kokkos::Profiling::pushRegion("FermionAccept");
-    auto dims = h.gauge_field.dimensions;
+    Kokkos::Profiling::pushRegion("FermionAcceptEO");
+    auto dims = phi.dimensions;
 
     FermionField x(dims, complex_t(0.0, 0.0));
     FermionField x0(dims, complex_t(0.0, 0.0));
@@ -92,11 +98,13 @@ class FermionMonomial : public Monomial<DGaugeFieldType, DAdjFieldType> {
       printf("Solving inside Fermion Monomial accept:");
     }
 
-    solver.template solve<Tags::TagDdaggerD>(x0, this->tol);
+    solver.template solve<Tags::TagDdaggerD>(x0,
+                                             this->tol);  // chi = S_e^-1 phi
     const FermionField chi = solver.x;
 
     Monomial<DGaugeFieldType, DAdjFieldType>::H_new =
-        spinor_dot_product<rank, Nc, RepDim>(chi, this->phi).real();
+        spinor_dot_product<rank, Nc, RepDim>(chi, this->phi)
+            .real();  // S_F = chi^dagger chi = phi^dagger S_e^-1 S_e^-1 phi
     Kokkos::Profiling::popRegion();
   }
   void print() override {

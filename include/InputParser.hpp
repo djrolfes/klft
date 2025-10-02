@@ -287,7 +287,7 @@ inline int parseInputFile(const std::string& filename,
       fermionParams.Solver = fp["solver"].as<std::string>("CG");
       fermionParams.RepDim = fp["RepDim"].as<size_t>(4);
       fermionParams.kappa = fp["kappa"].as<real_t>(0.1);
-
+      fermionParams.preconditioning = fp["preconditioning"].as<bool>(false);
       fermionParams.tol = fp["tol"].as<real_t>(1e-8);
     } else {
       // No Fermions
