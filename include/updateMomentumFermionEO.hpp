@@ -26,11 +26,9 @@
 
 namespace klft {
 
-template <typename DSpinorFieldType,
-          typename DGaugeFieldType,
+template <typename DSpinorFieldType, typename DGaugeFieldType,
           typename DAdjFieldType,
-          template <template <typename, typename> class DiracOpT,
-                    typename,
+          template <template <typename, typename> class DiracOpT, typename,
                     typename> class _Solver,
           template <typename, typename> class DiracOpT>
 class UpdateMomentumWilsonEO : public UpdateMomentum {
@@ -77,11 +75,9 @@ class UpdateMomentumWilsonEO : public UpdateMomentum {
   UpdateMomentumWilsonEO() = delete;
   ~UpdateMomentumWilsonEO() = default;
 
-  UpdateMomentumWilsonEO(FermionField& phi_,
-                         GaugeFieldType& gauge_field_,
+  UpdateMomentumWilsonEO(FermionField& phi_, GaugeFieldType& gauge_field_,
                          AdjFieldType& adjoint_field_,
-                         const diracParams& params_,
-                         const real_t& tol_)
+                         const diracParams& params_, const real_t& tol_)
       : UpdateMomentum(0),
         phi(phi_),
         gauge_field(gauge_field_),
@@ -191,6 +187,7 @@ class UpdateMomentumWilsonEO : public UpdateMomentum {
   }
 
   void update(const real_t step_size) override {
+    Kokkos::Profiling::pushRegion("UpdateMomentumEO");
     eps = step_size;
 
     IndexArray<rank> start;
@@ -223,6 +220,7 @@ class UpdateMomentumWilsonEO : public UpdateMomentum {
     // print_SUNAdj(momentum(1, 0, 0, 0, 0), "After Update Momentum");
 
     Kokkos::fence();
+    Kokkos::Profiling::popRegion();
   }
 };
 
