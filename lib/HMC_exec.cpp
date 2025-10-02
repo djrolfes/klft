@@ -64,7 +64,7 @@ int build_and_run_HMC(const std::string& input_file,
   setVerbosity(verbosity);
   // get tuning from environment
   const int tuning =
-      std::getenv("KLFT_TUNING") ? std::atoi(std::getenv("KLFT_TUNING")) : 0;
+      std::getenv("KLFT_TUNING") ? std::atoi(std::getenv("KLFT_TUNING")) : 1;
   setTuning(tuning);
   // if tuning is enbled, check if the user has set the
   // KLFT_CACHE_FILE environment variable
