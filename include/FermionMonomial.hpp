@@ -68,6 +68,7 @@ class FermionMonomial : public Monomial<DGaugeFieldType, DAdjFieldType> {
   }
 
   void heatbath(HamiltonianField<DGaugeFieldType, DAdjFieldType> h) override {
+    Kokkos::Profiling::pushRegion("FermionHeatbath");
     auto dims = h.gauge_field.dimensions;
 
     FermionField R(dims, rng, 0, SQRT2INV);
@@ -76,9 +77,11 @@ class FermionMonomial : public Monomial<DGaugeFieldType, DAdjFieldType> {
         spinor_norm_sq<rank, Nc, RepDim>(R);
     DiracOperator dirac_op(h.gauge_field, params);
     dirac_op.template apply<Tags::TagDdagger>(R, this->phi);
+    Kokkos::Profiling::popRegion();
   }
 
   void accept(HamiltonianField<DGaugeFieldType, DAdjFieldType> h) override {
+    Kokkos::Profiling::pushRegion("FermionAccept");
     auto dims = h.gauge_field.dimensions;
 
     FermionField x(dims, complex_t(0.0, 0.0));
@@ -94,6 +97,7 @@ class FermionMonomial : public Monomial<DGaugeFieldType, DAdjFieldType> {
 
     Monomial<DGaugeFieldType, DAdjFieldType>::H_new =
         spinor_dot_product<rank, Nc, RepDim>(chi, this->phi).real();
+    Kokkos::Profiling::popRegion();
   }
   void print() override {
     printf("Fermion Monomial: %.20f\n", this->get_delta_H());

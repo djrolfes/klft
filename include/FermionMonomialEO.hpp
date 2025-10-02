@@ -26,12 +26,9 @@
 #define SQRT2INV \
   0.707106781186547524400844362104849039284835937688474036588339868995366239231053519425193767163820786367506  // Oeis A010503
 namespace klft {
-template <class RNGType,
-          typename DSpinorFieldType,
-          typename DGaugeFieldType,
+template <class RNGType, typename DSpinorFieldType, typename DGaugeFieldType,
           typename DAdjFieldType,
-          template <template <typename, typename> class DiracOpT,
-                    typename,
+          template <template <typename, typename> class DiracOpT, typename,
                     typename> class _Solver,
           template <typename, typename> class DiracOpT>
 class FermionMonomialEO : public Monomial<DGaugeFieldType, DAdjFieldType> {
@@ -64,11 +61,8 @@ class FermionMonomialEO : public Monomial<DGaugeFieldType, DAdjFieldType> {
   const diracParams params;
   const real_t tol;
   RNGType rng;
-  FermionMonomialEO(FermionField& _phi,
-                    const diracParams& params_,
-                    const real_t& tol_,
-                    RNGType& RNG_,
-                    unsigned int _time_scale)
+  FermionMonomialEO(FermionField& _phi, const diracParams& params_,
+                    const real_t& tol_, RNGType& RNG_, unsigned int _time_scale)
       : Monomial<DGaugeFieldType, DAdjFieldType>(_time_scale),
         phi(_phi),
         params(params_),
@@ -80,6 +74,7 @@ class FermionMonomialEO : public Monomial<DGaugeFieldType, DAdjFieldType> {
   }
 
   void heatbath(HamiltonianField<DGaugeFieldType, DAdjFieldType> h) override {
+    Kokkos::Profiling::pushRegion("FermionHeatbathEO");
     auto dims = phi.dimensions;
 
     FermionField R(dims, rng, 0, SQRT2INV);
@@ -88,9 +83,11 @@ class FermionMonomialEO : public Monomial<DGaugeFieldType, DAdjFieldType> {
         spinor_norm_sq<rank, Nc, RepDim>(R);
     DiracOperator dirac_op(h.gauge_field, params);
     dirac_op.template apply<Tags::TagSe>(R, this->phi);
+    Kokkos::Profiling::popRegion();
   }
 
   void accept(HamiltonianField<DGaugeFieldType, DAdjFieldType> h) override {
+    Kokkos::Profiling::pushRegion("FermionAcceptEO");
     auto dims = phi.dimensions;
 
     FermionField x(dims, complex_t(0.0, 0.0));
@@ -108,6 +105,7 @@ class FermionMonomialEO : public Monomial<DGaugeFieldType, DAdjFieldType> {
     Monomial<DGaugeFieldType, DAdjFieldType>::H_new =
         spinor_dot_product<rank, Nc, RepDim>(chi, this->phi)
             .real();  // S_F = chi^dagger chi = phi^dagger S_e^-1 S_e^-1 phi
+    Kokkos::Profiling::popRegion();
   }
   void print() override {
     printf("Fermion Monomial: %.20f\n", this->get_delta_H());

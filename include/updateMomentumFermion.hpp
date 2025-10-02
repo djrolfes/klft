@@ -125,6 +125,7 @@ class UpdateMomentumWilson : public UpdateMomentum {
   }
 
   void update(const real_t step_size) override {
+    Kokkos::Profiling::pushRegion("UpdateMomentumFermion");
     eps = step_size;
 
     IndexArray<rank> start;
@@ -149,6 +150,7 @@ class UpdateMomentumWilson : public UpdateMomentum {
     tune_and_launch_for<rank>("UpdateMomentumWilson", start,
                               gauge_field.dimensions, *this);
     Kokkos::fence();
+    Kokkos::Profiling::popRegion();
   }
 };
 

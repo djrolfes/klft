@@ -48,15 +48,19 @@ class GaugeMonomial : public Monomial<DGaugeFieldType, DAdjFieldType> {
   }
 
   void heatbath(HamiltonianField<DGaugeFieldType, DAdjFieldType> h) override {
+    Kokkos::Profiling::pushRegion("GaugeHeatbath");
     Monomial<DGaugeFieldType, DAdjFieldType>::H_old =
         -(beta / static_cast<real_t>(Nc)) *
         GaugePlaquette<rank, Nc>(h.gauge_field, false);
+    Kokkos::Profiling::popRegion();
   }
 
   void accept(HamiltonianField<DGaugeFieldType, DAdjFieldType> h) override {
+    Kokkos::Profiling::pushRegion("GaugeAccept");
     Monomial<DGaugeFieldType, DAdjFieldType>::H_new =
         -(beta / static_cast<real_t>(Nc)) *
         GaugePlaquette<rank, Nc>(h.gauge_field, false);
+    Kokkos::Profiling::popRegion();
   }
   void print() override {
     printf("Gauge Monomial:   %.20f\n", this->get_delta_H());
