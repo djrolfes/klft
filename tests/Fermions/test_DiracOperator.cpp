@@ -32,7 +32,7 @@ int main(int argc, char* argv[]) {
     constexpr int count = 500;
     setVerbosity(5);
     setTuning(1);
-    printf("%i", KLFT_Tuning);
+    printf("%i", KLFT_TUNING);
     printf("%i", KLFT_VERBOSITY);
     printf("\n=== Testing DiracOperator SU(3)  ===\n");
     printf("\n= Testing hermiticity =\n");
@@ -60,19 +60,22 @@ int main(int argc, char* argv[]) {
 
     printf("Apply DiracOperator...\n");
     DeviceSpinorFieldType<4, 2, 4, SpinorFieldKind::Standard,
-                          SpinorFieldLayout::Checkerboard>
+                          SpinorFieldLayout::Checkerboard>::type
         u_norm_out(L0 / 2, L1, L2, L3, 0);
     DeviceSpinorFieldType<4, 2, 4, SpinorFieldKind::Standard,
-                          SpinorFieldLayout::Checkerboard>
+                          SpinorFieldLayout::Checkerboard>::type
         u_axpy_out(L0 / 2, L1, L2, L3, 0);
     DeviceSpinorFieldType<4, 2, 4, SpinorFieldKind::Standard,
-                          SpinorFieldLayout::Checkerboard>
+                          SpinorFieldLayout::Checkerboard>::type
         u_axpy_out2(L0 / 2, L1, L2, L3, 0);
+    printf("Launching Kernels for tuning...\n");
+    D.template apply<Tags::TagSe>(u, u_norm_out);
+    axpy<DeviceSpinorFieldType<4, 2, 4>>(1, u_norm_out, u, u_norm_out);
+    printf("Tuning done, now timing...\n");
     Kokkos::Timer timer;
     real_t diracTime = std::numeric_limits<real_t>::max();
     for (size_t i = 0; i < count; i++) {
-      D.template apply<Tags::TagSe>(u, u_normal_out);
-      axpy<DeviceSpinorFieldType<4, 2, 4>>(1, u_normal_out, u, u_normal_out);
+      D.template apply<Tags::TagSe>(u, u_norm_out);
     }
     auto diracTime1 = std::min(diracTime, timer.seconds());
     printf("Se Kernel Time:     %11.4e s\n", diracTime1 / count);
