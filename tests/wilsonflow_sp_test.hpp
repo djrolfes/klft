@@ -385,6 +385,8 @@ index_t do_wflowtest(HMCType &hmc, GaugeObservableParams &gaugeObsParams,
           hmc.hamiltonian_field.gauge_field));
       action_densities.push_back(
           getActionDensity<DGaugeFieldType>(hmc.hamiltonian_field.gauge_field));
+      action_densities_clover.push_back(
+          getActionDensity<DGaugeFieldType>(hmc.hamiltonian_field.gauge_field));
       action_densities_0.push_back(WilsonAction_full<DGaugeFieldType>(
           hmc.hamiltonian_field.gauge_field, 2.0, true));
       sp_avg.push_back(
@@ -400,6 +402,8 @@ index_t do_wflowtest(HMCType &hmc, GaugeObservableParams &gaugeObsParams,
         topological_charges.push_back(
             get_topological_charge<DGaugeFieldType>(wilson_flow.field));
         action_densities.push_back(
+            getActionDensity<DGaugeFieldType>(wilson_flow.field));
+        action_densities_clover.push_back(
             getActionDensity<DGaugeFieldType>(wilson_flow.field));
         action_densities_0.push_back(
             WilsonAction_full<DGaugeFieldType>(wilson_flow.field, 2.0, true));
@@ -420,6 +424,12 @@ index_t do_wflowtest(HMCType &hmc, GaugeObservableParams &gaugeObsParams,
         output_file_actiondensity << "," << density;
       }
       output_file_actiondensity << "\n";
+
+      output_file_actiondensity_clover << step;
+      for (const auto &density : action_densities_clover) {
+        output_file_actiondensity_clover << "," << density;
+      }
+      output_file_actiondensity_clover << "\n";
 
       output_file_actiondensity_0 << step;
       for (const auto &density : action_densities_0) {
