@@ -387,7 +387,8 @@ index_t do_wflowtest(HMCType &hmc, GaugeObservableParams &gaugeObsParams,
       action_densities.push_back(
           getActionDensity<DGaugeFieldType>(hmc.hamiltonian_field.gauge_field));
       action_densities_clover.push_back(
-          getActionDensity<DGaugeFieldType>(hmc.hamiltonian_field.gauge_field));
+          getActionDensity_clover<DGaugeFieldType>(
+              hmc.hamiltonian_field.gauge_field));
       action_densities_0.push_back(WilsonAction_full<DGaugeFieldType>(
           hmc.hamiltonian_field.gauge_field, 2.0, true));
       sp_avg.push_back(
@@ -405,7 +406,7 @@ index_t do_wflowtest(HMCType &hmc, GaugeObservableParams &gaugeObsParams,
         action_densities.push_back(
             getActionDensity<DGaugeFieldType>(wilson_flow.field));
         action_densities_clover.push_back(
-            getActionDensity<DGaugeFieldType>(wilson_flow.field));
+            getActionDensity_clover<DGaugeFieldType>(wilson_flow.field));
         action_densities_0.push_back(
             WilsonAction_full<DGaugeFieldType>(wilson_flow.field, 2.0, true));
         sp_avg.push_back(get_spavg<DGaugeFieldType>(wilson_flow.field));
