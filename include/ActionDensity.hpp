@@ -35,13 +35,13 @@ struct ActionDensityFunctor {
   KOKKOS_FORCEINLINE_FUNCTION void
   operator()(const indexType i0, const indexType i1, const indexType i2,
              const indexType i3) const {
-    Kokkos::Array<Kokkos::Array<ComplexMatrix, Nd>, Nd> C;
+    Kokkos::Array<Kokkos::Array<SUNAdj<Nc>, Nd>, Nd> C;
 
     for (int mu = 0; mu < Nd; ++mu) {
       for (int nu = mu + 1; nu < Nd; ++nu) {
         // get the clover C_munu
-        C[mu][nu] = fst(FSTTag{}, i0, i1, i2, i3, mu, nu);
-        C[nu][mu] = fst(FSTTag{}, i0, i1, i2, i3, nu, mu);
+        C[mu][nu] = traceT(restoreSUN(fst(FSTTag{}, i0, i1, i2, i3, mu, nu)));
+        C[nu][mu] = traceT(restoreSUN(fst(FSTTag{}, i0, i1, i2, i3, nu, mu)));
       }
     }
 
@@ -49,10 +49,13 @@ struct ActionDensityFunctor {
     for (int mu = 0; mu < Nd; ++mu) {
 #pragma unroll
       for (int nu = mu + 1; nu < Nd; ++nu) {
-        density_per_site(i0, i1, i2, i3) +=
-            0.25 * retrace(C[mu][nu] * C[mu][nu]);
-        density_per_site(i0, i1, i2, i3) +=
-            0.25 * retrace(C[nu][mu] * C[nu][mu]);
+        real_t local_density = 0.0;
+#pragma unroll
+        for (int i = 0; i < NcAdj<Nc>; ++i) {
+          local_density += 0.25 * (C[mu][nu][i] * C[mu][nu][i]);
+          local_density += 0.25 * (C[nu][mu][i] * C[nu][mu][i]);
+        }
+        density_per_site(i0, i1, i2, i3) += local_density;
       }
     }
   }
@@ -80,17 +83,48 @@ real_t getActionDensity(const typename DGaugeFieldType::type g_in) {
   // ActionDensityFunctor<DGaugeFieldType> actionDensity(g_in);
   // define the functor
   Kokkos::fence();
-  // tune_and_launch_for<Nd>("Calculate ActionDensity", IndexArray<Nd>{0, 0, 0,
-  // 0},
+  // tune_and_launch_for<Nd>("Calculate ActionDensity", IndexArray<Nd>{0, 0,
+  // 0, 0},
   //                         g_in.dimensions, actionDensity);
   // Kokkos::fence();
 
   // real_t density = Kokkos::real(actionDensity.density_per_site.avg());
   real_t density =
-      Kokkos::real(gaugePlaquette.plaq_per_site.avg()) / (Nd * (Nd - 1));
+      1 - Kokkos::real(gaugePlaquette.plaq_per_site.avg()) / (Nd * (Nd - 1));
   Kokkos::fence();
 
   return density;
 }
 
+template <typename DGaugeFieldType>
+real_t getActionDensity_clover(const typename DGaugeFieldType::type g_in) {
+  // calculate the density E according to (3.1) in
+  // https://arxiv.org/pdf/1006.4518
+  static_assert(isDeviceGaugeFieldType<DGaugeFieldType>(),
+                "action density requires a device gauge field type.");
+  constexpr static const size_t Nd =
+      DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank;
+  constexpr static const size_t Nc =
+      DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc;
+  constexpr static const GaugeFieldKind kind =
+      DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Kind;
+
+  // using FieldType = typename DeviceFieldType<Nd>::type;
+  // FieldType density_per_site(g_in.dimensions, complex_t(0.0, 0.0));
+  // GaugePlaq<Nd, Nc, kind> gaugePlaquette(g_in, density_per_site,
+  //                                        g_in.dimensions);
+  // tune_and_launch_for<Nd>("Calculate GaugePlaquette", IndexArray<Nd>{0},
+  //                         g_in.dimensions, gaugePlaquette);
+  ActionDensityFunctor<DGaugeFieldType> actionDensity(g_in);
+  // define the functor
+  Kokkos::fence();
+  tune_and_launch_for<Nd>("Calculate ActionDensity", IndexArray<Nd>{0, 0, 0, 0},
+                          g_in.dimensions, actionDensity);
+  Kokkos::fence();
+
+  real_t density = Kokkos::real(actionDensity.density_per_site.avg());
+  Kokkos::fence();
+
+  return density;
+}
 } // namespace klft
