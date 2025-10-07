@@ -143,15 +143,15 @@ int main(int argc, char* argv[]) {
         D_pre_alt(gauge, params);
     deviceSpinorField<2, 4> u_eo_temp(L0 / 2, L1, L2, L3, 0);
     // deviceSpinorField<2, 4> out_comp(L0 / 2, L1, L2, L3, 0);
-    auto out_comp = D_pre_alt.template apply<Tags::TagDDdagger>(u_even);
+    auto out_comp = D_pre_alt.template apply<Tags::TagDdaggerD>(u_even);
     // build it manually:
-    auto temp1 = D_pre.template apply<Tags::TagSe>(u_even);
-    auto out_man = D_pre.template apply<Tags::TagSe>(temp1);
-    // auto out_man =
-    //     axpy<DeviceSpinorFieldType<4, 2, 4, SpinorFieldKind::Standard,
-    //                                SpinorFieldLayout::Checkerboard>>(-1,
-    //                                temp2,
-    //                                                                  u_even);
+    auto temp0 = D_pre.template apply<Tags::TagSe>(u_even);
+    auto temp1 = D_pre.template apply<Tags::TagHoe>(temp0);
+    auto temp2 = D_pre.template apply<Tags::TagHeo>(temp1);
+    auto out_man =
+        axpyG5<DeviceSpinorFieldType<4, 2, 4, SpinorFieldKind::Standard,
+                                     SpinorFieldLayout::Checkerboard>>(
+            -params.kappa * params.kappa, temp2, u_even);
     // built it completla maually
     // auto temp3 = D.template apply<Tags::TagD>(u_for_normal);
     // auto temp4 = D.template apply<Tags::TagD>(temp3);

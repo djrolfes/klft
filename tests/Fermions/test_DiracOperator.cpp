@@ -30,7 +30,7 @@ int main(int argc, char* argv[]) {
   int RETURNVALUE = 0;
   {
     constexpr int count = 500;
-    setVerbosity(5);
+    setVerbosity(1);
     setTuning(1);
     printf("%i", KLFT_TUNING);
     printf("%i", KLFT_VERBOSITY);
@@ -75,13 +75,17 @@ int main(int argc, char* argv[]) {
     Kokkos::Timer timer;
     real_t diracTime = std::numeric_limits<real_t>::max();
     for (size_t i = 0; i < count; i++) {
-      D.template apply<Tags::TagSe>(u, u_norm_out);
+      D.template apply<Tags::TagDdaggerD>(u, u_norm_out);
     }
     auto diracTime1 = std::min(diracTime, timer.seconds());
     printf("Se Kernel Time:     %11.4e s\n", diracTime1 / count);
     printf("Se_normal total time: %11.4e s\n", diracTime1);
     timer.reset();
     for (size_t i = 0; i < count; i++) {
+      D.template apply<Tags::TagHoe>(u, u_axpy_out);
+      D.template apply<Tags::TagHeo>(u_axpy_out, u_axpy_out2);
+      axpyG5<DeviceSpinorFieldType<4, 2, 4>>(-params.kappa * params.kappa,
+                                             u_axpy_out2, u, u_axpy_out);
       D.template apply<Tags::TagHoe>(u, u_axpy_out);
       D.template apply<Tags::TagHeo>(u_axpy_out, u_axpy_out2);
       axpyG5<DeviceSpinorFieldType<4, 2, 4>>(-params.kappa * params.kappa,

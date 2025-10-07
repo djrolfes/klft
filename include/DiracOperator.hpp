@@ -96,13 +96,11 @@ class BaseDiracOperator {
   BaseDiracOperator() = default;
 };
 template <template <typename, typename> class _Derived,
-          typename DSpinorFieldType,
-          typename DGaugeFieldType>
+          typename DSpinorFieldType, typename DGaugeFieldType>
 class DiracOperator
     : public BaseDiracOperator<
           DiracOperator<_Derived, DSpinorFieldType, DGaugeFieldType>,
-          DSpinorFieldType,
-          DGaugeFieldType> {
+          DSpinorFieldType, DGaugeFieldType> {
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
   static_assert(isDeviceFermionFieldType<DSpinorFieldType>::value);
   constexpr static size_t rank =
@@ -118,8 +116,7 @@ class DiracOperator
 
   using BaseDiracOperator<
       DiracOperator<_Derived, DSpinorFieldType, DGaugeFieldType>,
-      DSpinorFieldType,
-      DGaugeFieldType>::BaseDiracOperator;
+      DSpinorFieldType, DGaugeFieldType>::BaseDiracOperator;
   using Derived = _Derived<DSpinorFieldType, DGaugeFieldType>;
   using SpinorFieldType = typename DSpinorFieldType::type;
 
@@ -197,13 +194,11 @@ class DiracOperator
 };
 
 template <template <typename, typename> class _Derived,
-          typename DSpinorFieldType,
-          typename DGaugeFieldType>
+          typename DSpinorFieldType, typename DGaugeFieldType>
 class EODiracOperator
     : public BaseDiracOperator<
           EODiracOperator<_Derived, DSpinorFieldType, DGaugeFieldType>,
-          DSpinorFieldType,
-          DGaugeFieldType> {
+          DSpinorFieldType, DGaugeFieldType> {
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
   static_assert(isDeviceFermionFieldType<DSpinorFieldType>::value);
   constexpr static size_t rank =
@@ -220,8 +215,7 @@ class EODiracOperator
  public:
   using BaseDiracOperator<
       EODiracOperator<_Derived, DSpinorFieldType, DGaugeFieldType>,
-      DSpinorFieldType,
-      DGaugeFieldType>::BaseDiracOperator;
+      DSpinorFieldType, DGaugeFieldType>::BaseDiracOperator;
   using Derived = _Derived<DSpinorFieldType, DGaugeFieldType>;
   using SpinorFieldType = typename DSpinorFieldType::type;
 
@@ -279,39 +273,42 @@ class EODiracOperator
     // printf("%i", this->test);
     this->apply_(Tags::TagHoe{});
 
-    this->s_in_same_parity = this->s_in;
+    auto temp = this->s_in;
     this->s_in = this->s_out;
     this->s_out = s_out;
 
-    tune_and_launch_for<rank, Tag1minusHeo>(
+    tune_and_launch_for<rank, Tags::TagHeo>(
         typeid(Derived).name(), IndexArray<rank>{}, this->s_in.dimensions,
         static_cast<Derived&>(*this));
-
+    axpyG5<DSpinorFieldType>(-this->params.kappa * this->params.kappa,
+                             this->s_out, temp, this->s_out);
     return this->s_out;
   }
   SpinorFieldType apply_(Tags::TagSo, const SpinorFieldType& s_out) {
     this->apply_(Tags::TagHeo{});
-    this->s_in_same_parity = this->s_in;
+
+    auto temp = this->s_in;
     this->s_in = this->s_out;
     this->s_out = s_out;
 
-    tune_and_launch_for<rank, Tag1minusHoe>(
+    tune_and_launch_for<rank, Tags::TagHoe>(
         typeid(Derived).name(), IndexArray<rank>{}, this->s_in.dimensions,
         static_cast<Derived&>(*this));
-
+    axpyG5<DSpinorFieldType>(-this->params.kappa * this->params.kappa,
+                             this->s_out, temp, this->s_out);
     return this->s_out;
   }
   SpinorFieldType apply_(Tags::TagDDdagger, const SpinorFieldType& s_out) {
     if (!temp.field.is_allocated()) {
       this->temp = SpinorFieldType(this->s_in.dimensions, 0);
-      // printf("instatinated temp\n");
+      printf("instatinated temp\n");
     }
 
     auto cached_s_out = this->s_out;
-    apply_(Tags::TagSe{}, temp);
-    this->s_in = temp;
+    apply_(Tags::TagSe{}, this->temp);
+    this->s_in = this->temp;
     this->s_out = cached_s_out;
-    // out is not correctly set for first Heo application
+
     apply_(Tags::TagSe{}, s_out);
     return this->s_out;
   }
