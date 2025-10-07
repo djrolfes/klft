@@ -249,8 +249,8 @@ index_t do_wflowtest(HMCType &hmc, GaugeObservableParams &gaugeObsParams,
       hmc.hamiltonian_field.gauge_field));
   action_densities.push_back(
       getActionDensity<DGaugeFieldType>(hmc.hamiltonian_field.gauge_field));
-  action_densities_0.push_back(
-      WilsonAction_full(hmc.hamiltonian_field.gauge_field, 2.0));
+  action_densities_0.push_back(WilsonAction_full<DGaugeFieldType>(
+      hmc.hamiltonian_field.gauge_field, 2.0));
   // get_sp_distribution<DGaugeFieldType>(hmc.hamiltonian_field.gauge_field,
   //                                      sp_avg, sp_dist_max,
   //                                      sp_dist_bin_width);
@@ -268,7 +268,8 @@ index_t do_wflowtest(HMCType &hmc, GaugeObservableParams &gaugeObsParams,
         get_topological_charge<DGaugeFieldType>(wilson_flow.field));
     action_densities.push_back(
         getActionDensity<DGaugeFieldType>(wilson_flow.field));
-    action_densities_0.push_back(WilsonAction_full(wilson_flow.field, 2.0));
+    action_densities_0.push_back(
+        WilsonAction_full<DGaugeFieldType>(wilson_flow.field, 2.0));
     sp_avg.push_back(get_spavg<DGaugeFieldType>(wilson_flow.field));
     sp_max.push_back(get_spmax<DGaugeFieldType>(wilson_flow.field));
 
@@ -357,8 +358,8 @@ index_t do_wflowtest(HMCType &hmc, GaugeObservableParams &gaugeObsParams,
           hmc.hamiltonian_field.gauge_field));
       action_densities.push_back(
           getActionDensity<DGaugeFieldType>(hmc.hamiltonian_field.gauge_field));
-      action_densities_0.push_back(
-          WilsonAction_full(hmc.hamiltonian_field.gauge_field, 2.0));
+      action_densities_0.push_back(WilsonAction_full<DGaugeFieldType>(
+          hmc.hamiltonian_field.gauge_field, 2.0));
       sp_avg.push_back(
           get_spavg<DGaugeFieldType>(hmc.hamiltonian_field.gauge_field));
       sp_max.push_back(
@@ -373,7 +374,8 @@ index_t do_wflowtest(HMCType &hmc, GaugeObservableParams &gaugeObsParams,
             get_topological_charge<DGaugeFieldType>(wilson_flow.field));
         action_densities.push_back(
             getActionDensity<DGaugeFieldType>(wilson_flow.field));
-        action_densities_0.push_back(WilsonAction_full(wilson_flow.field, 2.0));
+        action_densities_0.push_back(
+            WilsonAction_full<DGaugeFieldType>(wilson_flow.field, 2.0));
         sp_avg.push_back(get_spavg<DGaugeFieldType>(wilson_flow.field));
         sp_max.push_back(get_spmax<DGaugeFieldType>(wilson_flow.field));
 
