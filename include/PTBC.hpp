@@ -231,16 +231,8 @@ class PTBC {  // do I need the AdjFieldType here?
       shift[1] = (dist(mt) > 0.5) ? 1 : -1;
     }
     MPI_Bcast(shift, 2, MPI_INT, 0, MPI_COMM_WORLD);
-    printf("Shifting defect in direction %d by %d\n", shift[0], shift[1]);
     auto old_position =
         hmc.hamiltonian_field.gauge_field.dParams.defect_position;
-
-    printf("Rank %i:Old Position: ", rank);
-    for (auto&& i : hmc.hamiltonian_field.gauge_field.dParams.defect_position) {
-      printf("%i, ", i);
-    }
-    printf("\n");
-
     auto new_position = old_position;
     new_position[shift[0]] =
         (old_position[shift[0]] + shift[1] +
@@ -248,12 +240,6 @@ class PTBC {  // do I need the AdjFieldType here?
              hmc.hamiltonian_field.gauge_field.dimensions[shift[0]]) %
         hmc.hamiltonian_field.gauge_field.dimensions[shift[0]];
     hmc.hamiltonian_field.gauge_field.shift_defect(new_position);
-
-    printf("Rank %i:New Position: ", rank);
-    for (auto&& i : hmc.hamiltonian_field.gauge_field.dParams.defect_position) {
-      printf("%i, ", i);
-    }
-    printf("\n");
   }
   int swap() {
     int rank, size;
