@@ -1,6 +1,7 @@
 #pragma once
 #include "FieldTypeHelper.hpp"
 #include "GLOBAL.hpp"
+#include "GaugeAction.hpp"
 #include "GaugeObservable.hpp"
 #include "GaugePlaquette.hpp"
 #include "Kokkos_Atomic.hpp"
