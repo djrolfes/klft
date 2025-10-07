@@ -190,6 +190,17 @@ index_t do_wflowtest(HMCType &hmc, GaugeObservableParams &gaugeObsParams,
     return -1; // Or handle the error as appropriate
   }
 
+  std::string output_filename_action_density_clover =
+      output_directory + "action_densities_clover_cumulative.txt";
+  std::ofstream output_file_actiondensity_clover(
+      output_filename_action_density_clover);
+
+  if (!output_file_actiondensity_clover.is_open()) {
+    fprintf(stderr, "Error: Could not open output file %s\n",
+            output_filename_action_density_clover.c_str());
+    return -1; // Or handle the error as appropriate
+  }
+
   std::string output_filename_action_density_0 =
       output_directory + "action_densities_0_cumulative.txt";
   std::ofstream output_file_actiondensity_0(output_filename_action_density_0);
@@ -221,6 +232,8 @@ index_t do_wflowtest(HMCType &hmc, GaugeObservableParams &gaugeObsParams,
   // Set precision for floating point numbers in the output file
   output_file_topologicalcharge << std::fixed << std::setprecision(8);
   output_file_actiondensity << std::fixed << std::setprecision(8);
+  output_file_actiondensity_clover << std::fixed << std::setprecision(8);
+  output_file_actiondensity_0 << std::fixed << std::setprecision(8);
   output_file_sp_avg << std::fixed << std::setprecision(12);
   output_file_sp_max << std::fixed << std::setprecision(12);
   bool header_written = false;
@@ -235,6 +248,7 @@ index_t do_wflowtest(HMCType &hmc, GaugeObservableParams &gaugeObsParams,
   std::vector<real_t> flow_times;
   std::vector<real_t> topological_charges;
   std::vector<real_t> action_densities;
+  std::vector<real_t> action_densities_clover;
   std::vector<real_t>
       action_densities_0; // WilsonAciton rescalled a la PhysRevD.95.094508
   std::vector<real_t> sp_avg;
@@ -249,6 +263,8 @@ index_t do_wflowtest(HMCType &hmc, GaugeObservableParams &gaugeObsParams,
       hmc.hamiltonian_field.gauge_field));
   action_densities.push_back(
       getActionDensity<DGaugeFieldType>(hmc.hamiltonian_field.gauge_field));
+  action_densities_clover.push_back(getActionDensity_clover<DGaugeFieldType>(
+      hmc.hamiltonian_field.gauge_field));
   action_densities_0.push_back(WilsonAction_full<DGaugeFieldType>(
       hmc.hamiltonian_field.gauge_field, 2.0, true));
   // get_sp_distribution<DGaugeFieldType>(hmc.hamiltonian_field.gauge_field,
@@ -268,6 +284,8 @@ index_t do_wflowtest(HMCType &hmc, GaugeObservableParams &gaugeObsParams,
         get_topological_charge<DGaugeFieldType>(wilson_flow.field));
     action_densities.push_back(
         getActionDensity<DGaugeFieldType>(wilson_flow.field));
+    action_densities_clover.push_back(
+        getActionDensity_clover<DGaugeFieldType>(wilson_flow.field));
     action_densities_0.push_back(
         WilsonAction_full<DGaugeFieldType>(wilson_flow.field, 2.0, true));
     sp_avg.push_back(get_spavg<DGaugeFieldType>(wilson_flow.field));
@@ -279,12 +297,14 @@ index_t do_wflowtest(HMCType &hmc, GaugeObservableParams &gaugeObsParams,
   if (!header_written) {
     output_file_topologicalcharge << "hmc_step";
     output_file_actiondensity << "hmc_step";
+    output_file_actiondensity_clover << "hmc_step";
     output_file_actiondensity_0 << "hmc_step";
     output_file_sp_avg << "hmc_step";
     output_file_sp_max << "hmc_step";
     for (const auto &t : flow_times) {
       output_file_topologicalcharge << "," << t;
       output_file_actiondensity << "," << t;
+      output_file_actiondensity_clover << "," << t;
       output_file_actiondensity_0 << "," << t;
       output_file_sp_max << "," << t;
       output_file_sp_avg << "," << t;
@@ -292,6 +312,7 @@ index_t do_wflowtest(HMCType &hmc, GaugeObservableParams &gaugeObsParams,
     output_file_sp_avg << "\n";
     output_file_topologicalcharge << "\n";
     output_file_actiondensity << "\n";
+    output_file_actiondensity_clover << "\n";
     output_file_actiondensity_0 << "\n";
     output_file_sp_max << "\n";
     header_written = true;
@@ -308,6 +329,12 @@ index_t do_wflowtest(HMCType &hmc, GaugeObservableParams &gaugeObsParams,
     output_file_actiondensity << "," << density;
   }
   output_file_actiondensity << "\n";
+
+  output_file_actiondensity_clover << 0;
+  for (const auto &density : action_densities_clover) {
+    output_file_actiondensity_clover << "," << density;
+  }
+  output_file_actiondensity_clover << "\n";
 
   output_file_actiondensity_0 << 0;
   for (const auto &density : action_densities_0) {
