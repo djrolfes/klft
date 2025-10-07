@@ -90,7 +90,7 @@ struct TopoCharge {
       for (int nu = mu + 1; nu < Nd; ++nu) {
         // get the clover C_munu
         C[mu][nu] = (fst(FSTTag{}, i0, i1, i2, i3, mu, nu));
-        // C[nu][mu] = (fst(FSTTag{}, i0, i1, i2, i3, nu, mu));
+        C[nu][mu] = (fst(FSTTag{}, i0, i1, i2, i3, nu, mu));
       }
     }
 
@@ -120,6 +120,12 @@ struct TopoCharge {
             for (int i = 0; i < NcAdj<Nc>; ++i) {
               local_charge += epsilon4(mu, nu, rho, sigma) *
                               (C[mu][nu][i] * C[rho][sigma][i]);
+              local_charge += epsilon4(nu, mu, rho, sigma) *
+                              (C[nu][mu][i] * C[rho][sigma][i]);
+              local_charge += epsilon4(nu, mu, sigma, rho) *
+                              (C[nu][mu][i] * C[sigma][rho][i]);
+              local_charge += epsilon4(mu, nu, sigma, rho) *
+                              (C[mu][nu][i] * C[sigma][rho][i]);
             }
           }
         }
@@ -146,7 +152,7 @@ real_t get_topological_charge(const typename DGaugeFieldType::type g_in) {
                           g_in.dimensions, TCharge);
   Kokkos::fence();
 
-  real_t charge = -4.0 * TCharge.charge_per_site.sum();
+  real_t charge = TCharge.charge_per_site.sum();
   Kokkos::fence();
   // charge /= 32 * PI * PI;
 
