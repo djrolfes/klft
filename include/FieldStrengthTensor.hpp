@@ -174,9 +174,10 @@ template <typename DGaugeFieldType> struct FieldStrengthTensor {
       : g_in(g_in), dimensions(g_in.dimensions) {}
 
   template <typename indexType>
-  KOKKOS_FORCEINLINE_FUNCTION ComplexMatrix operator()(
-      CloverDef, const indexType i0, const indexType i1, const indexType i2,
-      const indexType i3, index_t mu, index_t nu) const {
+  KOKKOS_FORCEINLINE_FUNCTION SUNAdj<Nc>
+  operator()(CloverDef, const indexType i0, const indexType i1,
+             const indexType i2, const indexType i3, index_t mu,
+             index_t nu) const {
     // implemented according to https://doi.org/10.1140/epjc/s10052-020-7984-9
     // (21)
 
@@ -219,13 +220,14 @@ template <typename DGaugeFieldType> struct FieldStrengthTensor {
     P_munu += conj(g_in(x_m_mu, mu)) * conj(g_in(x_m_mu_m_nu, nu)) *
               g_in(x_m_mu_m_nu, mu) * g_in(x_m_nu, mu);
 
-    return (P_munu - conj(P_munu)) * 0.5 * 0.25;
+    return traceT(restoreSUN((P_munu - conj(P_munu)) * 0.5 * 0.25));
   }
 
   template <typename indexType>
-  KOKKOS_FORCEINLINE_FUNCTION ComplexMatrix operator()(
-      RectangleDef, const indexType i0, const indexType i1, const indexType i2,
-      const indexType i3, index_t mu, index_t nu) const {
+  KOKKOS_FORCEINLINE_FUNCTION SUNAdj<Nc>
+  operator()(RectangleDef, const indexType i0, const indexType i1,
+             const indexType i2, const indexType i3, index_t mu,
+             index_t nu) const {
     // implemented according to https://doi.org/10.1140/epjc/s10052-020-7984-9
     // (24)
 
@@ -315,7 +317,7 @@ template <typename DGaugeFieldType> struct FieldStrengthTensor {
               conj(g_in(x_m_mu_m_nu, nu)) * conj(g_in(x_m_mu_m_2nu, nu)) *
               g_in(x_m_mu_m_2nu, mu) * g_in(x_m_nu, nu);
 
-    return (P_munu - conj(P_munu)) * 0.5 * 0.125;
+    return traceT(restoreSUN((P_munu - conj(P_munu)) * 0.5 * 0.125));
   }
 };
 

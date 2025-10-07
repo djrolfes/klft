@@ -84,7 +84,7 @@ struct TopoCharge {
              const indexType i3) const {
     real_t local_charge{0.0};
     ComplexMatrix C1, C2;
-    Kokkos::Array<Kokkos::Array<ComplexMatrix, Nd>, Nd> C;
+    Kokkos::Array<Kokkos::Array<SUNAdj<Nc>, Nd>, Nd> C;
 
     for (int mu = 0; mu < Nd; ++mu) {
       for (int nu = mu + 1; nu < Nd; ++nu) {
@@ -116,8 +116,11 @@ struct TopoCharge {
           for (int sigma = rho + 1; sigma < Nd; ++sigma) {
             if (sigma == mu || sigma == nu)
               continue;
-            local_charge += epsilon4(mu, nu, rho, sigma) *
-                            retrace(C[mu][nu] * C[rho][sigma]); //
+#pragma unroll
+            for (int i = 0; i < NcAdj<Nc>; ++i) {
+              local_charge += epsilon4(mu, nu, rho, sigma) *
+                              (C[mu][nu][i] * C[rho][sigma][i]);
+            }
           }
         }
       }

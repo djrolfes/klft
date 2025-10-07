@@ -40,8 +40,8 @@ struct ActionDensityFunctor {
     for (int mu = 0; mu < Nd; ++mu) {
       for (int nu = mu + 1; nu < Nd; ++nu) {
         // get the clover C_munu
-        C[mu][nu] = traceT(restoreSUN(fst(FSTTag{}, i0, i1, i2, i3, mu, nu)));
-        C[nu][mu] = traceT(restoreSUN(fst(FSTTag{}, i0, i1, i2, i3, nu, mu)));
+        C[mu][nu] = fst(FSTTag{}, i0, i1, i2, i3, mu, nu);
+        C[nu][mu] = fst(FSTTag{}, i0, i1, i2, i3, nu, mu);
       }
     }
 
