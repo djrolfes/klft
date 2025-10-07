@@ -189,6 +189,16 @@ index_t do_wflowtest(HMCType &hmc, GaugeObservableParams &gaugeObsParams,
     return -1; // Or handle the error as appropriate
   }
 
+  std::string output_filename_action_density_0 =
+      output_directory + "action_densities_cumulative.txt";
+  std::ofstream output_file_actiondensity_0(output_filename_action_density_0);
+
+  if (!output_file_actiondensity_0.is_open()) {
+    fprintf(stderr, "Error: Could not open output file %s\n",
+            output_filename_action_density_0.c_str());
+    return -1; // Or handle the error as appropriate
+  }
+
   std::string output_filename_sp_dist = output_directory + "sp_avg.txt";
   std::ofstream output_file_sp_avg(output_filename_sp_dist);
 
@@ -224,6 +234,8 @@ index_t do_wflowtest(HMCType &hmc, GaugeObservableParams &gaugeObsParams,
   std::vector<real_t> flow_times;
   std::vector<real_t> topological_charges;
   std::vector<real_t> action_densities;
+  std::vector<real_t>
+      action_densities_0; // WilsonAciton rescalled a la PhysRevD.95.094508
   std::vector<real_t> sp_avg;
   std::vector<real_t> sp_max;
   real_t sp_dist_max = 0.1;
@@ -236,6 +248,8 @@ index_t do_wflowtest(HMCType &hmc, GaugeObservableParams &gaugeObsParams,
       hmc.hamiltonian_field.gauge_field));
   action_densities.push_back(
       getActionDensity<DGaugeFieldType>(hmc.hamiltonian_field.gauge_field));
+  action_densities_0.push_back(
+      WilsonAction_full(hmc.hamiltonian_field.gauge_field, 2.0));
   // get_sp_distribution<DGaugeFieldType>(hmc.hamiltonian_field.gauge_field,
   //                                      sp_avg, sp_dist_max,
   //                                      sp_dist_bin_width);
@@ -253,6 +267,7 @@ index_t do_wflowtest(HMCType &hmc, GaugeObservableParams &gaugeObsParams,
         get_topological_charge<DGaugeFieldType>(wilson_flow.field));
     action_densities.push_back(
         getActionDensity<DGaugeFieldType>(wilson_flow.field));
+    action_densities_0.push_back(WilsonAction_full(wilson_flow.field, 2.0));
     sp_avg.push_back(get_spavg<DGaugeFieldType>(wilson_flow.field));
     sp_max.push_back(get_spmax<DGaugeFieldType>(wilson_flow.field));
 
@@ -262,17 +277,20 @@ index_t do_wflowtest(HMCType &hmc, GaugeObservableParams &gaugeObsParams,
   if (!header_written) {
     output_file_topologicalcharge << "hmc_step";
     output_file_actiondensity << "hmc_step";
+    output_file_actiondensity_0 << "hmc_step";
     output_file_sp_avg << "hmc_step";
     output_file_sp_max << "hmc_step";
     for (const auto &t : flow_times) {
       output_file_topologicalcharge << "," << t;
       output_file_actiondensity << "," << t;
+      output_file_actiondensity_0 << "," << t;
       output_file_sp_max << "," << t;
       output_file_sp_avg << "," << t;
     }
     output_file_sp_avg << "\n";
     output_file_topologicalcharge << "\n";
     output_file_actiondensity << "\n";
+    output_file_actiondensity_0 << "\n";
     output_file_sp_max << "\n";
     header_written = true;
   }
@@ -288,6 +306,12 @@ index_t do_wflowtest(HMCType &hmc, GaugeObservableParams &gaugeObsParams,
     output_file_actiondensity << "," << density;
   }
   output_file_actiondensity << "\n";
+
+  output_file_actiondensity_0 << 0;
+  for (const auto &density : action_densities_0) {
+    output_file_actiondensity_0 << "," << density;
+  }
+  output_file_actiondensity_0 << "\n";
 
   output_file_sp_avg << 0;
   for (const auto &dist : sp_avg) {
@@ -307,6 +331,7 @@ index_t do_wflowtest(HMCType &hmc, GaugeObservableParams &gaugeObsParams,
     flow_times.clear();
     topological_charges.clear();
     action_densities.clear();
+    action_densities_0.clear();
     sp_avg.clear();
     sp_max.clear();
 
@@ -331,6 +356,8 @@ index_t do_wflowtest(HMCType &hmc, GaugeObservableParams &gaugeObsParams,
           hmc.hamiltonian_field.gauge_field));
       action_densities.push_back(
           getActionDensity<DGaugeFieldType>(hmc.hamiltonian_field.gauge_field));
+      action_densities_0.push_back(
+          WilsonAction_full(hmc.hamiltonian_field.gauge_field, 2.0));
       sp_avg.push_back(
           get_spavg<DGaugeFieldType>(hmc.hamiltonian_field.gauge_field));
       sp_max.push_back(
@@ -345,6 +372,7 @@ index_t do_wflowtest(HMCType &hmc, GaugeObservableParams &gaugeObsParams,
             get_topological_charge<DGaugeFieldType>(wilson_flow.field));
         action_densities.push_back(
             getActionDensity<DGaugeFieldType>(wilson_flow.field));
+        action_densities_0.push_back(WilsonAction_full(wilson_flow.field, 2.0));
         sp_avg.push_back(get_spavg<DGaugeFieldType>(wilson_flow.field));
         sp_max.push_back(get_spmax<DGaugeFieldType>(wilson_flow.field));
 
@@ -362,6 +390,13 @@ index_t do_wflowtest(HMCType &hmc, GaugeObservableParams &gaugeObsParams,
         output_file_actiondensity << "," << density;
       }
       output_file_actiondensity << "\n";
+
+      output_file_actiondensity_0 << step;
+      for (const auto &density : action_densities_0) {
+        output_file_actiondensity_0 << "," << density;
+      }
+      output_file_actiondensity_0 << "\n";
+
       output_file_sp_avg << step;
       for (const auto &dist : sp_avg) {
         output_file_sp_avg << "," << dist;
