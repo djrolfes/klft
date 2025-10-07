@@ -360,6 +360,7 @@ index_t do_wflowtest(HMCType &hmc, GaugeObservableParams &gaugeObsParams,
     flow_times.clear();
     topological_charges.clear();
     action_densities.clear();
+    action_densities_clover.clear();
     action_densities_0.clear();
     sp_avg.clear();
     sp_max.clear();
