@@ -318,11 +318,11 @@ inline void forceflushPTBCSimulationLogs(PTBCSimulationLoggingParams& p,
 
   const bool HEADER = !p.flushed;
   if (HEADER) {
-    file << "# step";
-    if (p.log_swap_start) file << ", swap_start";
-    if (p.log_swap_accepts) file << ", accepts";
-    if (p.log_delta_H_swap) file << ", delta_H_swap";
-    if (p.log_defects) file << ", defects";
+    file << "step";
+    if (p.log_swap_start) file << ",swap_start";
+    if (p.log_swap_accepts) file << ",accepts";
+    if (p.log_delta_H_swap) file << ",delta_H_swap";
+    if (p.log_defects) file << ",defects";
     file << "\n";
   }
 

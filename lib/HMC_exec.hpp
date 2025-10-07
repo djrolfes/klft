@@ -17,6 +17,7 @@
 // along with KLFT.  If not, see <http://www.gnu.org/licenses/>.
 //
 //******************************************************************************/
+#pragma once
 #include <cstddef>
 
 #include "GLOBAL.hpp"

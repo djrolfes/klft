@@ -10,8 +10,8 @@
 #include "HMC.hpp"
 #include "HMC_Params.hpp"
 #include "HamiltonianField.hpp"
+#include "IndexHelper.hpp"
 #include "SimulationLogging.hpp"
-
 using RNGType = Kokkos::Random_XorShift64_Pool<Kokkos::DefaultExecutionSpace>;
 
 namespace klft {
@@ -67,8 +67,8 @@ class PTBC {  // do I need the AdjFieldType here?
 
   index_t current_index;
 
-  std::vector<bool> swap_accepts;  // a vector that hold the last values shown
-                                   // if a given swap was accepted
+  std::vector<bool> swap_accepts;   // a vector that hold the last values shown
+                                    // if a given swap was accepted
   std::vector<real_t> swap_deltas;  // a vector that holds the partial Delta_S
                                     // values for each swap
   int _swap_start;                  // holds the rank of the last swap start
@@ -77,7 +77,8 @@ class PTBC {  // do I need the AdjFieldType here?
     TAG_DELTAS = 0,
     TAG_ACCEPT = 1,
     TAG_INDEX = 2,
-    TAG_SWAPSTART = 3
+    TAG_SWAPSTART = 3,
+    TAG_SHIFTDEFECT = 4
   } MPI_Tags;
 
   PTBC() = delete;  // default constructor is not allowed
@@ -217,7 +218,43 @@ class PTBC {  // do I need the AdjFieldType here?
 #endif
     }
   }
+  void shift_defect() {
+    int size, rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+    // shift[0] is the direction, shift [1] is the amount (1 or -1)
+    int shift[2];
+    if (rank == 0) {
+      shift[0] =
+          int(dist(mt) *
+              (Nd - 1));  // random direction but not in t direction ( so 0,1,2)
+      shift[1] = (dist(mt) > 0.5) ? 1 : -1;
+    }
+    MPI_Bcast(shift, 2, MPI_INT, 0, MPI_COMM_WORLD);
+    printf("Shifting defect in direction %d by %d\n", shift[0], shift[1]);
+    auto old_position =
+        hmc.hamiltonian_field.gauge_field.dParams.defect_position;
 
+    printf("Rank %i:Old Position: ", rank);
+    for (auto&& i : hmc.hamiltonian_field.gauge_field.dParams.defect_position) {
+      printf("%i, ", i);
+    }
+    printf("\n");
+
+    auto new_position = old_position;
+    new_position[shift[0]] =
+        (old_position[shift[0]] + shift[1] +
+         (old_position[shift[0]] == 0) * (shift[1] < 0) *
+             hmc.hamiltonian_field.gauge_field.dimensions[shift[0]]) %
+        hmc.hamiltonian_field.gauge_field.dimensions[shift[0]];
+    hmc.hamiltonian_field.gauge_field.shift_defect(new_position);
+
+    printf("Rank %i:New Position: ", rank);
+    for (auto&& i : hmc.hamiltonian_field.gauge_field.dParams.defect_position) {
+      printf("%i, ", i);
+    }
+    printf("\n");
+  }
   int swap() {
     int rank, size;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -321,8 +358,9 @@ class PTBC {  // do I need the AdjFieldType here?
         _swap_start = swap_start;  // store the swap start rank
       }
     }
-
     // TODO: shift the defect by one lattice spacing in a random direction
+    shift_defect();
+    MPI_Barrier(MPI_COMM_WORLD);
     //
     return 0;
   }

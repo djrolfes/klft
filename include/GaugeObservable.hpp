@@ -454,7 +454,7 @@ inline void flushTopologicalCharge(std::ofstream& file,
     printf("Error: no topological charge measurements available\n");
     return;
   }
-  if (HEADER) file << "# step, topological_charge\n";
+  if (HEADER) file << "step,topological_charge\n";
   for (size_t i = 0; i < params.measurement_steps.size(); ++i) {
     file << params.measurement_steps[i] << ", "
          << params.topological_charge_measurements[i] << "\n";
@@ -474,7 +474,7 @@ inline void flushActionDensity(std::ofstream& file,
     printf("Error: no density_E measurements available\n");
     return;
   }
-  if (HEADER) file << "# step, action_density, tsquaredxaction_density\n";
+  if (HEADER) file << "step, action_density,tsquaredxaction_density\n";
   for (size_t i = 0; i < params.measurement_steps.size(); ++i) {
     file << params.measurement_steps[i] << ", "
          << params.action_density_measurements[i] << ", "
@@ -498,7 +498,7 @@ inline void flushPlaquette(std::ofstream& file,
     printf("Error: no plaquette measurements available\n");
     return;
   }
-  if (HEADER) file << "# step, plaquette\n";
+  if (HEADER) file << "step,plaquette\n";
   for (size_t i = 0; i < params.measurement_steps.size(); ++i) {
     file << params.measurement_steps[i] << ", "
          << params.plaquette_measurements[i] << "\n";
@@ -519,7 +519,7 @@ inline void flushWilsonLoopTemporal(std::ofstream& file,
     printf("Error: no temporal Wilson loop measurements available\n");
     return;
   }
-  if (HEADER) file << "# step, L, T, W_temp\n";
+  if (HEADER) file << "step,L,T,W_temp\n";
   for (size_t i = 0; i < params.measurement_steps.size(); ++i) {
     for (const auto& measurement : params.W_temp_measurements[i]) {
       file << params.measurement_steps[i] << ", " << measurement[0] << ", "
@@ -542,7 +542,7 @@ inline void flushWilsonLoopMuNu(std::ofstream& file,
     printf("Error: no mu-nu Wilson loop measurements available\n");
     return;
   }
-  if (HEADER) file << "# step, mu, nu, Lmu, Lnu, W_mu_nu\n";
+  if (HEADER) file << "step,mu,nu,Lmu,Lnu,W_mu_nu\n";
   for (size_t i = 0; i < params.measurement_steps.size(); ++i) {
     for (const auto& measurement : params.W_mu_nu_measurements[i]) {
       file << params.measurement_steps[i] << ", " << measurement[0] << ", "
