@@ -190,7 +190,7 @@ index_t do_wflowtest(HMCType &hmc, GaugeObservableParams &gaugeObsParams,
   }
 
   std::string output_filename_action_density_0 =
-      output_directory + "action_densities_cumulative.txt";
+      output_directory + "action_densities_0_cumulative.txt";
   std::ofstream output_file_actiondensity_0(output_filename_action_density_0);
 
   if (!output_file_actiondensity_0.is_open()) {
