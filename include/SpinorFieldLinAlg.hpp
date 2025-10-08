@@ -19,6 +19,7 @@
 #pragma once
 #include "FieldTypeHelper.hpp"
 #include "GLOBAL.hpp"
+#include "GammaMatrix.hpp"
 #include "Spinor.hpp"
 #include "Tuner.hpp"
 
@@ -188,6 +189,26 @@ struct axpyFunctor {
     c(Idcs...) = (y(Idcs...) + (alpha * x(Idcs...)));
   }
 };
+
+template <size_t rank, size_t Nc, size_t RepDim>
+struct axpyG5Functor {
+  using SpinorFieldType =
+      typename DeviceSpinorFieldType<rank, Nc, RepDim>::type;
+  const SpinorFieldType x;
+  const SpinorFieldType y;
+  const complex_t alpha;
+  SpinorFieldType c;
+  const IndexArray<rank> dimensions;
+  axpyG5Functor(const complex_t& alpha, const SpinorFieldType& x,
+                const SpinorFieldType& y, SpinorFieldType& c,
+                const IndexArray<rank>& dimensions)
+      : x(x), y(y), c(c), alpha(alpha), dimensions(dimensions) {}
+  template <typename... Indices>
+  KOKKOS_FORCEINLINE_FUNCTION void operator()(const Indices... Idcs) const {
+    // axpy(alpha, x(Idcs...), y(Idcs...), c(Idcs...));
+    c(Idcs...) = gamma5(y(Idcs...) + (alpha * x(Idcs...)));
+  }
+};
 /// @brief Calculates alpha*x+y
 
 /// @param alpha
@@ -251,6 +272,75 @@ void KOKKOS_FORCEINLINE_FUNCTION axpy(const complex_t& alpha,
                                                                 // interaction
   IndexArray<rank> start{};
   axpyFunctor<rank, Nc, RepDim> add(alpha, x, y, c, x.dimensions);
+
+  tune_and_launch_for<rank>("SpinorField_axpy_inplace", start, x.dimensions,
+                            add);
+  Kokkos::fence();
+}
+
+/// @brief Calculates gamma5(alpha*x+y)
+
+/// @param alpha
+/// @param x
+/// @param y
+/// @return c = gamma5(alpha*x+y)
+template <typename DSpinorFieldType>
+typename DSpinorFieldType::type KOKKOS_FORCEINLINE_FUNCTION
+axpyG5(const complex_t& alpha, const typename DSpinorFieldType::type& x,
+       const typename DSpinorFieldType::type& y) {
+  constexpr static size_t rank =
+      DeviceFermionFieldTypeTraits<DSpinorFieldType>::Rank;
+  constexpr static size_t Nc =
+      DeviceFermionFieldTypeTraits<DSpinorFieldType>::Nc;
+  constexpr static size_t RepDim =
+      DeviceFermionFieldTypeTraits<DSpinorFieldType>::RepDim;
+  assert(x.dimensions == y.dimensions);
+  static_assert(
+      Kokkos::SpaceAccessibility<
+          typename decltype(x.field)::execution_space,
+          typename decltype(y.field)::memory_space>::accessible,
+      "Execution space of A cannot access memory space of B");  // allow only
+                                                                // device-device
+                                                                // or host-host
+                                                                // interaction
+
+  using SpinorFieldType = typename DSpinorFieldType::type;
+  SpinorFieldType c(x.dimensions, complex_t(0.0, 0.0));
+  IndexArray<rank> start{};
+  axpyG5Functor<rank, Nc, RepDim> add(alpha, x, y, c, x.dimensions);
+
+  tune_and_launch_for<rank>("SpinorField_axpy", start, x.dimensions, add);
+  Kokkos::fence();
+  return c;
+}
+/// @brief Calculates alpha*x+y
+/// @param alpha
+/// @param x
+/// @param y
+/// @param c
+/// @return c = gamma5(alpha*x+y)
+template <typename DSpinorFieldType>
+void KOKKOS_FORCEINLINE_FUNCTION
+axpyG5(const complex_t& alpha, const typename DSpinorFieldType::type& x,
+       const typename DSpinorFieldType::type& y,
+       typename DSpinorFieldType::type& c) {
+  constexpr static size_t rank =
+      DeviceFermionFieldTypeTraits<DSpinorFieldType>::Rank;
+  constexpr static size_t Nc =
+      DeviceFermionFieldTypeTraits<DSpinorFieldType>::Nc;
+  constexpr static size_t RepDim =
+      DeviceFermionFieldTypeTraits<DSpinorFieldType>::RepDim;
+  assert(x.dimensions == y.dimensions);
+  static_assert(
+      Kokkos::SpaceAccessibility<
+          typename decltype(x.field)::execution_space,
+          typename decltype(y.field)::memory_space>::accessible,
+      "Execution space of A cannot access memory space of B");  // allow only
+                                                                // device-device
+                                                                // or host-host
+                                                                // interaction
+  IndexArray<rank> start{};
+  axpyG5Functor<rank, Nc, RepDim> add(alpha, x, y, c, x.dimensions);
 
   tune_and_launch_for<rank>("SpinorField_axpy_inplace", start, x.dimensions,
                             add);
