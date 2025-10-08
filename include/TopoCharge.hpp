@@ -113,17 +113,14 @@ struct TopoCharge {
           for (int sigma = rho + 1; sigma < Nd; ++sigma) {
             if (sigma == mu || sigma == nu)
               continue;
-#pragma unroll
-            for (int i = 0; i < NcAdj<Nc>; ++i) {
-              local_charge += epsilon4(mu, nu, rho, sigma) *
-                              tr<Nc>(C[mu][nu], C[rho][sigma]);
-              local_charge += epsilon4(nu, mu, rho, sigma) *
-                              tr<Nc>(C[nu][mu], C[rho][sigma]);
-              local_charge += epsilon4(nu, mu, sigma, rho) *
-                              tr<Nc>(C[nu][mu], C[sigma][rho]);
-              local_charge += epsilon4(mu, nu, sigma, rho) *
-                              tr<Nc>(C[mu][nu], C[sigma][rho]);
-            }
+            local_charge +=
+                epsilon4(mu, nu, rho, sigma) * tr<Nc>(C[mu][nu], C[rho][sigma]);
+            local_charge +=
+                epsilon4(nu, mu, rho, sigma) * tr<Nc>(C[nu][mu], C[rho][sigma]);
+            local_charge +=
+                epsilon4(nu, mu, sigma, rho) * tr<Nc>(C[nu][mu], C[sigma][rho]);
+            local_charge +=
+                epsilon4(mu, nu, sigma, rho) * tr<Nc>(C[mu][nu], C[sigma][rho]);
           }
         }
       }
