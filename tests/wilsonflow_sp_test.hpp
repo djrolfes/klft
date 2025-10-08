@@ -231,9 +231,9 @@ index_t do_wflowtest(HMCType &hmc, GaugeObservableParams &gaugeObsParams,
 
   // Set precision for floating point numbers in the output file
   output_file_topologicalcharge << std::fixed << std::setprecision(8);
-  output_file_actiondensity << std::fixed << std::setprecision(8);
-  output_file_actiondensity_clover << std::fixed << std::setprecision(8);
-  output_file_actiondensity_0 << std::fixed << std::setprecision(8);
+  output_file_actiondensity << std::fixed << std::setprecision(12);
+  output_file_actiondensity_clover << std::fixed << std::setprecision(12);
+  output_file_actiondensity_0 << std::fixed << std::setprecision(12);
   output_file_sp_avg << std::fixed << std::setprecision(12);
   output_file_sp_max << std::fixed << std::setprecision(12);
   bool header_written = false;
