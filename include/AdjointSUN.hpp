@@ -39,6 +39,15 @@ print_SUNAdj(const SUNAdj<Nc> &a, const std::string &name = "SUNAdj:") {
   }
 }
 
+KOKKOS_FORCEINLINE_FUNCTION
+SUNAdj<2> operator*(const SUNAdj<2> &a, const SUNAdj<2> &b) {
+  SUNAdj<2> c;
+  c[0] = a[1] * b[2] - a[2] * b[1];
+  c[1] = a[2] * b[0] - a[0] * b[2];
+  c[2] = a[0] * b[1] - a[1] * b[0];
+  return c;
+}
+
 template <size_t Nc, typename Tin>
 KOKKOS_FORCEINLINE_FUNCTION SUNAdj<Nc> operator*(const SUNAdj<Nc> &a,
                                                  const Tin &b) {
