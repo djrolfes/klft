@@ -41,7 +41,7 @@ struct ActionDensityFunctor {
       for (int nu = mu + 1; nu < Nd; ++nu) {
         // get the clover C_munu
         C[mu][nu] = fst(FSTTag{}, i0, i1, i2, i3, mu, nu);
-        C[nu][mu] = fst(FSTTag{}, i0, i1, i2, i3, nu, mu);
+        // C[nu][mu] = fst(FSTTag{}, i0, i1, i2, i3, nu, mu);
       }
     }
 
@@ -51,7 +51,6 @@ struct ActionDensityFunctor {
       for (int nu = mu + 1; nu < Nd; ++nu) {
         real_t local_density = 0.0;
         local_density += tr<Nc>(C[mu][nu], C[mu][nu]);
-        local_density += tr<Nc>(C[nu][mu], C[nu][mu]);
         density_per_site(i0, i1, i2, i3) += local_density;
       }
     }

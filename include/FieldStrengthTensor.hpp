@@ -220,7 +220,7 @@ template <typename DGaugeFieldType> struct FieldStrengthTensor {
     P_munu += conj(g_in(x_m_mu, mu)) * conj(g_in(x_m_mu_m_nu, nu)) *
               g_in(x_m_mu_m_nu, mu) * g_in(x_m_nu, nu);
 
-    return traceT(restoreSUN((P_munu) * 0.25));
+    return traceT(P_munu) * 0.25;
   }
 
   template <typename indexType>
@@ -317,7 +317,7 @@ template <typename DGaugeFieldType> struct FieldStrengthTensor {
               conj(g_in(x_m_mu_m_nu, nu)) * conj(g_in(x_m_mu_m_2nu, nu)) *
               g_in(x_m_mu_m_2nu, mu) * g_in(x_m_nu, nu);
 
-    return traceT(restoreSUN((P_munu) * 0.125));
+    return traceT(P_munu) * 0.125;
   }
 };
 
