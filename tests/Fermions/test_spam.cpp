@@ -142,16 +142,16 @@ int main(int argc, char* argv[]) {
         DeviceGaugeFieldType<4, 2>>
         D_pre_alt(gauge, params);
     deviceSpinorField<2, 4> u_eo_temp(L0 / 2, L1, L2, L3, 0);
-    // deviceSpinorField<2, 4> out_comp(L0 / 2, L1, L2, L3, 0);
-    auto out_comp = D_pre_alt.template apply<Tags::TagDdaggerD>(u_even);
+    deviceSpinorField<2, 4> out_comp(L0 / 2, L1, L2, L3, 0);
     // build it manually:
+    D_pre_alt.template apply<Tags::TagDDdagger>(u_even, out_comp);
     auto temp0 = D_pre.template apply<Tags::TagSe>(u_even);
-    auto temp1 = D_pre.template apply<Tags::TagHoe>(temp0);
-    auto temp2 = D_pre.template apply<Tags::TagHeo>(temp1);
-    auto out_man =
-        axpyG5<DeviceSpinorFieldType<4, 2, 4, SpinorFieldKind::Standard,
-                                     SpinorFieldLayout::Checkerboard>>(
-            -params.kappa * params.kappa, temp2, u_even);
+    auto out_man = D_pre.template apply<Tags::TagSe>(temp0);
+    // auto temp2 = D_pre.template apply<Tags::TagHeo>(temp1);
+    // auto out_man =
+    //     axpyG5<DeviceSpinorFieldType<4, 2, 4, SpinorFieldKind::Standard,
+    //                                  SpinorFieldLayout::Checkerboard>>(
+    //         -params.kappa * params.kappa, temp2, u_even);
     // built it completla maually
     // auto temp3 = D.template apply<Tags::TagD>(u_for_normal);
     // auto temp4 = D.template apply<Tags::TagD>(temp3);
@@ -169,7 +169,7 @@ int main(int argc, char* argv[]) {
     // printf("temp2 == out_nor @(0,0,0,0) is equal: %i\n",
     //        out_man(1, 0, 0, 0) == out_nor(2, 0, 0, 0));
 
-    result = -999;
+    result = 0;
     Kokkos::parallel_reduce(
         "Reduction", Policy<4>({0, 0, 0, 0}, {L0 / 2, L1, L2, L3}),
         KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2,
