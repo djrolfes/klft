@@ -45,15 +45,15 @@ struct ActionDensityFunctor {
       }
     }
 
+    real_t local_density = 0.0;
 #pragma unroll
     for (int mu = 0; mu < Nd; ++mu) {
 #pragma unroll
       for (int nu = mu + 1; nu < Nd; ++nu) {
-        real_t local_density = 0.0;
         local_density += tr<Nc>(C[mu][nu], C[mu][nu]);
-        density_per_site(i0, i1, i2, i3) += local_density;
       }
     }
+    density_per_site(i0, i1, i2, i3) += local_density;
   }
 };
 
