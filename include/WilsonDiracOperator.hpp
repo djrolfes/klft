@@ -3,9 +3,9 @@
 namespace klft {
 
 template <typename DSpinorFieldType, typename DGaugeFieldType>
-class WilsonDiracOperator
-    : public DiracOperator<WilsonDiracOperator, DSpinorFieldType,
-                           DGaugeFieldType> {
+class WilsonDiracOperator : public DiracOperator<WilsonDiracOperator,
+                                                 DSpinorFieldType,
+                                                 DGaugeFieldType> {
  public:
   constexpr static size_t Nc =
       DeviceFermionFieldTypeTraits<DSpinorFieldType>::Nc;
@@ -84,9 +84,9 @@ class WilsonDiracOperator
 };
 
 template <typename DSpinorFieldType, typename DGaugeFieldType>
-class HWilsonDiracOperator
-    : public DiracOperator<HWilsonDiracOperator, DSpinorFieldType,
-                           DGaugeFieldType> {
+class HWilsonDiracOperator : public DiracOperator<HWilsonDiracOperator,
+                                                  DSpinorFieldType,
+                                                  DGaugeFieldType> {
  public:
   constexpr static size_t Nc =
       DeviceFermionFieldTypeTraits<DSpinorFieldType>::Nc;
@@ -133,9 +133,9 @@ class HWilsonDiracOperator
 };
 
 template <typename DSpinorFieldType, typename DGaugeFieldType>
-class EOWilsonDiracOperator
-    : public EODiracOperator<EOWilsonDiracOperator, DSpinorFieldType,
-                             DGaugeFieldType> {
+class EOWilsonDiracOperator : public EODiracOperator<EOWilsonDiracOperator,
+                                                     DSpinorFieldType,
+                                                     DGaugeFieldType> {
  public:
   using Base =
       EODiracOperator<EOWilsonDiracOperator, DSpinorFieldType, DGaugeFieldType>;
@@ -216,25 +216,6 @@ class EOWilsonDiracOperator
     this->s_out(Idcs...) *= this->params.kappa;
     this->s_out(Idcs...) -= this->s_in_same_parity(Idcs...);
     this->s_out(Idcs...) *= -1;
-  }
-  template <typename... Indices>
-  KOKKOS_FORCEINLINE_FUNCTION void operator()(typename Base::Tag1minusHeo,
-                                              const Indices... Idcs) const {
-    operator()(typename Tags::TagHeo(), Idcs...);
-    this->s_out(Idcs...) *= this->params.kappa * this->params.kappa;
-
-    this->s_out(Idcs...) -= this->s_in_same_parity(Idcs...);
-    this->s_out(Idcs...) *= -1;
-    this->s_out(Idcs...) = gamma5(this->s_out(Idcs...));
-  }
-  template <typename... Indices>
-  KOKKOS_FORCEINLINE_FUNCTION void operator()(typename Base::Tag1minusHoe,
-                                              const Indices... Idcs) const {
-    operator()(typename Tags::TagHoe(), Idcs...);
-    this->s_out(Idcs...) *= this->params.kappa * this->params.kappa;
-    this->s_out(Idcs...) -= this->s_in_same_parity(Idcs...);
-    this->s_out(Idcs...) *= -1;
-    this->s_out(Idcs...) = gamma5(this->s_out(Idcs...));
   }
 };
 
