@@ -48,6 +48,21 @@ SUNAdj<2> operator*(const SUNAdj<2> &a, const SUNAdj<2> &b) {
   return c;
 }
 
+// implement tr(SunAdj a SunAdj b) = 1/2 sum_i a_i b_i
+// from the definition tr(T_a T_b) = 1/2 delta_ab
+template <size_t Nc>
+KOKKOS_FORCEINLINE_FUNCTION real_t tr(const SUNAdj<Nc> &a,
+                                      const SUNAdj<Nc> &b) {
+  real_t c = 0.0;
+#pragma unroll
+  for (size_t i = 0; i < NcAdj<Nc>; ++i) {
+    c += a[i] * b[i];
+  }
+  return c * 0.5;
+}
+
+// TODO: add operator* for SU(3)
+
 template <size_t Nc, typename Tin>
 KOKKOS_FORCEINLINE_FUNCTION SUNAdj<Nc> operator*(const SUNAdj<Nc> &a,
                                                  const Tin &b) {
