@@ -50,10 +50,14 @@ struct ActionDensityFunctor {
     for (int mu = 0; mu < Nd; ++mu) {
 #pragma unroll
       for (int nu = mu + 1; nu < Nd; ++nu) {
-        local_density += tr<Nc>(C[mu][nu], C[mu][nu]);
+        local_density +=
+            2 * 0.5 *
+            tr<Nc>(C[mu][nu], C[mu][nu]); // 2*: G_{mu,nu} = -G_{nu,mu}, 0.5*:
+                                          // from E=1/4 G^a_{mu,nu}G^a_{mu,nu}
+                                          // (one factor 1/2 is contained in tr)
       }
     }
-    density_per_site(i0, i1, i2, i3) += local_density;
+    density_per_site(i0, i1, i2, i3) = local_density;
   }
 };
 
@@ -85,8 +89,8 @@ real_t getActionDensity(const typename DGaugeFieldType::type g_in) {
   // Kokkos::fence();
 
   // real_t density = Kokkos::real(actionDensity.density_per_site.avg());
-  real_t density =
-      1 - Kokkos::real(gaugePlaquette.plaq_per_site.avg()) / (Nd * (Nd - 1));
+  real_t density = 1 - Kokkos::real(gaugePlaquette.plaq_per_site.avg()) /
+                           ((Nd * (Nd - 1)) * 0.5);
   Kokkos::fence();
 
   return density;
@@ -118,7 +122,7 @@ real_t getActionDensity_clover(const typename DGaugeFieldType::type g_in) {
                           g_in.dimensions, actionDensity);
   Kokkos::fence();
 
-  real_t density = Kokkos::real(actionDensity.density_per_site.avg());
+  real_t density = actionDensity.density_per_site.avg();
   Kokkos::fence();
 
   return density;
