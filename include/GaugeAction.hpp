@@ -32,6 +32,6 @@ real_t WilsonAction_full(typename DGaugeFieldType::type deviceGaugeField,
   constexpr static const GaugeFieldKind k =
       DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Kind;
   real_t plaq = GaugePlaquette<Nd, Nc, k>(deviceGaugeField, normalize);
-  return (beta / static_cast<real_t>(Nc)) * (1 - 0.5 * plaq);
+  return (beta / static_cast<real_t>(Nc)) * (1 - plaq);
 }
 } // namespace klft

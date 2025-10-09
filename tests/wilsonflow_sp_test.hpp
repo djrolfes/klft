@@ -169,6 +169,7 @@ template <typename DGaugeFieldType, typename HMCType>
 index_t do_wflowtest(HMCType &hmc, GaugeObservableParams &gaugeObsParams,
                      std::string output_directory) {
 
+  static const size_t Nc = DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc;
   // Construct the output filename. Each MPI rank will get its own file.
   std::string output_filename =
       output_directory + "topological_charge_cumulative.txt";
@@ -266,7 +267,7 @@ index_t do_wflowtest(HMCType &hmc, GaugeObservableParams &gaugeObsParams,
   action_densities_clover.push_back(getActionDensity_clover<DGaugeFieldType>(
       hmc.hamiltonian_field.gauge_field));
   action_densities_0.push_back(WilsonAction_full<DGaugeFieldType>(
-      hmc.hamiltonian_field.gauge_field, 2.0, true));
+      hmc.hamiltonian_field.gauge_field, 2.0 * Nc, true));
   // get_sp_distribution<DGaugeFieldType>(hmc.hamiltonian_field.gauge_field,
   //                                      sp_avg, sp_dist_max,
   //                                      sp_dist_bin_width);
@@ -287,7 +288,7 @@ index_t do_wflowtest(HMCType &hmc, GaugeObservableParams &gaugeObsParams,
     action_densities_clover.push_back(
         getActionDensity_clover<DGaugeFieldType>(wilson_flow.field));
     action_densities_0.push_back(
-        WilsonAction_full<DGaugeFieldType>(wilson_flow.field, 2.0, true));
+        WilsonAction_full<DGaugeFieldType>(wilson_flow.field, 2.0 * Nc, true));
     sp_avg.push_back(get_spavg<DGaugeFieldType>(wilson_flow.field));
     sp_max.push_back(get_spmax<DGaugeFieldType>(wilson_flow.field));
 
@@ -390,7 +391,7 @@ index_t do_wflowtest(HMCType &hmc, GaugeObservableParams &gaugeObsParams,
           getActionDensity_clover<DGaugeFieldType>(
               hmc.hamiltonian_field.gauge_field));
       action_densities_0.push_back(WilsonAction_full<DGaugeFieldType>(
-          hmc.hamiltonian_field.gauge_field, 2.0, true));
+          hmc.hamiltonian_field.gauge_field, 2.0 * Nc, true));
       sp_avg.push_back(
           get_spavg<DGaugeFieldType>(hmc.hamiltonian_field.gauge_field));
       sp_max.push_back(
@@ -407,8 +408,8 @@ index_t do_wflowtest(HMCType &hmc, GaugeObservableParams &gaugeObsParams,
             getActionDensity<DGaugeFieldType>(wilson_flow.field));
         action_densities_clover.push_back(
             getActionDensity_clover<DGaugeFieldType>(wilson_flow.field));
-        action_densities_0.push_back(
-            WilsonAction_full<DGaugeFieldType>(wilson_flow.field, 2.0, true));
+        action_densities_0.push_back(WilsonAction_full<DGaugeFieldType>(
+            wilson_flow.field, 2.0 * Nc, true));
         sp_avg.push_back(get_spavg<DGaugeFieldType>(wilson_flow.field));
         sp_max.push_back(get_spmax<DGaugeFieldType>(wilson_flow.field));
 
