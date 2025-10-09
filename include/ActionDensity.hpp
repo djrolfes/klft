@@ -122,7 +122,7 @@ real_t getActionDensity_clover(const typename DGaugeFieldType::type g_in) {
                           g_in.dimensions, actionDensity);
   Kokkos::fence();
 
-  real_t density = actionDensity.density_per_site.avg();
+  real_t density = Kokkos::real(actionDensity.density_per_site.avg());
   Kokkos::fence();
 
   return density;
