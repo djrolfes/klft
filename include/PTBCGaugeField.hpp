@@ -273,12 +273,12 @@ struct devicePTBCGaugeField {
         KOKKOS_LAMBDA(const indexType i1, const indexType i2,
                       const indexType i3) {
           const indexType i1_shift =
-              (i1 + defect_position_local[0]) % dimensions_local[1];
+              (i1 + defect_position_local[0]) % dimensions_local[0];
           const indexType i2_shift =
-              (i2 + defect_position_local[1]) % dimensions_local[2];
+              (i2 + defect_position_local[1]) % dimensions_local[1];
           const indexType i3_shift =
-              (i3 + defect_position_local[2]) % dimensions_local[3];
-          defectField_local(0, i1_shift, i2_shift, i3_shift, 0) = cr;
+              (i3 + defect_position_local[2]) % dimensions_local[2];
+          defectField_local(i1_shift, i2_shift, i3_shift, Nd - 1, Nd - 1) = cr;
         });
     Kokkos::fence();
   }
