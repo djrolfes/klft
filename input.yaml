@@ -19,27 +19,31 @@ Integrator:
     - Type: "Leapfrog"
       level: 0
       steps: 100
-    - Type: "Leapfrog"
-      level: 1
-      steps: 20
+    # - Type: "Leapfrog"
+    #   level: 1
+    #   steps: 20
 Gauge Monomial:
   level: 0
-  beta: 2.12
+  beta: 2.3
 
-Fermion Monomial:
-  level: 1
-  fermion: "HWilson"
-  solver: "CG"
-  RepDim: 4
-  kappa: 0.15
-  tol: 1e-10
+# Fermion Monomial:
+#   level: 1
+#   fermion: "HWilson"
+#   solver: "CG"
+#   RepDim: 4
+#   kappa: 0.15
+#   tol: 1e-10
 
 GaugeObservableParams:
-  measurement_interval: 5
+  measurement_interval: 2
   measure_plaquette: true
   measure_wilson_loop_temporal: false
   measure_wilson_loop_mu_nu: false
-  flush: 5
+  flush: 25
+  do_wilson_flow: true
+  WilsonFlowParams:
+    tau: 8.0
+    eps: 0.01
 
   W_temp_L_T_pairs:
     - [2, 3]
@@ -53,9 +57,10 @@ GaugeObservableParams:
     - [2, 2]
     - [3, 3]
 
-  plaquette_filename: "plaquette_output20.txt"
-  W_temp_filename: "wilson_temp_output20.txt"
-  W_mu_nu_filename: "wilson_mu_nu_output20.txt"
+  plaquette_filename: "plaquette_output.txt"
+  W_temp_filename: "wilson_temp_output.txt"
+  W_mu_nu_filename: "wilson_mu_nu_output.txt"
+  action_density_filename: "action_density.txt"
 
   write_to_file: true
 
@@ -64,6 +69,21 @@ SimulationLoggingParams:
   log_delta_H: true
   log_acceptance: true
   flush: 5
-  
   log_filename: "simulation_log.txt"
   write_to_file: true
+
+PTBCParams:
+  defect_length: 2
+  defect_values: [0.0, 0.143, 0.286, 0.429, 0.571, 0.714, 0.857, 1.0]
+
+PTBCSimulationLoggingParams:
+  log_interval: 1
+  log_delta_H_swap: true
+  log_swap_start: true
+  log_swap_accepts: true
+  log_defects: true
+  flush: 25
+  log_filename: "ptbcsimulation_log.txt"
+  write_to_file: true
+
+

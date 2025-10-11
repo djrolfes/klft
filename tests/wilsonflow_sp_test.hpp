@@ -5,6 +5,7 @@
 #include "GaugeObservable.hpp"
 #include "GaugePlaquette.hpp"
 #include "Kokkos_Atomic.hpp"
+#include "SimulationLogging.hpp"
 
 namespace klft {
 // template <typename DGaugeFieldType>
@@ -160,13 +161,14 @@ real_t get_spavg(const typename DGaugeFieldType::type gauge_field) {
       rtn);
   Kokkos::fence();
 
-  Kokkos::printf("gaugefield size: %lu\n", gauge_field.field.size());
+  // Kokkos::printf("gaugefield size: %lu\n", gauge_field.field.size());
 
   return rtn / gauge_field.field.size();
 }
 
 template <typename DGaugeFieldType, typename HMCType>
 index_t do_wflowtest(HMCType &hmc, GaugeObservableParams &gaugeObsParams,
+                     SimulationLoggingParams &simLogParams,
                      std::string output_directory) {
 
   static const size_t Nc = DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc;
@@ -378,8 +380,11 @@ index_t do_wflowtest(HMCType &hmc, GaugeObservableParams &gaugeObsParams,
              static_cast<size_t>(accept), acc_rate, time);
     }
 
-    if (accept) {
+    // Simulation logging: log step, delta_H, acceptance rate, accept, time
+    addLogData(simLogParams, step, hmc.delta_H, acc_rate, accept, time);
+    flushSimulationLogs(simLogParams, step, true);
 
+    if (accept) {
       WilsonFlow<DGaugeFieldType> wilson_flow(
           hmc.hamiltonian_field.gauge_field, gaugeObsParams.wilson_flow_params);
       flow_times.push_back(0.0);
@@ -452,6 +457,8 @@ index_t do_wflowtest(HMCType &hmc, GaugeObservableParams &gaugeObsParams,
       output_file_sp_max << "\n";
     }
   }
+  // Final flush of simulation logs
+  forceflushSimulationLogs(simLogParams, true);
   return 0;
 }
 

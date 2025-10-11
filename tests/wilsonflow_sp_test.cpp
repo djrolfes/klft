@@ -147,7 +147,7 @@ int test_wilsonflow_sp(const std::string &input_file,
                                DSpinorFieldType>(s_4_SU2, diracParams,
                                                  fermionParams.tol, rng, 0);
     }
-    return do_wflowtest<DGaugeFieldType, HMC>(hmc, gaugeObsParams,
+    return do_wflowtest<DGaugeFieldType, HMC>(hmc, gaugeObsParams, simLogParams,
                                               output_directory);
   } else {
     using DGaugeFieldType = DeviceGaugeFieldType<4, 3>;
@@ -181,7 +181,7 @@ int test_wilsonflow_sp(const std::string &input_file,
                                DSpinorFieldType>(s_4_SU3, diracParams,
                                                  fermionParams.tol, rng, 0);
     }
-    return do_wflowtest<DGaugeFieldType, HMC>(hmc, gaugeObsParams,
+    return do_wflowtest<DGaugeFieldType, HMC>(hmc, gaugeObsParams, simLogParams,
                                               output_directory);
   }
   return 0;
@@ -193,6 +193,10 @@ int main(int argc, char *argv[]) {
   printf(HLINE);
 
   Kokkos::initialize(argc, argv);
+  const int verbosity = std::getenv("KLFT_VERBOSITY")
+                            ? std::atoi(std::getenv("KLFT_VERBOSITY"))
+                            : 0;
+  setVerbosity(verbosity);
   int rc;
   std::string input_file;
   std::string output_directory;
