@@ -41,7 +41,7 @@ struct ActionDensityFunctor {
       for (int nu = mu + 1; nu < Nd; ++nu) {
         // get the clover C_munu
         C[mu][nu] = fst(FSTTag{}, i0, i1, i2, i3, mu, nu);
-        C[nu][mu] = -C[mu][nu] // fst(FSTTag{}, i0, i1, i2, i3, nu, mu);
+        C[nu][mu] = -C[mu][nu]; // fst(FSTTag{}, i0, i1, i2, i3, nu, mu);
       }
     }
 
@@ -73,7 +73,7 @@ struct ActionDensityFunctor {
 #pragma unroll
           for (int temp_mu = 0; temp_mu < Nd; ++temp_mu) {
 #pragma unroll
-            for (temp int temp_nu = 0; temp_nu < Nd; ++temp_nu) {
+            for (int temp_nu = 0; temp_nu < Nd; ++temp_nu) {
               if (temp_mu != temp_nu) {
                 temp += 0.25 * tr<Nc>(C[temp_mu][temp_nu], C[temp_mu][temp_nu]);
               }
