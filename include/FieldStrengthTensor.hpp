@@ -203,8 +203,8 @@ template <typename DGaugeFieldType> struct FieldStrengthTensor {
     x_p_mu_m_nu[nu] = mod(x_p_mu_m_nu[nu] - 1, nu);
     IndexArray<Nd> x_m_nu = x;
     x_m_nu[nu] = mod(x[nu] - 1, nu);
-    P_munu += conj(g_in(x, mu)) * g_in(x_p_mu_m_nu, nu) * g_in(x_m_nu, mu) *
-              conj(g_in(x_m_nu, nu));
+    P_munu += conj(g_in(x_m_nu, nu)) * g_in(x_m_nu, mu) *
+              g_in(x_p_mu_m_nu, nu) * conj(g_in(x, mu));
 
     // 3. Plaquette in (-mu, +nu) plane starting at x
     IndexArray<Nd> x_m_mu = x;
@@ -220,7 +220,7 @@ template <typename DGaugeFieldType> struct FieldStrengthTensor {
     P_munu += conj(g_in(x_m_mu, mu)) * conj(g_in(x_m_mu_m_nu, nu)) *
               g_in(x_m_mu_m_nu, mu) * g_in(x_m_nu, nu);
 
-    return traceT(P_munu) * 0.25;
+    return traceT(P_munu);
   }
 
   template <typename indexType>
