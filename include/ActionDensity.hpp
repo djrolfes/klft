@@ -66,19 +66,11 @@ struct ActionDensityFunctor {
 #pragma unroll
       for (int nu = 0; nu < Nd; ++nu) {
         if (mu != nu) {
-          local_density += tr<Nc>(
-              C[mu][nu], C[mu][nu]); // 0.5*: from E=1/4 G^a_{mu,nu}G^a_{mu,nu}
-                                     // (one factor 1/2 is contained in tr)
-          real_t temp = 0.0;
-#pragma unroll
-          for (int temp_mu = 0; temp_mu < Nd; ++temp_mu) {
-#pragma unroll
-            for (int temp_nu = 0; temp_nu < Nd; ++temp_nu) {
-              if (temp_mu != temp_nu) {
-                temp += 0.25 * tr<Nc>(C[temp_mu][temp_nu], C[temp_mu][temp_nu]);
-              }
-            }
-          }
+          local_density +=
+              0.5 *
+              tr<Nc>(C[mu][nu],
+                     C[mu][nu]); // 0.5*: from E=1/4 G^a_{mu,nu}G^a_{mu,nu}
+                                 // (one factor 1/2 is contained in tr)
         }
       }
       density_per_site(i0, i1, i2, i3) = local_density;
@@ -150,6 +142,6 @@ real_t getActionDensity_clover(const typename DGaugeFieldType::type g_in) {
   real_t density = Kokkos::real(actionDensity.density_per_site.avg());
   Kokkos::fence();
 
-  return density / 16;
+  return density;
 }
 } // namespace klft
