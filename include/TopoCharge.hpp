@@ -128,7 +128,7 @@ struct TopoCharge {
         }
       }
     }
-    charge_per_site(i0, i1, i2, i3) = local_charge;
+    charge_per_site(i0, i1, i2, i3) = local_charge / 16;
     // charge_per_site(i0, i1, i2, i3) = local_charge / 16;
   }
 };
