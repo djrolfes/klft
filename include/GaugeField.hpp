@@ -74,6 +74,20 @@ struct deviceGaugeField {
             init);
   }
 
+  deviceGaugeField(const IndexArray<4>& dimensions, const std::string& filepath)
+      : dimensions(dimensions) {
+    do_init(dimensions[0], dimensions[1], dimensions[2], dimensions[3], field,
+            filepath);
+  }
+  deviceGaugeField(const index_t L0,
+                   const index_t L1,
+                   const index_t L2,
+                   const index_t L3,
+                   const std::string& filepath)
+      : dimensions({L0, L1, L2, L3}) {
+    do_init(L0, L1, L2, L3, field, filepath);
+  }
+
   // initialize all links to a given SUN matrix
   deviceGaugeField(const index_t L0,
                    const index_t L1,
@@ -124,6 +138,16 @@ struct deviceGaugeField {
       : dimensions(dimensions) {
     do_init(dimensions[0], dimensions[1], dimensions[2], dimensions[3], field,
             rng);
+  }
+  void do_init(const index_t L0,
+               const index_t L1,
+               const index_t L2,
+               const index_t L3,
+               GaugeField<Nd, Nc>& V,
+               const std::string& filepath) {
+    Kokkos::realloc(Kokkos::WithoutInitializing, V, L0, L1, L2, L3);
+    this->load(filepath);
+    Kokkos::fence();
   }
 
   void do_init(const index_t L0,
@@ -377,6 +401,30 @@ struct deviceGaugeField {
               field(i0mnu, i1mnu, i2mnu, i3mnu, nu);
     }  // loop over nu
     return temp;
+  }
+  void save(std::string filename) {
+    auto h_field = Kokkos::create_mirror_view(field);
+    Kokkos::deep_copy(h_field, field);
+    std::ofstream file;
+    file.open(filename, std::ios::out | std::ios::binary);
+    if (!file.is_open()) {
+      throw std::runtime_error("Error opening file " + filename);
+    }
+    file.write(reinterpret_cast<const char*>(h_field.data()),
+               h_field.size() * sizeof(SUN<Nc>));
+    file.close();
+  }
+  void load(std::string filename) {
+    auto h_field = Kokkos::create_mirror_view(field);
+    std::ifstream file;
+    file.open(filename, std::ios::in | std::ios::binary);
+    if (!file.is_open()) {
+      throw std::runtime_error("Error opening file " + filename);
+    }
+    file.read(reinterpret_cast<char*>(h_field.data()),
+              h_field.size() * sizeof(SUN<Nc>));
+    file.close();
+    Kokkos::deep_copy(field, h_field);
   }
 };
 
@@ -672,6 +720,30 @@ struct deviceGaugeField3D {
 
     return temp;
   }
+  void save(std::string filename) {
+    auto h_field = Kokkos::create_mirror_view(field);
+    Kokkos::deep_copy(h_field, field);
+    std::ofstream file;
+    file.open(filename, std::ios::out | std::ios::binary);
+    if (!file.is_open()) {
+      throw std::runtime_error("Error opening file " + filename);
+    }
+    file.write(reinterpret_cast<const char*>(h_field.data()),
+               h_field.size() * sizeof(SUN<Nc>));
+    file.close();
+  }
+  void load(std::string filename) {
+    auto h_field = Kokkos::create_mirror_view(field);
+    std::ifstream file;
+    file.open(filename, std::ios::in | std::ios::binary);
+    if (!file.is_open()) {
+      throw std::runtime_error("Error opening file " + filename);
+    }
+    file.read(reinterpret_cast<char*>(h_field.data()),
+              h_field.size() * sizeof(SUN<Nc>));
+    file.close();
+    Kokkos::deep_copy(field, h_field);
+  }
 };
 
 template <size_t Nd, size_t Nc>
@@ -920,6 +992,30 @@ struct deviceGaugeField2D {
     }
 
     return temp;
+  }
+  void save(std::string filename) {
+    auto h_field = Kokkos::create_mirror_view(field);
+    Kokkos::deep_copy(h_field, field);
+    std::ofstream file;
+    file.open(filename, std::ios::out | std::ios::binary);
+    if (!file.is_open()) {
+      throw std::runtime_error("Error opening file " + filename);
+    }
+    file.write(reinterpret_cast<const char*>(h_field.data()),
+               h_field.size() * sizeof(SUN<Nc>));
+    file.close();
+  }
+  void load(std::string filename) {
+    auto h_field = Kokkos::create_mirror_view(field);
+    std::ifstream file;
+    file.open(filename, std::ios::in | std::ios::binary);
+    if (!file.is_open()) {
+      throw std::runtime_error("Error opening file " + filename);
+    }
+    file.read(reinterpret_cast<char*>(h_field.data()),
+              h_field.size() * sizeof(SUN<Nc>));
+    file.close();
+    Kokkos::deep_copy(field, h_field);
   }
 };
 
