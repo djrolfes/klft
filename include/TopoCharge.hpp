@@ -115,15 +115,6 @@ struct TopoCharge {
               continue;
             local_charge +=
                 epsilon4(mu, nu, rho, sigma) * tr<Nc>(C[mu][nu], C[rho][sigma]);
-            // local_charge +=
-            //     epsilon4(nu, mu, rho, sigma) * tr<Nc>(C[nu][mu],
-            //     C[rho][sigma]);
-            // local_charge +=
-            //     epsilon4(nu, mu, sigma, rho) * tr<Nc>(C[nu][mu],
-            //     C[sigma][rho]);
-            // local_charge +=
-            //     epsilon4(mu, nu, sigma, rho) * tr<Nc>(C[mu][nu],
-            //     C[sigma][rho]);
           }
         }
       }
@@ -155,4 +146,38 @@ real_t get_topological_charge(const typename DGaugeFieldType::type g_in) {
 
   return -4.0 * charge / (32 * PI * PI);
 }
+
+template <typename DGaugeFieldType>
+real_t
+get_topological_charge_improved(const typename DGaugeFieldType::type g_in,
+                                const real_t b1) {
+  static_assert(isDeviceGaugeFieldType<DGaugeFieldType>(),
+                "get_topological_charge requires a device gauge field type.");
+  constexpr static const size_t Nd =
+      DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank;
+  static_assert(Nd == 4,
+                "Topological charge is only defined for 4D gauge fields.");
+
+  const real_t b0 = 1 - 8 * b1;
+  DEBUG_MPI_PRINT("enter get_topological_charge");
+  // define the functor
+  TopoCharge<DGaugeFieldType> TCharge(g_in);
+  tune_and_launch_for<Nd>("Calculate topological charge", IndexArray<Nd>{0},
+                          g_in.dimensions, TCharge);
+  TopoCharge<DGaugeFieldType,
+             typename FieldStrengthTensor<DGaugeFieldType>::RectangleDef>
+      TCharge_rect(g_in);
+  tune_and_launch_for<Nd>("Calculate topological charge", IndexArray<Nd>{0},
+                          g_in.dimensions, TCharge_rect);
+  Kokkos::fence();
+
+  real_t charge = b0 * TCharge.charge_per_site.sum();
+  Kokkos::fence();
+  charge += 2.0 * b1 * TCharge_rect.charge_per_site.sum();
+  Kokkos::fence();
+  // charge /= 32 * PI * PI;
+
+  return -4.0 * charge / (32 * PI * PI);
+}
+
 } // namespace klft
