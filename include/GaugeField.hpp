@@ -413,69 +413,69 @@ template <size_t Nd, size_t Nc> struct deviceGaugeField {
             v                                          |
             x ==U(x,μ)==>     x+μ  ---U(x+μ,μ)--->    x+2μ
       */
-      temp_site1[mu] = (temp_site1[mu] + 1) % this->dimensions[mu];
-      temp_site2[mu] = (temp_site2[mu] + 2) % this->dimensions[mu];
-      temp_site3[mu] = (temp_site3[mu] + 1) % this->dimensions[mu];
-      temp_site3[nu] = (temp_site3[nu] + 1) % this->dimensions[nu];
-      temp_site4[nu] = (temp_site4[nu] + 1) % this->dimensions[nu];
-      temp += this->operator()(temp_site1, mu) *
-              this->operator()(temp_site2, nu) *
-              conj(this->operator()(temp_site3, mu)) *
-              conj(this->operator()(temp_site4, mu)) *
-              conj(this->operator()(site, nu));
-      temp_site1 = site;
-      temp_site2 = site;
-      temp_site3 = site;
-      temp_site4 = site;
-
-      /*
-       U(x,μ): ==>
-        <--  <--
-       |        ^
-       v        |
-        -->  ==>
-      */
-      temp_site1[mu] = (temp_site1[mu] + 1) % this->dimensions[mu];
-      temp_site2[nu] = (temp_site2[nu] + 1) % this->dimensions[nu];
-      temp_site3[nu] = (temp_site3[nu] + 1) % this->dimensions[nu];
-      temp_site3[mu] = mod(temp_site3[mu] - 1, mu);
-      temp_site4[mu] = mod(temp_site4[mu] - 1, mu);
-      temp += this->operator()(temp_site1, nu) *
-              conj(this->operator()(temp_site2, mu)) *
-              conj(this->operator()(temp_site3, mu)) *
-              conj(this->operator()(temp_site4, nu)) *
-              this->operator()(temp_site4, mu);
-      temp_site1 = site;
-      temp_site2 = site;
-      temp_site3 = site;
-      temp_site4 = site;
-
-      /*
-       U(x,μ): ==>
-
-        ==>
-      ^     |
-      |     v
-
-      ^     |
-      |     v
-        <--
-*/
-      temp_site1[mu] = (temp_site1[mu] + 1) % this->dimensions[mu];
-      temp_site1[nu] = mod(temp_site1[nu] - 1, nu);
-      temp_site2[nu] = mod(temp_site2[nu] - 2, nu);
-      temp_site2[mu] = (temp_site2[mu] + 1) % this->dimensions[mu];
-      temp_site3[nu] = mod(temp_site3[nu] - 2, nu);
-      temp_site4[nu] = mod(temp_site4[nu] - 1, nu);
-      temp += conj(this->operator()(temp_site1, nu)) *
-              conj(this->operator()(temp_site2, nu)) *
-              conj(this->operator()(temp_site3, mu)) *
-              this->operator()(temp_site3, nu) *
-              this->operator()(temp_site4, nu);
-      temp_site1 = site;
-      temp_site2 = site;
-      temp_site3 = site;
-      temp_site4 = site;
+      //       temp_site1[mu] = (temp_site1[mu] + 1) % this->dimensions[mu];
+      //       temp_site2[mu] = (temp_site2[mu] + 2) % this->dimensions[mu];
+      //       temp_site3[mu] = (temp_site3[mu] + 1) % this->dimensions[mu];
+      //       temp_site3[nu] = (temp_site3[nu] + 1) % this->dimensions[nu];
+      //       temp_site4[nu] = (temp_site4[nu] + 1) % this->dimensions[nu];
+      //       temp += this->operator()(temp_site1, mu) *
+      //               this->operator()(temp_site2, nu) *
+      //               conj(this->operator()(temp_site3, mu)) *
+      //               conj(this->operator()(temp_site4, mu)) *
+      //               conj(this->operator()(site, nu));
+      //       temp_site1 = site;
+      //       temp_site2 = site;
+      //       temp_site3 = site;
+      //       temp_site4 = site;
+      //
+      //       /*
+      //        U(x,μ): ==>
+      //         <--  <--
+      //        |        ^
+      //        v        |
+      //         -->  ==>
+      //       */
+      //       temp_site1[mu] = (temp_site1[mu] + 1) % this->dimensions[mu];
+      //       temp_site2[nu] = (temp_site2[nu] + 1) % this->dimensions[nu];
+      //       temp_site3[nu] = (temp_site3[nu] + 1) % this->dimensions[nu];
+      //       temp_site3[mu] = mod(temp_site3[mu] - 1, mu);
+      //       temp_site4[mu] = mod(temp_site4[mu] - 1, mu);
+      //       temp += this->operator()(temp_site1, nu) *
+      //               conj(this->operator()(temp_site2, mu)) *
+      //               conj(this->operator()(temp_site3, mu)) *
+      //               conj(this->operator()(temp_site4, nu)) *
+      //               this->operator()(temp_site4, mu);
+      //       temp_site1 = site;
+      //       temp_site2 = site;
+      //       temp_site3 = site;
+      //       temp_site4 = site;
+      //
+      //       /*
+      //        U(x,μ): ==>
+      //
+      //         ==>
+      //       ^     |
+      //       |     v
+      //
+      //       ^     |
+      //       |     v
+      //         <--
+      // */
+      //       temp_site1[mu] = (temp_site1[mu] + 1) % this->dimensions[mu];
+      //       temp_site1[nu] = mod(temp_site1[nu] - 1, nu);
+      //       temp_site2[nu] = mod(temp_site2[nu] - 2, nu);
+      //       temp_site2[mu] = (temp_site2[mu] + 1) % this->dimensions[mu];
+      //       temp_site3[nu] = mod(temp_site3[nu] - 2, nu);
+      //       temp_site4[nu] = mod(temp_site4[nu] - 1, nu);
+      //       temp += conj(this->operator()(temp_site1, nu)) *
+      //               conj(this->operator()(temp_site2, nu)) *
+      //               conj(this->operator()(temp_site3, mu)) *
+      //               this->operator()(temp_site3, nu) *
+      //               this->operator()(temp_site4, nu);
+      //       temp_site1 = site;
+      //       temp_site2 = site;
+      //       temp_site3 = site;
+      //       temp_site4 = site;
     }
     return temp;
   }
