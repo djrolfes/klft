@@ -258,9 +258,9 @@ template <typename DGaugeFieldType> struct FieldStrengthTensor {
               conj(g_in(x, nu));
 
     // 1. 2x1 Plaquette in (+mu, +nu) plane starting at x
-    // P_munu += g_in(x, mu) * g_in(x_p_mu, nu) * g_in(x_p_2mu, nu) *
-    //           conj(g_in(x_p_mu_p_nu, mu)) * conj(g_in(x_p_nu, mu)) *
-    //           conj(g_in(x, nu));
+    P_munu += g_in(x, mu) * g_in(x_p_mu, mu) * g_in(x_p_2mu, nu) *
+              conj(g_in(x_p_mu_p_nu, mu)) * conj(g_in(x_p_nu, mu)) *
+              conj(g_in(x, nu));
 
     // // 2. 1x2 Plaquette in (+mu, -nu) plane starting at x
     IndexArray<Nd> x_p_2mu_m_nu = x_p_2mu;
