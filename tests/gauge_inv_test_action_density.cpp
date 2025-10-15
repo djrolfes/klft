@@ -26,10 +26,10 @@ int main(int argc, char *argv[]) {
     DeviceGaugeFieldType::type f(L, L, L, L, rng, 1.0);
     GaugeInv<DeviceGaugeFieldType> ginv(f, rng, 1.0);
     ginv.transform();
+
     real_t E_before_clover = getActionDensity_clover<DeviceGaugeFieldType>(f);
     real_t E_after_clover =
         getActionDensity_clover<DeviceGaugeFieldType>(ginv.field);
-
     Kokkos::printf(HLINE);
     Kokkos::printf("Action density (clover) before and after gauge inv:\n");
     Kokkos::printf("%e", E_before_clover);
@@ -59,6 +59,18 @@ int main(int argc, char *argv[]) {
     Kokkos::printf("%e", Plaq_after);
     Kokkos::printf("\n");
     Kokkos::printf("Difference: %e\n", Plaq_before - Plaq_after);
+    Kokkos::printf(HLINE);
+
+    real_t E_before_rect = getActionDensity_rect<DeviceGaugeFieldType>(f);
+    real_t E_after_rect =
+        getActionDensity_rect<DeviceGaugeFieldType>(ginv.field);
+    Kokkos::printf(HLINE);
+    Kokkos::printf("Action density (rectangle) before and after gauge inv:\n");
+    Kokkos::printf("%e", E_before_rect);
+    Kokkos::printf(" -> ");
+    Kokkos::printf("%e", E_after_rect);
+    Kokkos::printf("\n");
+    Kokkos::printf("Difference: %e\n", E_before_rect - E_after_rect);
     Kokkos::printf(HLINE);
   }
   Kokkos::finalize();

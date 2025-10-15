@@ -242,46 +242,48 @@ template <typename DGaugeFieldType> struct FieldStrengthTensor {
 
     // 1. 1x2 Plaquette in (+mu, +nu) plane starting at x
     IndexArray<Nd> x_p_mu = x;
-    IndexArray<Nd> x_p_2mu = x;
     IndexArray<Nd> x_p_mu_p_nu = x;
     IndexArray<Nd> x_p_nu = x;
-    x_p_mu[mu] = (x_p_mu[mu] + 1) % dimensions[mu];
+    IndexArray<Nd> x_p_2nu = x;
+    IndexArray<Nd> x_p_2mu = x;
     x_p_2mu[mu] = (x_p_2mu[mu] + 2) % dimensions[mu];
-    x_p_mu_p_nu[nu] = (x_p_mu_p_nu[nu] + 1) % dimensions[nu];
+    x_p_2nu[nu] = (x_p_2nu[nu] + 2) % dimensions[nu];
+    x_p_mu[mu] = (x_p_mu[mu] + 1) % dimensions[mu];
+    x_p_mu_p_nu[mu] = (x_p_mu_p_nu[mu] + 1) % dimensions[mu];
     x_p_mu_p_nu[nu] = (x_p_mu_p_nu[nu] + 1) % dimensions[nu];
     x_p_nu[nu] = (x_p_nu[nu] + 1) % dimensions[nu];
-    P_munu += g_in(x, mu) * g_in(x_p_mu, nu) * g_in(x_p_2mu, nu) *
-              conj(g_in(x_p_mu_p_nu, mu)) * conj(g_in(x_p_nu, nu)) *
-              conj(g_in(x, nu));
 
-    // 1. 2x1 Plaquette in (+mu, +nu) plane starting at x
-    IndexArray<Nd> x_p_2nu = x;
-    x_p_2nu[nu] = (x_p_2nu[nu] + 2) % dimensions[nu];
     P_munu += g_in(x, mu) * g_in(x_p_mu, nu) * g_in(x_p_mu_p_nu, nu) *
               conj(g_in(x_p_2nu, mu)) * conj(g_in(x_p_nu, nu)) *
               conj(g_in(x, nu));
 
-    // 2. 1x2 Plaquette in (+mu, -nu) plane starting at x
+    // 1. 2x1 Plaquette in (+mu, +nu) plane starting at x
+    // P_munu += g_in(x, mu) * g_in(x_p_mu, nu) * g_in(x_p_2mu, nu) *
+    //           conj(g_in(x_p_mu_p_nu, mu)) * conj(g_in(x_p_nu, mu)) *
+    //           conj(g_in(x, nu));
+
+    // // 2. 1x2 Plaquette in (+mu, -nu) plane starting at x
     IndexArray<Nd> x_p_2mu_m_nu = x_p_2mu;
     IndexArray<Nd> x_p_mu_m_nu = x_p_mu;
     IndexArray<Nd> x_m_nu = x;
+    IndexArray<Nd> x_m_2nu = x;
+    IndexArray<Nd> x_p_mu_m_2nu = x_p_mu;
+    x_p_mu_m_2nu[nu] = mod(x_p_mu_m_2nu[nu] - 2, nu);
     x_p_2mu_m_nu[nu] = mod(x_p_2mu_m_nu[nu] - 1, nu);
     x_p_mu_m_nu[nu] = mod(x_p_mu_m_nu[nu] - 1, nu);
     x_m_nu[nu] = mod(x[nu] - 1, nu);
-    P_munu += conj(g_in(x_m_nu, nu)) * g_in(x_m_nu, mu) *
-              g_in(x_p_mu_m_nu, mu) * g_in(x_p_2mu_m_nu, nu) *
-              conj(g_in(x_p_mu, mu)) * conj(g_in(x, mu));
-
-    // 2. 2x1 Plaquette in (+mu, -nu) plane starting at x
-    IndexArray<Nd> x_p_mu_m_2nu = x_p_mu;
-    IndexArray<Nd> x_m_2nu = x;
-    x_p_mu_m_2nu[nu] = mod(x_p_mu_m_2nu[nu] - 2, nu);
     x_m_2nu[nu] = mod(x[nu] - 2, nu);
+
     P_munu += conj(g_in(x_m_nu, nu)) * conj(g_in(x_m_2nu, nu)) *
               g_in(x_m_2nu, mu) * g_in(x_p_mu_m_2nu, nu) *
               g_in(x_p_mu_m_nu, nu) * conj(g_in(x, mu));
 
-    // 3. 1x2 Plaquette in (-mu, +nu) plane starting at x
+    // // 2. 2x1 Plaquette in (+mu, -nu) plane starting at x
+    P_munu += conj(g_in(x_m_nu, nu)) * g_in(x_m_nu, mu) *
+              g_in(x_p_mu_m_nu, mu) * g_in(x_p_2mu_m_nu, nu) *
+              conj(g_in(x_p_mu, mu)) * conj(g_in(x, mu));
+
+    // // 3. 1x2 Plaquette in (-mu, +nu) plane starting at x
     IndexArray<Nd> x_m_mu = x;
     x_m_mu[mu] = mod(x_m_mu[mu] - 1, mu);
     IndexArray<Nd> x_m_2mu = x;
@@ -293,29 +295,29 @@ template <typename DGaugeFieldType> struct FieldStrengthTensor {
     P_munu += g_in(x, nu) * conj(g_in(x_m_mu_p_nu, mu)) *
               conj(g_in(x_m_2mu_p_nu, mu)) * conj(g_in(x_m_2mu, nu)) *
               g_in(x_m_2mu, mu) * g_in(x_m_mu, mu);
-
-    // 3. 2x1 Plaquette in (-mu, +nu) plane starting at x
+    //
+    // // 3. 2x1 Plaquette in (-mu, +nu) plane starting at x
     IndexArray<Nd> x_m_mu_p_2nu = x_m_mu;
     x_m_mu_p_2nu[nu] = (x_m_mu_p_2nu[nu] + 2) % dimensions[nu];
     P_munu += g_in(x, nu) * g_in(x_p_nu, nu) * conj(g_in(x_m_mu_p_2nu, mu)) *
               conj(g_in(x_m_mu_p_nu, nu)) * conj(g_in(x_m_mu, nu)) *
               g_in(x_m_mu, mu);
 
-    // 4. 1x2 Plaquette in (-mu, -nu) plane starting at x
+    // // 4. 1x2 Plaquette in (-mu, -nu) plane starting at x
     IndexArray<Nd> x_m_2mu_m_nu = x_m_2mu;
     IndexArray<Nd> x_m_mu_m_nu = x_m_mu;
-    x_m_2mu_m_nu[nu] = mod(x_m_2mu_m_nu[nu] - 1, nu);
-    x_m_mu_m_nu[nu] = mod(x_m_mu_m_nu[nu] - 1, nu);
-    P_munu += g_in(x_m_nu, nu) * conj(g_in(x_m_mu, mu)) *
-              conj(g_in(x_m_2mu, mu)) * conj(g_in(x_m_2mu_m_nu, nu)) *
-              g_in(x_m_2mu_m_nu, mu) * g_in(x_m_mu_m_nu, mu);
-
-    // 4. 1x2 Plaquette in (-mu, -nu) plane starting at x
     IndexArray<Nd> x_m_mu_m_2nu = x_m_mu;
     x_m_mu_m_2nu[nu] = mod(x_m_mu_m_2nu[nu] - 2, nu);
-    P_munu += g_in(x_m_nu, nu) * conj(g_in(x_m_mu, mu)) *
-              conj(g_in(x_m_mu_m_nu, nu)) * conj(g_in(x_m_mu_m_2nu, nu)) *
-              g_in(x_m_mu_m_2nu, mu) * g_in(x_m_nu, nu);
+    x_m_2mu_m_nu[nu] = mod(x_m_2mu_m_nu[nu] - 1, nu);
+    x_m_mu_m_nu[nu] = mod(x_m_mu_m_nu[nu] - 1, nu);
+    P_munu += conj(g_in(x_m_mu, mu)) * conj(g_in(x_m_mu_m_nu, nu)) *
+              conj(g_in(x_m_mu_m_2nu, nu)) * g_in(x_m_mu_m_2nu, mu) *
+              g_in(x_m_2nu, nu) * g_in(x_m_nu, nu);
+
+    // 4. 1x2 Plaquette in (-mu, -nu) plane starting at x
+    P_munu += conj(g_in(x_m_mu, mu)) * conj(g_in(x_m_2mu, mu)) *
+              conj(g_in(x_m_2mu_m_nu, nu)) * g_in(x_m_2mu_m_nu, mu) *
+              g_in(x_m_mu_m_nu, mu) * g_in(x_m_nu, nu);
 
     return traceT(P_munu) * 0.125;
   }

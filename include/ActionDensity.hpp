@@ -46,20 +46,6 @@ struct ActionDensityFunctor {
     }
 
     real_t local_density = 0.0;
-    // #pragma unroll
-    //     for (int mu = 0; mu < Nd; ++mu) {
-    // #pragma unroll
-    //       for (int nu = mu + 1; nu < Nd; ++nu) {
-    //         local_density +=
-    //             2 * 0.5 *
-    //             tr<Nc>(C[mu][nu], C[mu][nu]); // 2*: G_{mu,nu} = -G_{nu,mu},
-    //             0.5*:
-    //                                           // from E=1/4
-    //                                           G^a_{mu,nu}G^a_{mu,nu}
-    //                                           // (one factor 1/2 is contained
-    //                                           in tr)
-    //       }
-    //     }
     // use (2.4) in 1304.0533 for renormalization
 #pragma unroll
     for (int mu = 0; mu < Nd; ++mu) {
@@ -133,6 +119,34 @@ real_t getActionDensity_clover(const typename DGaugeFieldType::type g_in) {
   // tune_and_launch_for<Nd>("Calculate GaugePlaquette", IndexArray<Nd>{0},
   //                         g_in.dimensions, gaugePlaquette);
   ActionDensityFunctor<DGaugeFieldType> actionDensity(g_in);
+  // define the functor
+  Kokkos::fence();
+  tune_and_launch_for<Nd>("Calculate ActionDensity", IndexArray<Nd>{0, 0, 0, 0},
+                          g_in.dimensions, actionDensity);
+  Kokkos::fence();
+
+  real_t density = Kokkos::real(actionDensity.density_per_site.avg());
+  Kokkos::fence();
+
+  return density;
+}
+
+template <typename DGaugeFieldType>
+real_t getActionDensity_rect(const typename DGaugeFieldType::type g_in) {
+  // calculate the density E according to (3.1) in
+  // https://arxiv.org/pdf/1006.4518
+  static_assert(isDeviceGaugeFieldType<DGaugeFieldType>(),
+                "action density requires a device gauge field type.");
+  constexpr static const size_t Nd =
+      DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank;
+  constexpr static const size_t Nc =
+      DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc;
+  constexpr static const GaugeFieldKind kind =
+      DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Kind;
+
+  ActionDensityFunctor<DGaugeFieldType, typename FieldStrengthTensor<
+                                            DGaugeFieldType>::RectangleDef>
+      actionDensity(g_in);
   // define the functor
   Kokkos::fence();
   tune_and_launch_for<Nd>("Calculate ActionDensity", IndexArray<Nd>{0, 0, 0, 0},
