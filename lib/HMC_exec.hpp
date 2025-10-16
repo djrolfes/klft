@@ -30,7 +30,8 @@ using RNGType = Kokkos::Random_XorShift64_Pool<Kokkos::DefaultExecutionSpace>;
 namespace klft {
 
 template <typename HMCType>
-int run_HMC(HMCType& hmc, const Integrator_Params& integratorParams,
+int run_HMC(HMCType& hmc,
+            const Integrator_Params& integratorParams,
             GaugeObservableParams& gaugeObsParams,
             SimulationLoggingParams& simLogParams) {
   // initiate and execute the HMC with the given parameters
@@ -84,64 +85,13 @@ int run_HMC(HMCType& hmc, const Integrator_Params& integratorParams,
           "%f\n",
           step, static_cast<size_t>(accept), acc_rate, time);
     }
-    // measure the gauge observables
-    // <<<<<<< HEAD
-    //     measureGaugeObservables<rank,
-    //     Nc>(hamiltonian_field.gauge_field,
-    //                                       gaugeObsParams, step);
-    //     addLogData(simLogParams, step, hmc.delta_H, acc_rate,
-    //     accept, time);
-    //     // TODO:make flushAllGaugeObservables append the
-    //     Observables to the files ->
-    //     // don't lose all progress when the simulation is
-    //     interupted if (step % 50
-    //     // == 0) {
-    //     //   // flush every 50 steps as well to not lose data on
-    //     program interuption
-    //     //   // TODO: this should be set by the Params
-    //     //   flushAllGaugeObservables(gaugeObsParams);
-    //     // }
-    //     DEBUG_LOG("Max unitarity defect: "
-    //               <<
-    //               unitarity_check<DGaugeFieldType>(hamiltonian_field.gauge_field)
-    //               << "\n");
-    //     if (step % 1000 == 0) {
-    //       unitarity_restore<DGaugeFieldType>(hamiltonian_field.gauge_field);
-    //     }
-    //   }
-    //   // flush the measurements to the files
-    //   forceflushAllGaugeObservables(gaugeObsParams);
-    //   forceflushSimulationLogs(simLogParams);
-    //
-    //   return 0;
-    // }
-    //
-    // #define INSTANTIATE_HMC(R, N) \
-    //   template int \
-    //   run_HMC<DeviceGaugeFieldType<R, N>, DeviceAdjFieldType<R,
-    //   N>, RNGType>(
-    //   \
-    //       typename DeviceGaugeFieldType<R, N>::type, \
-    //       typename DeviceAdjFieldType<R, N>::type, const
-    //       HMCParams &, \ GaugeObservableParams &,
-    //       SimulationLoggingParams &, RNGType &);
-    //
-    // INSTANTIATE_HMC(4, 1);
-    // INSTANTIATE_HMC(4, 2);
-    // INSTANTIATE_HMC(3, 2);
-    // INSTANTIATE_HMC(3, 1);
-    // INSTANTIATE_HMC(2, 1);
-    // INSTANTIATE_HMC(2, 2);
-    //
-    // // TODO: when SU3 is fully implemented, add Nc=3 here.
-    //
-    // } // namespace klft
-    // =======
     measureGaugeObservables<typename HMCType::DeviceGaugeFieldType>(
         hmc.hamiltonian_field.gauge_field, gaugeObsParams, step);
     addLogData(simLogParams, step, hmc.delta_H, acc_rate, accept, time);
     flushSimulationLogs(simLogParams, step, true);
     flushAllGaugeObservables(gaugeObsParams, step, true);
+    flushIO<HMCType::rank, HMCType::Nc>(hmc.ioParams, step,
+                                        hmc.hamiltonian_field.gauge_field);
     // flush the measurements to the files
     // if flush is set to 0, we flush with the  header at the end of
     // the simulation
@@ -149,6 +99,8 @@ int run_HMC(HMCType& hmc, const Integrator_Params& integratorParams,
 
   forceflushSimulationLogs(simLogParams, true);
   forceflushAllGaugeObservables(gaugeObsParams, true);
+  flushIO<HMCType::rank, HMCType::Nc>(hmc.ioParams, integratorParams.nsteps,
+                                      hmc.hamiltonian_field.gauge_field, true);
 
   printf("Total Acceptance rate: %f, Accept %f Configs", acc_rate, acc_sum);
   return 0;

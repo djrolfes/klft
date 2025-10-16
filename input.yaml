@@ -10,6 +10,11 @@ HMCParams:
   Nc: 2
   coldStart: false
   rngDelta: 1
+IOParams:
+  save: true
+  interval: 5
+  filename: "gaugeconfig.txt"
+  overwrite: false
 # Level 0 is the innermost level of the Integrator, i.e that is executed most frequently.
 Integrator:
 

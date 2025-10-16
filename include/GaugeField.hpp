@@ -402,7 +402,7 @@ struct deviceGaugeField {
     }  // loop over nu
     return temp;
   }
-  void save(std::string filename) {
+  void save(std::string filename) const {
     auto h_field = Kokkos::create_mirror_view(field);
     Kokkos::deep_copy(h_field, field);
     std::ofstream file;
@@ -720,7 +720,7 @@ struct deviceGaugeField3D {
 
     return temp;
   }
-  void save(std::string filename) {
+  void save(std::string filename) const {
     auto h_field = Kokkos::create_mirror_view(field);
     Kokkos::deep_copy(h_field, field);
     std::ofstream file;
@@ -993,7 +993,7 @@ struct deviceGaugeField2D {
 
     return temp;
   }
-  void save(std::string filename) {
+  void save(std::string filename) const {
     auto h_field = Kokkos::create_mirror_view(field);
     Kokkos::deep_copy(h_field, field);
     std::ofstream file;

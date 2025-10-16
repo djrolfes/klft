@@ -26,6 +26,7 @@
 
 #include "GaugeObservable.hpp"
 #include "HMC_Params.hpp"
+#include "IOParams.hpp"
 #include "Metropolis_Params.hpp"
 #include "PTBC.hpp"
 #include "SimulationLogging.hpp"
@@ -465,6 +466,36 @@ inline int parseSanityChecks(const Integrator_Params& iparams,
   }
   return true;
   //
+}
+inline int parseInputFile(const std::string& filename,
+                          const std::string& output_directory,
+                          IOParams& ioParams) {
+  try {
+    YAML::Node config = YAML::LoadFile(filename);
+
+    // Parse MetropolisParams
+    if (config["IOParams"]) {
+      const auto& mp = config["IOParams"];
+      // general parameters
+      ioParams.save_gauge_field = mp["save"].as<size_t>(0);
+      ioParams.gauge_field_filename =
+          mp["filename"].as<std::string>("config.dat");
+      ioParams.overwrite_gauge_field_file = mp["overwrite"].as<bool>(true);
+      ioParams.save_gauge_field_interval = mp["interval"].as<size_t>(1000);
+
+      ioParams.save_after_trajectory =
+          mp["save_after_trajectory"].as<bool>(true);
+      ioParams.output_dir = output_directory;
+    } else {
+      printf("Error: IOParams not found in input file\n");
+      return false;
+    }
+    return true;
+  } catch (const YAML::Exception& e) {
+    printf("(SimulationLoggingParams) Error parsing input file: %s\n",
+           e.what());
+    return false;
+  }
 }
 
 }  // namespace klft
