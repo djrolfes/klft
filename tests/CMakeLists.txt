@@ -12,6 +12,9 @@ target_link_libraries(wilsonflow_sp_test PUBLIC klft Kokkos::kokkos yaml-cpp)
 add_executable(topo_improved_test topo_improved_test.cpp)
 target_link_libraries(topo_improved_test PUBLIC klft Kokkos::kokkos yaml-cpp)
 
+add_executable(wilsonflow_improv_testing wilsonflow_improv_testing.cpp)
+target_link_libraries(wilsonflow_improv_testing PUBLIC klft Kokkos::kokkos yaml-cpp)
+
 add_executable(gauge_inv_test_Topo gauge_inv_test_Topo.cpp)
 target_link_libraries(gauge_inv_test_Topo PUBLIC klft Kokkos::kokkos yaml-cpp)
 
