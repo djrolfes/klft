@@ -18,9 +18,8 @@ index_t do_wilsonflow_improv_test(HMCType &hmc,
   static const size_t Nc = DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc;
   // Construct the output filename. Each MPI rank will get its own file.
 
-  const real_t b1 = -1.0 / 12;
-  const real_t b1 = -1.4088;
-  ;
+  real_t b1 = -1.0 / 12;
+  b1 = -1.4088;
   const real_t factors[]{1.0, 1.3, 1.5, 1.7, 2.0, 3.0, 4.0, 5.0};
   std::string output_filename_action_density_clover =
       output_directory + "action_densities_clover_cumulative.txt";
