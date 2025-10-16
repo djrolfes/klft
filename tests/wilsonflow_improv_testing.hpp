@@ -19,7 +19,7 @@ index_t do_wilsonflow_improv_test(HMCType &hmc,
   // Construct the output filename. Each MPI rank will get its own file.
 
   const real_t b1 = -1.0 / 12;
-  const int factors[]{1, 2, 4, 7, 10};
+  const real_t factors[]{1.0, 1.3, 1.5, 1.7, 2.0, 3.0, 4.0, 5.0};
   std::string output_filename_action_density_clover =
       output_directory + "action_densities_clover_cumulative.txt";
   std::ofstream output_file_actiondensity_clover(
