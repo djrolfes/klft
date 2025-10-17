@@ -145,252 +145,71 @@ int test_wilsonflow_sp(const std::string& input_file,
     hmc.add_kinetic_monomial(0);
     if (resParsef > 0) {
       auto diracParams = getDiracParams(fermionParams);
-      hmc.add_fermion_monomial<CGSolver, WilsonDiracOperator, DSpinorFieldType>(
-          s_4_SU2, diracParams, fermionParams.tol, rng, 0);
+      hmc.add_fermion_monomial<CGSolver, HWilsonDiracOperator,
+                               DSpinorFieldType>(s_4_SU2, diracParams,
+                                                 fermionParams.tol, rng, 0);
     }
+    return do_wflowtest<DGaugeFieldType, HMC>(hmc, gaugeObsParams, simLogParams,
+                                              output_directory);
+  } else {
+    using DGaugeFieldType = DeviceGaugeFieldType<4, 3>;
+    using DAdjFieldType = DeviceAdjFieldType<4, 3>;
+    using DSpinorFieldType = DeviceSpinorFieldType<4, 3, 4>;
+    typename DGaugeFieldType::type g_4_SU3(hmcParams.L0, hmcParams.L1,
+                                           hmcParams.L2, hmcParams.L3, rng,
+                                           hmcParams.rngDelta);
+    // typename DGaugeFieldType::type g_4_SU2(
+    //     hmcParams.L0, hmcParams.L1, hmcParams.L2, hmcParams.L3,
+    //     identitySUN<2>());
+    typename DAdjFieldType::type a_4_SU3(hmcParams.L0, hmcParams.L1,
+                                         hmcParams.L2, hmcParams.L3,
+                                         traceT(identitySUN<3>()));
+    typename DSpinorFieldType::type s_4_SU3(hmcParams.L0, hmcParams.L1,
+                                            hmcParams.L2, hmcParams.L3, 0);
+    auto integrator =
+        createIntegrator<DGaugeFieldType, DAdjFieldType, DSpinorFieldType>(
+            g_4_SU3, a_4_SU3, s_4_SU3, integratorParams, gaugeMonomialParams,
+            fermionParams, resParsef);
+    using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
+    HField hamiltonian_field = HField(g_4_SU3, a_4_SU3);
 
-    // Construct the output filename. Each MPI rank will get its own file.
-    std::string output_filename =
-        output_directory + "topological_charge_cumulative.txt";
-    std::ofstream output_file_topologicalcharge(output_filename);
-
-    if (!output_file_topologicalcharge.is_open()) {
-      fprintf(stderr, "Error: Could not open output file %s\n",
-              output_filename.c_str());
-      return -1;  // Or handle the error as appropriate
+    using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
+    HMC hmc(integratorParams, hamiltonian_field, integrator, rng, dist, mt);
+    hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
+    hmc.add_kinetic_monomial(0);
+    if (resParsef > 0) {
+      auto diracParams = getDiracParams(fermionParams);
+      hmc.add_fermion_monomial<CGSolver, HWilsonDiracOperator,
+                               DSpinorFieldType>(s_4_SU3, diracParams,
+                                                 fermionParams.tol, rng, 0);
     }
-
-    std::string output_filename_action_density =
-        output_directory + "action_densities_cumulative.txt";
-    std::ofstream output_file_actiondensity(output_filename_action_density);
-
-    if (!output_file_actiondensity.is_open()) {
-      fprintf(stderr, "Error: Could not open output file %s\n",
-              output_filename_action_density.c_str());
-      return -1;  // Or handle the error as appropriate
-    }
-
-    std::string output_filename_sp_dist =
-        output_directory + "sp_distribution.txt";
-    std::ofstream output_file_sp_dist(output_filename_sp_dist);
-
-    if (!output_file_sp_dist.is_open()) {
-      fprintf(stderr, "Error: Could not open output file %s\n",
-              output_filename_sp_dist.c_str());
-      return -1;  // Or handle the error as appropriate
-    }
-
-    std::string output_filename_sp_max = output_directory + "sp_max.txt";
-    std::ofstream output_file_sp_max(output_filename_sp_max);
-
-    if (!output_file_sp_max.is_open()) {
-      fprintf(stderr, "Error: Could not open output file %s\n",
-              output_filename_sp_max.c_str());
-      return -1;  // Or handle the error as appropriate
-    }
-
-    // Set precision for floating point numbers in the output file
-    output_file_topologicalcharge << std::fixed << std::setprecision(8);
-    output_file_actiondensity << std::fixed << std::setprecision(8);
-    output_file_sp_dist << std::fixed << std::setprecision(12);
-    output_file_sp_max << std::fixed << std::setprecision(12);
-    bool header_written = false;
-
-    Kokkos::Timer timer;
-    bool accept;
-    real_t acc_sum{0.0};
-    real_t acc_rate{0.0};
-
-    index_t flow_steps = gaugeObsParams.wilson_flow_params.n_steps;
-    gaugeObsParams.wilson_flow_params.n_steps = 1;
-    std::vector<real_t> flow_times;
-    std::vector<real_t> topological_charges;
-    std::vector<real_t> action_densities;
-    std::vector<real_t> sp_dist;
-    std::vector<real_t> sp_max;
-    real_t sp_dist_max = 0.1;
-    real_t sp_dist_bin_width = 0.001;
-
-    WilsonFlow<DGaugeFieldType> wilson_flow(hamiltonian_field.gauge_field,
-                                            gaugeObsParams.wilson_flow_params);
-    flow_times.push_back(0.0);
-    topological_charges.push_back(
-        get_topological_charge<DGaugeFieldType>(hamiltonian_field.gauge_field));
-    action_densities.push_back(
-        getActionDensity<DGaugeFieldType>(hamiltonian_field.gauge_field));
-    get_sp_distribution<DGaugeFieldType>(hamiltonian_field.gauge_field, sp_dist,
-                                         sp_dist_max, sp_dist_bin_width);
-    sp_max.push_back(get_spmax<DGaugeFieldType>(hamiltonian_field.gauge_field));
-
-    for (int flow_Step = 1; flow_Step <= flow_steps; ++flow_Step) {
-      // perform wilson flow step
-      wilson_flow.flow();
-
-      flow_times.push_back(flow_Step * gaugeObsParams.wilson_flow_params.eps);
-      topological_charges.push_back(
-          get_topological_charge<DGaugeFieldType>(wilson_flow.field));
-      action_densities.push_back(
-          getActionDensity<DGaugeFieldType>(wilson_flow.field));
-      sp_max.push_back(get_spmax<DGaugeFieldType>(wilson_flow.field));
-
-      // measure observables
-    }
-    // Write the header only once, before the first line of data
-    if (!header_written) {
-      output_file_topologicalcharge << "hmc_step";
-      output_file_actiondensity << "hmc_step";
-      output_file_sp_dist << "hmc_step";
-      output_file_sp_max << "hmc_step";
-      for (const auto& t : flow_times) {
-        output_file_topologicalcharge << "," << t;
-        output_file_actiondensity << "," << t;
-        output_file_sp_max << "," << t;
-      }
-      real_t tmp{0.0};
-      while (tmp < sp_dist_max) {
-        output_file_sp_dist << "," << tmp;
-        tmp += sp_dist_bin_width;
-      }
-      output_file_sp_dist << "\n";
-      output_file_topologicalcharge << "\n";
-      output_file_actiondensity << "\n";
-      output_file_sp_max << "\n";
-      header_written = true;
-    }
-
-    // Write the data for the current step
-    output_file_topologicalcharge << 0;
-    for (const auto& charge : topological_charges) {
-      output_file_topologicalcharge << "," << charge;
-    }
-    output_file_topologicalcharge << "\n";
-    output_file_actiondensity << 0;
-    for (const auto& density : action_densities) {
-      output_file_actiondensity << "," << density;
-    }
-    output_file_actiondensity << "\n";
-
-    output_file_sp_dist << 0;
-    for (const auto& dist : sp_dist) {
-      output_file_sp_dist << "," << dist;
-    }
-    output_file_sp_dist << "\n";
-
-    output_file_sp_max << 0;
-    for (const auto& max : sp_max) {
-      output_file_sp_max << "," << max;
-    }
-    output_file_sp_max << "\n";
-
-    // hmc loop
-    for (size_t step = 0; step < integratorParams.nsteps; ++step) {
-      timer.reset();
-      flow_times.clear();
-      topological_charges.clear();
-      action_densities.clear();
-      sp_dist.clear();
-      sp_max.clear();
-
-      // perform hmc_step
-      accept = hmc.hmc_step();
-
-      const real_t time = timer.seconds();
-      acc_sum += static_cast<real_t>(accept);
-      acc_rate = acc_sum / static_cast<real_t>(step + 1);
-
-      if (KLFT_VERBOSITY > 0) {
-        printf("Step: %ld, accepted: %ld, Acceptance rate: %f, Time: %f\n",
-               step, static_cast<size_t>(accept), acc_rate, time);
-      }
-
-      if (accept) {
-        WilsonFlow<DGaugeFieldType> wilson_flow(
-            hamiltonian_field.gauge_field, gaugeObsParams.wilson_flow_params);
-        flow_times.push_back(0.0);
-        topological_charges.push_back(get_topological_charge<DGaugeFieldType>(
-            hamiltonian_field.gauge_field));
-        action_densities.push_back(
-            getActionDensity<DGaugeFieldType>(hamiltonian_field.gauge_field));
-        get_sp_distribution<DGaugeFieldType>(hamiltonian_field.gauge_field,
-                                             sp_dist, sp_dist_max,
-                                             sp_dist_bin_width);
-        sp_max.push_back(
-            get_spmax<DGaugeFieldType>(hamiltonian_field.gauge_field));
-
-        for (int flow_Step = 1; flow_Step <= flow_steps; ++flow_Step) {
-          // perform wilson flow step
-          wilson_flow.flow();
-
-          flow_times.push_back(flow_Step *
-                               gaugeObsParams.wilson_flow_params.eps);
-          topological_charges.push_back(
-              get_topological_charge<DGaugeFieldType>(wilson_flow.field));
-          action_densities.push_back(
-              getActionDensity<DGaugeFieldType>(wilson_flow.field));
-          sp_max.push_back(get_spmax<DGaugeFieldType>(wilson_flow.field));
-
-          // measure observables
-        }
-        // Write the header only once, before the first line of data
-        // if (!header_written) {
-        //   output_file_topologicalcharge << "hmc_step";
-        //   output_file_actiondensity << "hmc_step";
-        //   for (const auto &t : flow_times) {
-        //     output_file_topologicalcharge << "," << t;
-        //     output_file_actiondensity << "," << t;
-        //   }
-        //   output_file_topologicalcharge << "\n";
-        //   output_file_actiondensity << "\n";
-        //   header_written = true;
-        // }
-
-        // Write the data for the current step
-        output_file_topologicalcharge << step;
-        for (const auto& charge : topological_charges) {
-          output_file_topologicalcharge << "," << charge;
-        }
-        output_file_topologicalcharge << "\n";
-        output_file_actiondensity << step;
-        for (const auto& density : action_densities) {
-          output_file_actiondensity << "," << density;
-        }
-        output_file_actiondensity << "\n";
-        output_file_sp_dist << step;
-        for (const auto& dist : sp_dist) {
-          output_file_sp_dist << "," << dist;
-        }
-        output_file_sp_dist << "\n";
-        output_file_sp_max << step;
-        for (const auto& max : sp_max) {
-          output_file_sp_max << "," << max;
-        }
-        output_file_sp_max << "\n";
-      }
-    }
-    return 0;
+    return do_wflowtest<DGaugeFieldType, HMC>(hmc, gaugeObsParams, simLogParams,
+                                              output_directory);
   }
+  return 0;
+}
 
-  int main(int argc, char* argv[]) {
-    printf(HLINE);
-    printf("HMC for SU(N) gauge fields\n");
-    printf(HLINE);
+int main(int argc, char* argv[]) {
+  printf(HLINE);
+  printf("HMC for SU(N) gauge fields\n");
+  printf(HLINE);
 
-    Kokkos::initialize(argc, argv);
-    const int verbosity = std::getenv("KLFT_VERBOSITY")
-                              ? std::atoi(std::getenv("KLFT_VERBOSITY"))
-                              : 0;
-    setVerbosity(verbosity);
-    int rc;
-    std::string input_file;
-    std::string output_directory;
-    rc = parse_args(argc, argv, input_file, output_directory);
-    if (rc == 0) {
-      rc = test_wilsonflow_sp(input_file, output_directory);
-    } else if (rc == -2) {
-      // Don't return error code when called with "-h"
-      rc = 0;
-    }
-    Kokkos::finalize();
-
-    return rc;
+  Kokkos::initialize(argc, argv);
+  const int verbosity = std::getenv("KLFT_VERBOSITY")
+                            ? std::atoi(std::getenv("KLFT_VERBOSITY"))
+                            : 0;
+  setVerbosity(verbosity);
+  int rc;
+  std::string input_file;
+  std::string output_directory;
+  rc = parse_args(argc, argv, input_file, output_directory);
+  if (rc == 0) {
+    rc = test_wilsonflow_sp(input_file, output_directory);
+  } else if (rc == -2) {
+    // Don't return error code when called with "-h"
+    rc = 0;
   }
+  Kokkos::finalize();
+
+  return rc;
+}

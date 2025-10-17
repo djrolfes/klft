@@ -18,10 +18,10 @@ Integrator:
   Monomials:
     - Type: "Leapfrog"
       level: 0
-      steps: 100
-    # - Type: "Leapfrog"
-    #   level: 1
-    #   steps: 20
+      steps: 20
+    - Type: "Leapfrog"
+      level: 1
+      steps: 20
 Gauge Monomial:
   level: 0
   beta: 2.12

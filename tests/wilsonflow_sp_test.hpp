@@ -102,7 +102,7 @@ real_t get_spmax(const typename DGaugeFieldType::type gauge_field) {
   Kokkos::parallel_reduce(
       "get h (sp_max)", policy,
       KOKKOS_LAMBDA(size_t i0, size_t i1, size_t i2, size_t i3,
-                    real_t &local_max) {
+                    real_t& local_max) {
         // GPlaq(i0, i1, i2, i3);
         real_t s = 0.0;
         for (index_t mu = 0; mu < Nd; ++mu) {
@@ -144,7 +144,7 @@ real_t get_spavg(const typename DGaugeFieldType::type gauge_field) {
   auto policy = Policy<Nd>({0, 0, 0, 0}, gauge_field.dimensions);
   Kokkos::parallel_reduce(
       "get h (sp_max)", policy,
-      KOKKOS_LAMBDA(size_t i0, size_t i1, size_t i2, size_t i3, real_t &local) {
+      KOKKOS_LAMBDA(size_t i0, size_t i1, size_t i2, size_t i3, real_t& local) {
         // GPlaq(i0, i1, i2, i3);
         real_t local_avg = 0.0;
         int tmp = 0;
@@ -167,10 +167,9 @@ real_t get_spavg(const typename DGaugeFieldType::type gauge_field) {
 }
 
 template <typename DGaugeFieldType, typename HMCType>
-index_t do_wflowtest(HMCType &hmc, GaugeObservableParams &gaugeObsParams,
-                     SimulationLoggingParams &simLogParams,
+index_t do_wflowtest(HMCType& hmc, GaugeObservableParams& gaugeObsParams,
+                     SimulationLoggingParams& simLogParams,
                      std::string output_directory) {
-
   static const size_t Nc = DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc;
   // Construct the output filename. Each MPI rank will get its own file.
   std::string output_filename =
@@ -180,7 +179,7 @@ index_t do_wflowtest(HMCType &hmc, GaugeObservableParams &gaugeObsParams,
   if (!output_file_topologicalcharge.is_open()) {
     fprintf(stderr, "Error: Could not open output file %s\n",
             output_filename.c_str());
-    return -1; // Or handle the error as appropriate
+    return -1;  // Or handle the error as appropriate
   }
 
   std::string output_filename_action_density =
@@ -190,7 +189,7 @@ index_t do_wflowtest(HMCType &hmc, GaugeObservableParams &gaugeObsParams,
   if (!output_file_actiondensity.is_open()) {
     fprintf(stderr, "Error: Could not open output file %s\n",
             output_filename_action_density.c_str());
-    return -1; // Or handle the error as appropriate
+    return -1;  // Or handle the error as appropriate
   }
 
   std::string output_filename_action_density_clover =
@@ -201,7 +200,7 @@ index_t do_wflowtest(HMCType &hmc, GaugeObservableParams &gaugeObsParams,
   if (!output_file_actiondensity_clover.is_open()) {
     fprintf(stderr, "Error: Could not open output file %s\n",
             output_filename_action_density_clover.c_str());
-    return -1; // Or handle the error as appropriate
+    return -1;  // Or handle the error as appropriate
   }
 
   std::string output_filename_action_density_0 =
@@ -211,7 +210,7 @@ index_t do_wflowtest(HMCType &hmc, GaugeObservableParams &gaugeObsParams,
   if (!output_file_actiondensity_0.is_open()) {
     fprintf(stderr, "Error: Could not open output file %s\n",
             output_filename_action_density_0.c_str());
-    return -1; // Or handle the error as appropriate
+    return -1;  // Or handle the error as appropriate
   }
 
   std::string output_filename_sp_dist = output_directory + "sp_avg.txt";
@@ -220,7 +219,7 @@ index_t do_wflowtest(HMCType &hmc, GaugeObservableParams &gaugeObsParams,
   if (!output_file_sp_avg.is_open()) {
     fprintf(stderr, "Error: Could not open output file %s\n",
             output_filename_sp_dist.c_str());
-    return -1; // Or handle the error as appropriate
+    return -1;  // Or handle the error as appropriate
   }
 
   std::string output_filename_sp_max = output_directory + "sp_max.txt";
@@ -229,7 +228,7 @@ index_t do_wflowtest(HMCType &hmc, GaugeObservableParams &gaugeObsParams,
   if (!output_file_sp_max.is_open()) {
     fprintf(stderr, "Error: Could not open output file %s\n",
             output_filename_sp_max.c_str());
-    return -1; // Or handle the error as appropriate
+    return -1;  // Or handle the error as appropriate
   }
 
   // Set precision for floating point numbers in the output file
@@ -253,7 +252,7 @@ index_t do_wflowtest(HMCType &hmc, GaugeObservableParams &gaugeObsParams,
   std::vector<real_t> action_densities;
   std::vector<real_t> action_densities_clover;
   std::vector<real_t>
-      action_densities_0; // WilsonAciton rescalled a la PhysRevD.95.094508
+      action_densities_0;  // WilsonAciton rescalled a la PhysRevD.95.094508
   std::vector<real_t> sp_avg;
   std::vector<real_t> sp_max;
   real_t sp_dist_max = 0.1;
@@ -304,7 +303,7 @@ index_t do_wflowtest(HMCType &hmc, GaugeObservableParams &gaugeObsParams,
     output_file_actiondensity_0 << "hmc_step";
     output_file_sp_avg << "hmc_step";
     output_file_sp_max << "hmc_step";
-    for (const auto &t : flow_times) {
+    for (const auto& t : flow_times) {
       output_file_topologicalcharge << "," << t;
       output_file_actiondensity << "," << t;
       output_file_actiondensity_clover << "," << t;
@@ -323,36 +322,36 @@ index_t do_wflowtest(HMCType &hmc, GaugeObservableParams &gaugeObsParams,
 
   // Write the data for the current step
   output_file_topologicalcharge << 0;
-  for (const auto &charge : topological_charges) {
+  for (const auto& charge : topological_charges) {
     output_file_topologicalcharge << "," << charge;
   }
   output_file_topologicalcharge << "\n";
   output_file_actiondensity << 0;
-  for (const auto &density : action_densities) {
+  for (const auto& density : action_densities) {
     output_file_actiondensity << "," << density;
   }
   output_file_actiondensity << "\n";
 
   output_file_actiondensity_clover << 0;
-  for (const auto &density : action_densities_clover) {
+  for (const auto& density : action_densities_clover) {
     output_file_actiondensity_clover << "," << density;
   }
   output_file_actiondensity_clover << "\n";
 
   output_file_actiondensity_0 << 0;
-  for (const auto &density : action_densities_0) {
+  for (const auto& density : action_densities_0) {
     output_file_actiondensity_0 << "," << density;
   }
   output_file_actiondensity_0 << "\n";
 
   output_file_sp_avg << 0;
-  for (const auto &dist : sp_avg) {
+  for (const auto& dist : sp_avg) {
     output_file_sp_avg << "," << dist;
   }
   output_file_sp_avg << "\n";
 
   output_file_sp_max << 0;
-  for (const auto &max : sp_max) {
+  for (const auto& max : sp_max) {
     output_file_sp_max << "," << max;
   }
   output_file_sp_max << "\n";
@@ -423,35 +422,35 @@ index_t do_wflowtest(HMCType &hmc, GaugeObservableParams &gaugeObsParams,
 
       // Write the data for the current step
       output_file_topologicalcharge << step;
-      for (const auto &charge : topological_charges) {
+      for (const auto& charge : topological_charges) {
         output_file_topologicalcharge << "," << charge;
       }
       output_file_topologicalcharge << "\n";
       output_file_actiondensity << step;
-      for (const auto &density : action_densities) {
+      for (const auto& density : action_densities) {
         output_file_actiondensity << "," << density;
       }
       output_file_actiondensity << "\n";
 
       output_file_actiondensity_clover << step;
-      for (const auto &density : action_densities_clover) {
+      for (const auto& density : action_densities_clover) {
         output_file_actiondensity_clover << "," << density;
       }
       output_file_actiondensity_clover << "\n";
 
       output_file_actiondensity_0 << step;
-      for (const auto &density : action_densities_0) {
+      for (const auto& density : action_densities_0) {
         output_file_actiondensity_0 << "," << density;
       }
       output_file_actiondensity_0 << "\n";
 
       output_file_sp_avg << step;
-      for (const auto &dist : sp_avg) {
+      for (const auto& dist : sp_avg) {
         output_file_sp_avg << "," << dist;
       }
       output_file_sp_avg << "\n";
       output_file_sp_max << step;
-      for (const auto &max : sp_max) {
+      for (const auto& max : sp_max) {
         output_file_sp_max << "," << max;
       }
       output_file_sp_max << "\n";
@@ -462,4 +461,4 @@ index_t do_wflowtest(HMCType &hmc, GaugeObservableParams &gaugeObsParams,
   return 0;
 }
 
-} // namespace klft
+}  // namespace klft
