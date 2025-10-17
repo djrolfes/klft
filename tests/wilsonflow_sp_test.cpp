@@ -123,14 +123,16 @@ int test_wilsonflow_sp(const std::string& input_file,
   if (hmcParams.Nc == 2) {
     using DGaugeFieldType = DeviceGaugeFieldType<4, 2>;
     using DAdjFieldType = DeviceAdjFieldType<4, 2>;
-    using DSpinorFieldType = DeviceSpinorFieldType<4, 2, 4>;
+    using DSpinorFieldType =
+        DeviceSpinorFieldType<4, 2, 4, SpinorFieldKind::Standard,
+                              SpinorFieldLayout::Checkerboard>;
     typename DGaugeFieldType::type g_4_SU2(hmcParams.L0, hmcParams.L1,
                                            hmcParams.L2, hmcParams.L3, rng,
                                            hmcParams.rngDelta);
     typename DAdjFieldType::type a_4_SU2(hmcParams.L0, hmcParams.L1,
                                          hmcParams.L2, hmcParams.L3,
                                          traceT(identitySUN<2>()));
-    typename DSpinorFieldType::type s_4_SU2(hmcParams.L0, hmcParams.L1,
+    typename DSpinorFieldType::type s_4_SU2(hmcParams.L0 / 2, hmcParams.L1,
                                             hmcParams.L2, hmcParams.L3, 0);
     auto integrator =
         createIntegrator<DGaugeFieldType, DAdjFieldType, DSpinorFieldType>(
@@ -139,32 +141,33 @@ int test_wilsonflow_sp(const std::string& input_file,
     using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
     HField hamiltonian_field = HField(g_4_SU2, a_4_SU2);
 
+    const auto& dimensions = g_4_SU2.dimensions;
+
     using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
     HMC hmc(integratorParams, hamiltonian_field, integrator, rng, dist, mt);
     hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
     hmc.add_kinetic_monomial(0);
     if (resParsef > 0) {
       auto diracParams = getDiracParams(fermionParams);
-      hmc.add_fermion_monomial<CGSolver, HWilsonDiracOperator,
-                               DSpinorFieldType>(s_4_SU2, diracParams,
-                                                 fermionParams.tol, rng, 0);
+      hmc.add_fermion_monomialEO<CGSolver, EOWilsonDiracOperator,
+                                 DSpinorFieldType>(s_4_SU2, diracParams,
+                                                   fermionParams.tol, rng, 0);
     }
     return do_wflowtest<DGaugeFieldType, HMC>(hmc, gaugeObsParams, simLogParams,
                                               output_directory);
   } else {
     using DGaugeFieldType = DeviceGaugeFieldType<4, 3>;
     using DAdjFieldType = DeviceAdjFieldType<4, 3>;
-    using DSpinorFieldType = DeviceSpinorFieldType<4, 3, 4>;
+    using DSpinorFieldType =
+        DeviceSpinorFieldType<4, 3, 4, SpinorFieldKind::Standard,
+                              SpinorFieldLayout::Checkerboard>;
     typename DGaugeFieldType::type g_4_SU3(hmcParams.L0, hmcParams.L1,
                                            hmcParams.L2, hmcParams.L3, rng,
                                            hmcParams.rngDelta);
-    // typename DGaugeFieldType::type g_4_SU2(
-    //     hmcParams.L0, hmcParams.L1, hmcParams.L2, hmcParams.L3,
-    //     identitySUN<2>());
     typename DAdjFieldType::type a_4_SU3(hmcParams.L0, hmcParams.L1,
                                          hmcParams.L2, hmcParams.L3,
                                          traceT(identitySUN<3>()));
-    typename DSpinorFieldType::type s_4_SU3(hmcParams.L0, hmcParams.L1,
+    typename DSpinorFieldType::type s_4_SU3(hmcParams.L0 / 2, hmcParams.L1,
                                             hmcParams.L2, hmcParams.L3, 0);
     auto integrator =
         createIntegrator<DGaugeFieldType, DAdjFieldType, DSpinorFieldType>(
@@ -173,15 +176,17 @@ int test_wilsonflow_sp(const std::string& input_file,
     using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
     HField hamiltonian_field = HField(g_4_SU3, a_4_SU3);
 
+    const auto& dimensions = g_4_SU3.dimensions;
+
     using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
     HMC hmc(integratorParams, hamiltonian_field, integrator, rng, dist, mt);
     hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
     hmc.add_kinetic_monomial(0);
     if (resParsef > 0) {
       auto diracParams = getDiracParams(fermionParams);
-      hmc.add_fermion_monomial<CGSolver, HWilsonDiracOperator,
-                               DSpinorFieldType>(s_4_SU3, diracParams,
-                                                 fermionParams.tol, rng, 0);
+      hmc.add_fermion_monomialEO<CGSolver, EOWilsonDiracOperator,
+                                 DSpinorFieldType>(s_4_SU3, diracParams,
+                                                   fermionParams.tol, rng, 0);
     }
     return do_wflowtest<DGaugeFieldType, HMC>(hmc, gaugeObsParams, simLogParams,
                                               output_directory);
