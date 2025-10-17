@@ -24,6 +24,8 @@
 #pragma once
 #include <yaml-cpp/yaml.h>
 
+#include <filesystem>
+
 #include "GaugeObservable.hpp"
 #include "HMC_Params.hpp"
 #include "IOParams.hpp"
@@ -238,6 +240,7 @@ inline bool parseInputFile(const std::string& filename,
       // parameters specific to the GaugeField
       hmcParams.Nd = mp["Nd"].as<size_t>(4);
       hmcParams.Nc = mp["Nc"].as<size_t>(2);
+      hmcParams.loadfile = mp["loadfile"].as<std::string>("");
       // add more parameters above this as needed
     } else {
       printf("Error: HMCParams not found in input file\n");
@@ -477,15 +480,19 @@ inline int parseInputFile(const std::string& filename,
     if (config["IOParams"]) {
       const auto& mp = config["IOParams"];
       // general parameters
-      ioParams.save_gauge_field = mp["save"].as<size_t>(0);
+      ioParams.save_gauge_field = mp["save"].as<bool>(0);
       ioParams.gauge_field_filename =
           mp["filename"].as<std::string>("config.dat");
       ioParams.overwrite_gauge_field_file = mp["overwrite"].as<bool>(true);
-      ioParams.save_gauge_field_interval = mp["interval"].as<size_t>(1000);
+      ioParams.save_gauge_field_interval = mp["interval"].as<size_t>(0);
 
       ioParams.save_after_trajectory =
           mp["save_after_trajectory"].as<bool>(true);
-      ioParams.output_dir = output_directory;
+      ioParams.output_dir = output_directory + "gauge_fields/";
+      if (!std::filesystem::exists(ioParams.output_dir) &&
+          ioParams.save_gauge_field) {
+        std::filesystem::create_directories(ioParams.output_dir);
+      }
     } else {
       printf("Error: IOParams not found in input file\n");
       return false;

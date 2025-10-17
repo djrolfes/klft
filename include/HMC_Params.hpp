@@ -41,7 +41,7 @@ struct HMCParams {
   // parameters specific to the GaugeField
   size_t Nd;  // number of mu degrees of freedom
   size_t Nc;  // number of color degrees of freedom
-
+  std::string loadfile;
   // add more parameters above this line as needed
   // ...
 
@@ -84,6 +84,23 @@ struct HMCParams {
       printf("Nd: %zu\n", Nd);
       printf("Nc: %zu\n", Nc);
     }
+  }
+  void fprint(std::FILE* stream) {
+    std::fprintf(stream, "HMC Parameters:\n");
+    std::fprintf(stream, "General Parameters:\n");
+    std::fprintf(stream, "Ndims: %d\n", Ndims);
+    std::fprintf(stream, "L0: %d\n", L0);
+    std::fprintf(stream, "L1: %d\n", L1);
+    std::fprintf(stream, "L2: %d\n", L2);
+    std::fprintf(stream, "L3: %d\n", L3);
+
+    std::fprintf(stream, "coldStart: %d", coldStart);
+    std::fprintf(stream, "rngDelta: %.3f\n", rngDelta);
+    std::fprintf(stream, "seed: %d\n", seed);
+
+    std::fprintf(stream, "GaugeField Parameters:\n");
+    std::fprintf(stream, "Nd: %zu\n", Nd);
+    std::fprintf(stream, "Nc: %zu\n", Nc);
   }
 };
 

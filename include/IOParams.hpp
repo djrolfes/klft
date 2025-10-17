@@ -17,16 +17,22 @@ struct IOParams {
     printf("Save After Last Trajectory: %i\n", save_after_trajectory);
   }
 };
-template <size_t rank, size_t Nc>
-void flushIO(const IOParams& params,
-             const size_t& step,
-             const typename DeviceGaugeFieldType<rank, Nc>::type& gauge_field,
+template <typename DGaugeFieldType>
+void flushIO(const IOParams& params, const size_t& step,
+             const typename DGaugeFieldType::type& gauge_field,
              const bool last_step = false) {
-  if (params.save_gauge_field) {
+  if (!params.save_gauge_field) {
     return;
   }
   if (step % params.save_gauge_field_interval == 0 ||
       (last_step && params.save_after_trajectory)) {
+    if constexpr (DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Kind ==
+                  GaugeFieldKind::PTBC) {
+      gauge_field.save(encode_ptbc_info(params.output_dir + "step_" +
+                                            std::to_string(step) + "_" +
+                                            params.gauge_field_filename,
+                                        gauge_field.dParams));
+    }
     if (params.overwrite_gauge_field_file) {
       gauge_field.save(params.output_dir + params.gauge_field_filename);
       return;

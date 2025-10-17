@@ -20,21 +20,14 @@
 // define structs for initializing ptbc gauge fields
 
 #pragma once
+#include "DefectParams.hpp"
 #include "GLOBAL.hpp"
 #include "GaugeField.hpp"
+#include "IOHelperFunctions.hpp"
 #include "SUN.hpp"
 #include "Tuner.hpp"
 
 namespace klft {
-template <size_t Nd>
-struct defectParams {
-  // A struct that is used to hold the defect information for a given
-  // devicePTBCGaugeField
-  index_t defect_length{1};
-  real_t defect_value{1.0};
-  IndexArray<Nd - 1> defect_position{
-      0};  // origin of the defect in mu = 1,2,3 directions
-};
 
 template <size_t Nd, size_t Nc>
 struct devicePTBCGaugeField {
@@ -447,6 +440,37 @@ struct devicePTBCGaugeField {
     }  // loop over nu
     return temp;
   }
+  void save(std::string filename) const {
+    auto h_field = Kokkos::create_mirror_view(field);
+    Kokkos::deep_copy(h_field, field);
+    std::ofstream file;
+    try {
+      file.open(filename, std::ios::out | std::ios::binary);
+      file.write(reinterpret_cast<const char*>(h_field.data()),
+                 h_field.size() * sizeof(SUN<Nc>));
+      file.close();
+    } catch (const std::exception& e) {
+      printf("Error saving PTBC field to file %s: %s\n", filename.c_str(),
+             e.what());
+    }
+  }
+  void load(std::string filename) {
+    try {
+      set_defect<index_t>(1.0);  // reset defect to 1.0 before loading
+      decode_ptbc_info<Nd>(filename, this->dParams);
+      set_defect<index_t>(this->dParams.defect_value);
+      auto h_field = Kokkos::create_mirror_view(field);
+      std::ifstream file;
+      file.open(filename, std::ios::in | std::ios::binary);
+      file.read(reinterpret_cast<char*>(h_field.data()),
+                h_field.size() * sizeof(SUN<Nc>));
+      file.close();
+      Kokkos::deep_copy(field, h_field);
+    } catch (const std::exception& e) {
+      printf("Error loading PTBC field from file %s: %s\n", filename.c_str(),
+             e.what());
+    }
+  }
 };
 
 template <size_t Nd, size_t Nc>
@@ -784,6 +808,37 @@ struct devicePTBCGaugeField3D {
 
     return temp;
   }
+  void save(std::string filename) const {
+    auto h_field = Kokkos::create_mirror_view(field);
+    Kokkos::deep_copy(h_field, field);
+    std::ofstream file;
+    try {
+      file.open(filename, std::ios::out | std::ios::binary);
+      file.write(reinterpret_cast<const char*>(h_field.data()),
+                 h_field.size() * sizeof(SUN<Nc>));
+      file.close();
+    } catch (const std::exception& e) {
+      printf("Error saving PTBC field to file %s: %s\n", filename.c_str(),
+             e.what());
+    }
+  }
+  void load(std::string filename) {
+    try {
+      set_defect<index_t>(1.0);  // reset defect to 1.0 before loading
+      decode_ptbc_info(filename, this->dParams);
+      set_defect<index_t>(this->dParams.defect_value);
+      auto h_field = Kokkos::create_mirror_view(field);
+      std::ifstream file;
+      file.open(filename, std::ios::in | std::ios::binary);
+      file.read(reinterpret_cast<char*>(h_field.data()),
+                h_field.size() * sizeof(SUN<Nc>));
+      file.close();
+      Kokkos::deep_copy(field, h_field);
+    } catch (const std::exception& e) {
+      printf("Error loading PTBC field from file %s: %s\n", filename.c_str(),
+             e.what());
+    }
+  }
 };
 
 template <size_t Nd, size_t Nc>
@@ -1094,6 +1149,37 @@ struct devicePTBCGaugeField2D {
     }
 
     return temp;
+  }
+  void save(std::string filename) const {
+    auto h_field = Kokkos::create_mirror_view(field);
+    Kokkos::deep_copy(h_field, field);
+    std::ofstream file;
+    try {
+      file.open(filename, std::ios::out | std::ios::binary);
+      file.write(reinterpret_cast<const char*>(h_field.data()),
+                 h_field.size() * sizeof(SUN<Nc>));
+      file.close();
+    } catch (const std::exception& e) {
+      printf("Error saving PTBC field to file %s: %s\n", filename.c_str(),
+             e.what());
+    }
+  }
+  void load(std::string filename) {
+    try {
+      set_defect<index_t>(1.0);  // reset defect to 1.0 before loading
+      decode_ptbc_info(filename, this->dParams);
+      set_defect<index_t>(this->dParams.defect_value);
+      auto h_field = Kokkos::create_mirror_view(field);
+      std::ifstream file;
+      file.open(filename, std::ios::in | std::ios::binary);
+      file.read(reinterpret_cast<char*>(h_field.data()),
+                h_field.size() * sizeof(SUN<Nc>));
+      file.close();
+      Kokkos::deep_copy(field, h_field);
+    } catch (const std::exception& e) {
+      printf("Error loading PTBC field from file %s: %s\n", filename.c_str(),
+             e.what());
+    }
   }
 };
 

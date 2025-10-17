@@ -60,11 +60,8 @@ struct deviceGaugeField {
       : field(f_in), dimensions(dims_in) {}
 
   // initialize all sites to a given value
-  deviceGaugeField(const index_t L0,
-                   const index_t L1,
-                   const index_t L2,
-                   const index_t L3,
-                   const complex_t init)
+  deviceGaugeField(const index_t L0, const index_t L1, const index_t L2,
+                   const index_t L3, const complex_t init)
       : dimensions({L0, L1, L2, L3}) {
     do_init(L0, L1, L2, L3, field, init);
   }
@@ -79,21 +76,15 @@ struct deviceGaugeField {
     do_init(dimensions[0], dimensions[1], dimensions[2], dimensions[3], field,
             filepath);
   }
-  deviceGaugeField(const index_t L0,
-                   const index_t L1,
-                   const index_t L2,
-                   const index_t L3,
-                   const std::string& filepath)
+  deviceGaugeField(const index_t L0, const index_t L1, const index_t L2,
+                   const index_t L3, const std::string& filepath)
       : dimensions({L0, L1, L2, L3}) {
     do_init(L0, L1, L2, L3, field, filepath);
   }
 
   // initialize all links to a given SUN matrix
-  deviceGaugeField(const index_t L0,
-                   const index_t L1,
-                   const index_t L2,
-                   const index_t L3,
-                   const SUN<Nc>& init)
+  deviceGaugeField(const index_t L0, const index_t L1, const index_t L2,
+                   const index_t L3, const SUN<Nc>& init)
       : dimensions({L0, L1, L2, L3}) {
     do_init(L0, L1, L2, L3, field, init);
   }
@@ -104,19 +95,14 @@ struct deviceGaugeField {
   }
   // initialize all links to a random SUN matrix
   template <class RNG>
-  deviceGaugeField(const index_t L0,
-                   const index_t L1,
-                   const index_t L2,
-                   const index_t L3,
-                   RNG& rng,
-                   const real_t delta)
+  deviceGaugeField(const index_t L0, const index_t L1, const index_t L2,
+                   const index_t L3, RNG& rng, const real_t delta)
       : dimensions({L0, L1, L2, L3}) {
     do_init(L0, L1, L2, L3, field, rng, delta);
   }
 
   template <class RNG>
-  deviceGaugeField(const IndexArray<4>& dimensions,
-                   RNG& rng,
+  deviceGaugeField(const IndexArray<4>& dimensions, RNG& rng,
                    const real_t delta)
       : dimensions(dimensions) {
     do_init(dimensions[0], dimensions[1], dimensions[2], dimensions[3], field,
@@ -125,11 +111,8 @@ struct deviceGaugeField {
 
   // initialize all sites to a random value
   template <class RNG>
-  deviceGaugeField(const index_t L0,
-                   const index_t L1,
-                   const index_t L2,
-                   const index_t L3,
-                   RNG& rng)
+  deviceGaugeField(const index_t L0, const index_t L1, const index_t L2,
+                   const index_t L3, RNG& rng)
       : dimensions({L0, L1, L2, L3}) {
     do_init(L0, L1, L2, L3, field, rng);
   }
@@ -139,23 +122,16 @@ struct deviceGaugeField {
     do_init(dimensions[0], dimensions[1], dimensions[2], dimensions[3], field,
             rng);
   }
-  void do_init(const index_t L0,
-               const index_t L1,
-               const index_t L2,
-               const index_t L3,
-               GaugeField<Nd, Nc>& V,
+  void do_init(const index_t L0, const index_t L1, const index_t L2,
+               const index_t L3, GaugeField<Nd, Nc>& V,
                const std::string& filepath) {
     Kokkos::realloc(Kokkos::WithoutInitializing, V, L0, L1, L2, L3);
     this->load(filepath);
     Kokkos::fence();
   }
 
-  void do_init(const index_t L0,
-               const index_t L1,
-               const index_t L2,
-               const index_t L3,
-               GaugeField<Nd, Nc>& V,
-               complex_t init) {
+  void do_init(const index_t L0, const index_t L1, const index_t L2,
+               const index_t L3, GaugeField<Nd, Nc>& V, complex_t init) {
     Kokkos::realloc(Kokkos::WithoutInitializing, V, L0, L1, L2, L3);
     tune_and_launch_for<4>(
         "init_deviceGaugeField", IndexArray<4>{0, 0, 0, 0},
@@ -176,12 +152,8 @@ struct deviceGaugeField {
     Kokkos::fence();
   }
 
-  void do_init(const index_t L0,
-               const index_t L1,
-               const index_t L2,
-               const index_t L3,
-               GaugeField<Nd, Nc>& V,
-               const SUN<Nc>& init) {
+  void do_init(const index_t L0, const index_t L1, const index_t L2,
+               const index_t L3, GaugeField<Nd, Nc>& V, const SUN<Nc>& init) {
     Kokkos::realloc(Kokkos::WithoutInitializing, V, L0, L1, L2, L3);
     tune_and_launch_for<4>(
         "init_deviceGaugeField", IndexArray<4>{0, 0, 0, 0},
@@ -197,12 +169,8 @@ struct deviceGaugeField {
   }
 
   template <class RNG>
-  void do_init(const index_t L0,
-               const index_t L1,
-               const index_t L2,
-               const index_t L3,
-               GaugeField<Nd, Nc>& V,
-               RNG& rng,
+  void do_init(const index_t L0, const index_t L1, const index_t L2,
+               const index_t L3, GaugeField<Nd, Nc>& V, RNG& rng,
                const real_t delta) {
     Kokkos::realloc(Kokkos::WithoutInitializing, V, L0, L1, L2, L3);
     tune_and_launch_for<4>(
@@ -221,12 +189,8 @@ struct deviceGaugeField {
   }
 
   template <class RNG>
-  void do_init(const index_t L0,
-               const index_t L1,
-               const index_t L2,
-               const index_t L3,
-               GaugeField<Nd, Nc>& V,
-               RNG& rng) {
+  void do_init(const index_t L0, const index_t L1, const index_t L2,
+               const index_t L3, GaugeField<Nd, Nc>& V, RNG& rng) {
     Kokkos::realloc(Kokkos::WithoutInitializing, V, L0, L1, L2, L3);
     tune_and_launch_for<4>(
         "init_deviceGaugeField", IndexArray<4>{0, 0, 0, 0},
@@ -275,22 +239,18 @@ struct deviceGaugeField {
   // define accessors with 4D Kokkos array
   template <typename indexType>
   KOKKOS_FORCEINLINE_FUNCTION SUN<Nc>& operator()(
-      const Kokkos::Array<indexType, 4> site,
-      const index_t mu) const {
+      const Kokkos::Array<indexType, 4> site, const index_t mu) const {
     return field(site[0], site[1], site[2], site[3], mu);
   }
 
   template <typename indexType>
   KOKKOS_FORCEINLINE_FUNCTION SUN<Nc>& operator()(
-      const Kokkos::Array<indexType, 4> site,
-      const index_t mu) {
+      const Kokkos::Array<indexType, 4> site, const index_t mu) {
     return field(site[0], site[1], site[2], site[3], mu);
   }
   template <typename indexType>
-  KOKKOS_FORCEINLINE_FUNCTION void set(const indexType i,
-                                       const indexType j,
-                                       const indexType k,
-                                       const indexType l,
+  KOKKOS_FORCEINLINE_FUNCTION void set(const indexType i, const indexType j,
+                                       const indexType k, const indexType l,
                                        const index_t mu,
                                        const SUN<Nc>& value) const {
     field(i, j, k, l, mu) = (value);  // raw write
@@ -302,8 +262,7 @@ struct deviceGaugeField {
     const IndexArray<3> start{0, 0, 0};
     std::vector<index_t> end_dims_no_mu;
     for (index_t i = 0; i < 3; ++i) {
-      if (i == mu)
-        continue;
+      if (i == mu) continue;
       end_dims_no_mu.push_back(dimensions[i]);
     }
     const IndexArray<3> end_dims(
@@ -339,8 +298,7 @@ struct deviceGaugeField {
   }
   template <typename indexType>
   KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> staple(
-      const Kokkos::Array<indexType, 4> site,
-      const index_t mu) const {
+      const Kokkos::Array<indexType, 4> site, const index_t mu) const {
     // this only works if Nd == 4
     assert(Nd == 4);
     // get the indices
@@ -359,8 +317,7 @@ struct deviceGaugeField {
 #pragma unroll
     for (index_t nu = 0; nu < Nd; ++nu) {  // loop over nu
       // do nothing for mu = nu
-      if (nu == mu)
-        continue;
+      if (nu == mu) continue;
       // get the x + nu indices
       const index_t i0pnu = nu == 0 ? (i0 + 1) % dimensions[0] : i0;
       const index_t i1pnu = nu == 1 ? (i1 + 1) % dimensions[1] : i1;
@@ -375,8 +332,7 @@ struct deviceGaugeField {
 #pragma unroll
     for (index_t nu = 0; nu < Nd; ++nu) {  // loop over nu
       // do nothing for mu = nu
-      if (nu == mu)
-        continue;
+      if (nu == mu) continue;
       // get the x + mu - nu indices
       const index_t i0pmu_mnu =
           nu == 0 ? (i0pmu - 1 + dimensions[0]) % dimensions[0] : i0pmu;
@@ -403,28 +359,33 @@ struct deviceGaugeField {
     return temp;
   }
   void save(std::string filename) const {
+    printf("Saving gauge field to file %s\n", filename.c_str());
     auto h_field = Kokkos::create_mirror_view(field);
     Kokkos::deep_copy(h_field, field);
     std::ofstream file;
-    file.open(filename, std::ios::out | std::ios::binary);
-    if (!file.is_open()) {
-      throw std::runtime_error("Error opening file " + filename);
+    try {
+      file.open(filename, std::ios::out | std::ios::binary);
+      file.write(reinterpret_cast<const char*>(h_field.data()),
+                 h_field.size() * sizeof(SUN<Nc>));
+      file.close();
+    } catch (const std::exception& e) {
+      printf("Error saving gauge field to file %s: %s\n", filename.c_str(),
+             e.what());
     }
-    file.write(reinterpret_cast<const char*>(h_field.data()),
-               h_field.size() * sizeof(SUN<Nc>));
-    file.close();
   }
   void load(std::string filename) {
-    auto h_field = Kokkos::create_mirror_view(field);
-    std::ifstream file;
-    file.open(filename, std::ios::in | std::ios::binary);
-    if (!file.is_open()) {
-      throw std::runtime_error("Error opening file " + filename);
+    try {
+      auto h_field = Kokkos::create_mirror_view(field);
+      std::ifstream file;
+      file.open(filename, std::ios::in | std::ios::binary);
+      file.read(reinterpret_cast<char*>(h_field.data()),
+                h_field.size() * sizeof(SUN<Nc>));
+      file.close();
+      Kokkos::deep_copy(field, h_field);
+    } catch (const std::exception& e) {
+      printf("Error loading gauge field from file %s: %s\n", filename.c_str(),
+             e.what());
     }
-    file.read(reinterpret_cast<char*>(h_field.data()),
-              h_field.size() * sizeof(SUN<Nc>));
-    file.close();
-    Kokkos::deep_copy(field, h_field);
   }
 };
 
@@ -436,9 +397,7 @@ struct deviceGaugeField3D {
   deviceGaugeField3D() = default;
 
   // initialize all sites to a given value
-  deviceGaugeField3D(const index_t L0,
-                     const index_t L1,
-                     const index_t L2,
+  deviceGaugeField3D(const index_t L0, const index_t L1, const index_t L2,
                      const complex_t init)
       : dimensions({L0, L1, L2}) {
     do_init(L0, L1, L2, field, init);
@@ -453,9 +412,7 @@ struct deviceGaugeField3D {
     do_init(dimensions[0], dimensions[1], dimensions[2], field, init);
   }
   // initialize all links to a given SUN matrix
-  deviceGaugeField3D(const index_t L0,
-                     const index_t L1,
-                     const index_t L2,
+  deviceGaugeField3D(const index_t L0, const index_t L1, const index_t L2,
                      const SUN<Nc>& init)
       : dimensions({L0, L1, L2}) {
     do_init(L0, L1, L2, field, init);
@@ -466,17 +423,13 @@ struct deviceGaugeField3D {
   }
   // initialize all links to a random SUN matrix
   template <class RNG>
-  deviceGaugeField3D(const index_t L0,
-                     const index_t L1,
-                     const index_t L2,
-                     RNG& rng,
-                     const real_t delta)
+  deviceGaugeField3D(const index_t L0, const index_t L1, const index_t L2,
+                     RNG& rng, const real_t delta)
       : dimensions({L0, L1, L2}) {
     do_init(L0, L1, L2, field, rng, delta);
   }
   template <class RNG>
-  deviceGaugeField3D(const IndexArray<3>& dimensions,
-                     RNG& rng,
+  deviceGaugeField3D(const IndexArray<3>& dimensions, RNG& rng,
                      const real_t delta)
       : dimensions(dimensions) {
     do_init(dimensions[0], dimensions[1], dimensions[2], field, rng, delta);
@@ -484,9 +437,7 @@ struct deviceGaugeField3D {
 
   // initialize all sites to a random value
   template <class RNG>
-  deviceGaugeField3D(const index_t L0,
-                     const index_t L1,
-                     const index_t L2,
+  deviceGaugeField3D(const index_t L0, const index_t L1, const index_t L2,
                      RNG& rng)
       : dimensions({L0, L1, L2}) {
     do_init(L0, L1, L2, field, rng);
@@ -498,11 +449,8 @@ struct deviceGaugeField3D {
     do_init(dimensions[0], dimensions[1], dimensions[2], field, rng);
   }
 
-  void do_init(const index_t L0,
-               const index_t L1,
-               const index_t L2,
-               GaugeField3D<Nd, Nc>& V,
-               complex_t init) {
+  void do_init(const index_t L0, const index_t L1, const index_t L2,
+               GaugeField3D<Nd, Nc>& V, complex_t init) {
     Kokkos::realloc(Kokkos::WithoutInitializing, V, L0, L1, L2);
     tune_and_launch_for<3>(
         "init_deviceGaugeField3D", IndexArray<3>{0, 0, 0},
@@ -522,11 +470,8 @@ struct deviceGaugeField3D {
     Kokkos::fence();
   }
 
-  void do_init(const index_t L0,
-               const index_t L1,
-               const index_t L2,
-               GaugeField3D<Nd, Nc>& V,
-               const SUN<Nc>& init) {
+  void do_init(const index_t L0, const index_t L1, const index_t L2,
+               GaugeField3D<Nd, Nc>& V, const SUN<Nc>& init) {
     Kokkos::realloc(Kokkos::WithoutInitializing, V, L0, L1, L2);
     tune_and_launch_for<3>(
         "init_deviceGaugeField3D", IndexArray<3>{0, 0, 0},
@@ -541,12 +486,8 @@ struct deviceGaugeField3D {
   }
 
   template <class RNG>
-  void do_init(const index_t L0,
-               const index_t L1,
-               const index_t L2,
-               GaugeField3D<Nd, Nc>& V,
-               RNG& rng,
-               const real_t delta) {
+  void do_init(const index_t L0, const index_t L1, const index_t L2,
+               GaugeField3D<Nd, Nc>& V, RNG& rng, const real_t delta) {
     Kokkos::realloc(Kokkos::WithoutInitializing, V, L0, L1, L2);
     tune_and_launch_for<3>(
         "init_deviceGaugeField3D", IndexArray<3>{0, 0, 0},
@@ -563,11 +504,8 @@ struct deviceGaugeField3D {
   }
 
   template <class RNG>
-  void do_init(const index_t L0,
-               const index_t L1,
-               const index_t L2,
-               GaugeField3D<Nd, Nc>& V,
-               RNG& rng) {
+  void do_init(const index_t L0, const index_t L1, const index_t L2,
+               GaugeField3D<Nd, Nc>& V, RNG& rng) {
     Kokkos::realloc(Kokkos::WithoutInitializing, V, L0, L1, L2);
     tune_and_launch_for<3>(
         "init_deviceGaugeField3D", IndexArray<3>{0, 0, 0},
@@ -610,23 +548,19 @@ struct deviceGaugeField3D {
   // define accessors with 3D Kokkos array
   template <typename indexType>
   KOKKOS_FORCEINLINE_FUNCTION SUN<Nc>& operator()(
-      const Kokkos::Array<indexType, 3> site,
-      const index_t mu) const {
+      const Kokkos::Array<indexType, 3> site, const index_t mu) const {
     return field(site[0], site[1], site[2], mu);
   }
 
   template <typename indexType>
   KOKKOS_FORCEINLINE_FUNCTION SUN<Nc>& operator()(
-      const Kokkos::Array<indexType, 3> site,
-      const index_t mu) {
+      const Kokkos::Array<indexType, 3> site, const index_t mu) {
     return field(site[0], site[1], site[2], mu);
   }
 
   template <typename indexType>
-  KOKKOS_FORCEINLINE_FUNCTION void set(const indexType i,
-                                       const indexType j,
-                                       const indexType k,
-                                       const index_t mu,
+  KOKKOS_FORCEINLINE_FUNCTION void set(const indexType i, const indexType j,
+                                       const indexType k, const index_t mu,
                                        const SUN<Nc>& value) const {
     field(i, j, k, mu) = (value);  // raw write
   }
@@ -637,8 +571,7 @@ struct deviceGaugeField3D {
     const IndexArray<2> start{0, 0};
     std::vector<index_t> end_dims_no_mu;
     for (index_t i = 0; i < 2; ++i) {
-      if (i == mu)
-        continue;
+      if (i == mu) continue;
       end_dims_no_mu.push_back(dimensions[i]);
     }
     const IndexArray<2> end_dims({end_dims_no_mu[0], end_dims_no_mu[1]});
@@ -665,8 +598,7 @@ struct deviceGaugeField3D {
 
   template <typename indexType>
   KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> staple(
-      const Kokkos::Array<indexType, 3> site,
-      const index_t mu) const {
+      const Kokkos::Array<indexType, 3> site, const index_t mu) const {
     // this only works if Nd == 3
     assert(Nd == 3);
     // get the indices
@@ -683,8 +615,7 @@ struct deviceGaugeField3D {
 // positive directions
 #pragma unroll
     for (index_t nu = 0; nu < Nd; ++nu) {  // loop over nu
-      if (nu == mu)
-        continue;  // skip if mu == nu
+      if (nu == mu) continue;              // skip if mu == nu
       const index_t i0pnu = nu == 0 ? (i0 + 1) % dimensions[0] : i0;
       const index_t i1pnu = nu == 1 ? (i1 + 1) % dimensions[1] : i1;
       const index_t i2pnu = nu == 2 ? (i2 + 1) % dimensions[2] : i2;
@@ -697,8 +628,7 @@ struct deviceGaugeField3D {
 // negative directions
 #pragma unroll
     for (index_t nu = 0; nu < Nd; ++nu) {  // loop over nu
-      if (nu == mu)
-        continue;  // skip if mu == nu
+      if (nu == mu) continue;              // skip if mu == nu
       const index_t i0pmu_mnu =
           nu == 0 ? (i0pmu - 1 + dimensions[0]) % dimensions[0] : i0pmu;
       const index_t i1pmu_mnu =
@@ -724,25 +654,29 @@ struct deviceGaugeField3D {
     auto h_field = Kokkos::create_mirror_view(field);
     Kokkos::deep_copy(h_field, field);
     std::ofstream file;
-    file.open(filename, std::ios::out | std::ios::binary);
-    if (!file.is_open()) {
-      throw std::runtime_error("Error opening file " + filename);
+    try {
+      file.open(filename, std::ios::out | std::ios::binary);
+      file.write(reinterpret_cast<const char*>(h_field.data()),
+                 h_field.size() * sizeof(SUN<Nc>));
+      file.close();
+    } catch (const std::exception& e) {
+      printf("Error saving gauge field to file %s: %s\n", filename.c_str(),
+             e.what());
     }
-    file.write(reinterpret_cast<const char*>(h_field.data()),
-               h_field.size() * sizeof(SUN<Nc>));
-    file.close();
   }
   void load(std::string filename) {
-    auto h_field = Kokkos::create_mirror_view(field);
-    std::ifstream file;
-    file.open(filename, std::ios::in | std::ios::binary);
-    if (!file.is_open()) {
-      throw std::runtime_error("Error opening file " + filename);
+    try {
+      auto h_field = Kokkos::create_mirror_view(field);
+      std::ifstream file;
+      file.open(filename, std::ios::in | std::ios::binary);
+      file.read(reinterpret_cast<char*>(h_field.data()),
+                h_field.size() * sizeof(SUN<Nc>));
+      file.close();
+      Kokkos::deep_copy(field, h_field);
+    } catch (const std::exception& e) {
+      printf("Error loading gauge field from file %s: %s\n", filename.c_str(),
+             e.what());
     }
-    file.read(reinterpret_cast<char*>(h_field.data()),
-              h_field.size() * sizeof(SUN<Nc>));
-    file.close();
-    Kokkos::deep_copy(field, h_field);
   }
 };
 
@@ -775,16 +709,13 @@ struct deviceGaugeField2D {
   }
   // initialize all links to a random SUN matrix
   template <class RNG>
-  deviceGaugeField2D(const index_t L0,
-                     const index_t L1,
-                     RNG& rng,
+  deviceGaugeField2D(const index_t L0, const index_t L1, RNG& rng,
                      const real_t delta)
       : dimensions({L0, L1}) {
     do_init(L0, L1, field, rng, delta);
   }
   template <class RNG>
-  deviceGaugeField2D(const IndexArray<2>& dimensions,
-                     RNG& rng,
+  deviceGaugeField2D(const IndexArray<2>& dimensions, RNG& rng,
                      const real_t delta)
       : dimensions(dimensions) {
     do_init(dimensions[0], dimensions[1], field, rng, delta);
@@ -800,9 +731,7 @@ struct deviceGaugeField2D {
       : dimensions(dimensions) {
     do_init(dimensions[0], dimensions[1], field, rng);
   }
-  void do_init(const index_t L0,
-               const index_t L1,
-               GaugeField2D<Nd, Nc>& V,
+  void do_init(const index_t L0, const index_t L1, GaugeField2D<Nd, Nc>& V,
                complex_t init) {
     Kokkos::realloc(Kokkos::WithoutInitializing, V, L0, L1);
     tune_and_launch_for<2>(
@@ -822,9 +751,7 @@ struct deviceGaugeField2D {
     Kokkos::fence();
   }
 
-  void do_init(const index_t L0,
-               const index_t L1,
-               GaugeField2D<Nd, Nc>& V,
+  void do_init(const index_t L0, const index_t L1, GaugeField2D<Nd, Nc>& V,
                const SUN<Nc>& init) {
     Kokkos::realloc(Kokkos::WithoutInitializing, V, L0, L1);
     tune_and_launch_for<2>(
@@ -839,11 +766,8 @@ struct deviceGaugeField2D {
   }
 
   template <class RNG>
-  void do_init(const index_t L0,
-               const index_t L1,
-               GaugeField2D<Nd, Nc>& V,
-               RNG& rng,
-               const real_t delta) {
+  void do_init(const index_t L0, const index_t L1, GaugeField2D<Nd, Nc>& V,
+               RNG& rng, const real_t delta) {
     Kokkos::realloc(Kokkos::WithoutInitializing, V, L0, L1);
     tune_and_launch_for<2>(
         "init_deviceGaugeField2D", IndexArray<2>{0, 0}, IndexArray<2>{L0, L1},
@@ -859,9 +783,7 @@ struct deviceGaugeField2D {
   }
 
   template <class RNG>
-  void do_init(const index_t L0,
-               const index_t L1,
-               GaugeField2D<Nd, Nc>& V,
+  void do_init(const index_t L0, const index_t L1, GaugeField2D<Nd, Nc>& V,
                RNG& rng) {
     Kokkos::realloc(Kokkos::WithoutInitializing, V, L0, L1);
     tune_and_launch_for<2>(
@@ -905,15 +827,13 @@ struct deviceGaugeField2D {
   // define accessors with 2D Kokkos array
   template <typename indexType>
   KOKKOS_FORCEINLINE_FUNCTION SUN<Nc>& operator()(
-      const Kokkos::Array<indexType, 2> site,
-      const index_t mu) const {
+      const Kokkos::Array<indexType, 2> site, const index_t mu) const {
     return field(site[0], site[1], mu);
   }
 
   template <typename indexType>
   KOKKOS_FORCEINLINE_FUNCTION SUN<Nc>& operator()(
-      const Kokkos::Array<indexType, 2> site,
-      const index_t mu) {
+      const Kokkos::Array<indexType, 2> site, const index_t mu) {
     return field(site[0], site[1], mu);
   }
 
@@ -938,8 +858,7 @@ struct deviceGaugeField2D {
         });
   }
   template <typename indexType>
-  KOKKOS_FORCEINLINE_FUNCTION void set(const indexType i,
-                                       const indexType j,
+  KOKKOS_FORCEINLINE_FUNCTION void set(const indexType i, const indexType j,
                                        const index_t mu,
                                        const SUN<Nc>& value) const {
     field(i, j, mu) = (value);  // raw write
@@ -947,8 +866,7 @@ struct deviceGaugeField2D {
 
   template <typename indexType>
   KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> staple(
-      const Kokkos::Array<indexType, 2> site,
-      const index_t mu) const {
+      const Kokkos::Array<indexType, 2> site, const index_t mu) const {
     // this only works if Nd == 2
     assert(Nd == 2);
     // get the indices
@@ -963,8 +881,7 @@ struct deviceGaugeField2D {
 // positive directions
 #pragma unroll
     for (index_t nu = 0; nu < Nd; ++nu) {  // loop over nu
-      if (nu == mu)
-        continue;  // skip if mu == nu
+      if (nu == mu) continue;              // skip if mu == nu
       const index_t i0pnu = nu == 0 ? (i0 + 1) % dimensions[0] : i0;
       const index_t i1pnu = nu == 1 ? (i1 + 1) % dimensions[1] : i1;
 
@@ -975,8 +892,7 @@ struct deviceGaugeField2D {
 // negative directions
 #pragma unroll
     for (index_t nu = 0; nu < Nd; ++nu) {  // loop over nu
-      if (nu == mu)
-        continue;  // skip if mu == nu
+      if (nu == mu) continue;              // skip if mu == nu
       const index_t i0pmu_mnu =
           nu == 0 ? (i0pmu - 1 + dimensions[0]) % dimensions[0] : i0pmu;
       const index_t i1pmu_mnu =
@@ -997,25 +913,29 @@ struct deviceGaugeField2D {
     auto h_field = Kokkos::create_mirror_view(field);
     Kokkos::deep_copy(h_field, field);
     std::ofstream file;
-    file.open(filename, std::ios::out | std::ios::binary);
-    if (!file.is_open()) {
-      throw std::runtime_error("Error opening file " + filename);
+    try {
+      file.open(filename, std::ios::out | std::ios::binary);
+      file.write(reinterpret_cast<const char*>(h_field.data()),
+                 h_field.size() * sizeof(SUN<Nc>));
+      file.close();
+    } catch (const std::exception& e) {
+      printf("Error saving gauge field to file %s: %s\n", filename.c_str(),
+             e.what());
     }
-    file.write(reinterpret_cast<const char*>(h_field.data()),
-               h_field.size() * sizeof(SUN<Nc>));
-    file.close();
   }
   void load(std::string filename) {
-    auto h_field = Kokkos::create_mirror_view(field);
-    std::ifstream file;
-    file.open(filename, std::ios::in | std::ios::binary);
-    if (!file.is_open()) {
-      throw std::runtime_error("Error opening file " + filename);
+    try {
+      auto h_field = Kokkos::create_mirror_view(field);
+      std::ifstream file;
+      file.open(filename, std::ios::in | std::ios::binary);
+      file.read(reinterpret_cast<char*>(h_field.data()),
+                h_field.size() * sizeof(SUN<Nc>));
+      file.close();
+      Kokkos::deep_copy(field, h_field);
+    } catch (const std::exception& e) {
+      printf("Error loading gauge field from file %s: %s\n", filename.c_str(),
+             e.what());
     }
-    file.read(reinterpret_cast<char*>(h_field.data()),
-              h_field.size() * sizeof(SUN<Nc>));
-    file.close();
-    Kokkos::deep_copy(field, h_field);
   }
 };
 

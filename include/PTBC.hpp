@@ -22,6 +22,7 @@ struct PTBCParams {
   std::vector<real_t>
       defects;            // a vector that hold the different defect values
   index_t defect_length;  // size of the defect on the lattice
+
   GaugeMonomial_Params gauge_params;  // HMC parameters´
   PTBCSimulationLoggingParams ptbcSimLogParams;
   GaugeObservableParams gaugeObsParams;
@@ -84,11 +85,8 @@ class PTBC {  // do I need the AdjFieldType here?
 
   PTBC() = delete;  // default constructor is not allowed
 
-  PTBC(PTBCParams& params_,
-       HMCType& hmc_,
-       RNG& rng_,
-       std::uniform_real_distribution<real_t> dist_,
-       std::mt19937 mt_)
+  PTBC(PTBCParams& params_, HMCType& hmc_, RNG& rng_,
+       std::uniform_real_distribution<real_t> dist_, std::mt19937 mt_)
       : params(params_), rng(rng_), dist(dist_), mt(mt_), hmc(hmc_) {
     device_id = Kokkos::device_id();  // default device id
     int rank;
@@ -162,11 +160,8 @@ class PTBC {  // do I need the AdjFieldType here?
     }
   }
 
-  void measure(SimulationLoggingParams& simLogParams,
-               index_t step,
-               real_t acc_rate,
-               bool accept,
-               real_t time) {
+  void measure(SimulationLoggingParams& simLogParams, index_t step,
+               real_t acc_rate, bool accept, real_t time) {
     // measure the simulation logging observables
     addLogData(simLogParams, step, hmc.delta_H, acc_rate, accept, time);
   }
@@ -339,8 +334,7 @@ class PTBC {  // do I need the AdjFieldType here?
         oss << "Defects after broadcast: [";
         for (size_t i = 0; i < params.defects.size(); ++i) {
           oss << params.defects[i];
-          if (i + 1 < params.defects.size())
-            oss << ", ";
+          if (i + 1 < params.defects.size()) oss << ", ";
         }
         oss << "]";
         // DEBUG_MPI_PRINT("%s", oss.str().c_str());
@@ -379,8 +373,7 @@ class PTBC {  // do I need the AdjFieldType here?
 // below: Functions used to dispatch the PTBC algorithm
 
 template <typename PTBCType>
-int run_PTBC(PTBCType& ptbc,
-             Integrator_Params& int_params,
+int run_PTBC(PTBCType& ptbc, Integrator_Params& int_params,
              GaugeObservableParams& gaugeObsParams,
              PTBCSimulationLoggingParams& ptbcSimLogParams,
              SimulationLoggingParams& simLogParams) {
@@ -422,6 +415,8 @@ int run_PTBC(PTBCType& ptbc,
                      step, accept, acc_rate, time);
     }
     flushSimulationLogs(simLogParams, step, true);
+    flushIO<PTBCType::Nd, PTBCType::Nc>(ptbc.hmc.ioParams, step,
+                                        ptbc.hmc.hamiltonian_field.gauge_field);
   }
 
   MPI_Barrier(MPI_COMM_WORLD);  // synchronize all ranks after the loop

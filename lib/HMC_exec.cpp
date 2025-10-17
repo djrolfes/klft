@@ -164,7 +164,9 @@ int build_and_run_HMC(const std::string& input_file,
               fermionParams, resParsef);
           using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
           HField hamiltonian_field = HField(g_4_U1, a_4_U1);
-
+          if (hmcParams.loadfile != "") {
+            hamiltonian_field.gauge_field.load(hmcParams.loadfile);
+          }
           const auto& dimensions = g_4_U1.dimensions;
 
           using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
@@ -198,7 +200,9 @@ int build_and_run_HMC(const std::string& input_file,
               fermionParams, resParsef);
           using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
           HField hamiltonian_field = HField(g_4_U1, a_4_U1);
-
+          if (hmcParams.loadfile != "") {
+            hamiltonian_field.gauge_field.load(hmcParams.loadfile);
+          }
           const auto& dimensions = g_4_U1.dimensions;
 
           using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
@@ -236,7 +240,12 @@ int build_and_run_HMC(const std::string& input_file,
               fermionParams, resParsef);
           using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
           HField hamiltonian_field = HField(g_4_SU2, a_4_SU2);
-
+          if (hmcParams.loadfile != "") {
+            hamiltonian_field.gauge_field.load(hmcParams.loadfile);
+          }
+          if (hmcParams.loadfile != "") {
+            hamiltonian_field.gauge_field.load(hmcParams.loadfile);
+          }
           const auto& dimensions = g_4_SU2.dimensions;
 
           using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
@@ -270,7 +279,9 @@ int build_and_run_HMC(const std::string& input_file,
               fermionParams, resParsef);
           using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
           HField hamiltonian_field = HField(g_4_SU2, a_4_SU2);
-
+          if (hmcParams.loadfile != "") {
+            hamiltonian_field.gauge_field.load(hmcParams.loadfile);
+          }
           const auto& dimensions = g_4_SU2.dimensions;
 
           using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
@@ -309,7 +320,9 @@ int build_and_run_HMC(const std::string& input_file,
         //       gaugeMonomialParams, fermionParams, resParsef);
         //   using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
         //   HField hamiltonian_field = HField(g_4_SU3, a_4_SU3);
-
+        // if(hmcParams.loadfile!=""){
+        //   hamiltonian_field.gauge_field.load(hmcParams.loadfile);
+        // }
         //   const auto& dimensions = g_4_SU3.dimensions;
 
         //   using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
@@ -349,7 +362,9 @@ int build_and_run_HMC(const std::string& input_file,
         //         gaugeMonomialParams, fermionParams, resParsef);
         // using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
         // HField hamiltonian_field = HField(g_4_SU3, a_4_SU3);
-
+        // if(hmcParams.loadfile!=""){
+        //   hamiltonian_field.gauge_field.load(hmcParams.loadfile);
+        // }
         // const auto& dimensions = g_4_SU3.dimensions;
 
         // using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
@@ -391,7 +406,9 @@ int build_and_run_HMC(const std::string& input_file,
                 fermionParams, resParsef);
         using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
         HField hamiltonian_field = HField(g_3_U1, a_3_U1);
-
+        if (hmcParams.loadfile != "") {
+          hamiltonian_field.gauge_field.load(hmcParams.loadfile);
+        }
         const auto& dimensions = g_3_U1.dimensions;
 
         using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
@@ -422,7 +439,9 @@ int build_and_run_HMC(const std::string& input_file,
                 gaugeMonomialParams, fermionParams, resParsef);
         using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
         HField hamiltonian_field = HField(g_3_SU2, a_3_SU2);
-
+        if (hmcParams.loadfile != "") {
+          hamiltonian_field.gauge_field.load(hmcParams.loadfile);
+        }
         const auto& dimensions = g_3_SU2.dimensions;
 
         using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
@@ -463,7 +482,9 @@ int build_and_run_HMC(const std::string& input_file,
         // using HField = HamiltonianField<DGaugeFieldType,
         // DAdjFieldType>; HField hamiltonian_field = HField(g_3_SU3,
         // a_3_SU3);
-
+        // if(hmcParams.loadfile!=""){
+        //   hamiltonian_field.gauge_field.load(hmcParams.loadfile);
+        // }
         // const auto& dimensions = g_3_SU3.dimensions;
 
         // using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
@@ -500,7 +521,9 @@ int build_and_run_HMC(const std::string& input_file,
                 fermionParams, resParsef);
         using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
         HField hamiltonian_field = HField(g_2_U1, a_2_U1);
-
+        if (hmcParams.loadfile != "") {
+          hamiltonian_field.gauge_field.load(hmcParams.loadfile);
+        }
         const auto& dimensions = g_2_U1.dimensions;
 
         using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
@@ -530,7 +553,9 @@ int build_and_run_HMC(const std::string& input_file,
                 gaugeMonomialParams, fermionParams, resParsef);
         using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
         HField hamiltonian_field = HField(g_2_SU2, a_2_SU2);
-
+        if (hmcParams.loadfile != "") {
+          hamiltonian_field.gauge_field.load(hmcParams.loadfile);
+        }
         const auto& dimensions = g_2_SU2.dimensions;
 
         using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
@@ -569,7 +594,9 @@ int build_and_run_HMC(const std::string& input_file,
         // using HField = HamiltonianField<DGaugeFieldType,
         // DAdjFieldType>; HField hamiltonian_field = HField(g_2_SU3,
         // a_2_SU3);
-
+        // if(hmcParams.loadfile!=""){
+        //   hamiltonian_field.gauge_field.load(hmcParams.loadfile);
+        // }
         // const auto& dimensions = g_2_SU3.dimensions;
 
         // using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
@@ -606,7 +633,9 @@ int build_and_run_HMC(const std::string& input_file,
               fermionParams, resParsef);
           using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
           HField hamiltonian_field = HField(g_4_U1, a_4_U1);
-
+          if (hmcParams.loadfile != "") {
+            hamiltonian_field.gauge_field.load(hmcParams.loadfile);
+          }
           const auto& dimensions = g_4_U1.dimensions;
 
           using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
@@ -642,7 +671,9 @@ int build_and_run_HMC(const std::string& input_file,
               fermionParams, resParsef);
           using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
           HField hamiltonian_field = HField(g_4_U1, a_4_U1);
-
+          if (hmcParams.loadfile != "") {
+            hamiltonian_field.gauge_field.load(hmcParams.loadfile);
+          }
           const auto& dimensions = g_4_U1.dimensions;
 
           using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
@@ -680,7 +711,9 @@ int build_and_run_HMC(const std::string& input_file,
               fermionParams, resParsef);
           using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
           HField hamiltonian_field = HField(g_4_SU2, a_4_SU2);
-
+          if (hmcParams.loadfile != "") {
+            hamiltonian_field.gauge_field.load(hmcParams.loadfile);
+          }
           const auto& dimensions = g_4_SU2.dimensions;
 
           using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
@@ -714,7 +747,9 @@ int build_and_run_HMC(const std::string& input_file,
               fermionParams, resParsef);
           using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
           HField hamiltonian_field = HField(g_4_SU2, a_4_SU2);
-
+          if (hmcParams.loadfile != "") {
+            hamiltonian_field.gauge_field.load(hmcParams.loadfile);
+          }
           const auto& dimensions = g_4_SU2.dimensions;
 
           using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
@@ -756,7 +791,9 @@ int build_and_run_HMC(const std::string& input_file,
         //       gaugeMonomialParams, fermionParams, resParsef);
         //   using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
         //   HField hamiltonian_field = HField(g_4_SU3, a_4_SU3);
-
+        // if(hmcParams.loadfile!=""){
+        //   hamiltonian_field.gauge_field.load(hmcParams.loadfile);
+        // }
         //   const auto& dimensions = g_4_SU3.dimensions;
 
         //   using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
@@ -794,7 +831,9 @@ int build_and_run_HMC(const std::string& input_file,
         //         gaugeMonomialParams, fermionParams, resParsef);
         // using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
         // HField hamiltonian_field = HField(g_4_SU3, a_4_SU3);
-
+        // if(hmcParams.loadfile!=""){
+        //   hamiltonian_field.gauge_field.load(hmcParams.loadfile);
+        // }
         // const auto& dimensions = g_4_SU3.dimensions;
 
         // using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
@@ -837,7 +876,9 @@ int build_and_run_HMC(const std::string& input_file,
                 fermionParams, resParsef);
         using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
         HField hamiltonian_field = HField(g_3_U1, a_3_U1);
-
+        if (hmcParams.loadfile != "") {
+          hamiltonian_field.gauge_field.load(hmcParams.loadfile);
+        }
         const auto& dimensions = g_3_U1.dimensions;
 
         using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
@@ -868,7 +909,9 @@ int build_and_run_HMC(const std::string& input_file,
                 gaugeMonomialParams, fermionParams, resParsef);
         using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
         HField hamiltonian_field = HField(g_3_SU2, a_3_SU2);
-
+        if (hmcParams.loadfile != "") {
+          hamiltonian_field.gauge_field.load(hmcParams.loadfile);
+        }
         const auto& dimensions = g_3_SU2.dimensions;
 
         using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
@@ -908,7 +951,9 @@ int build_and_run_HMC(const std::string& input_file,
         // using HField = HamiltonianField<DGaugeFieldType,
         // DAdjFieldType>; HField hamiltonian_field = HField(g_3_SU3,
         // a_3_SU3);
-
+        // if(hmcParams.loadfile!=""){
+        //   hamiltonian_field.gauge_field.load(hmcParams.loadfile);
+        // }
         // const auto& dimensions = g_3_SU3.dimensions;
 
         // using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
@@ -945,7 +990,9 @@ int build_and_run_HMC(const std::string& input_file,
                 fermionParams, resParsef);
         using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
         HField hamiltonian_field = HField(g_2_U1, a_2_U1);
-
+        if (hmcParams.loadfile != "") {
+          hamiltonian_field.gauge_field.load(hmcParams.loadfile);
+        }
         const auto& dimensions = g_2_U1.dimensions;
 
         using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
@@ -975,7 +1022,9 @@ int build_and_run_HMC(const std::string& input_file,
                 gaugeMonomialParams, fermionParams, resParsef);
         using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
         HField hamiltonian_field = HField(g_2_SU2, a_2_SU2);
-
+        if (hmcParams.loadfile != "") {
+          hamiltonian_field.gauge_field.load(hmcParams.loadfile);
+        }
         const auto& dimensions = g_2_SU2.dimensions;
 
         using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
@@ -1014,7 +1063,9 @@ int build_and_run_HMC(const std::string& input_file,
         // using HField = HamiltonianField<DGaugeFieldType,
         // DAdjFieldType>; HField hamiltonian_field = HField(g_2_SU3,
         // a_2_SU3);
-
+        // if(hmcParams.loadfile!=""){
+        //   hamiltonian_field.gauge_field.load(hmcParams.loadfile);
+        // }
         // const auto& dimensions = g_2_SU3.dimensions;
 
         // using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
