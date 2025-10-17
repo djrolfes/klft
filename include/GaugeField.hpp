@@ -378,6 +378,153 @@ struct deviceGaugeField {
     }  // loop over nu
     return temp;
   }
+
+  template <typename indexType>
+  KOKKOS_FORCEINLINE_FUNCTION SUN<Nc>
+  staple_rect(const Kokkos::Array<indexType, 4> site, const index_t mu) const {
+    // this only works if Nd == 4
+    assert(Nd == 4);
+    Kokkos::Array<indexType, 4> temp_site1 = site;
+    Kokkos::Array<indexType, 4> temp_site2 = site;
+    Kokkos::Array<indexType, 4> temp_site3 = site;
+    Kokkos::Array<indexType, 4> temp_site4 = site;
+
+    SUN<Nc> temp = zeroSUN<Nc>();
+
+    // Helper lambda for modular arithmetic
+    auto mod = [&](index_t s, index_t dir) {
+      return (s + this->dimensions[dir]) % this->dimensions[dir];
+    };
+
+#pragma unroll
+    for (index_t nu = 0; nu < Nd; ++nu) { // loop over nu
+      // do nothing for mu = nu
+      if (nu == mu)
+        continue;
+      // first do the 1x2 rectangles
+      temp_site1[mu] = (temp_site1[mu] + 1) % this->dimensions[mu];
+      temp_site2[nu] = (temp_site2[nu] + 1) % this->dimensions[nu];
+      temp_site2[mu] = (temp_site2[mu] + 1) % this->dimensions[mu];
+      temp_site3[nu] = (temp_site3[nu] + 2) % this->dimensions[nu];
+      temp_site4[nu] = (temp_site4[nu] + 1) % this->dimensions[nu];
+      temp += this->operator()(temp_site1, nu) *
+              this->operator()(temp_site2, nu) *
+              conj(this->operator()(temp_site3, mu)) *
+              conj(this->operator()(temp_site4, nu)) *
+              conj(this->operator()(site, nu));
+      temp_site1 = site;
+      temp_site2 = site;
+      temp_site3 = site;
+      temp_site4 = site;
+      //
+      temp_site1[mu] = (temp_site1[mu] + 1) % this->dimensions[mu];
+      temp_site2[mu] = (temp_site2[mu] + 2) % this->dimensions[mu];
+      temp_site2[nu] = mod(temp_site2[nu] - 1, nu);
+      temp_site3[mu] = (temp_site3[mu] + 1) % this->dimensions[mu];
+      temp_site3[nu] = mod(temp_site3[nu] - 1, nu);
+      temp_site4[nu] = mod(temp_site4[nu] - 1, nu);
+      temp += this->operator()(temp_site1, mu) *
+              conj(this->operator()(temp_site2, nu)) *
+              conj(this->operator()(temp_site3, mu)) *
+              conj(this->operator()(temp_site4, mu)) *
+              this->operator()(temp_site4, nu);
+      temp_site1 = site;
+      temp_site2 = site;
+      temp_site3 = site;
+      temp_site4 = site;
+      //
+      temp_site1[mu] = (temp_site1[mu] + 1) % this->dimensions[mu];
+      temp_site1[nu] = mod(temp_site1[nu] - 1, nu);
+      temp_site2[nu] = mod(temp_site2[nu] - 1, nu);
+      temp_site3[mu] = mod(temp_site3[mu] - 1, mu);
+      temp_site3[nu] = mod(temp_site3[nu] - 1, nu);
+      temp_site4[mu] = mod(temp_site4[mu] - 1, mu);
+      temp += conj(this->operator()(temp_site1, nu)) *
+              conj(this->operator()(temp_site2, mu)) *
+              conj(this->operator()(temp_site3, mu)) *
+              this->operator()(temp_site3, nu) *
+              this->operator()(temp_site4, mu);
+      temp_site1 = site;
+      temp_site2 = site;
+      temp_site3 = site;
+      temp_site4 = site;
+      //
+      // now do the 2x1 rectangles
+      /*
+          "Forward" 2x1 (+ν)
+
+            x+ν <--U†(x+ν,μ)-- x+μ+ν <--U†(x+μ+ν,μ)-- x+2μ+ν
+            |                                          ^
+            U†(x,ν)                                 U(x+2μ,ν)
+            v                                          |
+            x ==U(x,μ)==>     x+μ  ---U(x+μ,μ)--->    x+2μ
+      */
+      //       temp_site1[mu] = (temp_site1[mu] + 1) % this->dimensions[mu];
+      //       temp_site2[mu] = (temp_site2[mu] + 2) % this->dimensions[mu];
+      //       temp_site3[mu] = (temp_site3[mu] + 1) % this->dimensions[mu];
+      //       temp_site3[nu] = (temp_site3[nu] + 1) % this->dimensions[nu];
+      //       temp_site4[nu] = (temp_site4[nu] + 1) % this->dimensions[nu];
+      //       temp += this->operator()(temp_site1, mu) *
+      //               this->operator()(temp_site2, nu) *
+      //               conj(this->operator()(temp_site3, mu)) *
+      //               conj(this->operator()(temp_site4, mu)) *
+      //               conj(this->operator()(site, nu));
+      //       temp_site1 = site;
+      //       temp_site2 = site;
+      //       temp_site3 = site;
+      //       temp_site4 = site;
+      //
+      //       /*
+      //        U(x,μ): ==>
+      //         <--  <--
+      //        |        ^
+      //        v        |
+      //         -->  ==>
+      //       */
+      //       temp_site1[mu] = (temp_site1[mu] + 1) % this->dimensions[mu];
+      //       temp_site2[nu] = (temp_site2[nu] + 1) % this->dimensions[nu];
+      //       temp_site3[nu] = (temp_site3[nu] + 1) % this->dimensions[nu];
+      //       temp_site3[mu] = mod(temp_site3[mu] - 1, mu);
+      //       temp_site4[mu] = mod(temp_site4[mu] - 1, mu);
+      //       temp += this->operator()(temp_site1, nu) *
+      //               conj(this->operator()(temp_site2, mu)) *
+      //               conj(this->operator()(temp_site3, mu)) *
+      //               conj(this->operator()(temp_site4, nu)) *
+      //               this->operator()(temp_site4, mu);
+      //       temp_site1 = site;
+      //       temp_site2 = site;
+      //       temp_site3 = site;
+      //       temp_site4 = site;
+      //
+      //       /*
+      //        U(x,μ): ==>
+      //
+      //         ==>
+      //       ^     |
+      //       |     v
+      //
+      //       ^     |
+      //       |     v
+      //         <--
+      // */
+      //       temp_site1[mu] = (temp_site1[mu] + 1) % this->dimensions[mu];
+      //       temp_site1[nu] = mod(temp_site1[nu] - 1, nu);
+      //       temp_site2[nu] = mod(temp_site2[nu] - 2, nu);
+      //       temp_site2[mu] = (temp_site2[mu] + 1) % this->dimensions[mu];
+      //       temp_site3[nu] = mod(temp_site3[nu] - 2, nu);
+      //       temp_site4[nu] = mod(temp_site4[nu] - 1, nu);
+      //       temp += conj(this->operator()(temp_site1, nu)) *
+      //               conj(this->operator()(temp_site2, nu)) *
+      //               conj(this->operator()(temp_site3, mu)) *
+      //               this->operator()(temp_site3, nu) *
+      //               this->operator()(temp_site4, nu);
+      //       temp_site1 = site;
+      //       temp_site2 = site;
+      //       temp_site3 = site;
+      //       temp_site4 = site;
+    }
+    return temp;
+  }
 };
 
 template <size_t Nd, size_t Nc>

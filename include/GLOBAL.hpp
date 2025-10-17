@@ -597,6 +597,39 @@ constexpr KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> identitySUN() {
   return id;
 }
 
+template <typename T, size_t N>
+KOKKOS_FORCEINLINE_FUNCTION Kokkos::Array<Kokkos::Array<T, N>, N> operator*(
+    const Kokkos::Array<Kokkos::Array<T, N>, N>& a,
+    const Kokkos::Array<Kokkos::Array<T, N>, N>& b) {
+  Kokkos::Array<Kokkos::Array<T, N>, N> c;
+#pragma unroll
+  for (size_t i = 0; i < N; ++i) {
+#pragma unroll
+    for (size_t j = 0; j < N; ++j) {
+      c[i][j] = a[i][0] * b[0][j];
+#pragma unroll
+      for (size_t k = 1; k < N; ++k) {
+        c[i][j] += a[i][k] * b[k][j];
+      }
+    }
+  }
+  return c;
+}
+
+template <typename T, typename U, size_t N>
+KOKKOS_FORCEINLINE_FUNCTION Kokkos::Array<Kokkos::Array<T, N>, N> operator*(
+    const Kokkos::Array<Kokkos::Array<T, N>, N>& a, const U& b) {
+  Kokkos::Array<Kokkos::Array<T, N>, N> c;
+#pragma unroll
+  for (size_t i = 0; i < N; ++i) {
+#pragma unroll
+    for (size_t j = 0; j < N; ++j) {
+      c[i][j] = a[i][j] * b;
+    }
+  }
+  return c;
+}
+
 // define a global one generator
 // for spinor
 template <size_t Nc, size_t Nd>

@@ -53,12 +53,6 @@ struct WilsonFlow {
     const IndexArray<rank> dims = _field.dimensions;
     Kokkos::realloc(Kokkos::WithoutInitializing, tmp_Z, dims[0], dims[1],
                     dims[2], dims[3]);
-    // Kokkos::realloc(Kokkos::WithoutInitializing, tmp_staple, dims[0],
-    // dims[1],
-    //                 dims[2], dims[3]);
-
-    //            Kokkos::deep_copy(_field.field, tmp_stap);
-    //            Kokkos::deep_copy(_field.field, tmp_Z);
     Kokkos::fence();
   }
 
@@ -80,15 +74,48 @@ struct WilsonFlow {
     }
   }
 
+  void flow_DBW2() {  // todo: check this once by saving a staple field and once
+                      // by locally calculating the staple
+    for (int step = 0; step < params.n_steps; ++step) {
+#pragma unroll
+      for (index_t fstep = 0; fstep < 3; ++fstep) {
+        this->current_step = fstep;
+        stapleField<DGaugeFieldType>(this->field, this->tmp_staple, -1.4088);
+        Kokkos::fence();
+
+        tune_and_launch_for<rank>("Wilsonflow-flow-DBW2",
+                                  IndexArray<rank>{0, 0, 0, 0},
+                                  field.dimensions, *this);
+        Kokkos::fence();
+      }
+    }
+  }
+
+  void flow_impr(real_t b1) {
+    for (int step = 0; step < params.n_steps; ++step) {
+#pragma unroll
+      for (index_t fstep = 0; fstep < 3; ++fstep) {
+        this->current_step = fstep;
+        stapleField<DGaugeFieldType>(this->field, this->tmp_staple, -1.4088);
+        Kokkos::fence();
+
+        tune_and_launch_for<rank>("Wilsonflow-flow-impr",
+                                  IndexArray<rank>{0, 0, 0, 0},
+                                  field.dimensions, *this);
+        Kokkos::fence();
+      }
+    }
+  }
+
   template <typename indexType>
   KOKKOS_INLINE_FUNCTION void stepW1(indexType i0, indexType i1, indexType i2,
                                      indexType i3, index_t mu) const {
     // SUN<Nc> Z0_SUN = (field.field(i0, i1, i2, i3, mu)) *
     //                  (tmp_staple.field(i0, i1, i2, i3, mu));
-    SUN<Nc> Z0_SUN = (tmp_staple.field(i0, i1, i2, i3, mu) *
-                      conj(field.field(i0, i1, i2, i3, mu)));
-    SUNAdj<Nc> Z0 = traceT(Z0_SUN);  //* (Nc / params.beta);
-    tmp_Z(i0, i1, i2, i3, mu) = Z0;  // does this need to be deep copied?
+    SUN<Nc> Z0_SUN = (field.field(i0, i1, i2, i3, mu) *
+                      tmp_staple.field(i0, i1, i2, i3, mu));
+    SUNAdj<Nc> Z0 = 2.0 * traceT(Z0_SUN);  //* (Nc / params.beta);
+    tmp_Z(i0, i1, i2, i3, mu) = Z0;        // does this need to be deep copied?
     field.field(i0, i1, i2, i3, mu) =
         expoSUN(Z0 * -0.25 * params.eps) * field.field(i0, i1, i2, i3, mu);
     // restoreSUN(field.field(i0, i1, i2, i3, mu));
@@ -99,9 +126,9 @@ struct WilsonFlow {
                                      indexType i3, index_t mu) const {
     // SUN<Nc> Z1_SUN = (field.field(i0, i1, i2, i3, mu)) *
     //                  (tmp_staple.field(i0, i1, i2, i3, mu));
-    SUN<Nc> Z1_SUN = (tmp_staple.field(i0, i1, i2, i3, mu) *
-                      conj(field.field(i0, i1, i2, i3, mu)));
-    SUNAdj<Nc> Z1 = traceT(Z1_SUN);  // * (Nc / params.beta);
+    SUN<Nc> Z1_SUN = (field.field(i0, i1, i2, i3, mu) *
+                      tmp_staple.field(i0, i1, i2, i3, mu));
+    SUNAdj<Nc> Z1 = 2.0 * traceT(Z1_SUN);  // * (Nc / params.beta);
     SUNAdj<Nc> Z0 = tmp_Z(i0, i1, i2, i3, mu);
     Z1 = Z1 * static_cast<real_t>(8.0 / 9.0) -
          Z0 * static_cast<real_t>(17.0 / 36.0);
@@ -116,9 +143,9 @@ struct WilsonFlow {
                                     indexType i3, index_t mu) const {
     // SUN<Nc> Z2_SUN = (field.field(i0, i1, i2, i3, mu)) *
     //                  (tmp_staple.field(i0, i1, i2, i3, mu));
-    SUN<Nc> Z2_SUN = (tmp_staple.field(i0, i1, i2, i3, mu) *
-                      conj(field.field(i0, i1, i2, i3, mu)));
-    SUNAdj<Nc> Z2 = traceT(Z2_SUN);  // * (Nc / params.beta);
+    SUN<Nc> Z2_SUN = (field.field(i0, i1, i2, i3, mu) *
+                      tmp_staple.field(i0, i1, i2, i3, mu));
+    SUNAdj<Nc> Z2 = 2.0 * traceT(Z2_SUN);  // * (Nc / params.beta);
     SUNAdj<Nc> Z_old = tmp_Z(i0, i1, i2, i3, mu);
     Z2 = (Z2 * 0.75 - Z_old);
     // SUNAdj<Nc> tmp = (Z2);

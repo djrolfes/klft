@@ -39,6 +39,30 @@ KOKKOS_FORCEINLINE_FUNCTION void print_SUNAdj(
   }
 }
 
+KOKKOS_FORCEINLINE_FUNCTION
+SUNAdj<2> operator*(const SUNAdj<2>& a, const SUNAdj<2>& b) {
+  SUNAdj<2> c;
+  c[0] = a[1] * b[2] - a[2] * b[1];
+  c[1] = a[2] * b[0] - a[0] * b[2];
+  c[2] = a[0] * b[1] - a[1] * b[0];
+  return c;
+}
+
+// implement tr(SunAdj a SunAdj b) = 1/2 sum_i a_i b_i
+// from the definition tr(T_a T_b) = 1/2 delta_ab
+template <size_t Nc>
+KOKKOS_FORCEINLINE_FUNCTION real_t tr(const SUNAdj<Nc>& a,
+                                      const SUNAdj<Nc>& b) {
+  real_t c = 0.0;
+#pragma unroll
+  for (size_t i = 0; i < NcAdj<Nc>; ++i) {
+    c += a[i] * b[i];
+  }
+  return c * 0.5;
+}
+
+// TODO: add operator* for SU(3)
+
 template <size_t Nc, typename Tin>
 KOKKOS_FORCEINLINE_FUNCTION SUNAdj<Nc> operator*(const SUNAdj<Nc>& a,
                                                  const Tin& b) {
@@ -294,8 +318,6 @@ SUN<3> expoSUN(const SUNAdj<3>& a) {
   // printf("t: %f, %f\n", t.real(), t.imag());
   // d = i det(X)
   real_t d = imag_det_SU3(a_tmp);
-
-  // printf("D: %f\n", d);
 
   // now we can compute the exponential
   // q_{N,0} = c_N

@@ -51,6 +51,7 @@ struct TopoCharge {
   const FieldStrengthTensor<DGaugeFieldType> fst;
 
   using RealMatrix = Kokkos::Array<Kokkos::Array<real_t, Nc>, Nc>;
+  using ComplexMatrix = Kokkos::Array<Kokkos::Array<complex_t, Nc>, Nc>;
 
   // define the dimensions of the given Field
   const IndexArray<Nd> dimensions;
@@ -67,25 +68,16 @@ struct TopoCharge {
   KOKKOS_FORCEINLINE_FUNCTION
   constexpr int epsilon4(int mu, int nu, int rho, int sigma) const {
     // repeats -> 0
-    if (mu == nu || mu == rho || mu == sigma || nu == rho || nu == sigma ||
-        rho == sigma) {
-      return 0;
-    }
-    // pack into array
-    constexpr int N = 4;
-    IndexArray<N> idx{mu, nu, rho, sigma};
-    // count inversions
-    int inv = 0;
-    for (int i = 0; i < N; ++i) {
-      for (int j = i + 1; j < N; ++j) {
-        if (idx[i] > idx[j]) ++inv;
-      }
-    }
-    // parity of inversion count gives sign
-    return (inv % 2 == 0 ? +1 : -1);
-  }
+    // if (mu == nu || mu == rho || mu == sigma || nu == rho || nu == sigma ||
+    //     rho == sigma) {
+    //   return 0;
+    // }
+    index_t parity = (mu - nu) * (mu - rho) * (mu - sigma) * (nu - rho) *
+                     (nu - sigma) * (rho - sigma);
 
-  // TODO: make epsilon resolve at compiletime for the relevant combinations
+    // parity of inversion count gives sign
+    return parity > 0 ? (parity == 0 ? 0 : 1) : -1;
+  }
 
   // now define the topological charge calculation for a single site (should
   // this also be parallized over some directions?)
@@ -95,77 +87,42 @@ struct TopoCharge {
                                               const indexType i2,
                                               const indexType i3) const {
     real_t local_charge{0.0};
-    RealMatrix C1, C2;
-    Kokkos::Array<Kokkos::Array<RealMatrix, Nd>, Nd> C;
+    ComplexMatrix C1, C2;
+    Kokkos::Array<Kokkos::Array<SUNAdj<Nc>, Nd>, Nd> C;
 
-    // for (int mu = 0; mu < Nd; ++mu) {
-    //   for (int nu = mu + 1; nu < Nd; ++nu) {
-    //     // get the clover C_munu
-    //     C[mu][nu] = (fst(FSTTag{}, i0, i1, i2, i3, mu, nu));
-    //     C[nu][mu] = (fst(FSTTag{}, i0, i1, i2, i3, nu, mu));
-    //   }
-    // }
+    for (int mu = 0; mu < Nd; ++mu) {
+      for (int nu = mu + 1; nu < Nd; ++nu) {
+        // get the clover C_munu
+        C[mu][nu] = (fst(FSTTag{}, i0, i1, i2, i3, mu, nu));
+        C[nu][mu] = (fst(FSTTag{}, i0, i1, i2, i3, nu, mu));
+      }
+    }
 
-    // TODO 12.05.: implement this according to 1708.00696
-    local_charge += (trace(fst(FSTTag{}, i0, i1, i2, i3, 0, 1) *
-                           fst(FSTTag{}, i0, i1, i2, i3, 2, 3)) +
-                     trace(fst(FSTTag{}, i0, i1, i2, i3, 0, 2) *
-                           fst(FSTTag{}, i0, i1, i2, i3, 3, 1)) +
-                     trace(fst(FSTTag{}, i0, i1, i2, i3, 0, 3) *
-                           fst(FSTTag{}, i0, i1, i2, i3, 1, 2)));
+// TODO 12.05.: implement this according to 1708.00696
+// local_charge += tr<Nc>(C[0][1], C[2][3]);
+// local_charge += tr<Nc>(C[0][2], C[3][1]);
+// local_charge += tr<Nc>(C[0][3], C[1][2]);
+// charge_per_site(i0, i1, i2, i3) = local_charge;
+#pragma unroll
+    for (int mu = 0; mu < Nd - 1; ++mu) {
+#pragma unroll
+      for (int nu = mu + 1; nu < Nd; ++nu) {
+        if (mu == nu) continue;
+#pragma unroll
+        for (int rho = 0; rho < Nd - 1; ++rho) {
+          if (rho == mu || rho == nu) continue;
+#pragma unroll
+          for (int sigma = rho + 1; sigma < Nd; ++sigma) {
+            if (sigma == mu || sigma == nu) continue;
+            local_charge +=
+                epsilon4(mu, nu, rho, sigma) * tr<Nc>(C[mu][nu], C[rho][sigma]);
+          }
+        }
+      }
+    }
     charge_per_site(i0, i1, i2, i3) = local_charge;
     // charge_per_site(i0, i1, i2, i3) = local_charge / 16;
   }
-
-  // return the clover C_munu
-  // template <typename indexType>
-  // KOKKOS_FORCEINLINE_FUNCTION RealMatrix
-  // get_clover(const indexType i0, const indexType i1, const indexType i2,
-  //            const indexType i3, index_t mu, index_t nu) const {
-  //
-  //   SUN<Nc> P_munu = zeroSUN<Nc>();
-  //   const IndexArray<Nd> x{static_cast<index_t>(i0),
-  //   static_cast<index_t>(i1),
-  //                          static_cast<index_t>(i2),
-  //                          static_cast<index_t>(i3)};
-  //
-  //   // Helper lambda for modular arithmetic
-  //   auto mod = [&](index_t s, index_t dir) {
-  //     return (s + this->dimensions[dir]);
-  //   };
-  //
-  //   // 1. Plaquette in (+mu, +nu) plane starting at x
-  //   IndexArray<Nd> x_p_mu = x;
-  //   x_p_mu[mu] = (x[mu] + 1) % dimensions[mu];
-  //   IndexArray<Nd> x_p_nu = x;
-  //   x_p_nu[nu] = (x[nu] + 1) % dimensions[nu];
-  //   P_munu += g_in(x, mu) * g_in(x_p_mu, nu) * conj(g_in(x_p_nu, mu)) *
-  //             conj(g_in(x, nu));
-  //
-  //   // 2. Plaquette in (+mu, -nu) plane starting at x
-  //   IndexArray<Nd> x_m_nu = x;
-  //   x_m_nu[nu] = mod(x[nu] - 1, nu) % dimensions[nu];
-  //   IndexArray<Nd> x_p_mu_m_nu = x_p_mu;
-  //   x_p_mu_m_nu[nu] = mod(x_p_mu[nu] - 1, nu) % dimensions[nu];
-  //   P_munu += g_in(x, mu) * conj(g_in(x_p_mu_m_nu, nu)) *
-  //             conj(g_in(x_m_nu, mu)) * g_in(x_m_nu, nu);
-  //
-  //   // 3. Plaquette in (-mu, +nu) plane starting at x
-  //   IndexArray<Nd> x_m_mu = x;
-  //   x_m_mu[mu] = mod(x[mu] - 1, mu) % dimensions[mu];
-  //   IndexArray<Nd> x_m_mu_p_nu = x_m_mu;
-  //   x_m_mu_p_nu[nu] = (x_m_mu[nu] + 1) % dimensions[nu];
-  //   P_munu += conj(g_in(x_m_mu, mu)) * g_in(x_m_mu, nu) *
-  //             g_in(x_m_mu_p_nu, mu) * conj(g_in(x, nu));
-  //
-  //   // 4. Plaquette in (-mu, -nu) plane starting at x
-  //   IndexArray<Nd> x_m_mu_m_nu = x_m_mu;
-  //   x_m_mu_m_nu[nu] = mod(x_m_mu[nu] - 1, nu) % dimensions[nu];
-  //   P_munu += conj(g_in(x_m_mu, mu)) * conj(g_in(x_m_mu_m_nu, nu)) *
-  //             g_in(x_m_mu_m_nu, mu) * g_in(x_m_nu, nu);
-  //
-  //   return imag(P_munu) * 0.25;
-  // }
 };
 
 template <typename DGaugeFieldType>
@@ -188,6 +145,39 @@ real_t get_topological_charge(const typename DGaugeFieldType::type g_in) {
   Kokkos::fence();
   // charge /= 32 * PI * PI;
 
-  return charge / (8 * PI * PI);
+  return -4.0 * charge / (32 * PI * PI);
 }
+
+template <typename DGaugeFieldType>
+real_t get_topological_charge_improved(
+    const typename DGaugeFieldType::type g_in, const real_t b1) {
+  static_assert(isDeviceGaugeFieldType<DGaugeFieldType>(),
+                "get_topological_charge requires a device gauge field type.");
+  constexpr static const size_t Nd =
+      DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank;
+  static_assert(Nd == 4,
+                "Topological charge is only defined for 4D gauge fields.");
+
+  const real_t b0 = 1 - 8 * b1;
+  DEBUG_MPI_PRINT("enter get_topological_charge");
+  // define the functor
+  TopoCharge<DGaugeFieldType> TCharge(g_in);
+  tune_and_launch_for<Nd>("Calculate topological charge", IndexArray<Nd>{0},
+                          g_in.dimensions, TCharge);
+  TopoCharge<DGaugeFieldType,
+             typename FieldStrengthTensor<DGaugeFieldType>::RectangleDef>
+      TCharge_rect(g_in);
+  tune_and_launch_for<Nd>("Calculate topological charge", IndexArray<Nd>{0},
+                          g_in.dimensions, TCharge_rect);
+  Kokkos::fence();
+
+  real_t charge = b0 * TCharge.charge_per_site.sum();
+  Kokkos::fence();
+  charge += 2.0 * b1 * TCharge_rect.charge_per_site.sum();
+  Kokkos::fence();
+  // charge /= 32 * PI * PI;
+
+  return -4.0 * charge / (32 * PI * PI);
+}
+
 }  // namespace klft
