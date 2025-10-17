@@ -279,7 +279,7 @@ index_t do_wflowtest(HMCType& hmc, GaugeObservableParams& gaugeObsParams,
 
   for (int flow_Step = 1; flow_Step <= flow_steps; ++flow_Step) {
     // perform wilson flow step
-    wilson_flow.flow_DBW2();
+    wilson_flow.flow();
 
     flow_times.push_back(flow_Step * gaugeObsParams.wilson_flow_params.eps);
     topological_charges.push_back(
@@ -403,7 +403,7 @@ index_t do_wflowtest(HMCType& hmc, GaugeObservableParams& gaugeObsParams,
 
       for (int flow_Step = 1; flow_Step <= flow_steps; ++flow_Step) {
         // perform wilson flow step
-        wilson_flow.flow_DBW2();
+        wilson_flow.flow();
 
         flow_times.push_back(flow_Step * gaugeObsParams.wilson_flow_params.eps);
         topological_charges.push_back(
