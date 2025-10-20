@@ -155,9 +155,9 @@ void measureGaugeObservablesPTBC(const typename DGaugeFieldType::type &g_in,
         // measure the gauge density if requested
         if (params.do_wilson_flow) {
           // perform the Wilson flow if requested
-          ActionDensity = getActionDensity<DGaugeFieldType>(wf.field);
+          ActionDensity = getActionDensity_clover<DGaugeFieldType>(wf.field);
         } else {
-          ActionDensity = getActionDensity<DGaugeFieldType>(g_in);
+          ActionDensity = getActionDensity_clover<DGaugeFieldType>(g_in);
         }
         MPI_Send(&ActionDensity, 1, mpi_real_t(), 0,
                  MPI_GAUGE_OBSERVABLES_ACTION_DENSITY, MPI_COMM_WORLD);
@@ -359,9 +359,9 @@ void measureGaugeObservables(const typename DGaugeFieldType::type &g_in,
       real_t Density_E;
       if (params.do_wilson_flow) {
         // perform the Wilson flow if requested
-        Density_E = getActionDensity<DGaugeFieldType>(wf.field);
+        Density_E = getActionDensity_clover<DGaugeFieldType>(wf.field);
       } else {
-        Density_E = getActionDensity<DGaugeFieldType>(g_in);
+        Density_E = getActionDensity_clover<DGaugeFieldType>(g_in);
       }
       params.action_density_measurements.push_back(Density_E);
       if (KLFT_VERBOSITY > 1) {
