@@ -1,4 +1,5 @@
 add_library(klft STATIC 
   Metropolis.cpp
-  HMC_exec.cpp)
-target_link_libraries(klft PUBLIC Kokkos::kokkos yaml-cpp)
+  HMC_exec.cpp
+  PTBC.cpp)
+target_link_libraries(klft PUBLIC MPI::MPI_CXX Kokkos::kokkos yaml-cpp)

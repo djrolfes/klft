@@ -21,6 +21,7 @@
 // for 2D, 3D and 4D SU(N) gauge fields
 
 #include "Metropolis.hpp"
+
 #include "InputParser.hpp"
 
 // we are hard coding the RNG now to use Kokkos::Random_XorShift64_Pool
@@ -59,11 +60,11 @@ int Metropolis(const std::string& input_file,
   // parse input file
   MetropolisParams metropolisParams;
   GaugeObservableParams gaugeObsParams;
-  if (!parseInputFile(input_file, metropolisParams)) {
+  if (!parseInputFile(input_file, output_directory, metropolisParams)) {
     printf("Error parsing input file\n");
     return -1;
   }
-  if (!parseInputFile(input_file, gaugeObsParams)) {
+  if (!parseInputFile(input_file, output_directory, gaugeObsParams)) {
     printf("Error parsing input file\n");
     return -1;
   }
@@ -80,24 +81,21 @@ int Metropolis(const std::string& input_file,
       deviceGaugeField<4, 1> dev_g_U1_4D(
           metropolisParams.L0, metropolisParams.L1, metropolisParams.L2,
           metropolisParams.L3, identitySUN<1>());
-      run_metropolis<4, 1>(dev_g_U1_4D, metropolisParams, gaugeObsParams, rng,
-                           output_directory);
+      run_metropolis<4, 1>(dev_g_U1_4D, metropolisParams, gaugeObsParams, rng);
     }
     // case SU(2)
     else if (metropolisParams.Nc == 2) {
       deviceGaugeField<4, 2> dev_g_SU2_4D(
           metropolisParams.L0, metropolisParams.L1, metropolisParams.L2,
           metropolisParams.L3, identitySUN<2>());
-      run_metropolis<4, 2>(dev_g_SU2_4D, metropolisParams, gaugeObsParams, rng,
-                           output_directory);
+      run_metropolis<4, 2>(dev_g_SU2_4D, metropolisParams, gaugeObsParams, rng);
     }
     // case SU(3)
     else if (metropolisParams.Nc == 3) {
       deviceGaugeField<4, 3> dev_g_SU3_4D(
           metropolisParams.L0, metropolisParams.L1, metropolisParams.L2,
           metropolisParams.L3, identitySUN<3>());
-      run_metropolis<4, 3>(dev_g_SU3_4D, metropolisParams, gaugeObsParams, rng,
-                           output_directory);
+      run_metropolis<4, 3>(dev_g_SU3_4D, metropolisParams, gaugeObsParams, rng);
     }
     // case SU(N)
     else {
@@ -112,24 +110,21 @@ int Metropolis(const std::string& input_file,
       deviceGaugeField3D<3, 1> dev_g_U1_3D(
           metropolisParams.L0, metropolisParams.L1, metropolisParams.L2,
           identitySUN<1>());
-      run_metropolis<3, 1>(dev_g_U1_3D, metropolisParams, gaugeObsParams, rng,
-                           output_directory);
+      run_metropolis<3, 1>(dev_g_U1_3D, metropolisParams, gaugeObsParams, rng);
     }
     // case SU(2)
     else if (metropolisParams.Nc == 2) {
       deviceGaugeField3D<3, 2> dev_g_SU2_3D(
           metropolisParams.L0, metropolisParams.L1, metropolisParams.L2,
           identitySUN<2>());
-      run_metropolis<3, 2>(dev_g_SU2_3D, metropolisParams, gaugeObsParams, rng,
-                           output_directory);
+      run_metropolis<3, 2>(dev_g_SU2_3D, metropolisParams, gaugeObsParams, rng);
     }
     // case SU(3)
     else if (metropolisParams.Nc == 3) {
       deviceGaugeField3D<3, 3> dev_g_SU3_3D(
           metropolisParams.L0, metropolisParams.L1, metropolisParams.L2,
           identitySUN<3>());
-      run_metropolis<3, 3>(dev_g_SU3_3D, metropolisParams, gaugeObsParams, rng,
-                           output_directory);
+      run_metropolis<3, 3>(dev_g_SU3_3D, metropolisParams, gaugeObsParams, rng);
     }
     // case SU(N)
     else {
@@ -143,22 +138,19 @@ int Metropolis(const std::string& input_file,
     if (metropolisParams.Nc == 1) {
       deviceGaugeField2D<2, 1> dev_g_U1_2D(
           metropolisParams.L0, metropolisParams.L1, identitySUN<1>());
-      run_metropolis<2, 1>(dev_g_U1_2D, metropolisParams, gaugeObsParams, rng,
-                           output_directory);
+      run_metropolis<2, 1>(dev_g_U1_2D, metropolisParams, gaugeObsParams, rng);
     }
     // case SU(2)
     else if (metropolisParams.Nc == 2) {
       deviceGaugeField2D<2, 2> dev_g_SU2_2D(
           metropolisParams.L0, metropolisParams.L1, identitySUN<2>());
-      run_metropolis<2, 2>(dev_g_SU2_2D, metropolisParams, gaugeObsParams, rng,
-                           output_directory);
+      run_metropolis<2, 2>(dev_g_SU2_2D, metropolisParams, gaugeObsParams, rng);
     }
     // case SU(3)
     else if (metropolisParams.Nc == 3) {
       deviceGaugeField2D<2, 3> dev_g_SU3_2D(
           metropolisParams.L0, metropolisParams.L1, identitySUN<3>());
-      run_metropolis<2, 3>(dev_g_SU3_2D, metropolisParams, gaugeObsParams, rng,
-                           output_directory);
+      run_metropolis<2, 3>(dev_g_SU3_2D, metropolisParams, gaugeObsParams, rng);
     }
     // case SU(N)
     else {

@@ -1,9 +1,29 @@
+//******************************************************************************/
+//
+// This file is part of the Kokkos Lattice Field Theory (KLFT) library.
+//
+// KLFT is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// KLFT is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with KLFT.  If not, see <http://www.gnu.org/licenses/>.
+//
+//******************************************************************************/
 #pragma once
 #include <random>
 
 #include "AdjointFieldHelper.hpp"
 #include "FermionMonomial.hpp"
+#include "FermionMonomialEO.hpp"
 #include "FermionParams.hpp"
+#include "FieldTypeHelper.hpp"
 #include "GLOBAL.hpp"
 #include "GaugeMonomial.hpp"
 #include "Gauge_Util.hpp"
@@ -19,6 +39,8 @@ class HMC {
   // template argument deduction and safety
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
   static_assert(isDeviceAdjFieldType<DAdjFieldType>::value);
+  typedef DGaugeFieldType DeviceGaugeFieldType;
+  typedef DAdjFieldType DeviceAdjFieldType;
   constexpr static size_t rank =
       DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank;
   constexpr static size_t Nc = DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc;
@@ -67,16 +89,25 @@ class HMC {
                       typename> class _Solver,
             template <typename, typename> class DiracOpT,
             typename DSpinorFieldType>
-  void add_fermion_monomial(
-      typename DSpinorFieldType::type& spinorField,
-      diracParams<DeviceFermionFieldTypeTraits<DSpinorFieldType>::Rank,
-
-                  DeviceFermionFieldTypeTraits<DSpinorFieldType>::RepDim>&
-          params_,
-      const real_t& tol_, RNG& rng, const unsigned int _time_scale) {
+  void add_fermion_monomial(typename DSpinorFieldType::type& spinorField,
+                            const diracParams& params_, const real_t& tol_,
+                            RNG& rng, const unsigned int _time_scale) {
     monomials.emplace_back(
         std::make_unique<FermionMonomial<RNG, DSpinorFieldType, DGaugeFieldType,
                                          DAdjFieldType, _Solver, DiracOpT>>(
+            spinorField, params_, tol_, rng, _time_scale));
+  }
+  template <template <template <typename, typename> class DiracOpT, typename,
+                      typename> class _Solver,
+            template <typename, typename> class DiracOpT,
+            typename DSpinorFieldType>
+  void add_fermion_monomialEO(typename DSpinorFieldType::type& spinorField,
+                              const diracParams& params_, const real_t& tol_,
+                              RNG& rng, const unsigned int _time_scale) {
+    monomials.emplace_back(
+        std::make_unique<
+            FermionMonomialEO<RNG, DSpinorFieldType, DGaugeFieldType,
+                              DAdjFieldType, _Solver, DiracOpT>>(
             spinorField, params_, tol_, rng, _time_scale));
   }
 
@@ -87,8 +118,7 @@ class HMC {
     //              "Randomized Momentum");
 
     Kokkos::fence();
-    GaugeFieldType gauge_old(hamiltonian_field.gauge_field.dimensions, rng,
-                             0.1);
+    GaugeFieldType gauge_old(hamiltonian_field.gauge_field.dimensions, 0);
     Kokkos::deep_copy(gauge_old.field, hamiltonian_field.gauge_field.field);
     Kokkos::fence();
     for (int i = 0; i < monomials.size(); ++i) {
@@ -116,8 +146,7 @@ class HMC {
       }
     }
     if (check_Reversibility) {
-      GaugeFieldType gauge_save(hamiltonian_field.gauge_field.dimensions, rng,
-                                0.1);
+      GaugeFieldType gauge_save(hamiltonian_field.gauge_field.dimensions, 0);
       Kokkos::deep_copy(gauge_save.field, hamiltonian_field.gauge_field.field);
       Kokkos::fence();
       // for (int i = 0; i < monomials.size(); ++i) {
@@ -146,4 +175,14 @@ class HMC {
     return accept;
   }
 };
+
+// compile time check for the appropriate types
+template <typename T>
+struct isHMCClass : std::false_type {};
+
+template <size_t rank, size_t Nc, GaugeFieldKind k, class RNG>
+struct isHMCClass<
+    HMC<DeviceGaugeFieldType<rank, Nc, k>, DeviceAdjFieldType<rank, Nc>, RNG>>
+    : std::true_type {};
+
 }  // namespace klft

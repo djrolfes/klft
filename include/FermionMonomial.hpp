@@ -1,6 +1,23 @@
-
+//******************************************************************************/
+//
+// This file is part of the Kokkos Lattice Field Theory (KLFT) library.
+//
+// KLFT is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// KLFT is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with KLFT.  If not, see <http://www.gnu.org/licenses/>.
+//
+//******************************************************************************/
 #pragma once
-#include "GDiracOperator.hpp"
+#include "DiracOperator.hpp"
 #include "GLOBAL.hpp"
 #include "Monomial.hpp"
 #include "Solver.hpp"
@@ -31,16 +48,15 @@ class FermionMonomial : public Monomial<DGaugeFieldType, DAdjFieldType> {
                 "Rank and Nc must match between gauge, adjoint, and fermion "
                 "field types.");
   using FermionField = typename DSpinorFieldType::type;
-  using DiracOperator =
-      DiracOperator<DiracOpT, DSpinorFieldType, DGaugeFieldType>;
+  using DiracOperator = DiracOpT<DSpinorFieldType, DGaugeFieldType>;
   using Solver = _Solver<DiracOpT, DSpinorFieldType, DGaugeFieldType>;
 
  public:
   FermionField& phi;
-  const diracParams<rank, RepDim> params;
+  const diracParams params;
   const real_t tol;
   RNGType rng;
-  FermionMonomial(FermionField& _phi, const diracParams<rank, RepDim>& params_,
+  FermionMonomial(FermionField& _phi, const diracParams& params_,
                   const real_t& tol_, RNGType& RNG_, unsigned int _time_scale)
       : Monomial<DGaugeFieldType, DAdjFieldType>(_time_scale),
         phi(_phi),
@@ -52,6 +68,7 @@ class FermionMonomial : public Monomial<DGaugeFieldType, DAdjFieldType> {
   }
 
   void heatbath(HamiltonianField<DGaugeFieldType, DAdjFieldType> h) override {
+    Kokkos::Profiling::pushRegion("FermionHeatbath");
     auto dims = h.gauge_field.dimensions;
 
     FermionField R(dims, rng, 0, SQRT2INV);
@@ -60,9 +77,11 @@ class FermionMonomial : public Monomial<DGaugeFieldType, DAdjFieldType> {
         spinor_norm_sq<rank, Nc, RepDim>(R);
     DiracOperator dirac_op(h.gauge_field, params);
     dirac_op.template apply<Tags::TagDdagger>(R, this->phi);
+    Kokkos::Profiling::popRegion();
   }
 
   void accept(HamiltonianField<DGaugeFieldType, DAdjFieldType> h) override {
+    Kokkos::Profiling::pushRegion("FermionAccept");
     auto dims = h.gauge_field.dimensions;
 
     FermionField x(dims, complex_t(0.0, 0.0));
@@ -78,6 +97,7 @@ class FermionMonomial : public Monomial<DGaugeFieldType, DAdjFieldType> {
 
     Monomial<DGaugeFieldType, DAdjFieldType>::H_new =
         spinor_dot_product<rank, Nc, RepDim>(chi, this->phi).real();
+    Kokkos::Profiling::popRegion();
   }
   void print() override {
     printf("Fermion Monomial: %.20f\n", this->get_delta_H());

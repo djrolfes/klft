@@ -1,8 +1,9 @@
 #pragma once
 #include <fstream>
 #include <iomanip>
-
 #include "FermionParams.hpp"
+#include "FieldTypeHelper.hpp"
+#include "GLOBAL.hpp"
 #include "PionCorrelator.hpp"
 
 namespace klft {
@@ -33,17 +34,14 @@ template <size_t rank>
 auto getDiracParams(const IndexArray<rank>& dimensions,
                     const FermionObservableParams& fparams) {
   if (fparams.RepDim == 4) {
-    auto gammas = get_gammas<4>();
-    GammaMat<4> gamma5 = get_gamma5();
-    diracParams<rank, 4> dParams(dimensions, gammas, gamma5, fparams.kappa);
+    diracParams dParams(fparams.kappa);
     return dParams;
 
   } else {
     printf("Warning: Unsupported Gamma Matrix Representation\n");
     printf("Warning: Fallback RepDim = 4\n");
-    auto gammas = get_gammas<4>();
-    GammaMat<4> gamma5 = get_gamma5();
-    diracParams<rank, 4> dParams(dimensions, gammas, gamma5, fparams.kappa);
+
+    diracParams dParams(fparams.kappa);
     return dParams;
   }
 }
@@ -68,10 +66,7 @@ void measureFermionObservables(const typename DGaugeFieldType::type& g_in,
   if (params.measure_pion_correlator) {
     auto PC =
         PionCorrelator<DSpinorFieldType, DGaugeFieldType, _Solver, DiracOpT>(
-            g_in,
-            getDiracParams<DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank>(
-                g_in.dimensions, params),
-            params.tol);
+            g_in, getDiracParams(g_in.dimensions, params), params.tol);
     params.pion_correlator.push_back(PC);
     if (KLFT_VERBOSITY > 1) {
       printf("Pion Correlator:\n");
@@ -109,7 +104,7 @@ inline void flushPionCorrelator(std::ofstream& file,
 }
 
 inline void flushAllFermionObservables(const FermionObservableParams& params,
-                                       const std::string& output_directory,
+
                                        const bool HEADER = true,
                                        const int& p = std::cout.precision()) {
   std::setprecision(p);
@@ -118,10 +113,9 @@ inline void flushAllFermionObservables(const FermionObservableParams& params,
     printf("write_to_file is not enabled\n");
     return;
   }
-
+  // TODO : flush similar to gauge obs
   if (params.measure_pion_correlator && params.pion_correlator_filename != "") {
-    std::ofstream file(output_directory + params.pion_correlator_filename,
-                       std::ios::app);
+    std::ofstream file(params.pion_correlator_filename, std::ios::app);
     printf("Flushing Pion correlator");
     flushPionCorrelator(file, params, HEADER);
     file.close();

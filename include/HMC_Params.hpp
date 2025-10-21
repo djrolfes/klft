@@ -76,14 +76,13 @@ struct HMCParams {
       printf("L2: %d\n", L2);
       printf("L3: %d\n", L3);
 
-      printf("coldStart: %b", coldStart);
+      printf("coldStart: %d", coldStart);
       printf("rngDelta: %.3f\n", rngDelta);
       printf("seed: %d\n", seed);
 
       printf("GaugeField Parameters:\n");
       printf("Nd: %zu\n", Nd);
       printf("Nc: %zu\n", Nc);
-      printf("Wilson Action Parameters:\n");
     }
   }
 };
@@ -100,6 +99,10 @@ struct GaugeMonomial_Params {
       printf("  beta: %.10f\n", beta);
     }
   }
+  std::string to_string() const {
+    return "GaugeMonomial_Params{beta: " + std::to_string(beta) +
+           ", level: " + std::to_string(level) + "}";
+  }
 };
 
 struct FermionMonomial_Params {
@@ -109,6 +112,7 @@ struct FermionMonomial_Params {
   size_t RepDim;
   real_t kappa;
   real_t tol;
+  bool preconditioning;
   // FermionMonomial_Params(const std::string& _fermion_type = "HWilson",
   //                        const std::string& _Solver = "CG", size_t _RepDim =
   //                        4, real_t _kappa = 0.1, real_t _tol = 1e-6)
@@ -127,6 +131,7 @@ struct FermionMonomial_Params {
       printf("  RepDim: %zu\n", RepDim);
       printf("  Kappa: %.20f\n", kappa);
       printf("  Tolerance: %.20f\n", tol);
+      printf("  Preconditioning: %i\n", preconditioning);
     }
   }
 };

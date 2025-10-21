@@ -1,6 +1,25 @@
+//******************************************************************************/
+//
+// This file is part of the Kokkos Lattice Field Theory (KLFT) library.
+//
+// KLFT is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// KLFT is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with KLFT.  If not, see <http://www.gnu.org/licenses/>.
+//
+//******************************************************************************/
 #pragma once
 #include "FieldTypeHelper.hpp"
 #include "GLOBAL.hpp"
+#include "GammaMatrix.hpp"
 #include "Spinor.hpp"
 #include "Tuner.hpp"
 
@@ -36,7 +55,8 @@ struct SpinorDotProduct {
 template <size_t rank, size_t Nc, size_t RepDim>
 KOKKOS_FORCEINLINE_FUNCTION complex_t spinor_dot_product(
     const typename DeviceSpinorFieldType<rank, Nc, RepDim>::type& a,
-    const typename DeviceSpinorFieldType<rank, Nc, RepDim>::type& b) {
+    const typename DeviceSpinorFieldType<rank, Nc, RepDim>::type& b,
+    typename DeviceFieldType<rank>::type& dot_product_per_site) {
   assert(a.dimensions == b.dimensions);
   static_assert(
       Kokkos::SpaceAccessibility<
@@ -47,26 +67,46 @@ KOKKOS_FORCEINLINE_FUNCTION complex_t spinor_dot_product(
                                                                 // or host-host
                                                                 // interaction
   complex_t result = 0.0;
-  IndexArray<rank> start;
-  IndexArray<rank> end;
-  for (index_t i = 0; i < rank; ++i) {
-    start[i] = 0;
-    end[i] = a.dimensions[i];
-  }
+  IndexArray<rank> start{};
+
   // temporary field for storing results per site
   // direct reduction is slow
   // this field will be summed over in the end
-  using FieldType = typename DeviceFieldType<rank>::type;
-  FieldType dot_product_per_site(end, complex_t(0.0, 0.0));
-  SpinorDotProduct<rank, Nc, RepDim> SDP(a, b, dot_product_per_site, end);
+  // using FieldType = typename DeviceFieldType<rank>::type;
+  // FieldType dot_product_per_site(end, complex_t(0.0, 0.0));
+  SpinorDotProduct<rank, Nc, RepDim> SDP(a, b, dot_product_per_site,
+                                         a.dimensions);
 
-  tune_and_launch_for<rank>("SpinorField_dot_product", start, end, SDP);
+  tune_and_launch_for<rank>("SpinorField_dot_product", start, a.dimensions,
+                            SDP);
   Kokkos::fence();
   result = dot_product_per_site.sum();
   Kokkos::fence();
   return result;
 }
+template <size_t rank, size_t Nc, size_t RepDim>
+KOKKOS_FORCEINLINE_FUNCTION complex_t spinor_dot_product(
+    const typename DeviceSpinorFieldType<rank, Nc, RepDim>::type& a,
+    const typename DeviceSpinorFieldType<rank, Nc, RepDim>::type& b) {
+  assert(a.dimensions == b.dimensions);
+  static_assert(
+      Kokkos::SpaceAccessibility<
+          typename decltype(a.field)::execution_space,
+          typename decltype(b.field)::memory_space>::accessible,
+      "Execution space of A cannot access memory space of B");  // allow only
+                                                                // device-device
+                                                                // or host-host
+                                                                // interaction
 
+  // temporary field for storing results per site
+  // direct reduction is slow
+  // this field will be summed over in the end
+  using FieldType = typename DeviceFieldType<rank>::type;
+  FieldType dot_product_per_site(a.dimensions, complex_t(0.0, 0.0));
+
+  Kokkos::fence();
+  return spinor_dot_product<rank, Nc, RepDim>(a, b, dot_product_per_site);
+}
 template <size_t rank, size_t Nc, size_t RepDim>
 struct SpinorNorm {
   using SpinorFieldType =
@@ -89,120 +129,230 @@ struct SpinorNorm {
 };
 
 template <size_t rank, size_t Nc, size_t RepDim>
-KOKKOS_FORCEINLINE_FUNCTION real_t spinor_norm_sq(
-    const typename DeviceSpinorFieldType<rank, Nc, RepDim>::type& a) {
+KOKKOS_FORCEINLINE_FUNCTION real_t
+spinor_norm_sq(const typename DeviceSpinorFieldType<rank, Nc, RepDim>::type& a,
+               typename DeviceScalarFieldType<rank>::type& norm_per_site) {
   real_t result = 0.0;
-  IndexArray<rank> start;
-  IndexArray<rank> end;
-  for (index_t i = 0; i < rank; ++i) {
-    start[i] = 0;
-    end[i] = a.dimensions[i];
-  }
+  IndexArray<rank> start{};
+
   // temporary field for storing results per site
   // direct reduction is slow
   // this field will be summed over in the end
-  using FieldType = typename DeviceScalarFieldType<rank>::type;
-  real_t init = 0;
-  FieldType norm_per_site(end, init);
-  SpinorNorm<rank, Nc, RepDim> norm(a, norm_per_site, end);
-
-  tune_and_launch_for<rank>("SpinorField_norm", start, end, norm);
+  // using FieldType = typename DeviceScalarFieldType<rank>::type;
+  // real_t init = 0;
+  // FieldType norm_per_site(end, init);
+  SpinorNorm<rank, Nc, RepDim> norm(a, norm_per_site, a.dimensions);
+  tune_and_launch_for<rank>("SpinorField_norm", start, a.dimensions, norm);
   Kokkos::fence();
   result = norm_per_site.sum();
   Kokkos::fence();
   return result;
 }
 template <size_t rank, size_t Nc, size_t RepDim>
+KOKKOS_FORCEINLINE_FUNCTION real_t spinor_norm_sq(
+    const typename DeviceSpinorFieldType<rank, Nc, RepDim>::type& a) {
+  // temporary field for storing results per site
+  // direct reduction is slow
+  // this field will be summed over in the end
+  using FieldType = typename DeviceScalarFieldType<rank>::type;
+  real_t init = 0;
+  FieldType norm_per_site(a.dimensions, init);
+  Kokkos::fence();
+
+  return spinor_norm_sq<rank, Nc, RepDim>(a, norm_per_site);
+}
+template <size_t rank, size_t Nc, size_t RepDim>
 KOKKOS_FORCEINLINE_FUNCTION real_t
 spinor_norm(const typename DeviceSpinorFieldType<rank, Nc, RepDim>::type& a) {
   return Kokkos::sqrt(spinor_norm_sq<rank, Nc, RepDim>(a));
 }
-
 template <size_t rank, size_t Nc, size_t RepDim>
-struct SpinorAddMul {
+KOKKOS_FORCEINLINE_FUNCTION real_t
+spinor_norm(const typename DeviceSpinorFieldType<rank, Nc, RepDim>::type& a,
+            typename DeviceScalarFieldType<rank>::type& norm_per_site) {
+  return Kokkos::sqrt(spinor_norm_sq<rank, Nc, RepDim>(a, norm_per_site));
+}
+template <size_t rank, size_t Nc, size_t RepDim>
+struct axpyFunctor {
   using SpinorFieldType =
       typename DeviceSpinorFieldType<rank, Nc, RepDim>::type;
-  const SpinorFieldType a;
-  const SpinorFieldType b;
+  const SpinorFieldType x;
+  const SpinorFieldType y;
   const complex_t alpha;
   SpinorFieldType c;
   const IndexArray<rank> dimensions;
-  SpinorAddMul(const SpinorFieldType& a,
-               const SpinorFieldType& b,
-               SpinorFieldType& c,
-               const complex_t& alpha,
-               const IndexArray<rank>& dimensions)
-      : a(a), b(b), c(c), alpha(alpha), dimensions(dimensions) {}
+  axpyFunctor(const complex_t& alpha,
+              const SpinorFieldType& x,
+              const SpinorFieldType& y,
+              SpinorFieldType& c,
+              const IndexArray<rank>& dimensions)
+      : x(x), y(y), c(c), alpha(alpha), dimensions(dimensions) {}
   template <typename... Indices>
   KOKKOS_FORCEINLINE_FUNCTION void operator()(const Indices... Idcs) const {
-    c(Idcs...) = (a(Idcs...) + (alpha * b(Idcs...)));
+    // axpy(alpha, x(Idcs...), y(Idcs...), c(Idcs...));
+    c(Idcs...) = (y(Idcs...) + (alpha * x(Idcs...)));
   }
 };
+
 template <size_t rank, size_t Nc, size_t RepDim>
-typename DeviceSpinorFieldType<rank, Nc, RepDim>::type
-    KOKKOS_FORCEINLINE_FUNCTION
-    spinor_add_mul(
-        const typename DeviceSpinorFieldType<rank, Nc, RepDim>::type& a,
-        const typename DeviceSpinorFieldType<rank, Nc, RepDim>::type& b,
-        const complex_t& alpha) {
-  assert(a.dimensions == b.dimensions);
+struct axpyG5Functor {
+  using SpinorFieldType =
+      typename DeviceSpinorFieldType<rank, Nc, RepDim>::type;
+  const SpinorFieldType x;
+  const SpinorFieldType y;
+  const complex_t alpha;
+  SpinorFieldType c;
+  const IndexArray<rank> dimensions;
+  axpyG5Functor(const complex_t& alpha,
+                const SpinorFieldType& x,
+                const SpinorFieldType& y,
+                SpinorFieldType& c,
+                const IndexArray<rank>& dimensions)
+      : x(x), y(y), c(c), alpha(alpha), dimensions(dimensions) {}
+  template <typename... Indices>
+  KOKKOS_FORCEINLINE_FUNCTION void operator()(const Indices... Idcs) const {
+    // axpy(alpha, x(Idcs...), y(Idcs...), c(Idcs...));
+    c(Idcs...) = gamma5(y(Idcs...) + (alpha * x(Idcs...)));
+  }
+};
+/// @brief Calculates alpha*x+y
+
+/// @param alpha
+/// @param x
+/// @param y
+/// @return c = alpha*x+y
+template <typename DSpinorFieldType>
+typename DSpinorFieldType::type KOKKOS_FORCEINLINE_FUNCTION
+axpy(const complex_t& alpha,
+     const typename DSpinorFieldType::type& x,
+     const typename DSpinorFieldType::type& y) {
+  constexpr static size_t rank =
+      DeviceFermionFieldTypeTraits<DSpinorFieldType>::Rank;
+  constexpr static size_t Nc =
+      DeviceFermionFieldTypeTraits<DSpinorFieldType>::Nc;
+  constexpr static size_t RepDim =
+      DeviceFermionFieldTypeTraits<DSpinorFieldType>::RepDim;
+  assert(x.dimensions == y.dimensions);
   static_assert(
       Kokkos::SpaceAccessibility<
-          typename decltype(a.field)::execution_space,
-          typename decltype(b.field)::memory_space>::accessible,
+          typename decltype(x.field)::execution_space,
+          typename decltype(y.field)::memory_space>::accessible,
       "Execution space of A cannot access memory space of B");  // allow only
                                                                 // device-device
                                                                 // or host-host
                                                                 // interaction
-  IndexArray<rank> start;
-  IndexArray<rank> end;
-  for (index_t i = 0; i < rank; ++i) {
-    start[i] = 0;
-    end[i] = a.dimensions[i];
-  }
-  using SpinorFieldType =
-      typename DeviceSpinorFieldType<rank, Nc, RepDim>::type;
-  SpinorFieldType c(end, complex_t(0.0, 0.0));
-  SpinorAddMul<rank, Nc, RepDim> add(a, b, c, alpha, end);
 
-  tune_and_launch_for<rank>("SpinorField_add", start, end, add);
+  using SpinorFieldType = typename DSpinorFieldType::type;
+  SpinorFieldType c(x.dimensions, complex_t(0.0, 0.0));
+  IndexArray<rank> start{};
+  axpyFunctor<rank, Nc, RepDim> add(alpha, x, y, c, x.dimensions);
+
+  tune_and_launch_for<rank>("SpinorField_axpy", start, x.dimensions, add);
   Kokkos::fence();
   return c;
 }
-template <size_t rank, size_t Nc, size_t RepDim>
-KOKKOS_FORCEINLINE_FUNCTION void spinor_add_mul_inplace(
-    const typename DeviceSpinorFieldType<rank, Nc, RepDim>::type& a,
-    const typename DeviceSpinorFieldType<rank, Nc, RepDim>::type& b,
-    const complex_t& alpha,
-    typename DeviceSpinorFieldType<rank, Nc, RepDim>::type& c) {
-  assert(a.dimensions == b.dimensions);
+/// @brief Calculates alpha*x+y
+/// @param alpha
+/// @param x
+/// @param y
+/// @param c
+/// @return c = alpha*x+y
+template <typename DSpinorFieldType>
+void KOKKOS_FORCEINLINE_FUNCTION axpy(const complex_t& alpha,
+                                      const typename DSpinorFieldType::type& x,
+                                      const typename DSpinorFieldType::type& y,
+                                      typename DSpinorFieldType::type& c) {
+  constexpr static size_t rank =
+      DeviceFermionFieldTypeTraits<DSpinorFieldType>::Rank;
+  constexpr static size_t Nc =
+      DeviceFermionFieldTypeTraits<DSpinorFieldType>::Nc;
+  constexpr static size_t RepDim =
+      DeviceFermionFieldTypeTraits<DSpinorFieldType>::RepDim;
+  assert(x.dimensions == y.dimensions);
   static_assert(
       Kokkos::SpaceAccessibility<
-          typename decltype(a.field)::execution_space,
-          typename decltype(b.field)::memory_space>::accessible,
+          typename decltype(x.field)::execution_space,
+          typename decltype(y.field)::memory_space>::accessible,
       "Execution space of A cannot access memory space of B");  // allow only
                                                                 // device-device
                                                                 // or host-host
                                                                 // interaction
-  IndexArray<rank> start;
-  IndexArray<rank> end;
-  for (index_t i = 0; i < rank; ++i) {
-    start[i] = 0;
-    end[i] = a.dimensions[i];
-  }
-  using SpinorFieldType =
-      typename DeviceSpinorFieldType<rank, Nc, RepDim>::type;
-  SpinorAddMul<rank, Nc, RepDim> add(a, b, c, alpha, end);
+  IndexArray<rank> start{};
+  axpyFunctor<rank, Nc, RepDim> add(alpha, x, y, c, x.dimensions);
 
-  tune_and_launch_for<rank>("SpinorField_add", start, end, add);
+  tune_and_launch_for<rank>("SpinorField_axpy_inplace", start, x.dimensions,
+                            add);
   Kokkos::fence();
 }
-template <size_t rank, size_t Nc, size_t RepDim>
-typename DeviceSpinorFieldType<rank, Nc, RepDim>::type spinor_sub_mul(
-    const typename DeviceSpinorFieldType<rank, Nc, RepDim>::type& a,
-    const typename DeviceSpinorFieldType<rank, Nc, RepDim>::type& b,
-    const complex_t& alpha) {
-  return spinor_add_mul<rank, Nc, RepDim>(a, b, -alpha);
-}
 
+/// @brief Calculates gamma5(alpha*x+y)
+
+/// @param alpha
+/// @param x
+/// @param y
+/// @return c = gamma5(alpha*x+y)
+template <typename DSpinorFieldType>
+typename DSpinorFieldType::type KOKKOS_FORCEINLINE_FUNCTION
+axpyG5(const complex_t& alpha,
+       const typename DSpinorFieldType::type& x,
+       const typename DSpinorFieldType::type& y) {
+  constexpr static size_t rank =
+      DeviceFermionFieldTypeTraits<DSpinorFieldType>::Rank;
+  constexpr static size_t Nc =
+      DeviceFermionFieldTypeTraits<DSpinorFieldType>::Nc;
+  constexpr static size_t RepDim =
+      DeviceFermionFieldTypeTraits<DSpinorFieldType>::RepDim;
+  assert(x.dimensions == y.dimensions);
+  static_assert(
+      Kokkos::SpaceAccessibility<
+          typename decltype(x.field)::execution_space,
+          typename decltype(y.field)::memory_space>::accessible,
+      "Execution space of A cannot access memory space of B");  // allow only
+                                                                // device-device
+                                                                // or host-host
+                                                                // interaction
+
+  using SpinorFieldType = typename DSpinorFieldType::type;
+  SpinorFieldType c(x.dimensions, complex_t(0.0, 0.0));
+  IndexArray<rank> start{};
+  axpyG5Functor<rank, Nc, RepDim> add(alpha, x, y, c, x.dimensions);
+
+  tune_and_launch_for<rank>("SpinorField_axpy", start, x.dimensions, add);
+  Kokkos::fence();
+  return c;
+}
+/// @brief Calculates alpha*x+y
+/// @param alpha
+/// @param x
+/// @param y
+/// @param c
+/// @return c = gamma5(alpha*x+y)
+template <typename DSpinorFieldType>
+void KOKKOS_FORCEINLINE_FUNCTION
+axpyG5(const complex_t& alpha,
+       const typename DSpinorFieldType::type& x,
+       const typename DSpinorFieldType::type& y,
+       typename DSpinorFieldType::type& c) {
+  constexpr static size_t rank =
+      DeviceFermionFieldTypeTraits<DSpinorFieldType>::Rank;
+  constexpr static size_t Nc =
+      DeviceFermionFieldTypeTraits<DSpinorFieldType>::Nc;
+  constexpr static size_t RepDim =
+      DeviceFermionFieldTypeTraits<DSpinorFieldType>::RepDim;
+  assert(x.dimensions == y.dimensions);
+  static_assert(
+      Kokkos::SpaceAccessibility<
+          typename decltype(x.field)::execution_space,
+          typename decltype(y.field)::memory_space>::accessible,
+      "Execution space of A cannot access memory space of B");  // allow only
+                                                                // device-device
+                                                                // or host-host
+                                                                // interaction
+  IndexArray<rank> start{};
+  axpyG5Functor<rank, Nc, RepDim> add(alpha, x, y, c, x.dimensions);
+
+  tune_and_launch_for<rank>("SpinorField_axpy_inplace", start, x.dimensions,
+                            add);
+  Kokkos::fence();
+}
 }  // namespace klft

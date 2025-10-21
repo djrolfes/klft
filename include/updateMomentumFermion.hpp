@@ -1,10 +1,29 @@
+//******************************************************************************/
+//
+// This file is part of the Kokkos Lattice Field Theory (KLFT) library.
+//
+// KLFT is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// KLFT is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with KLFT.  If not, see <http://www.gnu.org/licenses/>.
+//
+//******************************************************************************/
 #pragma once
 #include "DiracOPTypeHelper.hpp"
+#include "DiracOperator.hpp"
 #include "FermionParams.hpp"
-#include "GDiracOperator.hpp"
 #include "IndexHelper.hpp"
 #include "SpinorFieldLinAlg.hpp"
 #include "UpdateMomentum.hpp"
+
 namespace klft {
 
 template <typename DSpinorFieldType, typename DGaugeFieldType,
@@ -12,7 +31,7 @@ template <typename DSpinorFieldType, typename DGaugeFieldType,
           template <template <typename, typename> class DiracOpT, typename,
                     typename> class _Solver,
           template <typename, typename> class DiracOpT>
-class UpdateMomentumFermion : public UpdateMomentum {
+class UpdateMomentumWilson : public UpdateMomentum {
   static_assert(isDeviceFermionFieldType<DSpinorFieldType>::value);
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
   static_assert(isDeviceAdjFieldType<DAdjFieldType>::value);
@@ -28,41 +47,38 @@ class UpdateMomentumFermion : public UpdateMomentum {
                     Nc == DeviceFermionFieldTypeTraits<DSpinorFieldType>::Nc,
                 "Rank and Nc must match between gauge, adjoint, and fermion "
                 "field types.");
-  using DiracOp = DiracOperator<DiracOpT, DSpinorFieldType, DGaugeFieldType>;
+  using DiracOp = DiracOpT<DSpinorFieldType, DGaugeFieldType>;
   using Solver = _Solver<DiracOpT, DSpinorFieldType, DGaugeFieldType>;
 
  public:
-  // Define Tags for different Operators
-  struct HWilsonDiracOperatorTag {};
-
   using FermionField = typename DSpinorFieldType::type;
   using GaugeFieldType = typename DeviceGaugeFieldType<rank, Nc>::type;
   using AdjFieldType = typename DeviceAdjFieldType<rank, Nc>::type;
   GaugeFieldType gauge_field;
   AdjFieldType momentum;
-  const diracParams<rank, RepDim> params;
+  const diracParams params;
   // \phi = D R, where R gaussian random field.
   FermionField phi;
-
+  const Kokkos::Array<index_t, rank> dimensions;
   FermionField chi;
   FermionField chi_alt;
   const real_t tol;
   real_t eps;
 
-  UpdateMomentumFermion() = delete;
-  ~UpdateMomentumFermion() = default;
+  UpdateMomentumWilson() = delete;
+  ~UpdateMomentumWilson() = default;
 
-  UpdateMomentumFermion(FermionField& phi_, GaugeFieldType& gauge_field_,
-                        AdjFieldType& adjoint_field_,
-                        const diracParams<rank, RepDim>& params_,
-                        const real_t& tol_)
+  UpdateMomentumWilson(FermionField& phi_, const GaugeFieldType& gauge_field_,
+                       AdjFieldType& adjoint_field_, const diracParams& params_,
+                       const real_t& tol_)
       : UpdateMomentum(0),
         phi(phi_),
         gauge_field(gauge_field_),
         momentum(adjoint_field_),
         params(params_),
         eps(0.0),
-        tol(tol_) {}
+        tol(tol_),
+        dimensions(phi_.dimensions) {}
 
   // Implemntation of the force correspondig to the Hermitian Wilson dirac
   // Operator
@@ -76,75 +92,66 @@ class UpdateMomentumFermion : public UpdateMomentum {
   // (\pdv{D}{U_\mu(x)}D^\dagger+ (\pdv{D}{U_\mu(x)}D^\dagger)^\dagger) =
   // -2Re(\chi^\dagger \pdv{D}{U_\mu(x)}D^\dagger \chi)
 
-  // The Derivative of the Hermtian Wilson Dirac Operator should be given as
+  // The Derivative of the Hermitian Wilson Dirac Operator should be given as
   // \pdv{D(x,y)}{U_\mu(z)} = - \kappa \gamma_5 \delta_{x,z} (1-\gamma_mu)T_i
   // U_mu(z)\delta_{x+\mu,y}
   // +\kappa \gamma_5 \delta_{x+\mu,y} (1+\gamma_\mu) t_i
   // U_\mu(z)^\dagger\delta_{z,y} <- Have to Check this
   template <typename... Indices>
-  KOKKOS_FORCEINLINE_FUNCTION void operator()(HWilsonDiracOperatorTag,
-                                              const Indices... Idcs) const {
-    // Update the momentum of the fermion field
+  KOKKOS_FORCEINLINE_FUNCTION void operator()(const Indices... Idcs) const {
 #pragma unroll
     for (size_t mu = 0; mu < rank; ++mu) {
       // X = chi , Y = chi_alt
-      auto xm = shift_index_minus_bc<rank, size_t>(
-          Kokkos::Array<size_t, rank>{Idcs...}, mu, 1, 0, -1,
-          this->params.dimensions);
+
       auto xp = shift_index_plus_bc<rank, size_t>(
-          Kokkos::Array<size_t, rank>{Idcs...}, mu, 1, 0, -1,
-          this->params.dimensions);
+          Kokkos::Array<size_t, rank>{Idcs...}, mu, 1, 3, -1,
+          this->phi.dimensions);
+      auto X_proj = project(mu, -1, this->chi(xp.first));
+      // minus sign in the projector comes from the derivative of D
+      auto Xplus = (-1 * this->params.kappa * xp.second) * X_proj;
+      auto temp1 = reconstruct(mu, -1, gauge_field(Idcs..., mu) * Xplus);
+      auto deriv = temp1 * (conj(this->chi_alt(Idcs...)));
 
-      auto Xplus = xp.second * this->chi(xp.first);
-      auto temp1 = gauge_field(Idcs..., mu) * Xplus;
-      auto temp2 = (this->params.gamma_id - this->params.gammas[mu]) * temp1;
-      temp1 = this->params.kappa * temp2;
-      auto first_term =
-          temp1 * (this->params.gamma5 * conj(this->chi_alt(Idcs...)));
+      auto Y_proj = project_alt(mu, 1, conj(this->chi_alt(xp.first)));
+      auto YPlus = (this->params.kappa * xp.second) * Y_proj;
+      auto temp3 =
+          reconstruct_alt(mu, 1, YPlus * conj(this->gauge_field(Idcs..., mu)));
+      deriv += this->chi(Idcs...) * temp3;
 
-      auto Yplus = xp.second * (this->params.gamma5 * this->chi_alt(xp.first));
-      auto temp3 = conj(Yplus) * conj(this->gauge_field(Idcs..., mu));
-      auto temp4 = temp3 * (this->params.gamma_id + this->params.gammas[mu]);
-      temp3 = this->params.kappa * temp4;
-      auto second_term = this->chi(Idcs...) * temp3;
+      momentum(Idcs..., mu) -= 2 * eps *
+                               traceT(traceLessAntiHermitian(
 
-      auto deriv = -1 * first_term + second_term;
-
-      // Taking the Real part is handled by the traceT
-      momentum(Idcs..., mu) -=
-          2 * eps *
-          traceT(traceLessAntiHermitian(
-
-              deriv));  // in leap frog therese the minus sign here
+                                   deriv));
     }
   }
 
   void update(const real_t step_size) override {
+    Kokkos::Profiling::pushRegion("UpdateMomentumFermion");
     eps = step_size;
 
     IndexArray<rank> start;
     DiracOp D(gauge_field, this->params);
-    DiracOp D1(gauge_field, this->params);
-    FermionField x(this->params.dimensions, complex_t(0.0, 0.0));
-    FermionField x0(this->params.dimensions, complex_t(0.0, 0.0));
+
+    FermionField x(this->phi.dimensions, complex_t(0.0, 0.0));
+    FermionField x0(this->phi.dimensions, complex_t(0.0, 0.0));
 
     Solver solver(this->phi, x, D);
     if (KLFT_VERBOSITY > 4) {
-      printf("Solving insde updateMomentumFermion:");
+      printf("Solving insde UpdateMomentumWilson:");
     }
 
     solver.template solve<Tags::TagDdaggerD>(x0, this->tol);
     this->chi = solver.x;
-    this->chi_alt = D1.template apply<Tags::TagD>(this->chi);
+    this->chi_alt = D.template apply<Tags::TagD>(this->chi);
 
     for (size_t i = 0; i < rank; ++i) {
       start[i] = 0;
     }
-
     // launch the kernel
-    tune_and_launch_for<rank, HWilsonDiracOperatorTag>(
-        "UpdateMomentumFermion", start, gauge_field.dimensions, *this);
+    tune_and_launch_for<rank>("UpdateMomentumWilson", start, phi.dimensions,
+                              *this);
     Kokkos::fence();
+    Kokkos::Profiling::popRegion();
   }
 };
 

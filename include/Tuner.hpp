@@ -67,24 +67,18 @@ inline TuningHashTable<4> tuning_hash_table_4D;
 inline TuningHashTable<3> tuning_hash_table_3D;
 inline TuningHashTable<2> tuning_hash_table_2D;
 
-// Only for debugging purposes
-// template <typename T>
-// void WhatEver(void) {
-//   if constexpr (std::is_void_v<T> == false) {
-//     T t;
-//     std::cout << "Worktag used in tune and launch" << __PRETTY_FUNCTION__
-//               << std::endl;
-
-//     return;
-//   }
-//   std::cout << "No worktag used in tune and launch" << std::endl;
-// }
-
 template <size_t rank, class WorkTag = void, class FunctorType>
-void tune_and_launch_for(std::string functor_id, const IndexArray<rank>& start,
+void tune_and_launch_for(std::string functor_id,
+                         const IndexArray<rank>& start,
                          const IndexArray<rank>& end,
                          const FunctorType& functor) {
   // WhatEver<WorkTag>();
+  if constexpr (rank == 1) {
+    // unsupported rank
+    const auto policy = Policy1D<WorkTag>(start[0], end[0]);
+    Kokkos::parallel_for(policy, functor);
+    return;
+  }
   // launch kernel if tuning is disabled
   if (!KLFT_TUNING) {
     const auto policy = Policy<rank, WorkTag>(start, end);

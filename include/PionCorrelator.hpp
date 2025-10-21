@@ -1,6 +1,6 @@
+#include "DiracOperator.hpp"
 #include "FermionParams.hpp"
 #include "FieldTypeHelper.hpp"
-#include "GDiracOperator.hpp"
 #include "GLOBAL.hpp"
 #include "PropagatorMatrix.hpp"
 #include "Solver.hpp"
@@ -16,12 +16,9 @@ template <typename DSpinorFieldType,
                     typename,
                     typename> class _Solver,
           template <typename, typename> class DiracOpT>
-std::vector<real_t> PionCorrelator(
-    const typename DGaugeFieldType::type& g_in,
-    const diracParams<DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank,
-                      DeviceFermionFieldTypeTraits<DSpinorFieldType>::RepDim>&
-        params,
-    const real_t& tol) {
+std::vector<real_t> PionCorrelator(const typename DGaugeFieldType::type& g_in,
+                                   const diracParams& params,
+                                   const real_t& tol) {
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
   constexpr static size_t rank =
       DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank;
@@ -32,8 +29,7 @@ std::vector<real_t> PionCorrelator(
       typename WithSpinorFieldKind<DSpinorFieldType,
                                    SpinorFieldKind::PointSource>::type;
   using SpinorField = typename DSpinorFieldType::type;
-  using DiracOperator =
-      DiracOperator<DiracOpT, DSpinorFieldType, DGaugeFieldType>;
+  using DiracOperator = DiracOpT<DSpinorFieldType, DGaugeFieldType>;
   using Solver = _Solver<DiracOpT, DSpinorFieldType, DGaugeFieldType>;
   DiracOperator dirac_op(g_in, params);
   auto Nt = g_in.field.extent(0);
