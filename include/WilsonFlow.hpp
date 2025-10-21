@@ -89,9 +89,9 @@ template <typename DGaugeFieldType> struct WilsonFlow {
                       real_t max_flow_time = -1.0) {
     // dynamically does the wilson flow either until sp_max is below
     // sp_max_target or until t^2E is above t_sqd_E_target.
-    if (min_flow_time < 0.0) {
-      min_flow_time = params.tau;
-    }
+    // if (min_flow_time < 0.0) {
+    //   min_flow_time = params.tau;
+    // }
     bool continue_flow = true;
     size_t step_t{0};
     size_t measure_step{10};
@@ -105,9 +105,10 @@ template <typename DGaugeFieldType> struct WilsonFlow {
 
         real_t sp_max = get_spmax<DGaugeFieldType>(this->field);
 
-        if (step_t == measure_step) {
+        if (step_t >= measure_step) {
           // linearlise the measured t_sqd_E to get a prediction for the end
           // step
+          measure_step = step_t;
           real_t t_sqd_E =
               getActionDensity_clover<DGaugeFieldType>(this->field) *
               (step_t * params.eps) * (step_t * params.eps);
