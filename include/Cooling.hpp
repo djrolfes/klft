@@ -19,7 +19,7 @@ struct CoolingParams {
   }
 };
 
-template <typename DGaugeFieldType> struct CoolingFunctors {
+template <typename DGaugeFieldType, class RNG> struct CoolingFunctors {
   // implement the Wilson flow, for now the field will not be copied, but it
   // will be flown in place -> copying needs to be done before
   constexpr static const size_t rank =
@@ -36,10 +36,11 @@ template <typename DGaugeFieldType> struct CoolingFunctors {
   GaugeFieldT field;
   GaugeFieldT tmp_staple;
   SUNAdjField<rank, Nc> tmp_Z;
+  RNG &rng;
 
   CoolingFunctors() = delete;
 
-  CoolingFunctors(const GaugeFieldT &_field, CoolingParams &_params)
+  CoolingFunctors(const GaugeFieldT &_field, CoolingParams &_params, RNG &rng)
       : params(_params), field(_field.field), tmp_staple(_field.field) {
     const IndexArray<rank> dims = _field.dimensions;
     Kokkos::realloc(Kokkos::WithoutInitializing, tmp_Z, dims[0], dims[1],

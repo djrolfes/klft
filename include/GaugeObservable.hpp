@@ -43,6 +43,7 @@ struct GaugeObservableParams {
   bool measure_wilson_loop_mu_nu;    // whether to measure the mu-nu Wilson loop
   bool measure_topological_charge; // whether to measure the topological charge
   bool measure_action_density;     // whether to measure the gauge density
+  bool measure_sp_max; // whether to measure the max of Re Tr (1 - Plaquette)
 
   std::vector<Kokkos::Array<index_t, 2>>
       W_temp_L_T_pairs; // pairs of (L,T) for the temporal Wilson loop
@@ -63,6 +64,8 @@ struct GaugeObservableParams {
                                                        // topological charge
   std::vector<real_t>
       action_density_measurements; // measurements of the gauge density
+  std::vector<real_t>
+      sp_max_measurements; // measurements of the max of Re Tr (1 - Plaquette)
 
   // finally, some filenames where the measurements will be flushed
   std::string plaquette_filename; // filename for the plaquette measurements
@@ -74,6 +77,7 @@ struct GaugeObservableParams {
       topological_charge_filename; // filename for the topological charge
   std::string
       action_density_filename; // filename for the gauge density measurements
+  std::string sp_max_filename; // filename for the max of Re Tr (1 - Plaquette)
 
   // boolean flag to indicate if the measurements are to be flushed
   bool write_to_file;
@@ -91,9 +95,10 @@ struct GaugeObservableParams {
   // by default nothing is measured
   GaugeObservableParams()
       : measurement_interval(0), measure_plaquette(false),
-        measure_wilson_loop_temporal(false), measure_wilson_loop_mu_nu(false),
-        measure_topological_charge(false), measure_action_density(false),
-        flush(25), flushed(false), wilson_flow_params() {}
+        measure_sp_max(false), measure_wilson_loop_temporal(false),
+        measure_wilson_loop_mu_nu(false), measure_topological_charge(false),
+        measure_action_density(false), flush(25), flushed(false),
+        wilson_flow_params() {}
 };
 
 typedef enum {
@@ -103,7 +108,8 @@ typedef enum {
   MPI_GAUGE_OBSERVABLES_WILSON_LOOP_MU_NU_SIZE = 3,
   MPI_GAUGE_OBSERVABLES_WILSON_LOOP_TEMPORAL_SIZE = 4,
   MPI_GAUGE_OBSERVABLES_TOPOLOGICAL_CHARGE = 5,
-  MPI_GAUGE_OBSERVABLES_ACTION_DENSITY = 6
+  MPI_GAUGE_OBSERVABLES_ACTION_DENSITY = 6,
+  MPI_GAUGE_OBSERVABLES_SP_MAX = 7
 } MPI_GaugeObservableTags;
 
 template <typename DGaugeFieldType>
@@ -127,6 +133,7 @@ void measureGaugeObservablesPTBC(const typename DGaugeFieldType::type &g_in,
   real_t TopologicalCharge;
   real_t Plaquette;
   real_t ActionDensity;
+  real_t SP_max;
   std::vector<Kokkos::Array<real_t, 5>> WilsonLoop_meas;
   std::vector<Kokkos::Array<real_t, 3>> WilsonTemp_measurements;
 
@@ -163,6 +170,21 @@ void measureGaugeObservablesPTBC(const typename DGaugeFieldType::type &g_in,
                  MPI_GAUGE_OBSERVABLES_ACTION_DENSITY, MPI_COMM_WORLD);
         if (KLFT_VERBOSITY > 1) {
           printf("gauge density: %11.6f\n", ActionDensity);
+        }
+      }
+
+      if (params.measure_sp_max) {
+        // measure the max of Re Tr (1 - Plaquette) if requested
+        if (params.do_wilson_flow) {
+          // perform the Wilson flow if requested
+          SP_max = get_spmax<DGaugeFieldType>(wf.field);
+        } else {
+          SP_max = get_spmax<DGaugeFieldType>(g_in);
+        }
+        MPI_Send(&SP_max, 1, mpi_real_t(), 0, MPI_GAUGE_OBSERVABLES_SP_MAX,
+                 MPI_COMM_WORLD);
+        if (KLFT_VERBOSITY > 1) {
+          printf("SP max: %11.6f\n", SP_max);
         }
       }
 
@@ -322,6 +344,13 @@ void measureGaugeObservablesPTBC(const typename DGaugeFieldType::type &g_in,
       }
       params.W_temp_measurements.push_back(WilsonTemp_measurements);
     }
+
+    if (params.measure_sp_max) {
+      // send the plaquette measurement to the compute rank
+      MPI_Recv(&SP_max, 1, mpi_real_t(), compute_rank,
+               MPI_GAUGE_OBSERVABLES_SP_MAX, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      params.sp_max_measurements.push_back(SP_max);
+    }
   }
 }
 
@@ -382,6 +411,20 @@ void measureGaugeObservables(const typename DGaugeFieldType::type &g_in,
         printf("topological charge: %11.6f\n", TopologicalCharge);
       }
     }
+    if (params.measure_sp_max) {
+      // measure the max of Re Tr (1 - Plaquette) if requested
+      real_t SP_max;
+      if (params.do_wilson_flow) {
+        // perform the Wilson flow if requested
+        SP_max = get_spmax<DGaugeFieldType>(wf.field);
+      } else {
+        SP_max = get_spmax<DGaugeFieldType>(g_in);
+      }
+      params.sp_max_measurements.push_back(SP_max);
+      if (KLFT_VERBOSITY > 1) {
+        printf("SP max: %11.6f\n", SP_max);
+      }
+    }
   }
   // measure the plaquette if requested
   if (params.measure_plaquette) {
@@ -434,6 +477,26 @@ void measureGaugeObservables(const typename DGaugeFieldType::type &g_in,
   // add the step to the measurement steps
   params.measurement_steps.push_back(step);
   return;
+}
+
+inline void flushSPMax(std::ofstream &file, const GaugeObservableParams &params,
+                       const bool HEADER = true) {
+  // check if the file is open
+  if (!file.is_open()) {
+    printf("Error: file is not open\n");
+    return;
+  }
+  // check if sp_max measurements are available
+  if (!params.measure_sp_max) {
+    printf("Error: no sp_max measurements available\n");
+    return;
+  }
+  if (HEADER)
+    file << "# step, sp_max\n";
+  for (size_t i = 0; i < params.measurement_steps.size(); ++i) {
+    file << params.measurement_steps[i] << ", " << params.sp_max_measurements[i]
+         << "\n";
+  }
 }
 
 inline void flushTopologicalCharge(std::ofstream &file,
@@ -560,6 +623,7 @@ inline void clearAllGaugeObservables(GaugeObservableParams &params) {
   params.W_temp_measurements.clear();
   params.W_mu_nu_measurements.clear();
   params.action_density_measurements.clear();
+  params.sp_max_measurements.clear();
   // ...
   // add more clear functions for other observables here
 }
@@ -581,6 +645,12 @@ forceflushAllGaugeObservables(GaugeObservableParams &params,
       params.topological_charge_filename != "") {
     std::ofstream file(params.topological_charge_filename, std::ios::app);
     flushTopologicalCharge(file, params, HEADER);
+    file.close();
+  }
+
+  if (params.measure_sp_max && params.sp_max_filename != "") {
+    std::ofstream file(params.sp_max_filename, std::ios::app);
+    flushSPMax(file, params, HEADER);
     file.close();
   }
 

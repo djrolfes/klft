@@ -96,6 +96,8 @@ inline int parseInputFile(const std::string &filename,
           gp["measure_wilson_loop_mu_nu"].as<bool>(false);
       gaugeObservableParams.measure_action_density =
           gp["measure_action_density"].as<bool>(false);
+      gaugeObservableParams.measure_sp_max =
+          gp["measure_sp_max"].as<bool>(false);
 
       // pairs of (L,T) for the temporal Wilson loop
       if (gp["W_temp_L_T_pairs"]) {
@@ -157,6 +159,8 @@ inline int parseInputFile(const std::string &filename,
           output_directory + gp["W_mu_nu_filename"].as<std::string>("");
       gaugeObservableParams.action_density_filename =
           output_directory + gp["action_density_filename"].as<std::string>("");
+      gaugeObservableParams.sp_max_filename =
+          output_directory + gp["sp_max_filename"].as<std::string>("");
 
       // whether to write to file
       gaugeObservableParams.write_to_file = gp["write_to_file"].as<bool>(false);

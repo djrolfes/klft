@@ -39,6 +39,7 @@ GaugeObservableParams:
   measure_plaquette: true
   measure_wilson_loop_temporal: false
   measure_wilson_loop_mu_nu: false
+  measure_sp_max: true
   flush: 25
   do_wilson_flow: true
   WilsonFlowParams:
@@ -61,6 +62,7 @@ GaugeObservableParams:
   W_temp_filename: "wilson_temp_output.txt"
   W_mu_nu_filename: "wilson_mu_nu_output.txt"
   action_density_filename: "action_density.txt"
+  sp_max_filename: "sp_max.txt"
 
   write_to_file: true
 
