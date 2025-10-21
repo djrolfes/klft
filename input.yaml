@@ -45,6 +45,7 @@ GaugeObservableParams:
   WilsonFlowParams:
     tau: 8.0
     eps: 0.01
+    dynamical_flow: true
 
   W_temp_L_T_pairs:
     - [2, 3]

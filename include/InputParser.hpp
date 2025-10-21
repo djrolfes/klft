@@ -136,6 +136,8 @@ inline int parseInputFile(const std::string &filename,
             wfp_node["tau"].as<real_t>();
         gaugeObservableParams.wilson_flow_params.eps =
             wfp_node["eps"].as<real_t>();
+        gaugeObservableParams.wilson_flow_params.dynamical_flow =
+            wfp_node["dynamical_flow"].as<bool>(false);
 
         // Recalculate eps based on parsed values
         if (gaugeObservableParams.wilson_flow_params.eps > 0) {
