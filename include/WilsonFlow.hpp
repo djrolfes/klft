@@ -109,9 +109,8 @@ template <typename DGaugeFieldType> struct WilsonFlow {
           // linearlise the measured t_sqd_E to get a prediction for the end
           // step
           measure_step = step_t;
-          real_t t_sqd_E =
-              getActionDensity_clover<DGaugeFieldType>(this->field) *
-              (step_t * params.eps) * (step_t * params.eps);
+          t_sqd_E = getActionDensity_clover<DGaugeFieldType>(this->field) *
+                    (step_t * params.eps) * (step_t * params.eps);
           real_t slope = (t_sqd_E - t_sqd_E_old) / (step_t - measure_step_old);
           real_t intercept = t_sqd_E - slope * static_cast<real_t>(step_t);
           measure_step_old = measure_step;
@@ -128,7 +127,7 @@ template <typename DGaugeFieldType> struct WilsonFlow {
           printf("Wilson Flow step %zu: sp_max = %1.6f, t^2E = %1.6f\n", step_t,
                  sp_max, t_sqd_E);
         }
-        if ((sp_max <= sp_max_target && t_sqd_E >= t_sqd_E_target)) {
+        if ((sp_max <= sp_max_target || t_sqd_E >= t_sqd_E_target)) {
           continue_flow = false;
         }
       }
