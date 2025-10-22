@@ -16,8 +16,15 @@ struct WilsonFlowParams {
   // flow time step size
   real_t eps;
   bool dynamical_flow;
-  // beta TODO: do not use the beta here
-  real_t beta;
+  real_t min_flow_time;
+  real_t max_flow_time;
+  real_t sp_max_target;
+  real_t t_sqrd_E_target;
+  size_t first_tE_measure_step;
+  bool log_details;
+  std::string wilson_flow_filename;
+
+  std::vector<std::string> log_strings;
 
   WilsonFlowParams() {
     // default parameters (eps = 0.01)
@@ -25,7 +32,14 @@ struct WilsonFlowParams {
     tau = 1.0;
     eps = real_t(tau / n_steps);
     dynamical_flow = false;
-    beta = real_t(1.0);
+    min_flow_time = -1.0;
+    max_flow_time = -1.0;
+    sp_max_target = real_t(0.067);
+    t_sqrd_E_target = real_t(0.1); // this is Nc dependent
+    first_tE_measure_step = 10;
+    log_details =
+        false; // for now this will only do something for the dynamical wflow
+    wilson_flow_filename = "";
   }
 };
 
@@ -39,7 +53,7 @@ template <typename DGaugeFieldType> struct WilsonFlow {
   constexpr static const GaugeFieldKind Kind =
       DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Kind;
   static_assert(rank == 4); // The wilson flow is only defined for 4D Fields
-  WilsonFlowParams params;
+  WilsonFlowParams &params;
 
   // get the correct deviceGaugeFieldType
   using GaugeFieldT = typename DGaugeFieldType::type;
@@ -84,26 +98,32 @@ template <typename DGaugeFieldType> struct WilsonFlow {
     }
   }
 
-  void flow_dynamical(real_t sp_max_target = 0.067, real_t t_sqd_E_target = 0.1,
-                      real_t min_flow_time = -1.0,
-                      real_t max_flow_time = -1.0) {
+  void flow_dynamical() {
     // dynamically does the wilson flow either until sp_max is below
     // sp_max_target or until t^2E is above t_sqd_E_target.
-    // if (min_flow_time < 0.0) {
-    //   min_flow_time = params.tau;
-    // }
     bool continue_flow = true;
+    real_t sp_max;
     size_t step_t{0};
-    size_t measure_step{10};
+    size_t measure_step{params.first_tE_measure_step};
     size_t measure_step_old{0};
     real_t t_sqd_E{0};
     real_t t_sqd_E_old{0};
     while (continue_flow) {
       flow_step();
       step_t++;
-      if (step_t * params.eps > min_flow_time) {
 
-        real_t sp_max = get_spmax<DGaugeFieldType>(this->field);
+      if (step_t * params.eps > params.min_flow_time) {
+
+        // quick napkin math:
+        // each flow_step() call calculates the staple field 3 times and
+        // multiplies this to the field(...) each time. A staple_field * field
+        // should be a bit less than 2 plaquette calculations in terms of
+        // instruction count. The get_spmax call does one sweep over the GPlaq
+        // Functor within a parallel reduction.
+        // -> a get_spmax call (- the overhead from the reduction vs. the
+        // parallel for) should be about(slightly larger than) 1/6'th of a
+        // flow_step() call
+        sp_max = get_spmax<DGaugeFieldType>(this->field);
 
         if (step_t >= measure_step) {
           // linearlise the measured t_sqd_E to get a prediction for the end
@@ -114,24 +134,27 @@ template <typename DGaugeFieldType> struct WilsonFlow {
           real_t slope = (t_sqd_E - t_sqd_E_old) / (step_t - measure_step_old);
           real_t intercept = t_sqd_E - slope * static_cast<real_t>(step_t);
           measure_step_old = measure_step;
-          measure_step =
-              static_cast<index_t>(((t_sqd_E_target - intercept) / slope) + 1);
-          if (KLFT_VERBOSITY > 4) {
+          measure_step = static_cast<index_t>(
+              ((params.t_sqrd_E_target - intercept) / slope) + 1);
+          if (KLFT_VERBOSITY > 1) {
             printf("Wilson Flow prediction: next measurement at step %zu\n",
                    measure_step);
             printf("  slope: %1.6f, intercept: %1.6f\n", slope, intercept);
             printf("  current t^2E: %1.6f\n", t_sqd_E);
           }
         }
-        if (KLFT_VERBOSITY > 2) {
+        if (KLFT_VERBOSITY > 4) {
           printf("Wilson Flow step %zu: sp_max = %1.6f, t^2E = %1.6f\n", step_t,
                  sp_max, t_sqd_E);
         }
-        if ((sp_max <= sp_max_target || t_sqd_E >= t_sqd_E_target)) {
+        if ((sp_max <= params.sp_max_target ||
+             t_sqd_E >= params.t_sqrd_E_target)) {
           continue_flow = false;
         }
       }
-      if (step_t * params.eps >= max_flow_time && max_flow_time > 0.0) {
+
+      if (step_t * params.eps >= params.max_flow_time &&
+          params.max_flow_time > 0.0) {
         continue_flow = false;
       }
     }
@@ -139,6 +162,25 @@ template <typename DGaugeFieldType> struct WilsonFlow {
       printf("Wilson Flow completed in %zu steps, total flow time %1.6f\n",
              step_t, step_t * params.eps);
     }
+    if (params.log_details) {
+      log_flow_step_dyn(step_t, step_t * params.eps, sp_max, t_sqd_E,
+                        measure_step,
+                        getActionDensity_clover<DGaugeFieldType>(this->field) *
+                            (step_t * params.eps) * (step_t * params.eps));
+    }
+  }
+
+  void log_flow_step_dyn(size_t steps, real_t tau, real_t sp_max,
+                         real_t t_sqrd_E_old, size_t measure_step,
+                         real_t t_sqrd_E) {
+    if (!params.log_details) {
+      return;
+    }
+    std::string log_line =
+        std::to_string(steps) + ", " + std::to_string(tau) + ", " +
+        std::to_string(sp_max) + ", " + std::to_string(t_sqrd_E_old) + ", " +
+        std::to_string(measure_step) + ", " + std::to_string(t_sqrd_E);
+    params.log_strings.push_back(log_line);
   }
 
   void flow_DBW2() { // todo: check this once by saving a staple field and

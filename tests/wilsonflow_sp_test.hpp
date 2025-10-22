@@ -4,7 +4,6 @@
 #include "GaugeAction.hpp"
 #include "GaugeObservable.hpp"
 #include "GaugePlaquette.hpp"
-#include "Kokkos_Atomic.hpp"
 #include "SimulationLogging.hpp"
 
 namespace klft {

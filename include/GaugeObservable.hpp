@@ -146,7 +146,7 @@ void measureGaugeObservablesPTBC(const typename DGaugeFieldType::type &g_in,
 
     if constexpr (Nd == 4) {
       // Wilson flow is only defined for 4D gauge fields
-      WilsonFlowParams wfparams = params.wilson_flow_params;
+      WilsonFlowParams &wfparams = params.wilson_flow_params;
       WilsonFlow<DGaugeFieldType> wf(g_in, wfparams);
       if (params.do_wilson_flow) {
         if (KLFT_VERBOSITY > 1) {
@@ -374,7 +374,7 @@ void measureGaugeObservables(const typename DGaugeFieldType::type &g_in,
   }
 
   if constexpr (Nd == 4) {
-    WilsonFlowParams wfparams = params.wilson_flow_params;
+    WilsonFlowParams &wfparams = params.wilson_flow_params;
     WilsonFlow<DGaugeFieldType> wf(g_in, wfparams);
     if (params.do_wilson_flow) {
       if (KLFT_VERBOSITY > 1) {
@@ -615,6 +615,27 @@ inline void flushWilsonLoopMuNu(std::ofstream &file,
   }
 }
 
+inline void flushWilsonFlowDetails(std::ofstream &file,
+                                   GaugeObservableParams &params,
+                                   const bool HEADER = true) {
+  // check if the file is open
+  if (!file.is_open()) {
+    printf("Error: file is not open\n");
+    return;
+  }
+  WilsonFlowParams &wfparams = params.wilson_flow_params;
+  if (HEADER) {
+    file << "# step, flow_steps, flow_time, sp_max, "
+            "tsquaredxaction_density(old), measure_t^E_step, "
+            "tsquaredxaction_density\n";
+  }
+  for (size_t i = 0; i < params.measurement_steps.size(); ++i) {
+
+    file << params.measurement_steps[i] << ", " << wfparams.log_strings[i]
+         << "\n";
+  }
+}
+
 // function to clear all measurements
 inline void clearAllGaugeObservables(GaugeObservableParams &params) {
   params.measurement_steps.clear();
@@ -624,6 +645,7 @@ inline void clearAllGaugeObservables(GaugeObservableParams &params) {
   params.W_mu_nu_measurements.clear();
   params.action_density_measurements.clear();
   params.sp_max_measurements.clear();
+  params.wilson_flow_params.log_strings.clear();
   // ...
   // add more clear functions for other observables here
 }
@@ -675,6 +697,14 @@ forceflushAllGaugeObservables(GaugeObservableParams &params,
   if (params.measure_wilson_loop_mu_nu && params.W_mu_nu_filename != "") {
     std::ofstream file(params.W_mu_nu_filename, std::ios::app);
     flushWilsonLoopMuNu(file, params, HEADER);
+    file.close();
+  }
+
+  if (params.do_wilson_flow && params.wilson_flow_params.log_details &&
+      params.wilson_flow_params.wilson_flow_filename != "") {
+    std::ofstream file(params.wilson_flow_params.wilson_flow_filename,
+                       std::ios::app);
+    flushWilsonFlowDetails(file, params, HEADER);
     file.close();
   }
   // ...

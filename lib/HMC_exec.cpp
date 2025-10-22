@@ -28,9 +28,6 @@
 #include "HMC_Params.hpp"
 #include "Integrator.hpp"
 #include "SimulationLogging.hpp"
-#include "UpdateMomentum.hpp"
-#include "UpdatePosition.hpp"
-#include "updateMomentumFermion.hpp"
 using RNGType = Kokkos::Random_XorShift64_Pool<Kokkos::DefaultExecutionSpace>;
 
 namespace klft {

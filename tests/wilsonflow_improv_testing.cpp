@@ -2,7 +2,6 @@
 #include "wilsonflow_improv_testing.hpp"
 #include "InputParser.hpp"
 #include "PTBC.hpp"
-#include "topo_improved_test.hpp"
 #include <filesystem>
 #include <getopt.h>
 
@@ -110,7 +109,6 @@ int test_wflow_improvement(const std::string &input_file,
     printf("Error parsing input file\n");
     return -1;
   }
-  gaugeObsParams.wilson_flow_params.beta = gaugeMonomialParams.beta;
 
   simLogParams.log_filename = (simLogParams.log_filename);
   RNGType rng(hmcParams.seed);

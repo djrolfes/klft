@@ -46,6 +46,13 @@ GaugeObservableParams:
     tau: 8.0
     eps: 0.01
     dynamical_flow: true
+    min_flow_time: 0.5
+    max_flow_time: 10.0
+    sp_max_target: 0.067
+    t_sqrd_E_target: 0.1
+    first_tE_measure_step: 10
+    log_details: true
+    wilson_flow_filename: "wilsonflow_details.txt"
 
   W_temp_L_T_pairs:
     - [2, 3]

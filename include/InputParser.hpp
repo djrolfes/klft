@@ -138,6 +138,21 @@ inline int parseInputFile(const std::string &filename,
             wfp_node["eps"].as<real_t>();
         gaugeObservableParams.wilson_flow_params.dynamical_flow =
             wfp_node["dynamical_flow"].as<bool>(false);
+        gaugeObservableParams.wilson_flow_params.min_flow_time =
+            wfp_node["min_flow_time"].as<real_t>(-1.0);
+        gaugeObservableParams.wilson_flow_params.max_flow_time =
+            wfp_node["max_flow_time"].as<real_t>(-1.0);
+        gaugeObservableParams.wilson_flow_params.sp_max_target =
+            wfp_node["sp_max_target"].as<real_t>(0.067);
+        gaugeObservableParams.wilson_flow_params.t_sqrd_E_target =
+            wfp_node["t_sqrd_E_target"].as<real_t>(0.1);
+        gaugeObservableParams.wilson_flow_params.first_tE_measure_step =
+            wfp_node["first_tE_measure_step"].as<size_t>(10);
+        gaugeObservableParams.wilson_flow_params.log_details =
+            wfp_node["log_details"].as<bool>(false);
+        gaugeObservableParams.wilson_flow_params.wilson_flow_filename =
+            output_directory +
+            wfp_node["wilson_flow_filename"].as<std::string>("");
 
         // Recalculate eps based on parsed values
         if (gaugeObservableParams.wilson_flow_params.eps > 0) {

@@ -166,7 +166,7 @@ GaugePlaquette(const typename DeviceGaugeFieldType<rank, Nc, k>::type &g_in,
     for (index_t i = 0; i < rank; ++i) {
       norm *= static_cast<real_t>(end[i]);
     }
-    norm *= static_cast<real_t>((Nd * (Nd - 1) / 2) * Nc);
+    norm *= static_cast<real_t>(((Nd - 1) * Nd / 2.0) * Nc);
     plaq /= norm;
   }
 

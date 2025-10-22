@@ -1,6 +1,4 @@
-// TODO: cooling needs to happen iteratively and thus is not parallelizable
 #pragma once
-#include "AdjointSUN.hpp"
 #include "FieldTypeHelper.hpp"
 #include "GLOBAL.hpp"
 #include "Gauge_Util.hpp"
@@ -73,6 +71,8 @@ template <typename DGaugeFieldType, class RNG> struct CoolingFunctors {
                                          const indexType i3) const {
 #pragma unroll
     for (index_t mu = 0; mu < 4; ++mu) {
+      bool accepted = false;
+
       this->field(i0, i1, i2, i3, mu) = (this->tmp_staple(i0, i1, i2, i3, mu));
       restoreSUN(this->field(i0, i1, i2, i3, mu));
     }
