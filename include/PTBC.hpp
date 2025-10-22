@@ -83,8 +83,11 @@ class PTBC {  // do I need the AdjFieldType here?
 
   PTBC() = delete;  // default constructor is not allowed
 
-  PTBC(PTBCParams& params_, HMCType& hmc_, RNG& rng_,
-       std::uniform_real_distribution<real_t> dist_, std::mt19937 mt_)
+  PTBC(PTBCParams& params_,
+       HMCType& hmc_,
+       RNG& rng_,
+       std::uniform_real_distribution<real_t> dist_,
+       std::mt19937 mt_)
       : params(params_), rng(rng_), dist(dist_), mt(mt_), hmc(hmc_) {
     device_id = Kokkos::device_id();  // default device id
     int rank;
@@ -158,8 +161,11 @@ class PTBC {  // do I need the AdjFieldType here?
     }
   }
 
-  void measure(SimulationLoggingParams& simLogParams, index_t step,
-               real_t acc_rate, bool accept, real_t time) {
+  void measure(SimulationLoggingParams& simLogParams,
+               index_t step,
+               real_t acc_rate,
+               bool accept,
+               real_t time) {
     // measure the simulation logging observables
     addLogData(simLogParams, step, hmc.delta_H, acc_rate, accept, time);
   }
@@ -241,6 +247,7 @@ class PTBC {  // do I need the AdjFieldType here?
         hmc.hamiltonian_field.gauge_field.dimensions[shift[0]];
     hmc.hamiltonian_field.gauge_field.shift_defect(new_position);
   }
+
   int swap() {
     int rank, size;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -254,14 +261,17 @@ class PTBC {  // do I need the AdjFieldType here?
 
     // Rank 0 determines swap_start and broadcasts
     if (rank == 0) {
-      swap_start = int(dist(mt) * (size));
+      IndexArray<2> swap_start_choices{0, size - 1};
+      swap_start = swap_start_choices[int(dist(mt) * 2)];
     }
 
     MPI_Bcast(&swap_start, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
-    for (index_t i = 0; i < size; ++i) {
-      swap_rank = (swap_start + i) % size;
-      partner_rank = (swap_rank + 1) % size;
+    for (index_t i = 0; i < size - 1; ++i) {
+      swap_rank = (swap_start - i);
+      partner_rank = (swap_rank - 1);
+      swap_rank = abs(swap_rank);
+      partner_rank = abs(partner_rank);
 
       // SWAP RANK sends its Delta_S
       if (rank == swap_rank) {
@@ -332,7 +342,8 @@ class PTBC {  // do I need the AdjFieldType here?
         oss << "Defects after broadcast: [";
         for (size_t i = 0; i < params.defects.size(); ++i) {
           oss << params.defects[i];
-          if (i + 1 < params.defects.size()) oss << ", ";
+          if (i + 1 < params.defects.size())
+            oss << ", ";
         }
         oss << "]";
         // DEBUG_MPI_PRINT("%s", oss.str().c_str());
@@ -371,7 +382,8 @@ class PTBC {  // do I need the AdjFieldType here?
 // below: Functions used to dispatch the PTBC algorithm
 
 template <typename PTBCType>
-int run_PTBC(PTBCType& ptbc, Integrator_Params& int_params,
+int run_PTBC(PTBCType& ptbc,
+             Integrator_Params& int_params,
              GaugeObservableParams& gaugeObsParams,
              PTBCSimulationLoggingParams& ptbcSimLogParams,
              SimulationLoggingParams& simLogParams) {
