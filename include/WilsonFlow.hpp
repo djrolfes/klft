@@ -159,7 +159,7 @@ template <typename DGaugeFieldType> struct WilsonFlow {
         }
       }
 
-      if (step_t * params.eps >= params.max_flow_time &&
+      if (this->params.tau >= params.max_flow_time &&
           params.max_flow_time > 0.0) {
         continue_flow = false;
       }
