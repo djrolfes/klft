@@ -78,6 +78,9 @@ SimulationLoggingParams:
   log_interval: 1
   log_delta_H: true
   log_acceptance: true
+  log_accept: true
+  log_time: true
+  log_observable_time: true
   flush: 5
   log_filename: "simulation_log.txt"
   write_to_file: true

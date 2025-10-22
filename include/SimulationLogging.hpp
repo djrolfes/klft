@@ -18,6 +18,7 @@ struct SimulationLoggingParams {
   bool log_acceptance;
   bool log_accept;
   bool log_time;
+  bool log_observable_time;
 
   // define vectors to hold the logs
   std::vector<size_t> log_steps;
@@ -25,20 +26,21 @@ struct SimulationLoggingParams {
   std::vector<real_t> acceptance;
   std::vector<bool> accept;
   std::vector<real_t> time;
+  std::vector<real_t> observable_time;
 
   // constructor to initialize the parameters
   SimulationLoggingParams()
       : log_interval(0), flush(25), flushed(false), write_to_file(false),
         log_delta_H(false), log_acceptance(false), log_accept(false),
-        log_time(false) {}
+        log_time(false), log_observable_time(false) {}
 };
 
 // define a function to log simulation information
 inline void
 addLogData(SimulationLoggingParams &params, const size_t step,
            const real_t _delta_H = 0.0, const real_t _acceptance = 0.0,
-           const bool _accept = false,
-           const real_t _time =
+           const bool _accept = false, const real_t _time = 0.0,
+           const real_t _observable_time =
                0.0) { // TODO: add overloads for different passed parameters
   if (params.log_interval == 0 || step % params.log_interval != 0 ||
       step == 0) {
@@ -78,6 +80,13 @@ addLogData(SimulationLoggingParams &params, const size_t step,
     }
   }
 
+  if (params.log_observable_time) {
+    params.observable_time.push_back(_observable_time);
+    if (KLFT_VERBOSITY > 1) {
+      printf("observable_time: %11.6f\n", _observable_time);
+    }
+  }
+
   params.log_steps.push_back(step);
 }
 
@@ -88,6 +97,7 @@ inline void clearSimulationLogs(SimulationLoggingParams &params) {
   params.acceptance.clear();
   params.accept.clear();
   params.time.clear();
+  params.observable_time.clear();
 }
 
 inline void forceflushSimulationLogs(SimulationLoggingParams &params,
@@ -122,6 +132,9 @@ inline void forceflushSimulationLogs(SimulationLoggingParams &params,
     if (params.log_time) {
       file << ", time";
     }
+    if (params.log_observable_time) {
+      file << ", observable_time";
+    }
     file << "\n";
   }
 
@@ -139,6 +152,9 @@ inline void forceflushSimulationLogs(SimulationLoggingParams &params,
     }
     if (params.log_time) {
       file << ", " << params.time[i];
+    }
+    if (params.log_observable_time) {
+      file << ", " << params.observable_time[i];
     }
     file << "\n";
   }

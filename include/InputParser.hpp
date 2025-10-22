@@ -339,6 +339,7 @@ inline int parseInputFile(const std::string &filename,
       simParams.log_acceptance = mp["log_acceptance"].as<bool>(false);
       simParams.log_accept = mp["log_accept"].as<bool>(false);
       simParams.log_time = mp["log_time"].as<bool>(false);
+      simParams.log_observable_time = mp["log_observable_time"].as<bool>(false);
     } else {
       printf("Error: SimulationLoggingParams not found in input file\n");
       return false;

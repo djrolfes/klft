@@ -156,9 +156,10 @@ public:
   }
 
   void measure(SimulationLoggingParams &simLogParams, index_t step,
-               real_t acc_rate, bool accept, real_t time) {
+               real_t acc_rate, bool accept, real_t time, real_t obs_time) {
     // measure the simulation logging observables
-    addLogData(simLogParams, step, hmc.delta_H, acc_rate, accept, time);
+    addLogData(simLogParams, step, hmc.delta_H, acc_rate, accept, time,
+               obs_time);
   }
 
   int step() {
@@ -371,8 +372,11 @@ int run_PTBC(PTBCType &ptbc, Integrator_Params &int_params,
 
     int ptbc_accept = ptbc.swap();
 
+    const real_t time = timer.seconds();
+    timer.reset();
     // Gauge observables
     ptbc.measure(gaugeObsParams, step);
+    const real_t obs_time = timer.seconds();
     ptbc.measure(ptbcSimLogParams, step);
 
     if (rank == 0) {
@@ -381,10 +385,9 @@ int run_PTBC(PTBCType &ptbc, Integrator_Params &int_params,
     }
     // PTBC swap/accept
 
-    const real_t time = timer.seconds();
     acc_sum += static_cast<real_t>(accept);
     acc_rate = acc_sum / static_cast<real_t>(step + 1);
-    ptbc.measure(simLogParams, step, acc_rate, accept, time);
+    ptbc.measure(simLogParams, step, acc_rate, accept, time, obs_time);
     if (rank == 0) {
       Kokkos::printf("Step: %zu, accepted: %d, Acceptance rate: %f, Time: %f\n",
                      step, accept, acc_rate, time);
@@ -402,10 +405,10 @@ int run_PTBC(PTBCType &ptbc, Integrator_Params &int_params,
   return 0;
 }
 
-// #define INITIALIZE_PTBCPREPARE(ND, NC, RNG)                                    \
-//   template int run_PTBC<DeviceGaugeFieldType<ND, NC, GaugeFieldKind::PTBC>,    \
-//                         DeviceAdjFieldType<ND, NC>, RNG>(                      \
-//       PTBCParams, RNG &, std::uniform_real_distribution<real_t>,               \
+// #define INITIALIZE_PTBCPREPARE(ND, NC, RNG) \
+//   template int run_PTBC<DeviceGaugeFieldType<ND, NC, GaugeFieldKind::PTBC>, \
+//                         DeviceAdjFieldType<ND, NC>, RNG>( \
+//       PTBCParams, RNG &, std::uniform_real_distribution<real_t>, \
 //       std::mt19937);
 // // INITIALIZE_PTBCPREPARE(2, 1, RNGType)
 // // INITIALIZE_PTBCPREPARE(2, 2, RNGType)
