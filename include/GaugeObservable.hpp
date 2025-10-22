@@ -42,7 +42,8 @@ struct GaugeObservableParams {
                                      // loop
   bool measure_wilson_loop_mu_nu;    // whether to measure the mu-nu Wilson loop
   bool measure_topological_charge; // whether to measure the topological charge
-  bool measure_action_density;     // whether to measure the gauge density
+  // TODO: measuring the density also needs to save the flowtime that was used
+  bool measure_action_density; // whether to measure the gauge density
   bool measure_sp_max; // whether to measure the max of Re Tr (1 - Plaquette)
 
   std::vector<Kokkos::Array<index_t, 2>>
@@ -109,7 +110,8 @@ typedef enum {
   MPI_GAUGE_OBSERVABLES_WILSON_LOOP_TEMPORAL_SIZE = 4,
   MPI_GAUGE_OBSERVABLES_TOPOLOGICAL_CHARGE = 5,
   MPI_GAUGE_OBSERVABLES_ACTION_DENSITY = 6,
-  MPI_GAUGE_OBSERVABLES_SP_MAX = 7
+  MPI_GAUGE_OBSERVABLES_SP_MAX = 7,
+  MPI_GAUGE_OBSERVABLES_WILSONFLOW_DETAILS = 8
 } MPI_GaugeObservableTags;
 
 template <typename DGaugeFieldType>
@@ -152,6 +154,16 @@ void measureGaugeObservablesPTBC(const typename DGaugeFieldType::type &g_in,
           printf("Performing Wilson flow...\n");
         }
         wf.flow();
+        if (compute_rank != 0 && params.wilson_flow_params.log_details) {
+          index_t arrsize = params.wilson_flow_params.log_strings.size();
+          std::string log_string =
+              params.wilson_flow_params.log_strings[arrsize];
+          index_t size = log_string.size();
+          MPI_Send(&size, 1, mpi_index_t(), 0,
+                   MPI_GAUGE_OBSERVABLES_WILSONFLOW_DETAILS, MPI_COMM_WORLD);
+          MPI_Send(log_string.c_str(), size, MPI_CHAR, 0,
+                   MPI_GAUGE_OBSERVABLES_WILSONFLOW_DETAILS, MPI_COMM_WORLD);
+        }
         if (KLFT_VERBOSITY > 1) {
           printf("Wilson flow completed.\n");
         }
@@ -271,6 +283,26 @@ void measureGaugeObservablesPTBC(const typename DGaugeFieldType::type &g_in,
   if (rank == 0) {
     // only the computing rank measures the observables
     params.measurement_steps.push_back(step);
+
+    if (compute_rank != 0 && params.wilson_flow_params.log_details) {
+      index_t size{0};
+      MPI_Recv(&size, 1, mpi_index_t(), compute_rank,
+               MPI_GAUGE_OBSERVABLES_WILSONFLOW_DETAILS, MPI_COMM_WORLD,
+               MPI_STATUS_IGNORE);
+      char *buffer = new char[size + 1];
+      MPI_Recv(buffer, size, MPI_CHAR, compute_rank,
+               MPI_GAUGE_OBSERVABLES_WILSONFLOW_DETAILS, MPI_COMM_WORLD,
+               MPI_STATUS_IGNORE);
+      std::string log_string(buffer, size);
+      params.wilson_flow_params.log_strings.push_back(log_string);
+    }
+    index_t arrsize = params.wilson_flow_params.log_strings.size();
+    std::string log_string = params.wilson_flow_params.log_strings[arrsize];
+    index_t size = log_string.size();
+    MPI_Send(&size, 1, mpi_index_t(), 0,
+             MPI_GAUGE_OBSERVABLES_WILSONFLOW_DETAILS, MPI_COMM_WORLD);
+    MPI_Send(log_string.c_str(), size, MPI_CHAR, 0,
+             MPI_GAUGE_OBSERVABLES_WILSONFLOW_DETAILS, MPI_COMM_WORLD);
 
     if constexpr (Nd == 4) {
 
