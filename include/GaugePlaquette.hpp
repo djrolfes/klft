@@ -200,7 +200,7 @@ real_t get_spmax(const typename DGaugeFieldType::type gauge_field) {
         for (index_t mu = 0; mu < Nd; ++mu) {
           for (index_t nu = 0; nu < Nd; ++nu) {
             if (nu > mu) {
-              real_t tmp = Kokkos::real(Nc - GPlaq(mu, nu, i0, i1, i2, i3));
+              real_t tmp = Kokkos::real(2 - GPlaq(mu, nu, i0, i1, i2, i3));
               s = tmp > s ? tmp : s;
             }
           }
