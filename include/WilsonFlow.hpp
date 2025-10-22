@@ -136,12 +136,18 @@ template <typename DGaugeFieldType> struct WilsonFlow {
           // step
           measure_step = step_t;
           t_sqd_E = getActionDensity_clover<DGaugeFieldType>(this->field) *
-                    params.tau * (params.tau);
+                    params.tau * params.tau;
           real_t slope = (t_sqd_E - t_sqd_E_old) / (step_t - measure_step_old);
           real_t intercept = t_sqd_E - slope * static_cast<real_t>(step_t);
           measure_step_old = measure_step;
           measure_step = static_cast<index_t>(
               ((params.t_sqrd_E_target - intercept) / slope) + 1);
+          measure_step = measure_step > measure_step_old + 10
+                             ? measure_step
+                             : measure_step_old + 10;
+          measure_step = measure_step < step_t + 100
+                             ? measure_step
+                             : measure_step_old + 100; // avoid too large steps
           if (KLFT_VERBOSITY > 1) {
             printf("Wilson Flow prediction: next measurement at step %zu\n",
                    measure_step);
