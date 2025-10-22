@@ -189,10 +189,6 @@ real_t get_spmax(const typename DGaugeFieldType::type gauge_field) {
   GaugePlaq<Nd, Nc, k> GPlaq(gauge_field, plaq_per_site,
                              gauge_field.dimensions);
 
-  // tune_and_launch_for<Nd>("compute plaq_per_site", IndexArray<Nd>{0},
-  //                         gauge_field.dimensions, GPlaq);
-  // Kokkos::fence();
-
   real_t rtn = 0.0;
   auto policy = Policy<Nd>({0, 0, 0, 0}, gauge_field.dimensions);
   Kokkos::parallel_reduce(
@@ -204,17 +200,17 @@ real_t get_spmax(const typename DGaugeFieldType::type gauge_field) {
         for (index_t mu = 0; mu < Nd; ++mu) {
           for (index_t nu = 0; nu < Nd; ++nu) {
             if (nu > mu) {
-              real_t tmp = Kokkos::real(2 - GPlaq(mu, nu, i0, i1, i2, i3));
-              s = tmp > s ? tmp : s;
+              real_t tmp = Kokkos::real(GPlaq(mu, nu, i0, i1, i2, i3));
+              s = tmp < s ? tmp : s;
             }
           }
         }
-        local_max = Kokkos::max(local_max, s);
+        local_max = Kokkos::min(local_max, s);
       },
-      Kokkos::Max<real_t>(rtn));
+      Kokkos::Min<real_t>(rtn));
   Kokkos::fence();
 
-  return rtn;
+  return 2 - rtn;
 }
 
 // return the avg value of ReTr(1 - plaquette) of the lattice
@@ -229,7 +225,6 @@ real_t get_spavg(const typename DGaugeFieldType::type gauge_field) {
   using FieldType = typename DeviceFieldType<Nd>::type;
   FieldType plaq_per_site(gauge_field.dimensions, complex_t(0.0, 0.0));
 
-  // number of bins
   GaugePlaq<Nd, Nc, k> GPlaq(gauge_field, plaq_per_site,
                              gauge_field.dimensions);
 
