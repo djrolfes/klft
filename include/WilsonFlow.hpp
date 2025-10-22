@@ -61,12 +61,14 @@ template <typename DGaugeFieldType> struct WilsonFlow {
   GaugeFieldT tmp_staple;
   SUNAdjField<rank, Nc> tmp_Z;
   index_t current_step{0};
+  real_t eps{0.01};
 
   WilsonFlow() = delete;
 
   WilsonFlow(const GaugeFieldT &_field, WilsonFlowParams &_params)
       : params(_params), field(_field.field), tmp_staple(_field.field) {
     const IndexArray<rank> dims = _field.dimensions;
+    eps = params.eps;
     Kokkos::realloc(Kokkos::WithoutInitializing, tmp_Z, dims[0], dims[1],
                     dims[2], dims[3]);
     Kokkos::fence();
@@ -114,8 +116,9 @@ template <typename DGaugeFieldType> struct WilsonFlow {
     while (continue_flow) {
       flow_step();
       step_t++;
+      this->params.tau = step_t * params.eps;
 
-      if (step_t * params.eps > params.min_flow_time) {
+      if (this->params.tau > this->params.min_flow_time) {
 
         // quick napkin math:
         // each flow_step() call calculates the staple field 3 times and
@@ -133,7 +136,7 @@ template <typename DGaugeFieldType> struct WilsonFlow {
           // step
           measure_step = step_t;
           t_sqd_E = getActionDensity_clover<DGaugeFieldType>(this->field) *
-                    (step_t * params.eps) * (step_t * params.eps);
+                    params.tau * (params.tau);
           real_t slope = (t_sqd_E - t_sqd_E_old) / (step_t - measure_step_old);
           real_t intercept = t_sqd_E - slope * static_cast<real_t>(step_t);
           measure_step_old = measure_step;
@@ -166,10 +169,9 @@ template <typename DGaugeFieldType> struct WilsonFlow {
              step_t, step_t * params.eps);
     }
     if (params.log_details) {
-      log_flow_step_dyn(step_t, step_t * params.eps, sp_max, t_sqd_E,
-                        measure_step,
+      log_flow_step_dyn(step_t, params.tau, sp_max, t_sqd_E, measure_step,
                         getActionDensity_clover<DGaugeFieldType>(this->field) *
-                            (step_t * params.eps) * (step_t * params.eps));
+                            params.tau * params.tau);
     }
   }
 
@@ -231,7 +233,7 @@ template <typename DGaugeFieldType> struct WilsonFlow {
     SUNAdj<Nc> Z0 = 2.0 * traceT(Z0_SUN); //* (Nc / params.beta);
     tmp_Z(i0, i1, i2, i3, mu) = Z0;       // does this need to be deep copied?
     field.field(i0, i1, i2, i3, mu) =
-        expoSUN(Z0 * -0.25 * params.eps) * field.field(i0, i1, i2, i3, mu);
+        expoSUN(Z0 * -0.25 * this->eps) * field.field(i0, i1, i2, i3, mu);
     // restoreSUN(field.field(i0, i1, i2, i3, mu));
   }
 
@@ -248,7 +250,7 @@ template <typename DGaugeFieldType> struct WilsonFlow {
          Z0 * static_cast<real_t>(17.0 / 36.0);
     tmp_Z(i0, i1, i2, i3, mu) = Z1;
     field.field(i0, i1, i2, i3, mu) =
-        expoSUN(Z1 * -params.eps) * field.field(i0, i1, i2, i3, mu);
+        expoSUN(Z1 * -this->eps) * field.field(i0, i1, i2, i3, mu);
     // restoreSUN(field.field(i0, i1, i2, i3, mu));
   }
 
@@ -264,7 +266,7 @@ template <typename DGaugeFieldType> struct WilsonFlow {
     Z2 = (Z2 * 0.75 - Z_old);
     // SUNAdj<Nc> tmp = (Z2);
     field.field(i0, i1, i2, i3, mu) =
-        expoSUN(Z2 * -params.eps) * field.field(i0, i1, i2, i3, mu);
+        expoSUN(Z2 * -this->eps) * field.field(i0, i1, i2, i3, mu);
     // restoreSUN(field.field(i0, i1, i2, i3, mu));
   }
 

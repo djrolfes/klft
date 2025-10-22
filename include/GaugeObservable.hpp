@@ -146,8 +146,7 @@ void measureGaugeObservablesPTBC(const typename DGaugeFieldType::type &g_in,
 
     if constexpr (Nd == 4) {
       // Wilson flow is only defined for 4D gauge fields
-      WilsonFlowParams &wfparams = params.wilson_flow_params;
-      WilsonFlow<DGaugeFieldType> wf(g_in, wfparams);
+      WilsonFlow<DGaugeFieldType> wf(g_in, params.wilson_flow_params);
       if (params.do_wilson_flow) {
         if (KLFT_VERBOSITY > 1) {
           printf("Performing Wilson flow...\n");
