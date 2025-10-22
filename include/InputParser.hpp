@@ -181,6 +181,7 @@ inline int parseInputFile(const std::string& filename,
   }
 }
 inline int parseInputFile(const std::string& filename,
+                          const std::string& output_directory,
                           FermionObservableParams& fobs) {
   try {
     YAML::Node config = YAML::LoadFile(filename);
@@ -191,7 +192,7 @@ inline int parseInputFile(const std::string& filename,
       fobs.measure_pion_correlator =
           mp["measure_pion_correlator"].as<bool>(false);
       fobs.pion_correlator_filename =
-          mp["pion_correlator_filename"].as<std::string>("");
+          output_directory + mp["pion_correlator_filename"].as<std::string>("");
       fobs.tol = mp["tol"].as<real_t>(10e-8);
       fobs.flush = mp["flush"].as<size_t>(25);
       fobs.write_to_file = mp["write_to_file"].as<bool>(false);

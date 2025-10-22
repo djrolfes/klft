@@ -115,7 +115,7 @@ int build_and_run_HMC(const std::string& input_file,
     return -1;
   }
   FermionObservableParams fObs;
-  if (!parseInputFile(input_file, fObs)) {
+  if (!parseInputFile(input_file, output_directory, fObs)) {
     printf("Error parsing inputfile\n");
     return -1;
   }

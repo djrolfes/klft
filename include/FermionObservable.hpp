@@ -17,6 +17,7 @@ struct FermionObservableParams {
   real_t kappa;
   size_t RepDim;
   bool write_to_file;
+  bool flushed;
 
   //
   size_t flush;  // interval to flush measurements to file, 0 to flush at the
@@ -103,16 +104,18 @@ inline void flushPionCorrelator(std::ofstream& file,
   }
 }
 
-inline void flushAllFermionObservables(const FermionObservableParams& params,
-
-                                       const bool HEADER = true,
-                                       const int& p = std::cout.precision()) {
-  std::setprecision(p);
-
+inline void forceflushAllFermionObservables(
+    FermionObservableParams& params,
+    const bool clear_after_flush = false,
+    const int& p = std::cout.precision()) {
+  auto _ = std::setprecision(p);
+  // check if write_to_file is enabled
   if (!params.write_to_file) {
     printf("write_to_file is not enabled\n");
     return;
   }
+  bool HEADER = !params.flushed;  // write header only once
+
   // TODO : flush similar to gauge obs
   if (params.measure_pion_correlator && params.pion_correlator_filename != "") {
     std::ofstream file(params.pion_correlator_filename, std::ios::app);
@@ -120,11 +123,93 @@ inline void flushAllFermionObservables(const FermionObservableParams& params,
     flushPionCorrelator(file, params, HEADER);
     file.close();
   }
+  params.flushed = true;  // write header only once
 }
 
 inline void clearAllFermionObservables(FermionObservableParams& params) {
   params.measurement_steps.clear();
   params.pion_correlator.clear();
+}
+
+inline void flushAllFermionObservables(FermionObservableParams& params,
+
+                                       const size_t step,
+                                       const bool clear_after_flush = false,
+                                       const int& p = std::cout.precision()) {
+  if (params.flush != 0 && step % params.flush == 0) {
+    forceflushAllFermionObservables(params, clear_after_flush, p);
+  }
+}
+typedef enum {
+  MPI_FERMION_OBSERVABLE_PION_CORRELATOR_SIZE = 0,
+  MPI_FERMION_OBSERVABLE_PION_CORRELATOR = 1
+
+} MPI_FermionObservableTypes;
+template <typename DSpinorFieldType,
+          typename DGaugeFieldType,
+          template <template <typename, typename> class DiracOpT,
+                    typename,
+                    typename> class _Solver,
+          template <typename, typename> class DiracOpT>
+void measureFermionObservablesPTBC(const typename DGaugeFieldType::type& g_in,
+                                   FermionObservableParams& params,
+                                   const size_t step,
+                                   const int compute_rank,
+                                   const bool do_compute = false) {
+  if ((params.measurement_interval == 0) ||
+      (step % params.measurement_interval != 0) || (step == 0)) {
+    return;
+  }
+  int rank, size;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_size(MPI_COMM_WORLD, &size);
+  if (KLFT_VERBOSITY > 1) {
+    printf("Measurement of Fermion Observables\n");
+    printf("step: %zu\n", step);
+  }
+  if (do_compute) {
+    /* code */
+    if (params.measure_pion_correlator) {
+      auto PC =
+          PionCorrelator<DSpinorFieldType, DGaugeFieldType, _Solver, DiracOpT>(
+              g_in, getDiracParams(g_in.dimensions, params), params.tol);
+      int size = PC.size();
+      MPI_Send(&size, 1, mpi_size_t(), 0,
+               MPI_FERMION_OBSERVABLE_PION_CORRELATOR, MPI_COMM_WORLD);
+      MPI_Send(PC.data(), PC.size(), mpi_real_t(), 0,
+               MPI_FERMION_OBSERVABLE_PION_CORRELATOR, MPI_COMM_WORLD);
+      if (KLFT_VERBOSITY > 1) {
+        printf("Pion Correlator:\n");
+        for (auto&& i : PC) {
+          printf("%f, ", i);
+        }
+        printf("\n");
+      }
+    }
+  }
+  if (rank == 0) {
+    params.measurement_steps.push_back(step);
+    if (params.measure_pion_correlator) {
+      size_t PC_size;
+      MPI_Recv(&PC_size, 1, mpi_size_t(), compute_rank,
+               MPI_FERMION_OBSERVABLE_PION_CORRELATOR_SIZE, MPI_COMM_WORLD,
+               MPI_STATUS_IGNORE);
+      std::vector<real_t> PC(PC_size);
+      MPI_Recv(PC.data(), PC_size, mpi_real_t(), compute_rank,
+               MPI_FERMION_OBSERVABLE_PION_CORRELATOR, MPI_COMM_WORLD,
+               MPI_STATUS_IGNORE);
+      params.pion_correlator.push_back(PC);
+      if (KLFT_VERBOSITY > 1) {
+        printf("Pion Correlator:\n");
+        for (auto&& i : PC) {
+          printf("%f, ", i);
+        }
+        printf("\n");
+      }
+    }
+  }
+
+  return;
 }
 
 }  // namespace klft

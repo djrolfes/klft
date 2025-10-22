@@ -4,6 +4,7 @@
 #include <random>
 #include <sstream>
 
+#include "FermionObservable.hpp"
 #include "FieldTypeHelper.hpp"
 #include "GLOBAL.hpp"
 #include "GaugeObservable.hpp"
@@ -26,7 +27,7 @@ struct PTBCParams {
   PTBCSimulationLoggingParams ptbcSimLogParams;
   GaugeObservableParams gaugeObsParams;
   SimulationLoggingParams simLogParams;
-
+  FermionObservableParams fermionObsParams;
   std::string to_string() const {
     std::ostringstream oss;
     oss << "PTBCParams: n_sims = " << n_sims
@@ -83,8 +84,11 @@ class PTBC {  // do I need the AdjFieldType here?
 
   PTBC() = delete;  // default constructor is not allowed
 
-  PTBC(PTBCParams& params_, HMCType& hmc_, RNG& rng_,
-       std::uniform_real_distribution<real_t> dist_, std::mt19937 mt_)
+  PTBC(PTBCParams& params_,
+       HMCType& hmc_,
+       RNG& rng_,
+       std::uniform_real_distribution<real_t> dist_,
+       std::mt19937 mt_)
       : params(params_), rng(rng_), dist(dist_), mt(mt_), hmc(hmc_) {
     device_id = Kokkos::device_id();  // default device id
     int rank;
@@ -157,9 +161,48 @@ class PTBC {  // do I need the AdjFieldType here?
       return;  // skip measurement for other ranks
     }
   }
+  void measure(FermionObservableParams& fermionObsParam, size_t step) {
+    // measure the gauge observables
+    int rank, size;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+    int compute_rank{0};
+    int dummy_rank{0};
 
-  void measure(SimulationLoggingParams& simLogParams, index_t step,
-               real_t acc_rate, bool accept, real_t time) {
+    if (rank == 0 || getDefectValue() >= 0.99999) {
+      // only the computing rank or the defect rank measures the observables
+      MPI_Reduce(
+          &rank, &compute_rank, 1, MPI_INT, MPI_SUM, 0,
+          MPI_COMM_WORLD);  // sum the ranks to get the computing rank in rank 0
+      if (getDefectValue() >= 0.99999) {
+        // if the defect value is close to 1, we measure the observables
+        // for the PTBC case
+        if (KLFT_VERBOSITY > 1) {
+          printf("Measuring PTBC  Fermionic observables at step %zu\n", step);
+        }
+        measureFermionObservablesPTBC<
+            DeviceSpinorFieldType<HMCType::rank, HMCType::Nc, 4>,
+            DGaugeFieldType, CGSolver, WilsonDiracOperator>(
+            hmc.hamiltonian_field.gauge_field, fermionObsParam, step, 0, true);
+      } else {
+        measureFermionObservablesPTBC<
+            DeviceSpinorFieldType<HMCType::rank, HMCType::Nc, 4>,
+            DGaugeFieldType, CGSolver, WilsonDiracOperator>(
+            hmc.hamiltonian_field.gauge_field, fermionObsParam, step,
+            compute_rank, false);
+      }
+    } else {
+      MPI_Reduce(&dummy_rank, &compute_rank, 1, MPI_INT, MPI_SUM, 0,
+                 MPI_COMM_WORLD);
+      return;  // skip measurement for other ranks
+    }
+  }
+
+  void measure(SimulationLoggingParams& simLogParams,
+               index_t step,
+               real_t acc_rate,
+               bool accept,
+               real_t time) {
     // measure the simulation logging observables
     addLogData(simLogParams, step, hmc.delta_H, acc_rate, accept, time);
   }
@@ -332,7 +375,8 @@ class PTBC {  // do I need the AdjFieldType here?
         oss << "Defects after broadcast: [";
         for (size_t i = 0; i < params.defects.size(); ++i) {
           oss << params.defects[i];
-          if (i + 1 < params.defects.size()) oss << ", ";
+          if (i + 1 < params.defects.size())
+            oss << ", ";
         }
         oss << "]";
         // DEBUG_MPI_PRINT("%s", oss.str().c_str());
@@ -371,10 +415,7 @@ class PTBC {  // do I need the AdjFieldType here?
 // below: Functions used to dispatch the PTBC algorithm
 
 template <typename PTBCType>
-int run_PTBC(PTBCType& ptbc, Integrator_Params& int_params,
-             GaugeObservableParams& gaugeObsParams,
-             PTBCSimulationLoggingParams& ptbcSimLogParams,
-             SimulationLoggingParams& simLogParams) {
+int run_PTBC(PTBCType& ptbc, Integrator_Params& int_params) {
   Kokkos::Timer timer;
   real_t acc_sum{0.0};
   real_t acc_rate{0.0};
@@ -391,36 +432,40 @@ int run_PTBC(PTBCType& ptbc, Integrator_Params& int_params,
     int accept = ptbc.step();
     MPI_Barrier(MPI_COMM_WORLD);  // synchronize all ranks after step
     // DEBUG_MPI_PRINT("HMC Step %zu: accept = %d", step, accept);
-
+    printf("did an hmc step\n");
     int ptbc_accept = ptbc.swap();
+    printf("did a ptbc swap\n");
 
     // Gauge observables
-    ptbc.measure(gaugeObsParams, step);
-    ptbc.measure(ptbcSimLogParams, step);
+    ptbc.measure(ptbc.params.gaugeObsParams, step);
+    ptbc.measure(ptbc.params.ptbcSimLogParams, step);
+    ptbc.measure(ptbc.params.fermionObsParams, step);
 
     if (rank == 0) {
-      flushAllGaugeObservables(gaugeObsParams, step, true);
-      flushPTBCSimulationLogs(ptbcSimLogParams, step, true);
+      flushAllGaugeObservables(ptbc.params.gaugeObsParams, step, true);
+      flushPTBCSimulationLogs(ptbc.params.ptbcSimLogParams, step, true);
+      flushAllFermionObservables(ptbc.params.fermionObsParams, step, true);
     }
     // PTBC swap/accept
 
     const real_t time = timer.seconds();
     acc_sum += static_cast<real_t>(accept);
     acc_rate = acc_sum / static_cast<real_t>(step + 1);
-    ptbc.measure(simLogParams, step, acc_rate, accept, time);
+    ptbc.measure(ptbc.params.simLogParams, step, acc_rate, accept, time);
     if (rank == 0) {
       Kokkos::printf("Step: %zu, accepted: %d, Acceptance rate: %f, Time: %f\n",
                      step, accept, acc_rate, time);
     }
-    flushSimulationLogs(simLogParams, step, true);
+    flushSimulationLogs(ptbc.params.simLogParams, step, true);
   }
 
   MPI_Barrier(MPI_COMM_WORLD);  // synchronize all ranks after the loop
   if (rank == 0) {
-    forceflushAllGaugeObservables(gaugeObsParams, true);
-    forceflushPTBCSimulationLogs(ptbcSimLogParams, true);
+    forceflushAllGaugeObservables(ptbc.params.gaugeObsParams, true);
+    forceflushPTBCSimulationLogs(ptbc.params.ptbcSimLogParams, true);
+    forceflushAllFermionObservables(ptbc.params.fermionObsParams, true);
   }
-  forceflushSimulationLogs(simLogParams, true);
+  forceflushSimulationLogs(ptbc.params.simLogParams, true);
 
   return 0;
 }
