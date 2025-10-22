@@ -30,7 +30,7 @@ Fermion Monomial:
   fermion: "Wilson"
   solver: "CG"
   RepDim: 4
-  kappa: 0.132
+  kappa: 0.15
   tol: 1e-10
   preconditioning: true
 GaugeObservableParams:
@@ -65,6 +65,21 @@ FermionObservableParams:
   kappa: 0.15
   RepDim: 4
   write_to_file: true
+PTBCParams:
+  defect_length: 2
+  defect_values: [0.714, 0.857, 1.0]
+
+PTBCSimulationLoggingParams:
+  log_interval: 1
+  log_delta_H_swap: true
+  log_swap_start: true
+  log_swap_accepts: true
+  log_defects: true
+  flush: 25
+  log_filename: "ptbcsimulation_log.txt"
+  write_to_file: true
+
+
 
 SimulationLoggingParams:
   log_interval: 1
