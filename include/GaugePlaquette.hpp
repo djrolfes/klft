@@ -207,7 +207,7 @@ real_t get_spmax(const typename DGaugeFieldType::type gauge_field) {
         }
         local_max = Kokkos::max(local_max, s);
       },
-      Kokkos::Min<real_t>(rtn));
+      Kokkos::Max<real_t>(rtn));
   Kokkos::fence();
 
   return rtn;
