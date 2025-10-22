@@ -158,10 +158,7 @@ void measureGaugeObservablesPTBC(const typename DGaugeFieldType::type &g_in,
           index_t arrsize = params.wilson_flow_params.log_strings.size();
           std::string log_string =
               params.wilson_flow_params.log_strings[arrsize];
-          index_t size = log_string.size();
-          MPI_Send(&size, 1, mpi_index_t(), 0,
-                   MPI_GAUGE_OBSERVABLES_WILSONFLOW_DETAILS, MPI_COMM_WORLD);
-          MPI_Send(log_string.c_str(), size, MPI_CHAR, 0,
+          MPI_Send(log_string.c_str(), log_string.size(), MPI_CHAR, 0,
                    MPI_GAUGE_OBSERVABLES_WILSONFLOW_DETAILS, MPI_COMM_WORLD);
         }
         if (KLFT_VERBOSITY > 1) {
@@ -286,9 +283,9 @@ void measureGaugeObservablesPTBC(const typename DGaugeFieldType::type &g_in,
 
     if (compute_rank != 0 && params.wilson_flow_params.log_details) {
       index_t size{0};
-      MPI_Recv(&size, 1, mpi_index_t(), compute_rank,
-               MPI_GAUGE_OBSERVABLES_WILSONFLOW_DETAILS, MPI_COMM_WORLD,
-               MPI_STATUS_IGNORE);
+      MPI_Probe(compute_rank, MPI_GAUGE_OBSERVABLES_WILSONFLOW_DETAILS,
+                MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      MPI_Get_count(MPI_STATUS_IGNORE, MPI_CHAR, &size);
       char *buffer = new char[size + 1];
       MPI_Recv(buffer, size, MPI_CHAR, compute_rank,
                MPI_GAUGE_OBSERVABLES_WILSONFLOW_DETAILS, MPI_COMM_WORLD,
@@ -296,13 +293,6 @@ void measureGaugeObservablesPTBC(const typename DGaugeFieldType::type &g_in,
       std::string log_string(buffer, size);
       params.wilson_flow_params.log_strings.push_back(log_string);
     }
-    index_t arrsize = params.wilson_flow_params.log_strings.size();
-    std::string log_string = params.wilson_flow_params.log_strings[arrsize];
-    index_t size = log_string.size();
-    MPI_Send(&size, 1, mpi_index_t(), 0,
-             MPI_GAUGE_OBSERVABLES_WILSONFLOW_DETAILS, MPI_COMM_WORLD);
-    MPI_Send(log_string.c_str(), size, MPI_CHAR, 0,
-             MPI_GAUGE_OBSERVABLES_WILSONFLOW_DETAILS, MPI_COMM_WORLD);
 
     if constexpr (Nd == 4) {
 
