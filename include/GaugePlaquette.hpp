@@ -200,17 +200,17 @@ real_t get_spmax(const typename DGaugeFieldType::type gauge_field) {
         for (index_t mu = 0; mu < Nd; ++mu) {
           for (index_t nu = 0; nu < Nd; ++nu) {
             if (nu > mu) {
-              real_t tmp = Kokkos::real(GPlaq(mu, nu, i0, i1, i2, i3));
-              s = tmp < s ? tmp : s;
+              real_t tmp = Kokkos::real(Nc - GPlaq(mu, nu, i0, i1, i2, i3));
+              s = tmp > s ? tmp : s;
             }
           }
         }
-        local_max = Kokkos::min(local_max, s);
+        local_max = Kokkos::max(local_max, s);
       },
       Kokkos::Min<real_t>(rtn));
   Kokkos::fence();
 
-  return 2 - rtn;
+  return rtn;
 }
 
 // return the avg value of ReTr(1 - plaquette) of the lattice
