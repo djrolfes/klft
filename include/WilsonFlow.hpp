@@ -90,6 +90,9 @@ template <typename DGaugeFieldType> struct WilsonFlow {
   void flow() { // todo: check this once by saving a staple field and once by
                 // locally calculating the staple
     if (params.dynamical_flow) {
+      if (KLFT_VERBOSITY > 2) {
+        printf("Using dynamical Wilson flow...\n");
+      }
       flow_dynamical();
       return;
     }

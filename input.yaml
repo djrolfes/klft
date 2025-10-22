@@ -18,7 +18,7 @@ Integrator:
   Monomials:
     - Type: "Leapfrog"
       level: 0
-      steps: 100
+      steps: 50
     # - Type: "Leapfrog"
     #   level: 1
     #   steps: 20
@@ -40,7 +40,7 @@ GaugeObservableParams:
   measure_wilson_loop_temporal: false
   measure_wilson_loop_mu_nu: false
   measure_sp_max: true
-  flush: 25
+  flush: 2
   do_wilson_flow: true
   WilsonFlowParams:
     tau: 8.0
