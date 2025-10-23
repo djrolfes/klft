@@ -162,12 +162,12 @@ void measureGaugeObservablesPTBC(const typename DGaugeFieldType::type &g_in,
           std::string log_string =
               params.wilson_flow_params.log_strings[arrsize];
           size_t log_string_size = log_string.size();
-          DEBUG_MPI_PRINT("Sending wilson flow log details of size %zu\n",
-                          log_string_size);
+          Kokkos::printf("Sending wilson flow log details of size %zu\n",
+                         log_string_size);
           MPI_Send(&log_string_size, 1, mpi_size_t(), 0,
                    MPI_GAUGE_OBSERVABLES_WILSONFLOW_DETAILS_SIZE,
                    MPI_COMM_WORLD);
-          DEBUG_MPI_PRINT("Sending wilson flow log details string\n");
+          Kokkos::printf("Sending wilson flow log details string\n");
           MPI_Send(log_string.c_str(), log_string.size(), MPI_CHAR, 0,
                    MPI_GAUGE_OBSERVABLES_WILSONFLOW_DETAILS, MPI_COMM_WORLD);
         }
@@ -300,17 +300,17 @@ void measureGaugeObservablesPTBC(const typename DGaugeFieldType::type &g_in,
                MPI_GAUGE_OBSERVABLES_WILSONFLOW_DETAILS_SIZE, MPI_COMM_WORLD,
                &status);
 
-      DEBUG_MPI_PRINT("Received wilson flow log details of size %zu\n", size);
+      Kokkos::printf("Received wilson flow log details of size %zu\n", size);
       char *buffer = new char[size + 1];
       MPI_Recv(buffer, size, MPI_CHAR, compute_rank,
                MPI_GAUGE_OBSERVABLES_WILSONFLOW_DETAILS, MPI_COMM_WORLD,
                MPI_STATUS_IGNORE);
       // Note: MPI_Recv can still use MPI_STATUS_IGNORE if you don't need its
       // status.
-      DEBUG_MPI_PRINT("Received wilson flow log details string\n");
+      Kokkos::printf("Received wilson flow log details string\n");
       std::string log_string(buffer, size);
-      DEBUG_MPI_PRINT("Wilson flow log details string: %s\n",
-                      log_string.c_str());
+      Kokkos::printf("Wilson flow log details string: %s\n",
+                     log_string.c_str());
       params.wilson_flow_params.log_strings.push_back(log_string);
       delete[] buffer; // <-- Added memory cleanup
     }
