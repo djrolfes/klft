@@ -57,7 +57,7 @@ std::vector<real_t> PionCorrelator(const typename DGaugeFieldType::type& g_in,
     }
     // at the end vecotor with length Nt, maybe new view with only one dimension
     // to do the device Reduction
-    for (size_t i3 = 0; i3 < g_in.dimensions[3]; i0++) {
+    for (size_t i3 = 0; i3 < g_in.dimensions[3]; i3++) {
       real_t res;
 
       Kokkos::parallel_reduce(
