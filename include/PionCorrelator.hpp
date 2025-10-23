@@ -10,10 +10,8 @@
 #include "Tuner.hpp"
 namespace klft {
 
-template <typename DSpinorFieldType,
-          typename DGaugeFieldType,
-          template <template <typename, typename> class DiracOpT,
-                    typename,
+template <typename DSpinorFieldType, typename DGaugeFieldType,
+          template <template <typename, typename> class DiracOpT, typename,
                     typename> class _Solver,
           template <typename, typename> class DiracOpT>
 std::vector<real_t> PionCorrelator(const typename DGaugeFieldType::type& g_in,
@@ -32,13 +30,14 @@ std::vector<real_t> PionCorrelator(const typename DGaugeFieldType::type& g_in,
   using DiracOperator = DiracOpT<DSpinorFieldType, DGaugeFieldType>;
   using Solver = _Solver<DiracOpT, DSpinorFieldType, DGaugeFieldType>;
   DiracOperator dirac_op(g_in, params);
-  auto Nt = g_in.field.extent(0);
+  auto Nt = g_in.field.extent(3);
 
   std::vector<real_t> result_vec;
 
   if constexpr (rank == 4) {
     typename DevicePropagator<rank, Nc, RepDim>::type result(
         g_in.dimensions, complex_t(0.0, 0.0));
+    size_t Vs = g_in.dimensions[0] * g_in.dimensions[1] * g_in.dimensions[2];
     for (index_t alpha0 = 0; alpha0 < Nc * RepDim; alpha0++) {
       SpinorFieldSource source(g_in.dimensions, IndexArray<rank>{}, alpha0);
       SpinorField x(g_in.dimensions, 0);
@@ -58,16 +57,16 @@ std::vector<real_t> PionCorrelator(const typename DGaugeFieldType::type& g_in,
     }
     // at the end vecotor with length Nt, maybe new view with only one dimension
     // to do the device Reduction
-    for (size_t i0 = 0; i0 < g_in.dimensions[0]; i0++) {
+    for (size_t i3 = 0; i3 < g_in.dimensions[3]; i0++) {
       real_t res;
 
       Kokkos::parallel_reduce(
           "Reductor",
           Policy<rank - 1>(
               IndexArray<rank - 1>{},
-              IndexArray<rank - 1>{g_in.dimensions[1], g_in.dimensions[2],
-                                   g_in.dimensions[3]}),
-          KOKKOS_LAMBDA(const size_t& i1, const size_t& i2, const size_t& i3,
+              IndexArray<rank - 1>{g_in.dimensions[0], g_in.dimensions[1],
+                                   g_in.dimensions[2]}),
+          KOKKOS_LAMBDA(const size_t& i0, const size_t& i1, const size_t& i2,
                         real_t& upd) {
 #pragma unroll
             for (size_t alpha = 0; alpha < Nc * RepDim; alpha++) {
@@ -81,7 +80,7 @@ std::vector<real_t> PionCorrelator(const typename DGaugeFieldType::type& g_in,
           },
           res);
 
-      result_vec.push_back(res);
+      result_vec.push_back(res / static_cast<real_t>(Vs));
     }
   }
   return result_vec;
