@@ -668,7 +668,7 @@ inline void flushWilsonFlowDetails(std::ofstream &file,
   }
   WilsonFlowParams &wfparams = params.wilson_flow_params;
   if (HEADER) {
-    file << "# step, flow_steps, flow_time, sp_max, "
+    file << "# step, flow_steps, flow_time, sp_max, sp_max_deriv, "
             "tsquaredxaction_density(old), measure_t^E_step, "
             "tsquaredxaction_density\n";
   }

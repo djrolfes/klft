@@ -4,6 +4,7 @@
 #include "FieldTypeHelper.hpp"
 #include "GLOBAL.hpp"
 #include "Gauge_Util.hpp"
+#include <string>
 
 namespace klft {
 struct WilsonFlowParams {
@@ -103,16 +104,20 @@ template <typename DGaugeFieldType> struct WilsonFlow {
     }
   }
 
+  // TODO: make a struct holding the gradient data
   void flow_dynamical() {
     // dynamically does the wilson flow either until sp_max is below
     // sp_max_target or until t^2E is above t_sqd_E_target.
     bool continue_flow = true;
     real_t sp_max;
+    real_t sp_max_old{0};
     size_t step_t{0};
     size_t measure_step{params.first_tE_measure_step};
     size_t measure_step_old{0};
     real_t t_sqd_E{0};
     real_t t_sqd_E_old{0};
+
+    real_t sp_max_deriv{0};
     while (continue_flow) {
       flow_step();
       step_t++;
@@ -130,6 +135,10 @@ template <typename DGaugeFieldType> struct WilsonFlow {
         // parallel for) should be about(slightly larger than) 1/6'th of a
         // flow_step() call
         sp_max = get_spmax<DGaugeFieldType>(this->field);
+        if (step_t > 1) {
+          sp_max_deriv += (sp_max - sp_max_old);
+        }
+        sp_max_old = sp_max;
 
         if (step_t >= measure_step) {
           // linearlise the measured t_sqd_E to get a prediction for the end
@@ -170,27 +179,30 @@ template <typename DGaugeFieldType> struct WilsonFlow {
         continue_flow = false;
       }
     }
+    sp_max_deriv = sp_max_deriv / static_cast<real_t>(step_t - 1);
     if (KLFT_VERBOSITY > 1) {
       printf("Wilson Flow completed in %zu steps, total flow time %1.6f\n",
              step_t, step_t * params.eps);
     }
     if (params.log_details) {
-      log_flow_step_dyn(step_t, params.tau, sp_max, t_sqd_E, measure_step,
+      log_flow_step_dyn(step_t, params.tau, sp_max, sp_max_deriv, t_sqd_E,
+                        measure_step,
                         getActionDensity_clover<DGaugeFieldType>(this->field) *
                             params.tau * params.tau);
     }
   }
 
   void log_flow_step_dyn(size_t steps, real_t tau, real_t sp_max,
-                         real_t t_sqrd_E_old, size_t measure_step,
-                         real_t t_sqrd_E) {
+                         real_t sp_max_deriv, real_t t_sqrd_E_old,
+                         size_t measure_step, real_t t_sqrd_E) {
     if (!params.log_details) {
       return;
     }
     std::string log_line =
         std::to_string(steps) + ", " + std::to_string(tau) + ", " +
-        std::to_string(sp_max) + ", " + std::to_string(t_sqrd_E_old) + ", " +
-        std::to_string(measure_step) + ", " + std::to_string(t_sqrd_E);
+        std::to_string(sp_max) + ", " + std::to_string(sp_max_deriv) + ", " +
+        std::to_string(t_sqrd_E_old) + ", " + std::to_string(measure_step) +
+        ", " + std::to_string(t_sqrd_E);
     params.log_strings.push_back(log_line);
   }
 
