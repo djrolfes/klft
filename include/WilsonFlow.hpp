@@ -154,6 +154,7 @@ template <typename DGaugeFieldType> struct WilsonFlow {
       flow_step();
       wfdata.step++;
       this->params.tau = wfdata.step * params.eps;
+      wfdata.flow_time = this->params.tau;
 
       if (this->params.tau > this->params.min_flow_time) {
 
