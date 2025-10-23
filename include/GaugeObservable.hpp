@@ -28,6 +28,7 @@
 
 #include "ActionDensity.hpp"
 #include "FieldTypeHelper.hpp"
+#include "GLOBAL.hpp"
 #include "GaugePlaquette.hpp"
 #include "TopoCharge.hpp"
 #include "WilsonFlow.hpp"
@@ -111,7 +112,8 @@ typedef enum {
   MPI_GAUGE_OBSERVABLES_TOPOLOGICAL_CHARGE = 5,
   MPI_GAUGE_OBSERVABLES_ACTION_DENSITY = 6,
   MPI_GAUGE_OBSERVABLES_SP_MAX = 7,
-  MPI_GAUGE_OBSERVABLES_WILSONFLOW_DETAILS = 8
+  MPI_GAUGE_OBSERVABLES_WILSONFLOW_DETAILS = 8,
+  MPI_GAUGE_OBSERVABLES_WILSONFLOW_DETAILS_SIZE = 9
 } MPI_GaugeObservableTags;
 
 template <typename DGaugeFieldType>
@@ -154,10 +156,18 @@ void measureGaugeObservablesPTBC(const typename DGaugeFieldType::type &g_in,
           printf("Performing Wilson flow...\n");
         }
         wf.flow();
+        // DEBUG_MPI_PRINT
         if (compute_rank != 0 && params.wilson_flow_params.log_details) {
           index_t arrsize = params.wilson_flow_params.log_strings.size();
           std::string log_string =
               params.wilson_flow_params.log_strings[arrsize];
+          size_t log_string_size = log_string.size();
+          DEBUG_MPI_PRINT("Sending wilson flow log details of size %zu\n",
+                          log_string_size);
+          MPI_Send(&log_string_size, 1, mpi_size_t(), 0,
+                   MPI_GAUGE_OBSERVABLES_WILSONFLOW_DETAILS_SIZE,
+                   MPI_COMM_WORLD);
+          DEBUG_MPI_PRINT("Sending wilson flow log details string\n");
           MPI_Send(log_string.c_str(), log_string.size(), MPI_CHAR, 0,
                    MPI_GAUGE_OBSERVABLES_WILSONFLOW_DETAILS, MPI_COMM_WORLD);
         }
@@ -283,23 +293,24 @@ void measureGaugeObservablesPTBC(const typename DGaugeFieldType::type &g_in,
 
     // ... inside if (rank == 0) { ...
     if (compute_rank != 0 && params.wilson_flow_params.log_details) {
-      index_t size{0};
+      size_t size{0};
       MPI_Status status; // <-- Declare an MPI_Status object
 
-      MPI_Probe(compute_rank, MPI_GAUGE_OBSERVABLES_WILSONFLOW_DETAILS,
-                MPI_COMM_WORLD, &status); // <-- Store the status in the object
+      MPI_Recv(&size, 1, mpi_size_t(), compute_rank,
+               MPI_GAUGE_OBSERVABLES_WILSONFLOW_DETAILS_SIZE, MPI_COMM_WORLD,
+               &status);
 
-      MPI_Get_count(&status, MPI_CHAR,
-                    &size); // <-- Use the status object to get the count
-
+      DEBUG_MPI_PRINT("Received wilson flow log details of size %zu\n", size);
       char *buffer = new char[size + 1];
       MPI_Recv(buffer, size, MPI_CHAR, compute_rank,
                MPI_GAUGE_OBSERVABLES_WILSONFLOW_DETAILS, MPI_COMM_WORLD,
                MPI_STATUS_IGNORE);
       // Note: MPI_Recv can still use MPI_STATUS_IGNORE if you don't need its
       // status.
-
+      DEBUG_MPI_PRINT("Received wilson flow log details string\n");
       std::string log_string(buffer, size);
+      DEBUG_MPI_PRINT("Wilson flow log details string: %s\n",
+                      log_string.c_str());
       params.wilson_flow_params.log_strings.push_back(log_string);
       delete[] buffer; // <-- Added memory cleanup
     }
