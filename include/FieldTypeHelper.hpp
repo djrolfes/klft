@@ -26,6 +26,7 @@
 #include "AdjointField.hpp"
 #include "Field.hpp"
 #include "GaugeField.hpp"
+#include "JTBCGaugeField.hpp"
 #include "PTBCGaugeField.hpp"
 #include "SUNField.hpp"
 #include "ScalarField.hpp"
@@ -34,7 +35,7 @@
 
 namespace klft {
 // define GaugeFieldKinds
-enum class GaugeFieldKind { Standard, PTBC };
+enum class GaugeFieldKind { Standard, PTBC, JTBC };
 
 enum class SpinorFieldKind { Standard, Staggered };
 // define a function to get the gauge field type based on the rank,
@@ -87,6 +88,18 @@ template <size_t Nc> struct DeviceGaugeFieldType<3, Nc, GaugeFieldKind::PTBC> {
 
 template <size_t Nc> struct DeviceGaugeFieldType<2, Nc, GaugeFieldKind::PTBC> {
   using type = devicePTBCGaugeField2D<2, Nc>;
+};
+
+template <size_t Nc> struct DeviceGaugeFieldType<4, Nc, GaugeFieldKind::JTBC> {
+  using type = deviceJTBCGaugeField<4, Nc>;
+};
+
+template <size_t Nc> struct DeviceGaugeFieldType<3, Nc, GaugeFieldKind::JTBC> {
+  using type = deviceJTBCGaugeField3D<3, Nc>;
+};
+
+template <size_t Nc> struct DeviceGaugeFieldType<2, Nc, GaugeFieldKind::JTBC> {
+  using type = deviceJTBCGaugeField2D<2, Nc>;
 };
 
 // define Traits to extract the rank, Nc and GaugeFieldKind at a later point
