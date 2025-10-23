@@ -107,10 +107,10 @@ real_t getActionDensity_clover(const typename DGaugeFieldType::type g_in) {
                 "action density requires a device gauge field type.");
   constexpr static const size_t Nd =
       DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank;
-  constexpr static const size_t Nc =
-      DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc;
-  constexpr static const GaugeFieldKind kind =
-      DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Kind;
+  // constexpr static const size_t Nc =
+  //     DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc;
+  // constexpr static const GaugeFieldKind kind =
+  //     DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Kind;
 
   // using FieldType = typename DeviceFieldType<Nd>::type;
   // FieldType density_per_site(g_in.dimensions, complex_t(0.0, 0.0));
