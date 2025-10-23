@@ -20,6 +20,8 @@ struct TagHoe {};
 struct TagHeo {};
 struct TagSe {};
 struct TagSo {};
+struct TagG5Se {};
+struct TagG5So {};
 }  // namespace Tags
 template <class _Derived, typename DSpinorFieldType, typename DGaugeFieldType>
 class BaseDiracOperator {
@@ -96,13 +98,11 @@ class BaseDiracOperator {
   BaseDiracOperator() = default;
 };
 template <template <typename, typename> class _Derived,
-          typename DSpinorFieldType,
-          typename DGaugeFieldType>
+          typename DSpinorFieldType, typename DGaugeFieldType>
 class DiracOperator
     : public BaseDiracOperator<
           DiracOperator<_Derived, DSpinorFieldType, DGaugeFieldType>,
-          DSpinorFieldType,
-          DGaugeFieldType> {
+          DSpinorFieldType, DGaugeFieldType> {
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
   static_assert(isDeviceFermionFieldType<DSpinorFieldType>::value);
   constexpr static size_t rank =
@@ -118,8 +118,7 @@ class DiracOperator
 
   using BaseDiracOperator<
       DiracOperator<_Derived, DSpinorFieldType, DGaugeFieldType>,
-      DSpinorFieldType,
-      DGaugeFieldType>::BaseDiracOperator;
+      DSpinorFieldType, DGaugeFieldType>::BaseDiracOperator;
   using Derived = _Derived<DSpinorFieldType, DGaugeFieldType>;
   using SpinorFieldType = typename DSpinorFieldType::type;
 
@@ -197,13 +196,11 @@ class DiracOperator
 };
 
 template <template <typename, typename> class _Derived,
-          typename DSpinorFieldType,
-          typename DGaugeFieldType>
+          typename DSpinorFieldType, typename DGaugeFieldType>
 class EODiracOperator
     : public BaseDiracOperator<
           EODiracOperator<_Derived, DSpinorFieldType, DGaugeFieldType>,
-          DSpinorFieldType,
-          DGaugeFieldType> {
+          DSpinorFieldType, DGaugeFieldType> {
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
   static_assert(isDeviceFermionFieldType<DSpinorFieldType>::value);
   constexpr static size_t rank =
@@ -220,8 +217,7 @@ class EODiracOperator
  public:
   using BaseDiracOperator<
       EODiracOperator<_Derived, DSpinorFieldType, DGaugeFieldType>,
-      DSpinorFieldType,
-      DGaugeFieldType>::BaseDiracOperator;
+      DSpinorFieldType, DGaugeFieldType>::BaseDiracOperator;
   using Derived = _Derived<DSpinorFieldType, DGaugeFieldType>;
   using SpinorFieldType = typename DSpinorFieldType::type;
 
@@ -286,11 +282,54 @@ class EODiracOperator
     tune_and_launch_for<rank, Tags::TagHeo>(
         typeid(Derived).name(), IndexArray<rank>{}, this->s_in.dimensions,
         static_cast<Derived&>(*this));
+    axpy<DSpinorFieldType>(-this->params.kappa * this->params.kappa,
+                           this->s_out, temp, this->s_out);
+    return this->s_out;
+  }
+  SpinorFieldType apply_(Tags::TagSo, const SpinorFieldType& s_out) {
+    this->apply_(Tags::TagHeo{});
+
+    auto temp = this->s_in;
+    this->s_in = this->s_out;
+    this->s_out = s_out;
+
+    tune_and_launch_for<rank, Tags::TagHoe>(
+        typeid(Derived).name(), IndexArray<rank>{}, this->s_in.dimensions,
+        static_cast<Derived&>(*this));
+    axpy<DSpinorFieldType>(-this->params.kappa * this->params.kappa,
+                           this->s_out, temp, this->s_out);
+    return this->s_out;
+  }
+
+  SpinorFieldType apply_(Tags::TagG5Se) {
+    auto cached_out = this->s_out;
+    this->s_out = SpinorFieldType(this->s_in.dimensions, complex_t(0.0, 0.0));
+    return this->apply_(Tags::TagG5Se{}, cached_out);
+  }
+
+  SpinorFieldType apply_(Tags::TagG5So) {
+    auto cached_out = this->s_out;
+    this->s_out = SpinorFieldType(this->s_in.dimensions, complex_t(0.0, 0.0));
+    return this->apply_(Tags::TagG5So{}, cached_out);
+  }
+
+  SpinorFieldType apply_(Tags::TagG5Se, const SpinorFieldType& s_out) {
+    // printf("iam a EO Se\n");
+    // printf("%i", this->test);
+    this->apply_(Tags::TagHoe{});
+
+    auto temp = this->s_in;
+    this->s_in = this->s_out;
+    this->s_out = s_out;
+
+    tune_and_launch_for<rank, Tags::TagHeo>(
+        typeid(Derived).name(), IndexArray<rank>{}, this->s_in.dimensions,
+        static_cast<Derived&>(*this));
     axpyG5<DSpinorFieldType>(-this->params.kappa * this->params.kappa,
                              this->s_out, temp, this->s_out);
     return this->s_out;
   }
-  SpinorFieldType apply_(Tags::TagSo, const SpinorFieldType& s_out) {
+  SpinorFieldType apply_(Tags::TagG5So, const SpinorFieldType& s_out) {
     this->apply_(Tags::TagHeo{});
 
     auto temp = this->s_in;
@@ -304,17 +343,18 @@ class EODiracOperator
                              this->s_out, temp, this->s_out);
     return this->s_out;
   }
+
   SpinorFieldType apply_(Tags::TagDDdagger, const SpinorFieldType& s_out) {
     if (!temp.field.is_allocated()) {
       this->temp = SpinorFieldType(this->s_in.dimensions, 0);
     }
 
     auto cached_s_out = this->s_out;
-    apply_(Tags::TagSe{}, this->temp);
+    apply_(Tags::TagG5Se{}, this->temp);
     this->s_in = this->temp;
     this->s_out = cached_s_out;
 
-    apply_(Tags::TagSe{}, s_out);
+    apply_(Tags::TagG5Se{}, s_out);
     return s_out;
   }
   SpinorFieldType apply_(Tags::TagDdaggerD, const SpinorFieldType& s_out) {
