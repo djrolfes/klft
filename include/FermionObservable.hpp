@@ -1,6 +1,7 @@
 #pragma once
 #include <fstream>
 #include <iomanip>
+
 #include "FermionParams.hpp"
 #include "FieldTypeHelper.hpp"
 #include "GLOBAL.hpp"
@@ -47,10 +48,8 @@ auto getDiracParams(const IndexArray<rank>& dimensions,
   }
 }
 
-template <typename DSpinorFieldType,
-          typename DGaugeFieldType,
-          template <template <typename, typename> class DiracOpT,
-                    typename,
+template <typename DSpinorFieldType, typename DGaugeFieldType,
+          template <template <typename, typename> class DiracOpT, typename,
                     typename> class _Solver,
           template <typename, typename> class DiracOpT>
 void measureFermionObservables(const typename DGaugeFieldType::type& g_in,
@@ -93,8 +92,7 @@ inline void flushPionCorrelator(std::ofstream& file,
     printf("Error: no plaquette measurements available\n");
     return;
   }
-  if (HEADER)
-    file << "# step, pion correlator\n";
+  if (HEADER) file << "# step, pion correlator\n";
   for (size_t i = 0; i < params.pion_correlator.size(); ++i) {
     file << params.measurement_steps[i] << ", ";
     for (auto&& j : params.pion_correlator[i]) {
@@ -105,8 +103,7 @@ inline void flushPionCorrelator(std::ofstream& file,
 }
 
 inline void forceflushAllFermionObservables(
-    FermionObservableParams& params,
-    const bool clear_after_flush = false,
+    FermionObservableParams& params, const bool clear_after_flush = false,
     const int& p = std::cout.precision()) {
   auto _ = std::setprecision(p);
   // check if write_to_file is enabled
@@ -119,7 +116,6 @@ inline void forceflushAllFermionObservables(
   // TODO : flush similar to gauge obs
   if (params.measure_pion_correlator && params.pion_correlator_filename != "") {
     std::ofstream file(params.pion_correlator_filename, std::ios::app);
-    printf("Flushing Pion correlator");
     flushPionCorrelator(file, params, HEADER);
     file.close();
   }
@@ -145,16 +141,13 @@ typedef enum {
   MPI_FERMION_OBSERVABLE_PION_CORRELATOR = 1
 
 } MPI_FermionObservableTypes;
-template <typename DSpinorFieldType,
-          typename DGaugeFieldType,
-          template <template <typename, typename> class DiracOpT,
-                    typename,
+template <typename DSpinorFieldType, typename DGaugeFieldType,
+          template <template <typename, typename> class DiracOpT, typename,
                     typename> class _Solver,
           template <typename, typename> class DiracOpT>
 void measureFermionObservablesPTBC(const typename DGaugeFieldType::type& g_in,
                                    FermionObservableParams& params,
-                                   const size_t step,
-                                   const int compute_rank,
+                                   const size_t step, const int compute_rank,
                                    const bool do_compute = false) {
   if ((params.measurement_interval == 0) ||
       (step % params.measurement_interval != 0) || (step == 0)) {
@@ -173,25 +166,26 @@ void measureFermionObservablesPTBC(const typename DGaugeFieldType::type& g_in,
       auto PC =
           PionCorrelator<DSpinorFieldType, DGaugeFieldType, _Solver, DiracOpT>(
               g_in, getDiracParams(g_in.dimensions, params), params.tol);
-      int size = PC.size();
-      MPI_Send(&size, 1, mpi_size_t(), 0,
+      index_t size = PC.size();
+      MPI_Send(&size, 1, mpi_index_t(), 0,
+               MPI_FERMION_OBSERVABLE_PION_CORRELATOR_SIZE, MPI_COMM_WORLD);
+      printf("Sent Pion Correlator size");
+      MPI_Send(PC.data(), size, mpi_real_t(), 0,
                MPI_FERMION_OBSERVABLE_PION_CORRELATOR, MPI_COMM_WORLD);
-      MPI_Send(PC.data(), PC.size(), mpi_real_t(), 0,
-               MPI_FERMION_OBSERVABLE_PION_CORRELATOR, MPI_COMM_WORLD);
-      if (KLFT_VERBOSITY > 1) {
-        printf("Pion Correlator:\n");
-        for (auto&& i : PC) {
-          printf("%f, ", i);
-        }
-        printf("\n");
-      }
+      // if (KLFT_VERBOSITY > 1) {
+      //   printf("Pion Correlator:\n");
+      //   for (auto&& i : PC) {
+      //     printf("%f, ", i);
+      //   }
+      //   printf("\n");
+      // }
     }
   }
   if (rank == 0) {
     params.measurement_steps.push_back(step);
     if (params.measure_pion_correlator) {
-      size_t PC_size;
-      MPI_Recv(&PC_size, 1, mpi_size_t(), compute_rank,
+      index_t PC_size;
+      MPI_Recv(&PC_size, 1, mpi_index_t(), compute_rank,
                MPI_FERMION_OBSERVABLE_PION_CORRELATOR_SIZE, MPI_COMM_WORLD,
                MPI_STATUS_IGNORE);
       std::vector<real_t> PC(PC_size);

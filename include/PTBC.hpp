@@ -84,11 +84,8 @@ class PTBC {  // do I need the AdjFieldType here?
 
   PTBC() = delete;  // default constructor is not allowed
 
-  PTBC(PTBCParams& params_,
-       HMCType& hmc_,
-       RNG& rng_,
-       std::uniform_real_distribution<real_t> dist_,
-       std::mt19937 mt_)
+  PTBC(PTBCParams& params_, HMCType& hmc_, RNG& rng_,
+       std::uniform_real_distribution<real_t> dist_, std::mt19937 mt_)
       : params(params_), rng(rng_), dist(dist_), mt(mt_), hmc(hmc_) {
     device_id = Kokkos::device_id();  // default device id
     int rank;
@@ -178,7 +175,7 @@ class PTBC {  // do I need the AdjFieldType here?
         // if the defect value is close to 1, we measure the observables
         // for the PTBC case
         if (KLFT_VERBOSITY > 1) {
-          printf("Measuring PTBC  Fermionic observables at step %zu\n", step);
+          printf("Measuring   Fermionic observables at step %zu\n", step);
         }
         measureFermionObservablesPTBC<
             DeviceSpinorFieldType<HMCType::rank, HMCType::Nc, 4>,
@@ -198,11 +195,8 @@ class PTBC {  // do I need the AdjFieldType here?
     }
   }
 
-  void measure(SimulationLoggingParams& simLogParams,
-               index_t step,
-               real_t acc_rate,
-               bool accept,
-               real_t time) {
+  void measure(SimulationLoggingParams& simLogParams, index_t step,
+               real_t acc_rate, bool accept, real_t time) {
     // measure the simulation logging observables
     addLogData(simLogParams, step, hmc.delta_H, acc_rate, accept, time);
   }
@@ -375,8 +369,7 @@ class PTBC {  // do I need the AdjFieldType here?
         oss << "Defects after broadcast: [";
         for (size_t i = 0; i < params.defects.size(); ++i) {
           oss << params.defects[i];
-          if (i + 1 < params.defects.size())
-            oss << ", ";
+          if (i + 1 < params.defects.size()) oss << ", ";
         }
         oss << "]";
         // DEBUG_MPI_PRINT("%s", oss.str().c_str());
@@ -432,12 +425,12 @@ int run_PTBC(PTBCType& ptbc, Integrator_Params& int_params) {
     int accept = ptbc.step();
     MPI_Barrier(MPI_COMM_WORLD);  // synchronize all ranks after step
     // DEBUG_MPI_PRINT("HMC Step %zu: accept = %d", step, accept);
-    printf("did an hmc step\n");
+
     int ptbc_accept = ptbc.swap();
-    printf("did a ptbc swap\n");
 
     // Gauge observables
     ptbc.measure(ptbc.params.gaugeObsParams, step);
+
     ptbc.measure(ptbc.params.ptbcSimLogParams, step);
     ptbc.measure(ptbc.params.fermionObsParams, step);
 
