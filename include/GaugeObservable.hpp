@@ -37,6 +37,7 @@
 namespace klft {
 // define a struct to hold parameters related to the gauge observables
 struct GaugeObservableParams {
+  size_t thermalization_steps;       // number of thermalization steps
   size_t measurement_interval;       // interval between measurements
   bool measure_plaquette;            // whether to measure the plaquette
   bool measure_wilson_loop_temporal; // whether to measure the temporal Wilson
@@ -96,11 +97,11 @@ struct GaugeObservableParams {
   // constructor to initialize the parameters
   // by default nothing is measured
   GaugeObservableParams()
-      : measurement_interval(0), measure_plaquette(false),
-        measure_sp_max(false), measure_wilson_loop_temporal(false),
-        measure_wilson_loop_mu_nu(false), measure_topological_charge(false),
-        measure_action_density(false), flush(25), flushed(false),
-        wilson_flow_params() {}
+      : thermalization_steps(0), measurement_interval(1),
+        measure_plaquette(false), measure_sp_max(false),
+        measure_wilson_loop_temporal(false), measure_wilson_loop_mu_nu(false),
+        measure_topological_charge(false), measure_action_density(false),
+        flush(25), flushed(false), wilson_flow_params() {}
 };
 
 typedef enum {
@@ -127,7 +128,8 @@ void measureGaugeObservablesPTBC(const typename DGaugeFieldType::type &g_in,
       DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc;
 
   if ((params.measurement_interval == 0) ||
-      (step % params.measurement_interval != 0) || (step == 0)) {
+      (step % params.measurement_interval != 0) || (step == 0) ||
+      step < params.thermalization_steps) {
     return;
   }
 
@@ -399,7 +401,8 @@ void measureGaugeObservables(const typename DGaugeFieldType::type &g_in,
       DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc;
   // check if the step is a measurement step
   if ((params.measurement_interval == 0) ||
-      (step % params.measurement_interval != 0) || (step == 0)) {
+      (step % params.measurement_interval != 0) || (step == 0) ||
+      step < params.thermalization_steps) {
     return;
   }
   // otherwise, carry out the measurements

@@ -35,6 +35,7 @@ Gauge Monomial:
 #   tol: 1e-10
 
 GaugeObservableParams:
+  thermalization_steps: 500
   measurement_interval: 2
   measure_plaquette: true
   measure_wilson_loop_temporal: false
