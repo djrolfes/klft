@@ -3,4 +3,7 @@ build
 *.code-workspace
 arc
 .cache
+.clangd
+cmake-build-*
+compile_commands.json
 
