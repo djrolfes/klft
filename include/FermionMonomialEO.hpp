@@ -82,7 +82,7 @@ class FermionMonomialEO : public Monomial<DGaugeFieldType, DAdjFieldType> {
     Monomial<DGaugeFieldType, DAdjFieldType>::H_old =
         spinor_norm_sq<rank, Nc, RepDim>(R);
     DiracOperator dirac_op(h.gauge_field, params);
-    dirac_op.template apply<Tags::TagSe>(R, this->phi);
+    dirac_op.template apply<Tags::TagG5Se>(R, this->phi);
     Kokkos::Profiling::popRegion();
   }
 

@@ -26,12 +26,10 @@
 
 namespace klft {
 
-template <template <template <typename, typename> class DiracOpT,
-                    typename,
+template <template <template <typename, typename> class DiracOpT, typename,
                     typename> class _Derived,
           template <typename, typename> class DiracOpT,
-          typename DSpinorFieldType,
-          typename DGaugeFieldType>
+          typename DSpinorFieldType, typename DGaugeFieldType>
 class Solver {
   // using DSpinorFieldType =
   //     typename DiracOpFieldTypeTraits<DiracOperator>::DSpinorFieldType;
@@ -79,7 +77,8 @@ class Solver {
   /// @param odd_b
   void construct_problem(const SpinorFieldType& odd_b) {
     auto out_even_from_odd_b = dirac_op.template apply<Tags::TagHeo>(odd_b);
-    axpy<DSpinorFieldType>(1.0, out_even_from_odd_b, this->b, this->b);
+    axpy<DSpinorFieldType>(this->dirac_op.params.kappa, out_even_from_odd_b,
+                           this->b, this->b);
   }
 
   /// @brief Reconstructs the Odd part of the solution
@@ -87,7 +86,7 @@ class Solver {
   void reconstruct_solution(const SpinorFieldType& odd_b,
                             SpinorFieldType& out) {
     dirac_op.template apply<Tags::TagHoe>(this->x, out);
-    axpy<DSpinorFieldType>(1.0, odd_b, out, out);
+    axpy<DSpinorFieldType>(this->dirac_op.params.kappa, out, odd_b, out);
   }
   SpinorFieldType reconstruct_solution(const SpinorFieldType& odd_b) {
     auto out = SpinorFieldType(x.dimensions, complex_t(0.0, 0.0));
@@ -104,8 +103,7 @@ class Solver {
 //               SpinorType::RepDim>;
 
 template <template <typename, typename> class DiracOpT,
-          typename DSpinorFieldType,
-          typename DGaugeFieldType>
+          typename DSpinorFieldType, typename DGaugeFieldType>
 class CGSolver
     : public Solver<CGSolver, DiracOpT, DSpinorFieldType, DGaugeFieldType> {
   // using DSpinorFieldType =
@@ -204,8 +202,7 @@ class CGSolver
 };
 
 template <template <typename, typename> class DiracOpT,
-          typename DSpinorFieldType,
-          typename DGaugeFieldType>
+          typename DSpinorFieldType, typename DGaugeFieldType>
 class BiCGStab
     : public Solver<BiCGStab, DiracOpT, DSpinorFieldType, DGaugeFieldType> {
   // using DSpinorFieldType =

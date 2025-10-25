@@ -211,7 +211,7 @@ class UpdateMomentumWilsonEO : public UpdateMomentum {
 
     this->chi = solver.x;  // chi = S_e^-1 S_e^-1 phi
 
-    D.template apply<Tags::TagSe>(this->chi, this->y);  // y = S_e^-1 phi
+    D.template apply<Tags::TagG5Se>(this->chi, this->y);  // y = S_e^-1 phi
 
     D.template apply<Tags::TagHoe>(this->chi, this->rho);
     D.template apply<Tags::TagHoe>(this->y, this->sigma);
