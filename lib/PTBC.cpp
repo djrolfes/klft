@@ -88,6 +88,9 @@ int PTBC_execute(const std::string& input_file,
            ptbcParams.defects.size(), size);
     return -1;
   }
+  if (resParsef < 0) {
+    fermionObsParams.measure_pion_correlator = false;
+  }
 
   ptbcParams.gaugeObsParams = gaugeObsParams;
   ptbcParams.simLogParams = simLogParams;

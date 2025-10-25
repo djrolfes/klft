@@ -82,6 +82,17 @@ class Solver {
   }
 
   /// @brief Reconstructs the Odd part of the solution
+  /// with zero odd part
+  void reconstruct_solution_0(SpinorFieldType& out) {
+    dirac_op.template apply<Tags::TagHoe>(this->x, out);
+    ax<DSpinorFieldType>(this->dirac_op.params.kappa, out, out);
+  }
+  SpinorFieldType reconstruct_solution_0() {
+    auto out = SpinorFieldType(x.dimensions, complex_t(0.0, 0.0));
+    reconstruct_solution_0(out);
+    return out;
+  }
+  /// @brief Reconstructs the Odd part of the solution
   /// @param out
   void reconstruct_solution(const SpinorFieldType& odd_b,
                             SpinorFieldType& out) {

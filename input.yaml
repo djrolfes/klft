@@ -66,6 +66,7 @@ FermionObservableParams:
   RepDim: 4
   write_to_file: true
   flush: 5
+  preconditioning: true
 PTBCParams:
   defect_length: 2
   defect_values: [0.714, 0.857, 1.0]

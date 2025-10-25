@@ -31,8 +31,7 @@ using RNGType = Kokkos::Random_XorShift64_Pool<Kokkos::DefaultExecutionSpace>;
 namespace klft {
 
 template <typename HMCType>
-int run_HMC(HMCType& hmc,
-            const Integrator_Params& integratorParams,
+int run_HMC(HMCType& hmc, const Integrator_Params& integratorParams,
             GaugeObservableParams& gaugeObsParams,
             SimulationLoggingParams& simLogParams,
             FermionObservableParams& fermionObsParams) {
@@ -69,8 +68,9 @@ int run_HMC(HMCType& hmc,
     // For now fix fermion measurment stuff:
     measureFermionObservables<
         DeviceSpinorFieldType<HMCType::rank, HMCType::Nc, 4>,
-        typename HMCType::DeviceGaugeFieldType, CGSolver, HWilsonDiracOperator>(
-        hmc.hamiltonian_field.gauge_field, fermionObsParams, step);
+        typename HMCType::DeviceGaugeFieldType, BiCGStab,
+        EOWilsonDiracOperator>(hmc.hamiltonian_field.gauge_field,
+                               fermionObsParams, step);
     flushSimulationLogs(simLogParams, step, true);
     flushAllGaugeObservables(gaugeObsParams, step, true);
     if (fermionObsParams.flush != 0 && step % fermionObsParams.flush == 0) {

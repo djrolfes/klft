@@ -19,6 +19,7 @@ struct FermionObservableParams {
   size_t RepDim;
   bool write_to_file;
   bool flushed;
+  bool preconditioning;
 
   //
   size_t flush;  // interval to flush measurements to file, 0 to flush at the
@@ -30,11 +31,11 @@ struct FermionObservableParams {
         flush(25),
         tol(10e-8),
         kappa(0.15),
-        RepDim(4) {}
+        RepDim(4),
+        preconditioning(true) {}
 };
-template <size_t rank>
-auto getDiracParams(const IndexArray<rank>& dimensions,
-                    const FermionObservableParams& fparams) {
+
+auto getDiracParams(const FermionObservableParams& fparams) {
   if (fparams.RepDim == 4) {
     diracParams dParams(fparams.kappa);
     return dParams;
@@ -64,16 +65,36 @@ void measureFermionObservables(const typename DGaugeFieldType::type& g_in,
     printf("step: %zu\n", step);
   }
   if (params.measure_pion_correlator) {
-    auto PC =
-        PionCorrelator<DSpinorFieldType, DGaugeFieldType, _Solver, DiracOpT>(
-            g_in, getDiracParams(g_in.dimensions, params), params.tol);
-    params.pion_correlator.push_back(PC);
-    if (KLFT_VERBOSITY > 1) {
-      printf("Pion Correlator:\n");
-      for (auto&& i : PC) {
-        printf("%f, ", i);
+    if (params.preconditioning == false ||
+        std::is_same_v<
+            typename DiracOpT<DSpinorFieldType, DGaugeFieldType>::Base,
+            DiracOperator<DiracOpT, DSpinorFieldType, DGaugeFieldType>>) {
+      auto PC =
+          PionCorrelator<DSpinorFieldType, DGaugeFieldType, CGSolver, DiracOpT>(
+              g_in, getDiracParams(params), params.tol);
+      params.pion_correlator.push_back(PC);
+      if (KLFT_VERBOSITY > 1) {
+        printf("Pion Correlator:\n");
+        for (auto&& i : PC) {
+          printf("%f, ", i);
+        }
+        printf("\n");
       }
-      printf("\n");
+    } else {
+      printf("Computing Pion Correlator Checkerboard layout\n");
+      auto dims = g_in.dimensions;
+      dims[0] /= 2;
+      auto PC = PionCorrelatorEO<DSpinorFieldType, DGaugeFieldType, _Solver,
+                                 DiracOpT>(g_in, getDiracParams(params), dims,
+                                           params.tol);
+      params.pion_correlator.push_back(PC);
+      if (KLFT_VERBOSITY > 1) {
+        printf("Pion Correlator:\n");
+        for (auto&& i : PC) {
+          printf("%f, ", i);
+        }
+        printf("\n");
+      }
     }
   }
   params.measurement_steps.push_back(step);
@@ -147,6 +168,7 @@ template <typename DSpinorFieldType, typename DGaugeFieldType,
           template <typename, typename> class DiracOpT>
 void measureFermionObservablesPTBC(const typename DGaugeFieldType::type& g_in,
                                    FermionObservableParams& params,
+
                                    const size_t step, const int compute_rank,
                                    const bool do_compute = false) {
   if ((params.measurement_interval == 0) ||
@@ -163,24 +185,45 @@ void measureFermionObservablesPTBC(const typename DGaugeFieldType::type& g_in,
   if (do_compute) {
     /* code */
     if (params.measure_pion_correlator) {
-      auto PC =
-          PionCorrelator<DSpinorFieldType, DGaugeFieldType, _Solver, DiracOpT>(
-              g_in, getDiracParams(g_in.dimensions, params), params.tol);
-      index_t size = PC.size();
-      MPI_Send(&size, 1, mpi_index_t(), 0,
-               MPI_FERMION_OBSERVABLE_PION_CORRELATOR_SIZE, MPI_COMM_WORLD);
-      printf("Sent Pion Correlator size");
-      MPI_Send(PC.data(), size, mpi_real_t(), 0,
-               MPI_FERMION_OBSERVABLE_PION_CORRELATOR, MPI_COMM_WORLD);
-      // if (KLFT_VERBOSITY > 1) {
-      //   printf("Pion Correlator:\n");
-      //   for (auto&& i : PC) {
-      //     printf("%f, ", i);
-      //   }
-      //   printf("\n");
-      // }
+      if (params.preconditioning == false) {
+        if (KLFT_VERBOSITY > 1) {
+          printf("Computing Pion Correlator FULL layout\n");
+        }
+        auto PC =
+            PionCorrelator<DSpinorFieldType, DGaugeFieldType, _Solver,
+                           DiracOpT>(g_in, getDiracParams(params), params.tol);
+        index_t size = PC.size();
+        MPI_Send(&size, 1, mpi_index_t(), 0,
+                 MPI_FERMION_OBSERVABLE_PION_CORRELATOR_SIZE, MPI_COMM_WORLD);
+        printf("Sent Pion Correlator size");
+        MPI_Send(PC.data(), size, mpi_real_t(), 0,
+                 MPI_FERMION_OBSERVABLE_PION_CORRELATOR, MPI_COMM_WORLD);
+      } else {
+        if (KLFT_VERBOSITY > 1) {
+          printf("Computing Pion Correlator Checkerboard layout\n");
+        }
+        auto dims = g_in.dimensions;
+        dims[0] /= 2;
+        auto PC = PionCorrelatorEO<DSpinorFieldType, DGaugeFieldType, _Solver,
+                                   DiracOpT>(g_in, getDiracParams(params), dims,
+                                             params.tol);
+        index_t size = PC.size();
+        MPI_Send(&size, 1, mpi_index_t(), 0,
+                 MPI_FERMION_OBSERVABLE_PION_CORRELATOR_SIZE, MPI_COMM_WORLD);
+        printf("Sent Pion Correlator size");
+        MPI_Send(PC.data(), size, mpi_real_t(), 0,
+                 MPI_FERMION_OBSERVABLE_PION_CORRELATOR, MPI_COMM_WORLD);
+      }
     }
+    // if (KLFT_VERBOSITY > 1) {
+    //   printf("Pion Correlator:\n");
+    //   for (auto&& i : PC) {
+    //     printf("%f, ", i);
+    //   }
+    //   printf("\n");
+    // }
   }
+
   if (rank == 0) {
     params.measurement_steps.push_back(step);
     if (params.measure_pion_correlator) {

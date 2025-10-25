@@ -119,6 +119,9 @@ int build_and_run_HMC(const std::string& input_file,
     printf("Error parsing inputfile\n");
     return -1;
   }
+  if (resParsef < 0) {
+    fObs.measure_pion_correlator = false;
+  }
 
   if (!parseSanityChecks(integratorParams, gaugeMonomialParams, fermionParams,
                          resParsef)) {
