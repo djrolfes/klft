@@ -34,7 +34,7 @@ std::vector<real_t> PionCorrelator(const typename DGaugeFieldType::type& g_in,
   DiracOperator dirac_op(g_in, params);
   auto Nt = g_in.field.extent(3);
 
-  std::vector<real_t> result_vec(Nt);
+  std::vector<real_t> result_vec(Nt - 1);
 
   if constexpr (rank == 4) {
     typename DevicePropagator<rank, Nc, RepDim>::type result(
@@ -47,7 +47,7 @@ std::vector<real_t> PionCorrelator(const typename DGaugeFieldType::type& g_in,
       Solver solver(source, x, dirac_op);
       solver.template solve<Tags::TagDdaggerD>(x0, tol);
       auto prop = dirac_op.template apply<Tags::TagDdagger>(solver.x);
-      for (size_t i3 = 0; i3 < g_in.dimensions[3]; i3++) {
+      for (size_t i3 = 1; i3 < g_in.dimensions[3]; i3++) {
         real_t res = 0.0;
         Kokkos::parallel_reduce(
             "Reductor",
@@ -59,7 +59,7 @@ std::vector<real_t> PionCorrelator(const typename DGaugeFieldType::type& g_in,
                           real_t& upd) { upd += sqnorm(prop(i0, i1, i2, i3)); },
             res);
         Kokkos::fence();
-        result_vec[i3] += (res / static_cast<real_t>(Vs));
+        result_vec[i3] += (res);
       }
     }
   }
