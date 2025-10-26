@@ -6,3 +6,6 @@ target_link_libraries(hmc PUBLIC klft Kokkos::kokkos yaml-cpp)
 
 add_executable(ptbc ptbc.cpp)
 target_link_libraries(ptbc PUBLIC klft MPI::MPI_CXX Kokkos::kokkos yaml-cpp)
+
+add_executable(jtbc jtbc.cpp)
+target_link_libraries(jtbc PUBLIC klft Kokkos::kokkos yaml-cpp)

@@ -9,6 +9,9 @@ int Metropolis(const std::string &input_file,
 int PTBC_execute(const std::string &input_file,
                  const std::string &output_directory);
 
+int JTBC_execute(const std::string &input_file,
+                 const std::string &output_directory);
+
 int build_and_run_HMC(const std::string &input_file,
                       const std::string &output_directory);
 } // namespace klft

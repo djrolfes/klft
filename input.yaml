@@ -100,4 +100,9 @@ PTBCSimulationLoggingParams:
   log_filename: "ptbcsimulation_log.txt"
   write_to_file: true
 
+JTBCSimulationLoggingParams:
+  flush: 25
+  log_defects: true
+  log_filename: "jtbcsimulation_log.txt"
+  write_to_file: true
 

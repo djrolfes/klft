@@ -7,42 +7,6 @@
 #include <string>
 
 namespace klft {
-struct WilsonFlowParams {
-  // define parameters for a given Wilson Flow calculation, the wilson flow
-  // follows arxiv.org/pdf/1006.4518
-  // flow time
-  real_t tau;
-  // number of Wilson flow steps that should be generated
-  index_t n_steps;
-  // flow time step size
-  real_t eps;
-  bool dynamical_flow;
-  real_t min_flow_time;
-  real_t max_flow_time;
-  real_t sp_max_target;
-  real_t t_sqrd_E_target;
-  size_t first_tE_measure_step;
-  bool log_details;
-  std::string wilson_flow_filename;
-
-  std::vector<std::string> log_strings;
-
-  WilsonFlowParams() {
-    // default parameters (eps = 0.01)
-    n_steps = 10;
-    tau = 1.0;
-    eps = real_t(tau / n_steps);
-    dynamical_flow = false;
-    min_flow_time = -1.0;
-    max_flow_time = -1.0;
-    sp_max_target = real_t(0.067);
-    t_sqrd_E_target = real_t(0.1); // this is Nc dependent
-    first_tE_measure_step = 10;
-    log_details =
-        false; // for now this will only do something for the dynamical wflow
-    wilson_flow_filename = "";
-  }
-};
 
 struct WilsonFlowData {
   size_t step;
@@ -68,6 +32,44 @@ struct WilsonFlowData {
     return "# step, flow_step, flow_time, sp_max_init, sp_max, sp_max_deriv, "
            "tsquaredxaction_density(old), next_measure_t^E_step, "
            "tsquaredxaction_density\n";
+  }
+};
+
+struct WilsonFlowParams {
+  // define parameters for a given Wilson Flow calculation, the wilson flow
+  // follows arxiv.org/pdf/1006.4518
+  // flow time
+  real_t tau;
+  // number of Wilson flow steps that should be generated
+  index_t n_steps;
+  // flow time step size
+  real_t eps;
+  bool dynamical_flow;
+  real_t min_flow_time;
+  real_t max_flow_time;
+  real_t sp_max_target;
+  real_t t_sqrd_E_target;
+  size_t first_tE_measure_step;
+  bool log_details;
+  std::string wilson_flow_filename;
+
+  std::vector<std::string> log_strings;
+  WilsonFlowData last_wfdata;
+
+  WilsonFlowParams() {
+    // default parameters (eps = 0.01)
+    n_steps = 10;
+    tau = 1.0;
+    eps = real_t(tau / n_steps);
+    dynamical_flow = false;
+    min_flow_time = -1.0;
+    max_flow_time = -1.0;
+    sp_max_target = real_t(0.067);
+    t_sqrd_E_target = real_t(0.1); // this is Nc dependent
+    first_tE_measure_step = 10;
+    log_details =
+        false; // for now this will only do something for the dynamical wflow
+    wilson_flow_filename = "";
   }
 };
 
@@ -225,6 +227,9 @@ template <typename DGaugeFieldType> struct WilsonFlow {
       printf("Wilson Flow completed in %zu steps, total flow time %1.6f\n",
              wfdata.step, wfdata.step * params.eps);
     }
+    wfdata.sp_max_deriv =
+        (wfdata.sp_max_init - wfdata.sp_max) / static_cast<real_t>(wfdata.step);
+    params.last_wfdata = wfdata;
     if (params.log_details) {
       wfdata.t_sqrd_E_old = wfdata.t_sqrd_E;
       wfdata.t_sqrd_E = getActionDensity_clover<DGaugeFieldType>(this->field) *

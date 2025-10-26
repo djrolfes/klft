@@ -374,4 +374,84 @@ inline void flushPTBCSimulationLogs(PTBCSimulationLoggingParams &p,
   }
 }
 
+struct JTBCSimulationLoggingParams {
+  std::string log_filename; // filename for the log
+  bool write_to_file;       // whether to write logs to file
+  size_t flush; // interval to flush logs to file ,0 to flush at the end of the
+                // simulation
+  bool flushed; // check if the logs were flushed at least once -> used to
+                // add the header line to the file
+
+  // define flags for the different types of logs
+  bool log_defects;
+
+  // define vectors to hold the logs
+  std::vector<size_t> hmc_steps;
+  std::vector<real_t> defects;
+  std::vector<bool> accepts;
+
+  // constructor to initialize the parameters
+  JTBCSimulationLoggingParams()
+      : flush(25), flushed(false), write_to_file(false), log_defects(true) {}
+};
+
+inline void addJTBCLogData(JTBCSimulationLoggingParams &p, const size_t step,
+                           const real_t defect, const bool accept) {
+  if (step == 0)
+    return;
+
+  if (KLFT_VERBOSITY > 1) {
+    printf("Logging JTBC Data (step %zu)\n", step);
+  }
+
+  p.hmc_steps.push_back(step);
+  p.defects.push_back(defect);
+  p.accepts.push_back(accept);
+}
+
+inline void clearJTBCSimulationLogs(JTBCSimulationLoggingParams &p) {
+  p.hmc_steps.clear();
+  p.defects.clear();
+  p.accepts.clear();
+}
+
+inline void forceflushJTBCSimulationLogs(JTBCSimulationLoggingParams &p,
+                                         const bool clear_after_flush = false) {
+  if (!p.write_to_file) {
+    if (KLFT_VERBOSITY > 0)
+      printf("JTBC write_to_file is not enabled\n");
+    return;
+  }
+
+  std::ofstream file(p.log_filename, std::ios::app);
+  if (!file.is_open()) {
+    printf("Error: could not open JTBC log file %s\n", p.log_filename.c_str());
+    return;
+  }
+
+  const bool HEADER = !p.flushed;
+  if (HEADER) {
+    file << "# step, defect, accept\n";
+  }
+
+  const size_t n = p.hmc_steps.size();
+  for (size_t i = 0; i < n; ++i) {
+    file << p.hmc_steps[i] << ", " << p.defects[i] << ", "
+         << (p.accepts[i] ? 1 : 0) << "\n";
+  }
+
+  file.close();
+  if (clear_after_flush)
+    clearJTBCSimulationLogs(p);
+  p.flushed = true;
+}
+
+inline void flushJTBCSimulationLogs(JTBCSimulationLoggingParams &p,
+                                    const size_t step,
+                                    const bool clear_after_flush = false) {
+  if (p.flush != 0 && step % p.flush == 0) {
+    forceflushJTBCSimulationLogs(p, clear_after_flush);
+  }
+}
+
 } // namespace klft

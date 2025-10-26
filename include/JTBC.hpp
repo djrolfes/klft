@@ -6,6 +6,7 @@
 #include "HMC_Params.hpp"
 #include "HamiltonianField.hpp"
 #include "SimulationLogging.hpp"
+#include <queue>
 #include <random>
 #include <sstream>
 
@@ -17,7 +18,7 @@ struct JTBCParams {
   // Define parameters for the JTBC algorithm
   index_t defect_length;             // size of the defect on the lattice
   GaugeMonomial_Params gauge_params; // HMC parameters´
-  // JTBCSimulationLoggingParams jtbcSimLogParams;
+  JTBCSimulationLoggingParams jtbcSimLogParams;
   GaugeObservableParams gaugeObsParams;
   SimulationLoggingParams simLogParams;
 
@@ -26,6 +27,80 @@ struct JTBCParams {
     oss << "JTBCParams: "
         << ", defect_length = " << defect_length;
     return oss.str();
+  }
+};
+
+struct JTBCDecision {
+  size_t long_term = 100;
+  size_t short_term = 10;
+  real_t Z_0 = 2.0;
+  real_t steepness = 1.0;
+  real_t t2E_target = 0.1; // TODO: make input yaml dependent
+
+  std::queue<real_t> sp_max_diff_long;
+  std::queue<real_t> sp_max_diff_short;
+
+  real_t t2E;
+
+  real_t average(std::queue<real_t> &q) {
+    real_t sum = 0.0;
+    std::queue<real_t> temp = q;
+    size_t n = temp.size();
+    while (!temp.empty()) {
+      sum += temp.front();
+      temp.pop();
+    }
+    return (n > 0) ? sum / static_cast<real_t>(n) : 0.0;
+  }
+
+  real_t stddev(std::queue<real_t> &q, real_t mean) {
+    real_t sum = 0.0;
+    std::queue<real_t> temp = q;
+    size_t n = temp.size();
+    while (!temp.empty()) {
+      real_t diff = temp.front() - mean;
+      sum += diff * diff;
+      temp.pop();
+    }
+    return (n > 1) ? sqrt(sum / static_cast<real_t>(n - 1)) : 0.0;
+  }
+
+  real_t Z() {
+    real_t avg_long = average(sp_max_diff_long);
+    real_t std_long = stddev(sp_max_diff_long, avg_long);
+    real_t avg_short = average(sp_max_diff_short);
+    return (avg_short - avg_long) / (std_long + 1e-10);
+  }
+
+  real_t acceptance_probability() {
+    if (t2E >= t2E_target) {
+      return 0.0; // always reject if we are above the target
+    }
+
+    real_t z = Z();
+    real_t exponent = -steepness * (z - Z_0);
+    return 1.0 / (1.0 + exp(exponent));
+  }
+
+  void push_data(WilsonFlowData wfdata) {
+    push_sp_max_deriv(wfdata.sp_max_deriv);
+    t2E = wfdata.t_sqrd_E;
+  }
+
+  void push_sp_max_deriv(real_t val) {
+    sp_max_diff_long.push(val);
+    sp_max_diff_short.push(val);
+    if (sp_max_diff_long.size() > long_term) {
+      sp_max_diff_long.pop();
+    }
+    if (sp_max_diff_short.size() > short_term) {
+      sp_max_diff_short.pop();
+    }
+  }
+
+  bool ready() {
+    return (sp_max_diff_long.size() == long_term) &&
+           (sp_max_diff_short.size() == short_term);
   }
 };
 
@@ -53,6 +128,8 @@ public:
   RNG &rng;
   std::mt19937 mt;
   std::uniform_real_distribution<real_t> dist;
+  real_t defect_value{1.0};
+  JTBCDecision decision;
 
   JTBC() = delete; // default constructor is not allowed
 
@@ -72,11 +149,54 @@ public:
 
     // if the defect value is close to 1, we measure the observables
     // for the JTBC case
-    if (KLFT_VERBOSITY > 1) {
-      printf("Measuring JTBC observables at step %zu\n", step);
+    if (!is_PBC_step()) {
+      if (KLFT_VERBOSITY > 3) {
+        printf("non PBC step detected, not measuring observables\n");
+      }
+      measureGaugeObservables<DGaugeFieldType>(
+          hmc.hamiltonian_field.gauge_field, gaugeObsParams, 0);
+
+      return;
     }
     measureGaugeObservables<DGaugeFieldType>(hmc.hamiltonian_field.gauge_field,
-                                             gaugeObsParams, step, 0, true);
+                                             gaugeObsParams, step);
+  }
+
+  void decide_defect_value(WilsonFlowData wfdata) {
+    // decide the defect value for the next HMC step
+    decision.push_sp_max_deriv(wfdata.sp_max_deriv);
+    if (!decision.ready()) {
+      // not enough data to make a decision yet
+      return;
+    }
+
+    if (!is_PBC_step()) {
+      // only decide a new defect value if we are not at a PBC step
+      if (KLFT_VERBOSITY > 1) {
+        printf("did an OBC step going back to PBC.\n");
+      }
+      defect_value = 1.0;
+    }
+    real_t decide_defect_value = dist(mt);
+    real_t acceptance_probability = decision.acceptance_probability();
+
+    if (KLFT_VERBOSITY > 1) {
+      printf("Defect decision Z: %f, acceptance probability: %f, random draw: "
+             "%f\n",
+             decision.Z(), acceptance_probability, decide_defect_value);
+    }
+
+    if (decide_defect_value < acceptance_probability) {
+      // accept the new defect value
+      defect_value = 0.0;
+    }
+
+    if (KLFT_VERBOSITY > 1) {
+      printf("Decided defect value: %f\n", defect_value);
+    }
+    // set the defect value in the gauge field
+    hmc.hamiltonian_field.gauge_field.template set_defect<index_t>(
+        defect_value);
   }
 
   void measure(SimulationLoggingParams &simLogParams, index_t step,
@@ -85,6 +205,8 @@ public:
     addLogData(simLogParams, step, hmc.delta_H, acc_rate, accept, time,
                obs_time);
   }
+
+  bool is_PBC_step() { return (defect_value > 0.9999999); }
 
   int step() {
     auto rtn = hmc.hmc_step();
@@ -109,7 +231,7 @@ public:
 template <typename JTBCType>
 int run_JTBC(JTBCType &jtbc, Integrator_Params &int_params,
              GaugeObservableParams &gaugeObsParams,
-             // JTBCSimulationLoggingParams &jtbcSimLogParams,
+             JTBCSimulationLoggingParams &jtbcSimLogParams,
              SimulationLoggingParams &simLogParams) {
 
   Kokkos::Timer timer;
@@ -122,14 +244,13 @@ int run_JTBC(JTBCType &jtbc, Integrator_Params &int_params,
     int accept = jtbc.step();
     MPI_Barrier(MPI_COMM_WORLD); // synchronize all ranks after step
 
-    int jtbc_accept = jtbc.swap();
-
     const real_t time = timer.seconds();
     timer.reset();
     // Gauge observables
     jtbc.measure(gaugeObsParams, step);
     const real_t obs_time = timer.seconds();
     // jtbc.measure(jtbcSimLogParams, step);
+    jtbc.decide_defect_value(gaugeObsParams.wilson_flow_params.last_wfdata);
 
     flushAllGaugeObservables(gaugeObsParams, step, true);
     // flushJTBCSimulationLogs(jtbcSimLogParams, step, true);

@@ -433,6 +433,34 @@ inline int parseInputFile(const std::string &filename,
   }
 }
 
+inline int parseInputFile(const std::string &filename,
+                          const std::string &output_directory,
+                          JTBCSimulationLoggingParams &simParams) {
+  try {
+    YAML::Node config = YAML::LoadFile(filename);
+
+    // Parse MetropolisParams
+    if (config["JTBCSimulationLoggingParams"]) {
+      const auto &mp = config["JTBCSimulationLoggingParams"];
+      // general parameters
+      simParams.log_filename =
+          output_directory + mp["log_filename"].as<std::string>("");
+      simParams.write_to_file = mp["write_to_file"].as<bool>(false);
+      simParams.flush = mp["flush"].as<size_t>(25);
+
+      simParams.log_defects = mp["log_defects"].as<bool>(false);
+    } else {
+      printf("Error: JTBCSimulationLoggingParams not found in input file\n");
+      return false;
+    }
+    return true;
+  } catch (const YAML::Exception &e) {
+    printf("(JTBCSimulationLoggingParams) Error parsing input file: %s\n",
+           e.what());
+    return false;
+  }
+}
+
 inline int parseSanityChecks(const Integrator_Params &iparams,
                              const GaugeMonomial_Params &gmparams,
                              const FermionMonomial_Params &fparams,
