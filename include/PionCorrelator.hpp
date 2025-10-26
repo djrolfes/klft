@@ -34,7 +34,7 @@ std::vector<real_t> PionCorrelator(const typename DGaugeFieldType::type& g_in,
   DiracOperator dirac_op(g_in, params);
   auto Nt = g_in.field.extent(3);
 
-  std::vector<real_t> result_vec;
+  std::vector<real_t> result_vec(Nt);
 
   if constexpr (rank == 4) {
     typename DevicePropagator<rank, Nc, RepDim>::type result(
@@ -47,42 +47,20 @@ std::vector<real_t> PionCorrelator(const typename DGaugeFieldType::type& g_in,
       Solver solver(source, x, dirac_op);
       solver.template solve<Tags::TagDdaggerD>(x0, tol);
       auto prop = dirac_op.template apply<Tags::TagDdagger>(solver.x);
-      tune_and_launch_for<rank>(
-          "init_deviceSpinorField", IndexArray<RepDim>{0, 0, 0, 0},
-          g_in.dimensions,
-          KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2,
-                        const index_t i3) {
-            add_inplace(result(i0, i1, i2, i3), prop(i0, i1, i2, i3), alpha0);
-          });
-      Kokkos::fence();
-      // Function
-    }
-    // at the end vecotor with length Nt, maybe new view with only one dimension
-    // to do the device Reduction
-    for (size_t i3 = 0; i3 < g_in.dimensions[3]; i3++) {
-      real_t res = 0;
-
-      Kokkos::parallel_reduce(
-          "Reductor",
-          Policy<rank - 1>(
-              IndexArray<rank - 1>{},
-              IndexArray<rank - 1>{g_in.dimensions[0], g_in.dimensions[1],
-                                   g_in.dimensions[2]}),
-          KOKKOS_LAMBDA(const size_t& i0, const size_t& i1, const size_t& i2,
-                        real_t& upd) {
-#pragma unroll
-            for (size_t alpha = 0; alpha < Nc * RepDim; alpha++) {
-#pragma unroll
-              for (size_t beta = 0; beta < Nc * RepDim; beta++) {
-                upd += (result(i0, i1, i2, i3)[beta][alpha] *
-                        conj(result(i0, i1, i2, i3)[beta][alpha]))
-                           .real();
-              }
-            }
-          },
-          res);
-      Kokkos::fence();
-      result_vec.push_back(res / static_cast<real_t>(Vs));
+      for (size_t i3 = 0; i3 < g_in.dimensions[3]; i3++) {
+        real_t res = 0.0;
+        Kokkos::parallel_reduce(
+            "Reductor",
+            Policy<rank - 1>(
+                IndexArray<rank - 1>{},
+                IndexArray<rank - 1>{g_in.dimensions[0], g_in.dimensions[1],
+                                     g_in.dimensions[2]}),
+            KOKKOS_LAMBDA(const size_t& i0, const size_t& i1, const size_t& i2,
+                          real_t& upd) { upd += sqnorm(prop(i0, i1, i2, i3)); },
+            res);
+        Kokkos::fence();
+        result_vec[i3] += (res / static_cast<real_t>(Vs));
+      }
     }
   }
   return result_vec;

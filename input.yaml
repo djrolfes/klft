@@ -1,10 +1,10 @@
 
 HMCParams:
   Ndims: 4
-  L0: 8
-  L1: 8
-  L2: 8
-  L3: 8
+  L0: 12
+  L1: 12
+  L2: 12
+  L3: 12
   seed: 1234
   Nd: 4
   Nc: 2
@@ -20,7 +20,7 @@ Integrator:
       steps: 50
     - Type: "Leapfrog"
       level: 1
-      steps: 20
+      steps: 30
 Gauge Monomial:
   level: 0
   beta: 0.8
@@ -32,7 +32,7 @@ Fermion Monomial:
   RepDim: 4
   kappa: 0.159
   tol: 1e-10
-  preconditioning: false
+  preconditioning: true
 GaugeObservableParams:
   measurement_interval: 5
   measure_plaquette: true

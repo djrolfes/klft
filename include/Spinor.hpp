@@ -297,7 +297,7 @@ KOKKOS_INLINE_FUNCTION Spinor<Nc, Nd> deltaSpinor(index_t i) {
   Spinor<Nc, Nd> a;
   index_t dirac = i / Nc;
   index_t color = i % Nc;
-  a[color][dirac] = 1;
+  a[dirac][color] = 1;
   return a;
 }
 template <size_t Nc, size_t Nd>
