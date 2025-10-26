@@ -13,7 +13,7 @@ HMCParams:
 # Level 0 is the innermost level of the Integrator, i.e that is executed most frequently.
 Integrator:
   tau: 1
-  nSteps: 1000
+  nSteps: 11
   Monomials:
     - Type: "Leapfrog"
       level: 0
@@ -23,16 +23,16 @@ Integrator:
       steps: 20
 Gauge Monomial:
   level: 0
-  beta: 2.12
+  beta: 0.8
 
 Fermion Monomial:
   level: 1
   fermion: "Wilson"
   solver: "CG"
   RepDim: 4
-  kappa: 0.15
+  kappa: 0.159
   tol: 1e-10
-  preconditioning: true
+  preconditioning: false
 GaugeObservableParams:
   measurement_interval: 5
   measure_plaquette: true
@@ -62,11 +62,11 @@ FermionObservableParams:
   measurement_interval: 5
   measure_pion_correlator: true
   tol: 1e-10
-  kappa: 0.15
+  kappa: 0.159
   RepDim: 4
   write_to_file: true
   flush: 5
-  preconditioning: true
+  preconditioning: false
 PTBCParams:
   defect_length: 2
   defect_values: [0.714, 0.857, 1.0]

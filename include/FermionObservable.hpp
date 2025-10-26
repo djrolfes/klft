@@ -33,6 +33,19 @@ struct FermionObservableParams {
         kappa(0.15),
         RepDim(4),
         preconditioning(true) {}
+  void print() const {
+    printf("FermionObservableParams:\n");
+    printf("  measurement_interval: %zu\n", measurement_interval);
+    printf("  measure_pion_correlator: %s\n",
+           measure_pion_correlator ? "true" : "false");
+    printf("  pion_correlator_filename: %s\n",
+           pion_correlator_filename.c_str());
+    printf("  tol: %e\n", tol);
+    printf("  kappa: %f\n", kappa);
+    printf("  RepDim: %zu\n", RepDim);
+    printf("  write_to_file: %s\n", write_to_file ? "true" : "false");
+    printf("  flush: %zu\n", flush);
+  }
 };
 
 auto getDiracParams(const FermionObservableParams& fparams) {

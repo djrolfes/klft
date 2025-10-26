@@ -30,6 +30,7 @@ std::vector<real_t> PionCorrelator(const typename DGaugeFieldType::type& g_in,
   using SpinorField = typename DSpinorFieldType::type;
   using DiracOperator = DiracOpT<DSpinorFieldType, DGaugeFieldType>;
   using Solver = _Solver<DiracOpT, DSpinorFieldType, DGaugeFieldType>;
+  printf("Kappa: %f\n", params.kappa);
   DiracOperator dirac_op(g_in, params);
   auto Nt = g_in.field.extent(3);
 
@@ -43,7 +44,7 @@ std::vector<real_t> PionCorrelator(const typename DGaugeFieldType::type& g_in,
       SpinorFieldSource source(g_in.dimensions, IndexArray<rank>{}, alpha0);
       SpinorField x(g_in.dimensions, 0);
       SpinorField x0(g_in.dimensions, 0);
-      Solver solver(SpinorField(source), x, dirac_op);
+      Solver solver(source, x, dirac_op);
       solver.template solve<Tags::TagDdaggerD>(x0, tol);
       auto prop = dirac_op.template apply<Tags::TagDdagger>(solver.x);
       tune_and_launch_for<rank>(
@@ -59,7 +60,7 @@ std::vector<real_t> PionCorrelator(const typename DGaugeFieldType::type& g_in,
     // at the end vecotor with length Nt, maybe new view with only one dimension
     // to do the device Reduction
     for (size_t i3 = 0; i3 < g_in.dimensions[3]; i3++) {
-      real_t res;
+      real_t res = 0;
 
       Kokkos::parallel_reduce(
           "Reductor",
@@ -80,7 +81,7 @@ std::vector<real_t> PionCorrelator(const typename DGaugeFieldType::type& g_in,
             }
           },
           res);
-
+      Kokkos::fence();
       result_vec.push_back(res / static_cast<real_t>(Vs));
     }
   }
@@ -157,7 +158,7 @@ std::vector<real_t> PionCorrelatorEO(
     // at the end vecotor with length Nt, maybe new view with only one dimension
     // to do the device Reduction
     for (size_t i3 = 0; i3 < g_in.dimensions[3]; i3++) {
-      real_t res;
+      real_t res = 0;
 
       Kokkos::parallel_reduce(
           "Reductor",
@@ -178,7 +179,7 @@ std::vector<real_t> PionCorrelatorEO(
             }
           },
           res);
-
+      Kokkos::fence();
       result_vec.push_back(res / static_cast<real_t>(Vs));
     }
   }

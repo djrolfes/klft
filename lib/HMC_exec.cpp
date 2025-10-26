@@ -132,6 +132,7 @@ int build_and_run_HMC(const std::string& input_file,
   // print the parameters
   hmcParams.print();
   integratorParams.print();
+  fObs.print();
   //   gaugeObsParams.print();
   if (resParsef > 0) {
     fermionParams.print();
