@@ -25,7 +25,7 @@ struct JTBCParams {
   std::string to_string() const {
     std::ostringstream oss;
     oss << "JTBCParams: "
-        << ", defect_length = " << defect_length;
+        << "defect_length = " << defect_length;
     return oss.str();
   }
 };
@@ -33,9 +33,11 @@ struct JTBCParams {
 struct JTBCDecision {
   size_t long_term = 100;
   size_t short_term = 10;
-  real_t Z_0 = 2.0;
-  real_t steepness = 1.0;
+  real_t sigma_weight = 4.0;
+  real_t short_term_weight = 0.75;
   real_t t2E_target = 0.1; // TODO: make input yaml dependent
+  real_t sp_max_deriv_max = 0.0;
+  real_t sp_max_deriv_min = 0.0;
 
   std::queue<real_t> sp_max_diff_long;
   std::queue<real_t> sp_max_diff_short;
@@ -65,21 +67,25 @@ struct JTBCDecision {
     return (n > 1) ? sqrt(sum / static_cast<real_t>(n - 1)) : 0.0;
   }
 
-  real_t Z() {
-    real_t avg_long = average(sp_max_diff_long);
-    real_t std_long = stddev(sp_max_diff_long, avg_long);
-    real_t avg_short = average(sp_max_diff_short);
-    return (avg_short - avg_long) / (std_long + 1e-10);
-  }
-
   real_t acceptance_probability() {
     if (t2E >= t2E_target) {
       return 0.0; // always reject if we are above the target
     }
 
-    real_t z = Z();
-    real_t exponent = -steepness * (z - Z_0);
-    return 1.0 / (1.0 + exp(exponent));
+    real_t sp_max_deriv_range = sp_max_deriv_max - sp_max_deriv_min;
+    real_t avg_long = average(sp_max_diff_long);
+    real_t avg_short = average(sp_max_diff_short);
+    real_t std_long = stddev(sp_max_diff_long, avg_long);
+    real_t pos_long = (avg_long - sp_max_deriv_min) / sp_max_deriv_range;
+    real_t pos_short = (avg_short - sp_max_deriv_min) / sp_max_deriv_range;
+
+    real_t long_term_factor = std::max(real_t(0.0), 2.0 * (pos_long - 0.5));
+    real_t long_term_weight =
+        Kokkos::exp(-sigma_weight * std_long / sp_max_deriv_range);
+    real_t short_term_factor = 1.0 + short_term_weight * (2.0 * pos_short - 1);
+
+    return std::max(real_t(0.0),
+                    long_term_factor * long_term_weight * short_term_factor);
   }
 
   void push_data(WilsonFlowData wfdata) {
@@ -96,6 +102,8 @@ struct JTBCDecision {
     if (sp_max_diff_short.size() > short_term) {
       sp_max_diff_short.pop();
     }
+    sp_max_deriv_max = std::max(sp_max_deriv_max, val); // update max derivative
+    sp_max_deriv_min = std::min(sp_max_deriv_min, val); // update min derivative
   }
 
   bool ready() {
@@ -139,27 +147,33 @@ public:
     Kokkos::fence();
   }
 
-  // void measure(JTBCSimulationLoggingParams &jtbcSimLogParams,
-  //              const size_t step) {
-  //   // measure the simulation logging observables
-  // }
+  void measure(JTBCSimulationLoggingParams &jtbcSimLogParams, const size_t step,
+               const int accept) {
+    if (!is_PBC_step()) {
+      // only log for JTBC steps
+      addJTBCLogData(jtbcSimLogParams, step, defect_value, accept);
+    }
+    // measure the simulation logging observables
+  }
 
   void measure(GaugeObservableParams &gaugeObsParams, size_t step) {
     // measure the gauge observables
 
     // if the defect value is close to 1, we measure the observables
     // for the JTBC case
-    if (!is_PBC_step()) {
-      if (KLFT_VERBOSITY > 3) {
-        printf("non PBC step detected, not measuring observables\n");
-      }
+    if (is_PBC_step()) {
+      // PBC case
       measureGaugeObservables<DGaugeFieldType>(
-          hmc.hamiltonian_field.gauge_field, gaugeObsParams, 0);
-
-      return;
+          hmc.hamiltonian_field.gauge_field, gaugeObsParams, step);
+    } else {
+      // JTBC case
+      if constexpr (Nd == 4) {
+        WilsonFlowParams &wfparams = gaugeObsParams.wilson_flow_params;
+        WilsonFlow<DGaugeFieldType> wf(hmc.hamiltonian_field.gauge_field,
+                                       wfparams);
+        wf.flow();
+      }
     }
-    measureGaugeObservables<DGaugeFieldType>(hmc.hamiltonian_field.gauge_field,
-                                             gaugeObsParams, step);
   }
 
   void decide_defect_value(WilsonFlowData wfdata) {
@@ -170,22 +184,15 @@ public:
       return;
     }
 
-    if (!is_PBC_step()) {
-      // only decide a new defect value if we are not at a PBC step
-      if (KLFT_VERBOSITY > 1) {
-        printf("did an OBC step going back to PBC.\n");
-      }
-      defect_value = 1.0;
-    }
     real_t decide_defect_value = dist(mt);
     real_t acceptance_probability = decision.acceptance_probability();
 
     if (KLFT_VERBOSITY > 1) {
-      printf("Defect decision Z: %f, acceptance probability: %f, random draw: "
-             "%f\n",
-             decision.Z(), acceptance_probability, decide_defect_value);
+      Kokkos::printf("Decide defect value: %f, acceptance probability: %f\n",
+                     decide_defect_value, acceptance_probability);
     }
 
+    defect_value = 1.0;
     if (decide_defect_value < acceptance_probability) {
       // accept the new defect value
       defect_value = 0.0;
@@ -241,19 +248,22 @@ int run_JTBC(JTBCType &jtbc, Integrator_Params &int_params,
   for (size_t step = 0; step < int_params.nsteps; ++step) {
     timer.reset();
 
+    if (!jtbc.is_PBC_step()) {
+      --step;
+    }
+
     int accept = jtbc.step();
-    MPI_Barrier(MPI_COMM_WORLD); // synchronize all ranks after step
 
     const real_t time = timer.seconds();
     timer.reset();
     // Gauge observables
     jtbc.measure(gaugeObsParams, step);
     const real_t obs_time = timer.seconds();
-    // jtbc.measure(jtbcSimLogParams, step);
+    jtbc.measure(jtbcSimLogParams, step, accept);
     jtbc.decide_defect_value(gaugeObsParams.wilson_flow_params.last_wfdata);
 
     flushAllGaugeObservables(gaugeObsParams, step, true);
-    // flushJTBCSimulationLogs(jtbcSimLogParams, step, true);
+    flushJTBCSimulationLogs(jtbcSimLogParams, step, true);
 
     acc_sum += static_cast<real_t>(accept);
     acc_rate = acc_sum / static_cast<real_t>(step + 1);
@@ -264,7 +274,7 @@ int run_JTBC(JTBCType &jtbc, Integrator_Params &int_params,
   }
 
   forceflushAllGaugeObservables(gaugeObsParams, true);
-  // forceflushJTBCSimulationLogs(jtbcSimLogParams, true);
+  forceflushJTBCSimulationLogs(jtbcSimLogParams, true);
   forceflushSimulationLogs(simLogParams, true);
 
   return 0;

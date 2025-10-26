@@ -229,6 +229,7 @@ template <typename DGaugeFieldType> struct WilsonFlow {
     }
     wfdata.sp_max_deriv =
         (wfdata.sp_max_init - wfdata.sp_max) / static_cast<real_t>(wfdata.step);
+
     params.last_wfdata = wfdata;
     if (params.log_details) {
       wfdata.t_sqrd_E_old = wfdata.t_sqrd_E;

@@ -388,7 +388,7 @@ struct JTBCSimulationLoggingParams {
   // define vectors to hold the logs
   std::vector<size_t> hmc_steps;
   std::vector<real_t> defects;
-  std::vector<bool> accepts;
+  std::vector<int> accepts;
 
   // constructor to initialize the parameters
   JTBCSimulationLoggingParams()
@@ -396,7 +396,7 @@ struct JTBCSimulationLoggingParams {
 };
 
 inline void addJTBCLogData(JTBCSimulationLoggingParams &p, const size_t step,
-                           const real_t defect, const bool accept) {
+                           const real_t defect, const int accept) {
   if (step == 0)
     return;
 
@@ -436,8 +436,8 @@ inline void forceflushJTBCSimulationLogs(JTBCSimulationLoggingParams &p,
 
   const size_t n = p.hmc_steps.size();
   for (size_t i = 0; i < n; ++i) {
-    file << p.hmc_steps[i] << ", " << p.defects[i] << ", "
-         << (p.accepts[i] ? 1 : 0) << "\n";
+    file << p.hmc_steps[i] << ", " << p.defects[i] << ", " << p.accepts[i]
+         << "\n";
   }
 
   file.close();
@@ -449,7 +449,7 @@ inline void forceflushJTBCSimulationLogs(JTBCSimulationLoggingParams &p,
 inline void flushJTBCSimulationLogs(JTBCSimulationLoggingParams &p,
                                     const size_t step,
                                     const bool clear_after_flush = false) {
-  if (p.flush != 0 && step % p.flush == 0) {
+  if (p.flush != 0 && p.hmc_steps.size() % p.flush == 0) {
     forceflushJTBCSimulationLogs(p, clear_after_flush);
   }
 }

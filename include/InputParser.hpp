@@ -24,6 +24,7 @@
 #pragma once
 #include "GaugeObservable.hpp"
 #include "HMC_Params.hpp"
+#include "JTBC.hpp"
 #include "Metropolis_Params.hpp"
 #include "PTBC.hpp"
 #include "SimulationLogging.hpp"
@@ -224,6 +225,27 @@ inline bool parseInputFile(const std::string &filename,
         ptbcParams.n_sims = 1;
         ptbcParams.defects = {1.0}; // will this error without resizing?
       } // ...
+    } else {
+      printf("Error: PTBCParams not found in input file\n");
+      return false;
+    }
+    return true;
+  } catch (const YAML::Exception &e) {
+    printf("(PTBCParams) Error parsing input file: %s\n", e.what());
+    return false;
+  }
+}
+
+inline bool parseInputFile(const std::string &filename,
+                           const std::string &output_directory,
+                           JTBCParams &jtbcParams) {
+  try {
+    YAML::Node config = YAML::LoadFile(filename);
+
+    // Parse GaugeObservableParams
+    if (config["JTBCParams"]) {
+      const auto &jp = config["JTBCParams"];
+      jtbcParams.defect_length = jp["defect_length"].as<index_t>(1);
     } else {
       printf("Error: PTBCParams not found in input file\n");
       return false;

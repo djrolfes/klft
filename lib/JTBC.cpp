@@ -46,6 +46,7 @@ int JTBC_execute(const std::string &input_file,
   bool inputFileParsedCorrectly =
       (parseInputFile(input_file, output_directory, gaugeObsParams) &&
        parseInputFile(input_file, output_directory, hmcParams) &&
+       parseInputFile(input_file, output_directory, jtbcParams) &&
        parseInputFile(input_file, output_directory, simLogParams) &&
        parseInputFile(input_file, output_directory, integratorParams) &&
        abs(resParsef) &&
@@ -56,7 +57,6 @@ int JTBC_execute(const std::string &input_file,
     return -1;
   }
 
-  jtbcParams.defect_length = 2;
   jtbcParams.gaugeObsParams = gaugeObsParams;
   jtbcParams.simLogParams = simLogParams;
   jtbcParams.jtbcSimLogParams = jtbcSimLogParams;
