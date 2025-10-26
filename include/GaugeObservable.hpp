@@ -37,6 +37,7 @@
 namespace klft {
 // define a struct to hold parameters related to the gauge observables
 struct GaugeObservableParams {
+  size_t thermalization_steps;       // number of thermalization steps
   size_t measurement_interval;       // interval between measurements
   bool measure_plaquette;            // whether to measure the plaquette
   bool measure_wilson_loop_temporal; // whether to measure the temporal Wilson
@@ -96,11 +97,11 @@ struct GaugeObservableParams {
   // constructor to initialize the parameters
   // by default nothing is measured
   GaugeObservableParams()
-      : measurement_interval(0), measure_plaquette(false),
-        measure_sp_max(false), measure_wilson_loop_temporal(false),
-        measure_wilson_loop_mu_nu(false), measure_topological_charge(false),
-        measure_action_density(false), flush(25), flushed(false),
-        wilson_flow_params() {}
+      : thermalization_steps(0), measurement_interval(1),
+        measure_plaquette(false), measure_sp_max(false),
+        measure_wilson_loop_temporal(false), measure_wilson_loop_mu_nu(false),
+        measure_topological_charge(false), measure_action_density(false),
+        flush(25), flushed(false), wilson_flow_params() {}
 };
 
 typedef enum {
@@ -127,7 +128,8 @@ void measureGaugeObservablesPTBC(const typename DGaugeFieldType::type &g_in,
       DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc;
 
   if ((params.measurement_interval == 0) ||
-      (step % params.measurement_interval != 0) || (step == 0)) {
+      (step % params.measurement_interval != 0) || (step == 0) ||
+      step < params.thermalization_steps) {
     return;
   }
 
@@ -156,20 +158,16 @@ void measureGaugeObservablesPTBC(const typename DGaugeFieldType::type &g_in,
           printf("Performing Wilson flow...\n");
         }
         wf.flow();
-        // DEBUG_MPI_PRINT
-        if (compute_rank != 0 && params.wilson_flow_params.log_details) {
-          index_t arrsize = params.wilson_flow_params.log_strings.size();
-          std::string log_string =
-              params.wilson_flow_params.log_strings[arrsize];
+        DEBUG_MPI_PRINT("Wilson flow done on compute rank %d\n", compute_rank);
+        if (rank != 0 && params.wilson_flow_params.log_details) {
+          std::string log_string = params.wilson_flow_params.log_strings.back();
           size_t log_string_size = log_string.size();
-          Kokkos::printf("Sending wilson flow log details of size %zu\n",
-                         log_string_size);
           MPI_Send(&log_string_size, 1, mpi_size_t(), 0,
                    MPI_GAUGE_OBSERVABLES_WILSONFLOW_DETAILS_SIZE,
                    MPI_COMM_WORLD);
-          Kokkos::printf("Sending wilson flow log details string\n");
           MPI_Send(log_string.c_str(), log_string.size(), MPI_CHAR, 0,
                    MPI_GAUGE_OBSERVABLES_WILSONFLOW_DETAILS, MPI_COMM_WORLD);
+          params.wilson_flow_params.log_strings.clear();
         }
         if (KLFT_VERBOSITY > 1) {
           printf("Wilson flow completed.\n");
@@ -293,24 +291,20 @@ void measureGaugeObservablesPTBC(const typename DGaugeFieldType::type &g_in,
 
     // ... inside if (rank == 0) { ...
     if (compute_rank != 0 && params.wilson_flow_params.log_details) {
+      DEBUG_MPI_PRINT(
+          "Receiving wilson flow log details size from compute rank: %d\n",
+          compute_rank);
       size_t size{0};
-      MPI_Status status; // <-- Declare an MPI_Status object
 
       MPI_Recv(&size, 1, mpi_size_t(), compute_rank,
                MPI_GAUGE_OBSERVABLES_WILSONFLOW_DETAILS_SIZE, MPI_COMM_WORLD,
-               &status);
+               MPI_STATUS_IGNORE);
 
-      Kokkos::printf("Received wilson flow log details of size %zu\n", size);
       char *buffer = new char[size + 1];
       MPI_Recv(buffer, size, MPI_CHAR, compute_rank,
                MPI_GAUGE_OBSERVABLES_WILSONFLOW_DETAILS, MPI_COMM_WORLD,
                MPI_STATUS_IGNORE);
-      // Note: MPI_Recv can still use MPI_STATUS_IGNORE if you don't need its
-      // status.
-      Kokkos::printf("Received wilson flow log details string\n");
       std::string log_string(buffer, size);
-      Kokkos::printf("Wilson flow log details string: %s\n",
-                     log_string.c_str());
       params.wilson_flow_params.log_strings.push_back(log_string);
       delete[] buffer; // <-- Added memory cleanup
     }
@@ -407,7 +401,8 @@ void measureGaugeObservables(const typename DGaugeFieldType::type &g_in,
       DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc;
   // check if the step is a measurement step
   if ((params.measurement_interval == 0) ||
-      (step % params.measurement_interval != 0) || (step == 0)) {
+      (step % params.measurement_interval != 0) || (step == 0) ||
+      step < params.thermalization_steps) {
     return;
   }
   // otherwise, carry out the measurements
@@ -668,8 +663,8 @@ inline void flushWilsonFlowDetails(std::ofstream &file,
   }
   WilsonFlowParams &wfparams = params.wilson_flow_params;
   if (HEADER) {
-    file << "# step, flow_steps, flow_time, sp_max, "
-            "tsquaredxaction_density(old), measure_t^E_step, "
+    file << "# step, flow_step, flow_time, sp_max_init, sp_max, sp_max_deriv, "
+            "tsquaredxaction_density(old), next_measure_t^E_step, "
             "tsquaredxaction_density\n";
   }
   for (size_t i = 0; i < params.measurement_steps.size(); ++i) {

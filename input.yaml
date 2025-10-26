@@ -24,7 +24,7 @@ Integrator:
     #   steps: 20
 Gauge Monomial:
   level: 0
-  beta: 2.3
+  beta: 2.5
 
 # Fermion Monomial:
 #   level: 1
@@ -35,6 +35,7 @@ Gauge Monomial:
 #   tol: 1e-10
 
 GaugeObservableParams:
+  thermalization_steps: 500
   measurement_interval: 2
   measure_plaquette: true
   measure_wilson_loop_temporal: false
@@ -81,7 +82,7 @@ SimulationLoggingParams:
   log_accept: true
   log_time: true
   log_observable_time: true
-  flush: 5
+  flush: 2
   log_filename: "simulation_log.txt"
   write_to_file: true
 
@@ -95,7 +96,7 @@ PTBCSimulationLoggingParams:
   log_swap_start: true
   log_swap_accepts: true
   log_defects: true
-  flush: 25
+  flush: 1
   log_filename: "ptbcsimulation_log.txt"
   write_to_file: true
 

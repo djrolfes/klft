@@ -79,9 +79,11 @@ inline int parseInputFile(const std::string &filename,
     // Parse GaugeObservableParams
     if (config["GaugeObservableParams"]) {
       const auto &gp = config["GaugeObservableParams"];
+      gaugeObservableParams.thermalization_steps =
+          gp["thermalization_steps"].as<size_t>(0);
       // interval between measurements
       gaugeObservableParams.measurement_interval =
-          gp["measurement_interval"].as<size_t>(0);
+          gp["measurement_interval"].as<size_t>(1);
       // whether to measure the topological charge
       gaugeObservableParams.measure_topological_charge =
           gp["measure_topological_charge"].as<bool>(false);

@@ -141,7 +141,8 @@ public:
           printf("Measuring PTBC observables at step %zu\n", step);
         }
         measureGaugeObservablesPTBC<DGaugeFieldType>(
-            hmc.hamiltonian_field.gauge_field, gaugeObsParams, step, 0, true);
+            hmc.hamiltonian_field.gauge_field, gaugeObsParams, step, rank,
+            true);
       } else {
 
         measureGaugeObservablesPTBC<DGaugeFieldType>(
