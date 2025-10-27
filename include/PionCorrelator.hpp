@@ -11,8 +11,10 @@
 #include "Tuner.hpp"
 namespace klft {
 
-template <typename DSpinorFieldType, typename DGaugeFieldType,
-          template <template <typename, typename> class DiracOpT, typename,
+template <typename DSpinorFieldType,
+          typename DGaugeFieldType,
+          template <template <typename, typename> class DiracOpT,
+                    typename,
                     typename> class _Solver,
           template <typename, typename> class DiracOpT>
 std::vector<real_t> PionCorrelator(const typename DGaugeFieldType::type& g_in,
@@ -34,7 +36,7 @@ std::vector<real_t> PionCorrelator(const typename DGaugeFieldType::type& g_in,
   DiracOperator dirac_op(g_in, params);
   auto Nt = g_in.field.extent(3);
 
-  std::vector<real_t> result_vec(Nt - 1);
+  std::vector<real_t> result_vec(Nt);
 
   if constexpr (rank == 4) {
     typename DevicePropagator<rank, Nc, RepDim>::type result(
@@ -66,12 +68,15 @@ std::vector<real_t> PionCorrelator(const typename DGaugeFieldType::type& g_in,
   return result_vec;
 }
 
-template <typename DSpinorFieldType, typename DGaugeFieldType,
-          template <template <typename, typename> class DiracOpT, typename,
+template <typename DSpinorFieldType,
+          typename DGaugeFieldType,
+          template <template <typename, typename> class DiracOpT,
+                    typename,
                     typename> class _Solver,
           template <typename, typename> class DiracOpT>
 std::vector<real_t> PionCorrelatorEO(
-    const typename DGaugeFieldType::type& g_in, const diracParams& params,
+    const typename DGaugeFieldType::type& g_in,
+    const diracParams& params,
     IndexArray<DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank> f_dims,
     const real_t& tol) {
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
