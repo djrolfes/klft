@@ -90,23 +90,6 @@ index_t do_wflowtest(HMCType &hmc, GaugeObservableParams &gaugeObsParams,
       get_spmax<DGaugeFieldType>(hmc.hamiltonian_field.gauge_field));
 
   // Write the header only once, before the first line of data
-  if (!header_written) {
-    output_file_topologicalcharge << "hmc_step";
-    output_file_actiondensity_clover << "hmc_step";
-    output_file_sp_avg << "hmc_step";
-    output_file_sp_max << "hmc_step";
-    for (const auto &t : flow_times) {
-      output_file_topologicalcharge << "," << t;
-      output_file_actiondensity_clover << "," << t;
-      output_file_sp_max << "," << t;
-      output_file_sp_avg << "," << t;
-    }
-    output_file_sp_avg << "\n";
-    output_file_topologicalcharge << "\n";
-    output_file_actiondensity_clover << "\n";
-    output_file_sp_max << "\n";
-    header_written = true;
-  }
 
   // hmc loop
   for (size_t step = 0; step < hmc.params.nsteps; ++step) {
@@ -156,6 +139,23 @@ index_t do_wflowtest(HMCType &hmc, GaugeObservableParams &gaugeObsParams,
       }
       wilson_flow.flow();
       // measure observables
+    }
+    if (!header_written) {
+      output_file_topologicalcharge << "hmc_step";
+      output_file_actiondensity_clover << "hmc_step";
+      output_file_sp_avg << "hmc_step";
+      output_file_sp_max << "hmc_step";
+      for (const auto &t : flow_times) {
+        output_file_topologicalcharge << "," << t;
+        output_file_actiondensity_clover << "," << t;
+        output_file_sp_max << "," << t;
+        output_file_sp_avg << "," << t;
+      }
+      output_file_sp_avg << "\n";
+      output_file_topologicalcharge << "\n";
+      output_file_actiondensity_clover << "\n";
+      output_file_sp_max << "\n";
+      header_written = true;
     }
 
     // Write the data for the current step
