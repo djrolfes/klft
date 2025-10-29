@@ -101,7 +101,7 @@ void measureFermionObservables(const typename DGaugeFieldType::type& g_in,
       dims[0] /= 2;
       auto PC =
           PionCorrelator<DSpinorFieldType, DGaugeFieldType, CGSolver, DiracOpT>(
-              g_in, getDiracParams(params), dims, params.tol);
+              g_in, getDiracParams(params), params.tol);
       params.pion_correlator.push_back(PC);
       if (KLFT_VERBOSITY > 1) {
         printf("Pion Correlator:\n");
@@ -224,9 +224,9 @@ void measureFermionObservablesPTBC(const typename DGaugeFieldType::type& g_in,
         }
         auto dims = g_in.dimensions;
         dims[0] /= 2;
-        auto PC = PionCorrelator<DSpinorFieldType, DGaugeFieldType, CGSolver,
-                                 DiracOpT>(g_in, getDiracParams(params), dims,
-                                           params.tol);
+        auto PC =
+            PionCorrelator<DSpinorFieldType, DGaugeFieldType, CGSolver,
+                           DiracOpT>(g_in, getDiracParams(params), params.tol);
         index_t size = PC.size();
         MPI_Send(&size, 1, mpi_index_t(), 0,
                  MPI_FERMION_OBSERVABLE_PION_CORRELATOR_SIZE, MPI_COMM_WORLD);
