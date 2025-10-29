@@ -32,7 +32,6 @@ std::vector<real_t> PionCorrelator(const typename DGaugeFieldType::type& g_in,
   using SpinorField = typename DSpinorFieldType::type;
   using DiracOperator = DiracOpT<DSpinorFieldType, DGaugeFieldType>;
   using Solver = _Solver<DiracOpT, DSpinorFieldType, DGaugeFieldType>;
-  printf("Kappa: %f\n", params.kappa);
   DiracOperator dirac_op(g_in, params);
   auto Nt = g_in.field.extent(3);
 
