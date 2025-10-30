@@ -45,7 +45,12 @@ std::vector<real_t> PionCorrelator(const typename DGaugeFieldType::type& g_in,
     SpinorField x0(g_in.dimensions, 0);
     for (index_t source_i = 0; source_i < n_sources; source_i++) {
       for (index_t i = 0; i < rank; i++) {
-        sourceIdx[i] = int(dist(rng) * g_in.dimensions[i]);
+        if (i == 0) {
+          sourceIdx[i] = int(dist(rng) * g_in.dimensions[i] / 2) * 2;
+          /* code */
+        } else {
+          sourceIdx[i] = int(dist(rng) * g_in.dimensions[i]);
+        }
       }
       for (index_t alpha0 = 0; alpha0 < Nc * RepDim; alpha0++) {
         SpinorFieldSource source(g_in.dimensions, sourceIdx, alpha0);
@@ -76,4 +81,85 @@ std::vector<real_t> PionCorrelator(const typename DGaugeFieldType::type& g_in,
   return result_vec;
 }
 
+template <typename RNG, typename DSpinorFieldType, typename DGaugeFieldType,
+          template <template <typename, typename> class DiracOpT, typename,
+                    typename> class _Solver,
+          template <typename, typename> class DiracOpT>
+std::vector<real_t> PionCorrelatorEO(
+    const typename DGaugeFieldType::type& g_in, const diracParams& params,
+    const IndexArray<DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank>& f_dims,
+    const real_t& tol, RNG& rng, const index_t& n_sources) {
+  static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
+  constexpr static size_t rank =
+      DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank;
+  constexpr static size_t Nc = DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc;
+  constexpr static size_t RepDim =
+      DeviceFermionFieldTypeTraits<DSpinorFieldType>::RepDim;
+  using SpinorFieldSource =
+      typename WithSpinorFieldKind<DSpinorFieldType,
+                                   SpinorFieldKind::PointSource>::type;
+  using SpinorField = typename DSpinorFieldType::type;
+  using DiracOperator = DiracOpT<DSpinorFieldType, DGaugeFieldType>;
+  using Solver = _Solver<DiracOpT, DSpinorFieldType, DGaugeFieldType>;
+  DiracOperator dirac_op(g_in, params);
+  auto Nt = g_in.field.extent(3);
+  std::uniform_real_distribution<real_t> dist;
+  std::vector<real_t> result_vec(Nt);
+  IndexArray<rank> sourceIdx{};
+
+  if constexpr (rank == 4) {
+    typename DevicePropagator<rank, Nc, RepDim>::type result(
+        g_in.dimensions, complex_t(0.0, 0.0));
+    size_t Vs = g_in.dimensions[0] * g_in.dimensions[1] * g_in.dimensions[2];
+    for (index_t source_i = 0; source_i < n_sources; source_i++) {
+      for (index_t i = 0; i < rank; i++) {
+        sourceIdx[i] = int(dist(rng) * f_dims[i]);
+      }
+      for (index_t alpha0 = 0; alpha0 < Nc * RepDim; alpha0++) {
+        SpinorField x(f_dims, 0);
+        SpinorField x0(f_dims, 0);
+        SpinorField prop_even(f_dims, 0);
+        SpinorField prop_odd(f_dims, 0);
+        SpinorFieldSource source(f_dims, sourceIdx,
+                                 alpha0);  // even source
+        Solver solver(source, x, dirac_op);
+        if constexpr (std::is_same_v<Solver,
+                                     CGSolver<DiracOpT, DSpinorFieldType,
+                                              DGaugeFieldType>>) {
+          printf("CG currently not supported\n");
+        }
+        if constexpr (std::is_same_v<Solver,
+                                     BiCGStab<DiracOpT, DSpinorFieldType,
+                                              DGaugeFieldType>>) {
+          // BicCGStab gives D^-1 directly
+          solver.template solve<Tags::TagSe>(x0, tol);
+          prop_even = solver.x;
+          solver.reconstruct_solution_0(prop_odd);
+        }
+        for (size_t i3 = 0; i3 < g_in.dimensions[3]; i3++) {
+          real_t res = 0.0;
+          Kokkos::parallel_reduce(
+              "Reductor",
+              Policy<rank - 1>(
+                  IndexArray<rank - 1>{},
+                  IndexArray<rank - 1>{f_dims[0], f_dims[1], f_dims[2]}),
+              KOKKOS_LAMBDA(const size_t& i0, const size_t& i1,
+                            const size_t& i2, real_t& upd) {
+                upd += sqnorm(prop_even(
+                    i0, i1, i2,
+                    i3));  // i0 is the halfed dim, so i3 isnt affected
+                upd += sqnorm(prop_odd(i0, i1, i2, i3));
+              },
+              res);
+          Kokkos::fence();
+          auto t_shifted = (i3 >= sourceIdx[3]) ? (i3 - sourceIdx[3])
+                                                : (Nt - (sourceIdx[3] - i3));
+          result_vec[t_shifted] += (res / (Vs * n_sources));
+        }
+        // Function
+      }
+    }
+  }
+  return result_vec;
+}
 }  // namespace klft

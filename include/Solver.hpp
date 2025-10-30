@@ -286,7 +286,7 @@ class BiCGStab
       rk_norm = spinor_norm<rank, Nc, RepDim>(rk);
       num_iter++;
       if (KLFT_VERBOSITY > 2) {
-        printf("CG Iteration %d: rk_norm = %.15f\n", num_iter, rk_norm);
+        printf("BiCGstab Iteration %d: rk_norm = %.15f\n", num_iter, rk_norm);
         if (KLFT_VERBOSITY > 3) {
           printf("Norm of (b - A*x) %.15f\n",
                  spinor_norm<rank, Nc, RepDim>(axpy<DSpinorFieldType>(
@@ -306,7 +306,7 @@ class BiCGStab
       this->template solve<Tag>(xk, tol);
     } else {
       if (KLFT_VERBOSITY > 1) {
-        printf("CG solver converged in %d iterations\n", num_iter);
+        printf("BiCGstab solver converged in %d iterations\n", num_iter);
       }
       this->x = xk;
     }
