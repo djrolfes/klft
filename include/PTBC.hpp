@@ -178,15 +178,16 @@ class PTBC {  // do I need the AdjFieldType here?
           printf("Measuring   Fermionic observables at step %zu\n", step);
         }
         measureFermionObservablesPTBC<
-            DeviceSpinorFieldType<HMCType::rank, HMCType::Nc, 4>,
+            std::mt19937, DeviceSpinorFieldType<HMCType::rank, HMCType::Nc, 4>,
             DGaugeFieldType, CGSolver, WilsonDiracOperator>(
-            hmc.hamiltonian_field.gauge_field, fermionObsParam, step, 0, true);
+            hmc.hamiltonian_field.gauge_field, fermionObsParam, step, 0, hmc.mt,
+            true);
       } else {
         measureFermionObservablesPTBC<
-            DeviceSpinorFieldType<HMCType::rank, HMCType::Nc, 4>,
+            std::mt19937, DeviceSpinorFieldType<HMCType::rank, HMCType::Nc, 4>,
             DGaugeFieldType, CGSolver, WilsonDiracOperator>(
             hmc.hamiltonian_field.gauge_field, fermionObsParam, step,
-            compute_rank, false);
+            compute_rank, hmc.mt, false);
       }
     } else {
       MPI_Reduce(&dummy_rank, &compute_rank, 1, MPI_INT, MPI_SUM, 0,

@@ -200,6 +200,7 @@ inline int parseInputFile(const std::string& filename,
       fobs.RepDim = mp["RepDim"].as<size_t>(4);
       fobs.write_to_file = mp["write_to_file"].as<bool>(false);
       fobs.preconditioning = mp["preconditioning"].as<bool>(false);
+      fobs.n_sources = mp["n_sources"].as<index_t>(12);
     } else {
       printf("Info: No Fermionic Measurments are done!\n");
       return false;
