@@ -79,10 +79,11 @@ void measureFermionObservables(const typename DGaugeFieldType::type& g_in,
     printf("step: %zu\n", step);
   }
   if (params.measure_pion_correlator) {
-    if (params.preconditioning == false ||
-        std::is_same_v<
-            typename DiracOpT<DSpinorFieldType, DGaugeFieldType>::Base,
-            DiracOperator<DiracOpT, DSpinorFieldType, DGaugeFieldType>>) {
+    if constexpr (std::is_same_v<typename DiracOpT<DSpinorFieldType,
+                                                   DGaugeFieldType>::Base,
+                                 DiracOperator<DiracOpT, DSpinorFieldType,
+                                               DGaugeFieldType>>) {
+      printf("Computing Pion Correlator FULL layout\n");
       auto PC = PionCorrelator<RNG, DSpinorFieldType, DGaugeFieldType, CGSolver,
                                DiracOpT>(g_in, getDiracParams(params),
                                          params.tol, rng, params.n_sources);
@@ -200,12 +201,15 @@ void measureFermionObservablesPTBC(const typename DGaugeFieldType::type& g_in,
   if (do_compute) {
     /* code */
     if (params.measure_pion_correlator) {
-      if (params.preconditioning == false) {
+      if constexpr (std::is_same_v<typename DiracOpT<DSpinorFieldType,
+                                                     DGaugeFieldType>::Base,
+                                   DiracOperator<DiracOpT, DSpinorFieldType,
+                                                 DGaugeFieldType>>) {
         if (KLFT_VERBOSITY > 1) {
           printf("Computing Pion Correlator FULL layout\n");
         }
         auto PC = PionCorrelator<RNG, DSpinorFieldType, DGaugeFieldType,
-                                 _Solver, DiracOpT>(
+                                 CGSolver, DiracOpT>(
             g_in, getDiracParams(params), params.tol, rng, params.n_sources);
         index_t size = PC.size();
         MPI_Send(&size, 1, mpi_index_t(), 0,
@@ -220,7 +224,7 @@ void measureFermionObservablesPTBC(const typename DGaugeFieldType::type& g_in,
         auto dims = g_in.dimensions;
         dims[0] /= 2;
         auto PC =
-            PionCorrelatorEO<RNG, DSpinorFieldType, DGaugeFieldType, CGSolver,
+            PionCorrelatorEO<RNG, DSpinorFieldType, DGaugeFieldType, BiCGStab,
                              DiracOpT>(g_in, getDiracParams(params), dims,
                                        params.tol, rng, params.n_sources);
         index_t size = PC.size();

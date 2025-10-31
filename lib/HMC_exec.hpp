@@ -68,7 +68,7 @@ int run_HMC(HMCType& hmc, const Integrator_Params& integratorParams,
     // For now fix fermion measurment stuff:
     measureFermionObservables<
         std::mt19937, DeviceSpinorFieldType<HMCType::rank, HMCType::Nc, 4>,
-        typename HMCType::DeviceGaugeFieldType, BiCGStab,
+        typename HMCType::DeviceGaugeFieldType, CGSolver,
         EOWilsonDiracOperator>(hmc.hamiltonian_field.gauge_field,
                                fermionObsParams, step, hmc.mt);
     flushSimulationLogs(simLogParams, step, true);

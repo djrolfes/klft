@@ -35,6 +35,7 @@ std::vector<real_t> PionCorrelator(const typename DGaugeFieldType::type& g_in,
   using Solver = _Solver<DiracOpT, DSpinorFieldType, DGaugeFieldType>;
   DiracOperator dirac_op(g_in, params);
   auto Nt = g_in.field.extent(3);
+  SpinorField prop(g_in.dimensions, 0);
   std::uniform_real_distribution<real_t> dist;
   std::vector<real_t> result_vec(Nt);
   IndexArray<rank> sourceIdx{};
@@ -45,18 +46,13 @@ std::vector<real_t> PionCorrelator(const typename DGaugeFieldType::type& g_in,
     SpinorField x0(g_in.dimensions, 0);
     for (index_t source_i = 0; source_i < n_sources; source_i++) {
       for (index_t i = 0; i < rank; i++) {
-        if (i == 0) {
-          sourceIdx[i] = int(dist(rng) * g_in.dimensions[i] / 2) * 2;
-          /* code */
-        } else {
-          sourceIdx[i] = int(dist(rng) * g_in.dimensions[i]);
-        }
+        sourceIdx[i] = int(dist(rng) * g_in.dimensions[i]);
       }
       for (index_t alpha0 = 0; alpha0 < Nc * RepDim; alpha0++) {
         SpinorFieldSource source(g_in.dimensions, sourceIdx, alpha0);
         Solver solver(source, x, dirac_op);
-        solver.template solve<Tags::TagDdaggerD>(x0, tol);
-        auto prop = dirac_op.template apply<Tags::TagDdagger>(solver.x);
+        solver.template solve<Tags::TagDDdagger>(x0, tol);
+        dirac_op.template apply<Tags::TagDdagger>(solver.x, prop);
         for (size_t i3 = 0; i3 < g_in.dimensions[3]; i3++) {
           real_t res = 0.0;
           Kokkos::parallel_reduce(
@@ -108,12 +104,11 @@ std::vector<real_t> PionCorrelatorEO(
   IndexArray<rank> sourceIdx{};
 
   if constexpr (rank == 4) {
-    typename DevicePropagator<rank, Nc, RepDim>::type result(
-        g_in.dimensions, complex_t(0.0, 0.0));
     size_t Vs = g_in.dimensions[0] * g_in.dimensions[1] * g_in.dimensions[2];
     for (index_t source_i = 0; source_i < n_sources; source_i++) {
       for (index_t i = 0; i < rank; i++) {
         sourceIdx[i] = int(dist(rng) * f_dims[i]);
+        // sourceIdx[i] = 0;
       }
       for (index_t alpha0 = 0; alpha0 < Nc * RepDim; alpha0++) {
         SpinorField x(f_dims, 0);
@@ -126,15 +121,15 @@ std::vector<real_t> PionCorrelatorEO(
         if constexpr (std::is_same_v<Solver,
                                      CGSolver<DiracOpT, DSpinorFieldType,
                                               DGaugeFieldType>>) {
-          printf("CG currently not supported\n");
+          printf("CG Solver not supported\n");
         }
         if constexpr (std::is_same_v<Solver,
                                      BiCGStab<DiracOpT, DSpinorFieldType,
                                               DGaugeFieldType>>) {
           // BicCGStab gives D^-1 directly
           solver.template solve<Tags::TagSe>(x0, tol);
-          prop_even = solver.x;
           solver.reconstruct_solution_0(prop_odd);
+          prop_even = solver.x;
         }
         for (size_t i3 = 0; i3 < g_in.dimensions[3]; i3++) {
           real_t res = 0.0;
@@ -145,9 +140,7 @@ std::vector<real_t> PionCorrelatorEO(
                   IndexArray<rank - 1>{f_dims[0], f_dims[1], f_dims[2]}),
               KOKKOS_LAMBDA(const size_t& i0, const size_t& i1,
                             const size_t& i2, real_t& upd) {
-                upd += sqnorm(prop_even(
-                    i0, i1, i2,
-                    i3));  // i0 is the halfed dim, so i3 isnt affected
+                upd += sqnorm(prop_even(i0, i1, i2, i3));
                 upd += sqnorm(prop_odd(i0, i1, i2, i3));
               },
               res);
