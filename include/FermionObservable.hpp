@@ -26,14 +26,6 @@ struct FermionObservableParams {
   size_t flush;  // interval to flush measurements to file, 0 to flush at the
   // end of the simulation
 
-  FermionObservableParams()
-      : measurement_interval(0),
-        measure_pion_correlator(false),
-        flush(25),
-        tol(10e-8),
-        kappa(0.15),
-        RepDim(4),
-        preconditioning(true) {}
   void print() const {
     printf("FermionObservableParams:\n");
     printf("  measurement_interval: %zu\n", measurement_interval);
@@ -46,6 +38,7 @@ struct FermionObservableParams {
     printf("  RepDim: %zu\n", RepDim);
     printf("  write_to_file: %s\n", write_to_file ? "true" : "false");
     printf("  flush: %zu\n", flush);
+    printf("  n_sources: %d\n", n_sources);
   }
 };
 
