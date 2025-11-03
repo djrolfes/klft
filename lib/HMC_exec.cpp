@@ -82,41 +82,41 @@ int build_and_run_HMC(const std::string& input_file,
   HMCParams hmcParams;
   // parse the input file for HMC parameters
   if (!parseInputFile(input_file, output_directory, hmcParams)) {
-    printf("Error parsing input file\n");
+    printf("(hmcParams) Error parsing input file\n");
     return -1;
   }
   Integrator_Params integratorParams;
   GaugeObservableParams gaugeObsParams;
   if (!parseInputFile(input_file, output_directory, gaugeObsParams)) {
-    printf("Error parsing input file\n");
+    printf("(gaugeObsParams) Error parsing input file\n");
     return -1;
   }
   if (!parseInputFile(input_file, output_directory, integratorParams)) {
-    printf("Error parsing input file\n");
+    printf("(integratorParams) Error parsing input file\n");
     return -1;
   }
   FermionMonomial_Params fermionParams;
   auto resParsef = parseInputFile(input_file, output_directory, fermionParams);
 
   if (resParsef == 0) {
-    printf("Error parsing input file\n");
+    printf("(fermionParams) Error parsing input file\n");
     return -1;
   } else if (resParsef < 0) {
     printf("Info: No Fermion Monomial detected, skipping\n");
   }
   GaugeMonomial_Params gaugeMonomialParams;
   if (!parseInputFile(input_file, output_directory, gaugeMonomialParams)) {
-    printf("Error parsing input file\n");
+    printf("(gaugeMonomialParams) Error parsing input file\n");
     return -1;
   }
   SimulationLoggingParams simLogParams;
   if (!parseInputFile(input_file, output_directory, simLogParams)) {
-    printf("Error parsing input file\n");
+    printf("(simLogParams) Error parsing input file\n");
     return -1;
   }
   FermionObservableParams fObs;
   if (!parseInputFile(input_file, output_directory, fObs)) {
-    printf("Error parsing inputfile\n");
+    printf("(FermionObservableParams) Error parsing inputfile\n");
     return -1;
   }
   if (resParsef < 0) {
