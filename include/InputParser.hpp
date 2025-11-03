@@ -67,7 +67,7 @@ inline bool parseInputFile(const std::string& filename,
     }
     return true;
   } catch (const YAML::Exception& e) {
-    printf("Error parsing input file: %s\n", e.what());
+    printf("(MetropolisParams) Error parsing input file: %s\n", e.what());
     return false;
   }
 }

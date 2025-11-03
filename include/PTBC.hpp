@@ -280,10 +280,7 @@ class PTBC {  // do I need the AdjFieldType here?
     }
     MPI_Bcast(shift, 2, MPI_INT, 0, MPI_COMM_WORLD);
 
-    /* code */
     if (getDefectValue() == 1) {
-      /* code */
-
       auto old_position =
           hmc.hamiltonian_field.gauge_field.dParams.defect_position;
       auto new_position = old_position;
