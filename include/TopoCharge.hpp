@@ -76,7 +76,7 @@ struct TopoCharge {
                      (nu - sigma) * (rho - sigma);
 
     // parity of inversion count gives sign
-    return parity > 0 ? (parity == 0 ? 0 : 1) : -1;
+    return parity >= 0 ? (parity == 0 ? 0 : 1) : -1;
   }
 
   // now define the topological charge calculation for a single site (should

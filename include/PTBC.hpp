@@ -83,8 +83,11 @@ class PTBC {  // do I need the AdjFieldType here?
 
   PTBC() = delete;  // default constructor is not allowed
 
-  PTBC(PTBCParams& params_, HMCType& hmc_, RNG& rng_,
-       std::uniform_real_distribution<real_t> dist_, std::mt19937 mt_)
+  PTBC(PTBCParams& params_,
+       HMCType& hmc_,
+       RNG& rng_,
+       std::uniform_real_distribution<real_t> dist_,
+       std::mt19937 mt_)
       : params(params_), rng(rng_), dist(dist_), mt(mt_), hmc(hmc_) {
     device_id = Kokkos::device_id();  // default device id
     int rank;
@@ -145,7 +148,8 @@ class PTBC {  // do I need the AdjFieldType here?
           printf("Measuring PTBC observables at step %zu\n", step);
         }
         measureGaugeObservablesPTBC<DGaugeFieldType>(
-            hmc.hamiltonian_field.gauge_field, gaugeObsParams, step, 0, true);
+            hmc.hamiltonian_field.gauge_field, gaugeObsParams, step, rank,
+            true);
       } else {
         measureGaugeObservablesPTBC<DGaugeFieldType>(
             hmc.hamiltonian_field.gauge_field, gaugeObsParams, step,
@@ -158,10 +162,15 @@ class PTBC {  // do I need the AdjFieldType here?
     }
   }
 
-  void measure(SimulationLoggingParams& simLogParams, index_t step,
-               real_t acc_rate, bool accept, real_t time) {
+  void measure(SimulationLoggingParams& simLogParams,
+               index_t step,
+               real_t acc_rate,
+               bool accept,
+               real_t time,
+               real_t obs_time) {
     // measure the simulation logging observables
-    addLogData(simLogParams, step, hmc.delta_H, acc_rate, accept, time);
+    addLogData(simLogParams, step, hmc.delta_H, acc_rate, accept, time,
+               obs_time);
   }
 
   int step() {
@@ -332,7 +341,8 @@ class PTBC {  // do I need the AdjFieldType here?
         oss << "Defects after broadcast: [";
         for (size_t i = 0; i < params.defects.size(); ++i) {
           oss << params.defects[i];
-          if (i + 1 < params.defects.size()) oss << ", ";
+          if (i + 1 < params.defects.size())
+            oss << ", ";
         }
         oss << "]";
         // DEBUG_MPI_PRINT("%s", oss.str().c_str());
@@ -371,7 +381,8 @@ class PTBC {  // do I need the AdjFieldType here?
 // below: Functions used to dispatch the PTBC algorithm
 
 template <typename PTBCType>
-int run_PTBC(PTBCType& ptbc, Integrator_Params& int_params,
+int run_PTBC(PTBCType& ptbc,
+             Integrator_Params& int_params,
              GaugeObservableParams& gaugeObsParams,
              PTBCSimulationLoggingParams& ptbcSimLogParams,
              SimulationLoggingParams& simLogParams) {
@@ -394,8 +405,11 @@ int run_PTBC(PTBCType& ptbc, Integrator_Params& int_params,
 
     int ptbc_accept = ptbc.swap();
 
+    const real_t time = timer.seconds();
+    timer.reset();
     // Gauge observables
     ptbc.measure(gaugeObsParams, step);
+    const real_t obs_time = timer.seconds();
     ptbc.measure(ptbcSimLogParams, step);
 
     if (rank == 0) {
@@ -404,10 +418,9 @@ int run_PTBC(PTBCType& ptbc, Integrator_Params& int_params,
     }
     // PTBC swap/accept
 
-    const real_t time = timer.seconds();
     acc_sum += static_cast<real_t>(accept);
     acc_rate = acc_sum / static_cast<real_t>(step + 1);
-    ptbc.measure(simLogParams, step, acc_rate, accept, time);
+    ptbc.measure(simLogParams, step, acc_rate, accept, time, obs_time);
     if (rank == 0) {
       Kokkos::printf("Step: %zu, accepted: %d, Acceptance rate: %f, Time: %f\n",
                      step, accept, acc_rate, time);

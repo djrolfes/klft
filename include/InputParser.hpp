@@ -80,9 +80,11 @@ inline int parseInputFile(const std::string& filename,
     // Parse GaugeObservableParams
     if (config["GaugeObservableParams"]) {
       const auto& gp = config["GaugeObservableParams"];
+      gaugeObservableParams.thermalization_steps =
+          gp["thermalization_steps"].as<size_t>(0);
       // interval between measurements
       gaugeObservableParams.measurement_interval =
-          gp["measurement_interval"].as<size_t>(0);
+          gp["measurement_interval"].as<size_t>(1);
       // whether to measure the topological charge
       gaugeObservableParams.measure_topological_charge =
           gp["measure_topological_charge"].as<bool>(false);
@@ -97,6 +99,8 @@ inline int parseInputFile(const std::string& filename,
           gp["measure_wilson_loop_mu_nu"].as<bool>(false);
       gaugeObservableParams.measure_action_density =
           gp["measure_action_density"].as<bool>(false);
+      gaugeObservableParams.measure_sp_max =
+          gp["measure_sp_max"].as<bool>(false);
 
       // pairs of (L,T) for the temporal Wilson loop
       if (gp["W_temp_L_T_pairs"]) {
@@ -135,6 +139,23 @@ inline int parseInputFile(const std::string& filename,
             wfp_node["tau"].as<real_t>();
         gaugeObservableParams.wilson_flow_params.eps =
             wfp_node["eps"].as<real_t>();
+        gaugeObservableParams.wilson_flow_params.dynamical_flow =
+            wfp_node["dynamical_flow"].as<bool>(false);
+        gaugeObservableParams.wilson_flow_params.min_flow_time =
+            wfp_node["min_flow_time"].as<real_t>(-1.0);
+        gaugeObservableParams.wilson_flow_params.max_flow_time =
+            wfp_node["max_flow_time"].as<real_t>(-1.0);
+        gaugeObservableParams.wilson_flow_params.sp_max_target =
+            wfp_node["sp_max_target"].as<real_t>(0.067);
+        gaugeObservableParams.wilson_flow_params.t_sqrd_E_target =
+            wfp_node["t_sqrd_E_target"].as<real_t>(0.1);
+        gaugeObservableParams.wilson_flow_params.first_tE_measure_step =
+            wfp_node["first_tE_measure_step"].as<size_t>(10);
+        gaugeObservableParams.wilson_flow_params.log_details =
+            wfp_node["log_details"].as<bool>(false);
+        gaugeObservableParams.wilson_flow_params.wilson_flow_filename =
+            output_directory +
+            wfp_node["wilson_flow_filename"].as<std::string>("");
 
         // Recalculate eps based on parsed values
         if (gaugeObservableParams.wilson_flow_params.eps > 0) {
@@ -160,6 +181,8 @@ inline int parseInputFile(const std::string& filename,
           output_directory + gp["W_mu_nu_filename"].as<std::string>("");
       gaugeObservableParams.action_density_filename =
           output_directory + gp["action_density_filename"].as<std::string>("");
+      gaugeObservableParams.sp_max_filename =
+          output_directory + gp["sp_max_filename"].as<std::string>("");
 
       // whether to write to file
       gaugeObservableParams.write_to_file = gp["write_to_file"].as<bool>(false);
@@ -321,6 +344,7 @@ inline int parseInputFile(const std::string& filename,
       simParams.log_acceptance = mp["log_acceptance"].as<bool>(false);
       simParams.log_accept = mp["log_accept"].as<bool>(false);
       simParams.log_time = mp["log_time"].as<bool>(false);
+      simParams.log_observable_time = mp["log_observable_time"].as<bool>(false);
     } else {
       printf("Error: SimulationLoggingParams not found in input file\n");
       return false;

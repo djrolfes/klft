@@ -35,15 +35,25 @@ Fermion Monomial:
   tol: 1e-10
   preconditioning: true
 GaugeObservableParams:
+  thermalization_steps: 500
   measurement_interval: 2
   measure_plaquette: true
   measure_wilson_loop_temporal: false
   measure_wilson_loop_mu_nu: false
-  flush: 25
+  measure_sp_max: true
+  flush: 2
   do_wilson_flow: true
   WilsonFlowParams:
     tau: 8.0
     eps: 0.01
+    dynamical_flow: true
+    min_flow_time: 0.5
+    max_flow_time: 10.0
+    sp_max_target: 0.067
+    t_sqrd_E_target: 0.1
+    first_tE_measure_step: 10
+    log_details: true
+    wilson_flow_filename: "wilsonflow_details.txt"
 
   W_temp_L_T_pairs:
     - [2, 3]
@@ -61,6 +71,7 @@ GaugeObservableParams:
   W_temp_filename: "wilson_temp_output.txt"
   W_mu_nu_filename: "wilson_mu_nu_output.txt"
   action_density_filename: "action_density.txt"
+  sp_max_filename: "sp_max.txt"
 
   write_to_file: true
 
@@ -68,7 +79,10 @@ SimulationLoggingParams:
   log_interval: 1
   log_delta_H: true
   log_acceptance: true
-  flush: 5
+  log_accept: true
+  log_time: true
+  log_observable_time: true
+  flush: 2
   log_filename: "simulation_log.txt"
   write_to_file: true
 
@@ -82,7 +96,7 @@ PTBCSimulationLoggingParams:
   log_swap_start: true
   log_swap_accepts: true
   log_defects: true
-  flush: 25
+  flush: 1
   log_filename: "ptbcsimulation_log.txt"
   write_to_file: true
 

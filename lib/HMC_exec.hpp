@@ -60,9 +60,12 @@ int run_HMC(HMCType& hmc, const Integrator_Params& integratorParams,
           "%f\n",
           step, static_cast<size_t>(accept), acc_rate, time);
     }
+    timer.reset();
     measureGaugeObservables<typename HMCType::DeviceGaugeFieldType>(
         hmc.hamiltonian_field.gauge_field, gaugeObsParams, step);
-    addLogData(simLogParams, step, hmc.delta_H, acc_rate, accept, time);
+    const real_t obs_time = timer.seconds();
+    addLogData(simLogParams, step, hmc.delta_H, acc_rate, accept, time,
+               obs_time);
     flushSimulationLogs(simLogParams, step, true);
     flushAllGaugeObservables(gaugeObsParams, step, true);
     // flush the measurements to the files
