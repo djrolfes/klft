@@ -64,6 +64,7 @@ class Solver {
   DiracOp dirac_op;
   Solver(const SpinorFieldType& b, SpinorFieldType& x, const DiracOp& dirac_op)
       : b(b), x(x), dirac_op(dirac_op) {}
+
   template <typename Tag>
   void solve(const SpinorFieldType& x0, const real_t& tol) {
     Kokkos::Profiling::pushRegion("Solver");
@@ -76,15 +77,27 @@ class Solver {
   /// @param odd_b
   void construct_problem(const SpinorFieldType& odd_b) {
     auto out_even_from_odd_b = dirac_op.template apply<Tags::TagHeo>(odd_b);
-    axpy<DSpinorFieldType>(1.0, out_even_from_odd_b, this->b, this->b);
+    axpy<DSpinorFieldType>(this->dirac_op.params.kappa, out_even_from_odd_b,
+                           this->b, this->b);
   }
 
+  /// @brief Reconstructs the Odd part of the solution
+  /// with zero odd part
+  void reconstruct_solution_0(SpinorFieldType& out) {
+    dirac_op.template apply<Tags::TagHoe>(this->x, out);
+    ax<DSpinorFieldType>(this->dirac_op.params.kappa, out, out);
+  }
+  SpinorFieldType reconstruct_solution_0() {
+    auto out = SpinorFieldType(x.dimensions, complex_t(0.0, 0.0));
+    reconstruct_solution_0(out);
+    return out;
+  }
   /// @brief Reconstructs the Odd part of the solution
   /// @param out
   void reconstruct_solution(const SpinorFieldType& odd_b,
                             SpinorFieldType& out) {
     dirac_op.template apply<Tags::TagHoe>(this->x, out);
-    axpy<DSpinorFieldType>(1.0, odd_b, out, out);
+    axpy<DSpinorFieldType>(this->dirac_op.params.kappa, out, odd_b, out);
   }
   SpinorFieldType reconstruct_solution(const SpinorFieldType& odd_b) {
     auto out = SpinorFieldType(x.dimensions, complex_t(0.0, 0.0));
@@ -200,8 +213,7 @@ class CGSolver
 };
 
 template <template <typename, typename> class DiracOpT,
-          typename DSpinorFieldType,
-          typename DGaugeFieldType>
+          typename DSpinorFieldType, typename DGaugeFieldType>
 class BiCGStab
     : public Solver<BiCGStab, DiracOpT, DSpinorFieldType, DGaugeFieldType> {
   // using DSpinorFieldType =
@@ -274,7 +286,7 @@ class BiCGStab
       rk_norm = spinor_norm<rank, Nc, RepDim>(rk);
       num_iter++;
       if (KLFT_VERBOSITY > 2) {
-        printf("CG Iteration %d: rk_norm = %.15f\n", num_iter, rk_norm);
+        printf("BiCGstab Iteration %d: rk_norm = %.15f\n", num_iter, rk_norm);
         if (KLFT_VERBOSITY > 3) {
           printf("Norm of (b - A*x) %.15f\n",
                  spinor_norm<rank, Nc, RepDim>(axpy<DSpinorFieldType>(
@@ -294,7 +306,7 @@ class BiCGStab
       this->template solve<Tag>(xk, tol);
     } else {
       if (KLFT_VERBOSITY > 1) {
-        printf("CG solver converged in %d iterations\n", num_iter);
+        printf("BiCGstab solver converged in %d iterations\n", num_iter);
       }
       this->x = xk;
     }

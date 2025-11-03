@@ -2,6 +2,7 @@
 
 #include <mpi.h>
 
+#include "FermionObservable.hpp"
 #include "FieldTypeHelper.hpp"
 #include "GLOBAL.hpp"
 #include "GaugeObservable.hpp"
@@ -63,6 +64,7 @@ int PTBC_execute(const std::string& input_file,
   FermionMonomial_Params fermionParams;
   auto resParsef = parseInputFile(input_file, output_directory, fermionParams);
   GaugeMonomial_Params gaugeMonomialParams;
+  FermionObservableParams fermionObsParams;
   bool inputFileParsedCorrectly =
       (parseInputFile(input_file, output_directory, gaugeObsParams) &&
        parseInputFile(input_file, output_directory, hmcParams) &&
@@ -71,7 +73,8 @@ int PTBC_execute(const std::string& input_file,
        parseInputFile(input_file, output_directory, integratorParams) &&
        abs(resParsef) &&
        parseInputFile(input_file, output_directory, gaugeMonomialParams) &&
-       parseInputFile(input_file, output_directory, ptbcSimLogParams));
+       parseInputFile(input_file, output_directory, ptbcSimLogParams) &&
+       parseInputFile(input_file, output_directory, fermionObsParams));
   if (!inputFileParsedCorrectly) {
     printf("Error parsing input file\n");
     return -1;
@@ -83,11 +86,15 @@ int PTBC_execute(const std::string& input_file,
            ptbcParams.defects.size(), size);
     return -1;
   }
+  if (resParsef < 0) {
+    fermionObsParams.measure_pion_correlator = false;
+  }
 
   ptbcParams.gaugeObsParams = gaugeObsParams;
   ptbcParams.simLogParams = simLogParams;
   ptbcParams.ptbcSimLogParams = ptbcSimLogParams;
   ptbcParams.gauge_params = gaugeMonomialParams;
+  ptbcParams.fermionObsParams = fermionObsParams;
 
   // DEBUG_MPI_PRINT("%s", gaugeMonomialParams.to_string().c_str());
   RNGType rng(hmcParams.seed + rank);
@@ -137,8 +144,7 @@ int PTBC_execute(const std::string& input_file,
           using PTBC = PTBC<DGaugeFieldType, DAdjFieldType, RNGType>;
           PTBC ptbc(ptbcParams, hmc, rng, dist, mt);
 
-          run_PTBC(ptbc, integratorParams, gaugeObsParams, ptbcSimLogParams,
-                   simLogParams);
+          run_PTBC(ptbc, integratorParams);
         } else {
           using DGaugeFieldType =
               DeviceGaugeFieldType<4, 1, GaugeFieldKind::PTBC>;
@@ -174,8 +180,7 @@ int PTBC_execute(const std::string& input_file,
           using PTBC = PTBC<DGaugeFieldType, DAdjFieldType, RNGType>;
           PTBC ptbc(ptbcParams, hmc, rng, dist, mt);
 
-          run_PTBC(ptbc, integratorParams, gaugeObsParams, ptbcSimLogParams,
-                   simLogParams);
+          run_PTBC(ptbc, integratorParams);
         }
 
       } else if (hmcParams.Nc == 2) {
@@ -218,8 +223,7 @@ int PTBC_execute(const std::string& input_file,
           using PTBC = PTBC<DGaugeFieldType, DAdjFieldType, RNGType>;
           PTBC ptbc(ptbcParams, hmc, rng, dist, mt);
 
-          run_PTBC(ptbc, integratorParams, gaugeObsParams, ptbcSimLogParams,
-                   simLogParams);
+          run_PTBC(ptbc, integratorParams);
         } else {
           using DGaugeFieldType =
               DeviceGaugeFieldType<4, 2, GaugeFieldKind::PTBC>;
@@ -255,8 +259,7 @@ int PTBC_execute(const std::string& input_file,
           using PTBC = PTBC<DGaugeFieldType, DAdjFieldType, RNGType>;
           PTBC ptbc(ptbcParams, hmc, rng, dist, mt);
 
-          run_PTBC(ptbc, integratorParams, gaugeObsParams, ptbcSimLogParams,
-                   simLogParams);
+          ;
         }
 
       } else if (hmcParams.Nc == 3) {
@@ -387,8 +390,7 @@ int PTBC_execute(const std::string& input_file,
         using PTBC = PTBC<DGaugeFieldType, DAdjFieldType, RNGType>;
         PTBC ptbc(ptbcParams, hmc, rng, dist, mt);
 
-        run_PTBC(ptbc, integratorParams, gaugeObsParams, ptbcSimLogParams,
-                 simLogParams);
+        run_PTBC(ptbc, integratorParams);
 
       } else if (hmcParams.Nc == 2) {
         using DGaugeFieldType =
@@ -423,8 +425,7 @@ int PTBC_execute(const std::string& input_file,
         using PTBC = PTBC<DGaugeFieldType, DAdjFieldType, RNGType>;
         PTBC ptbc(ptbcParams, hmc, rng, dist, mt);
 
-        run_PTBC(ptbc, integratorParams, gaugeObsParams, ptbcSimLogParams,
-                 simLogParams);
+        run_PTBC(ptbc, integratorParams);
 
       } else if (hmcParams.Nc == 3) {
         printf("Error: SU(3) isn't supported yet");
@@ -504,8 +505,7 @@ int PTBC_execute(const std::string& input_file,
         using PTBC = PTBC<DGaugeFieldType, DAdjFieldType, RNGType>;
         PTBC ptbc(ptbcParams, hmc, rng, dist, mt);
 
-        run_PTBC(ptbc, integratorParams, gaugeObsParams, ptbcSimLogParams,
-                 simLogParams);
+        run_PTBC(ptbc, integratorParams);
 
       } else if (hmcParams.Nc == 2) {
         using DGaugeFieldType =
@@ -538,8 +538,7 @@ int PTBC_execute(const std::string& input_file,
         using PTBC = PTBC<DGaugeFieldType, DAdjFieldType, RNGType>;
         PTBC ptbc(ptbcParams, hmc, rng, dist, mt);
 
-        run_PTBC(ptbc, integratorParams, gaugeObsParams, ptbcSimLogParams,
-                 simLogParams);
+        run_PTBC(ptbc, integratorParams);
 
       } else if (hmcParams.Nc == 3) {
         printf("Error: SU(3) isn't supported yet");
@@ -624,8 +623,7 @@ int PTBC_execute(const std::string& input_file,
           using PTBC = PTBC<DGaugeFieldType, DAdjFieldType, RNGType>;
           PTBC ptbc(ptbcParams, hmc, rng, dist, mt);
 
-          run_PTBC(ptbc, integratorParams, gaugeObsParams, ptbcSimLogParams,
-                   simLogParams);
+          run_PTBC(ptbc, integratorParams);
         } else {
           using DGaugeFieldType =
               DeviceGaugeFieldType<4, 1, GaugeFieldKind::PTBC>;
@@ -661,8 +659,7 @@ int PTBC_execute(const std::string& input_file,
           using PTBC = PTBC<DGaugeFieldType, DAdjFieldType, RNGType>;
           PTBC ptbc(ptbcParams, hmc, rng, dist, mt);
 
-          run_PTBC(ptbc, integratorParams, gaugeObsParams, ptbcSimLogParams,
-                   simLogParams);
+          run_PTBC(ptbc, integratorParams);
         }
       } else if (hmcParams.Nc == 2) {
         if (fermionParams.preconditioning) {
@@ -712,8 +709,7 @@ int PTBC_execute(const std::string& input_file,
                 hmcParams.L2, hmcParams.L3);
           }
 
-          run_PTBC(ptbc, integratorParams, gaugeObsParams, ptbcSimLogParams,
-                   simLogParams);
+          run_PTBC(ptbc, integratorParams);
         } else {
           using DGaugeFieldType =
               DeviceGaugeFieldType<4, 2, GaugeFieldKind::PTBC>;
@@ -757,8 +753,7 @@ int PTBC_execute(const std::string& input_file,
                 hmcParams.L2, hmcParams.L3);
           }
 
-          run_PTBC(ptbc, integratorParams, gaugeObsParams, ptbcSimLogParams,
-                   simLogParams);
+          run_PTBC(ptbc, integratorParams);
         }
       } else if (hmcParams.Nc == 3) {
         printf("Error: SU(3) isn't supported yet");
@@ -806,8 +801,7 @@ int PTBC_execute(const std::string& input_file,
         using PTBC = PTBC<DGaugeFieldType, DAdjFieldType, RNGType>;
         PTBC ptbc(ptbcParams, hmc, rng, dist, mt);
 
-        run_PTBC(ptbc, integratorParams, gaugeObsParams, ptbcSimLogParams,
-                 simLogParams);
+        run_PTBC(ptbc, integratorParams);
       } else if (hmcParams.Nc == 2) {
         using DGaugeFieldType =
             DeviceGaugeFieldType<3, 2, GaugeFieldKind::PTBC>;
@@ -841,8 +835,7 @@ int PTBC_execute(const std::string& input_file,
         using PTBC = PTBC<DGaugeFieldType, DAdjFieldType, RNGType>;
         PTBC ptbc(ptbcParams, hmc, rng, dist, mt);
 
-        run_PTBC(ptbc, integratorParams, gaugeObsParams, ptbcSimLogParams,
-                 simLogParams);
+        run_PTBC(ptbc, integratorParams);
       } else if (hmcParams.Nc == 3) {
         printf("Error: SU(3) isn't supported yet");
         return 1;
@@ -887,8 +880,7 @@ int PTBC_execute(const std::string& input_file,
         using PTBC = PTBC<DGaugeFieldType, DAdjFieldType, RNGType>;
         PTBC ptbc(ptbcParams, hmc, rng, dist, mt);
 
-        run_PTBC(ptbc, integratorParams, gaugeObsParams, ptbcSimLogParams,
-                 simLogParams);
+        run_PTBC(ptbc, integratorParams);
       } else if (hmcParams.Nc == 2) {
         using DGaugeFieldType =
             DeviceGaugeFieldType<2, 2, GaugeFieldKind::PTBC>;
@@ -920,8 +912,7 @@ int PTBC_execute(const std::string& input_file,
         using PTBC = PTBC<DGaugeFieldType, DAdjFieldType, RNGType>;
         PTBC ptbc(ptbcParams, hmc, rng, dist, mt);
 
-        run_PTBC(ptbc, integratorParams, gaugeObsParams, ptbcSimLogParams,
-                 simLogParams);
+        run_PTBC(ptbc, integratorParams);
       } else if (hmcParams.Nc == 3) {
         printf("Error: SU(3) isn't supported yet");
         return 1;

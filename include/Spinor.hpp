@@ -289,6 +289,17 @@ KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, Nd> conj(const Spinor<Nc, Nd>& a) {
   }
   return res;
 }
+
+template <size_t Nc, size_t Nd>
+KOKKOS_INLINE_FUNCTION Spinor<Nc, Nd> deltaSpinor(index_t i) {
+  KOKKOS_ASSERT(i < Nc * Nd);
+  KOKKOS_ASSERT(i >= 0);
+  Spinor<Nc, Nd> a;
+  index_t dirac = i / Nc;
+  index_t color = i % Nc;
+  a[dirac][color] = 1;
+  return a;
+}
 template <size_t Nc, size_t Nd>
 void print_spinor_int(const Spinor<Nc, Nd>& s, const char* name = "Spinor") {
   printf("%s:\n", name);
