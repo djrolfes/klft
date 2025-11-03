@@ -132,4 +132,48 @@ constexpr KOKKOS_FORCEINLINE_FUNCTION
   return {new_idx, sign};
 }
 
+// Index helper for even odd spinor field
+
+// returns index of half field and parity (dont no if i need that) based on full
+// field index, assuming that e/o around x axis x axis is 0 index
+//
+template <size_t rank, typename indexType>
+constexpr KOKKOS_FORCEINLINE_FUNCTION
+    Kokkos::pair<Kokkos::Array<index_t, rank>, int>
+    index_full_to_half(const Kokkos::Array<indexType, rank>& idx) {
+  Kokkos::Array<index_t, rank> new_idx{};
+  // starting at index 0 is on purpose
+#pragma unroll
+  for (int i = 1; i < rank; ++i) {
+    auto temp = static_cast<index_t>(idx[i]);
+    new_idx[0] += temp;
+    new_idx[i] = temp;
+  }
+  auto parity = (new_idx[0] + idx[0]) & 1;
+  new_idx[0] = (idx[0] - ((new_idx[0] + parity) & 1)) >> 1;
+  return {new_idx, static_cast<int>(parity)};
+}
+
+/// @brief Index Helper function with calculates the Full index based on the
+/// half field index and parity
+/// @param idx the input index to be converted
+/// @param parity native parity of idx
+/// @return Index array of the full index
+template <size_t rank, typename indexType>
+constexpr KOKKOS_FORCEINLINE_FUNCTION Kokkos::Array<index_t, rank>
+index_half_to_full(const Kokkos::Array<indexType, rank>& idx,
+                   const int& parity) {
+  Kokkos::Array<index_t, rank> new_idx{};
+  // using 0 entry as temp storage for the sum of all other dims
+#pragma unroll
+  for (index_t i = 1; i < rank; i++) {
+    auto temp = static_cast<index_t>(idx[i]);
+    new_idx[0] += temp;
+    new_idx[i] = temp;
+  }
+  new_idx[0] = 2 * idx[0] + ((new_idx[0] + parity) & 1);
+
+  return new_idx;
+}
+
 }  // namespace klft

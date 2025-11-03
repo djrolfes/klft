@@ -1,5 +1,6 @@
 
 #include "wilsonflow_improv_testing.hpp"
+
 #include <getopt.h>
 #include <filesystem>
 #include "InputParser.hpp"
@@ -142,7 +143,7 @@ int test_wflow_improvement(const std::string& input_file,
     hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
     hmc.add_kinetic_monomial(0);
     if (resParsef > 0) {
-      auto diracParams = getDiracParams<4>(g_4_SU2.dimensions, fermionParams);
+      auto diracParams = getDiracParams(fermionParams);
       hmc.add_fermion_monomial<CGSolver, HWilsonDiracOperator,
                                DSpinorFieldType>(s_4_SU2, diracParams,
                                                  fermionParams.tol, rng, 0);
@@ -176,7 +177,7 @@ int test_wflow_improvement(const std::string& input_file,
     hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
     hmc.add_kinetic_monomial(0);
     if (resParsef > 0) {
-      auto diracParams = getDiracParams<4>(g_4_SU3.dimensions, fermionParams);
+      auto diracParams = getDiracParams(fermionParams);
       hmc.add_fermion_monomial<CGSolver, HWilsonDiracOperator,
                                DSpinorFieldType>(s_4_SU3, diracParams,
                                                  fermionParams.tol, rng, 0);

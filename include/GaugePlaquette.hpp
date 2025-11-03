@@ -197,7 +197,7 @@ real_t get_spmax(const typename DGaugeFieldType::type gauge_field) {
   Kokkos::parallel_reduce(
       "get h (sp_max)", policy,
       KOKKOS_LAMBDA(size_t i0, size_t i1, size_t i2, size_t i3,
-                    real_t & local_max) {
+                    real_t& local_max) {
         // GPlaq(i0, i1, i2, i3);
         real_t s = 0.0;
         for (index_t mu = 0; mu < Nd; ++mu) {
@@ -235,8 +235,7 @@ real_t get_spavg(const typename DGaugeFieldType::type gauge_field) {
   auto policy = Policy<Nd>({0, 0, 0, 0}, gauge_field.dimensions);
   Kokkos::parallel_reduce(
       "get h (sp_max)", policy,
-      KOKKOS_LAMBDA(size_t i0, size_t i1, size_t i2, size_t i3,
-                    real_t & local) {
+      KOKKOS_LAMBDA(size_t i0, size_t i1, size_t i2, size_t i3, real_t& local) {
         // GPlaq(i0, i1, i2, i3);
         real_t local_avg = 0.0;
         int tmp = 0;

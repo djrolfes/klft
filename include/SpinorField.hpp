@@ -21,6 +21,7 @@
 
 #pragma once
 #include "GLOBAL.hpp"
+#include "SpinorPointSource.hpp"
 #include "Tuner.hpp"
 // Nc number of colors
 // RepDim Dimension of Gamma matrices, Nd = RepDim
@@ -32,7 +33,9 @@ struct deviceSpinorField {
   static const size_t RepDim =
       _RepDim;  // RepDim is the dimension of the Gamma matrices
   deviceSpinorField() = default;
-
+  // Is this the best option?
+  deviceSpinorField(deviceSpinorPointSource<Nc, RepDim>& a)
+      : field(a.field), dimensions(a.dimensions) {}
   // initialize all sites to a given value
 
   deviceSpinorField(const index_t L0,
@@ -107,10 +110,10 @@ struct deviceSpinorField {
         KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2,
                       const index_t i3) {
 #pragma unroll
-          for (index_t c1 = 0; c1 < Nc; ++c1) {
+          for (index_t c2 = 0; c2 < RepDim; ++c2) {
 #pragma unroll
-            for (index_t c2 = 0; c2 < RepDim; ++c2) {
-              V(i0, i1, i2, i3)[c1][c2] = init;
+            for (index_t c1 = 0; c1 < Nc; ++c1) {
+              V(i0, i1, i2, i3)[c2][c1] = init;
             }
           }
         });
@@ -145,13 +148,15 @@ struct deviceSpinorField {
         IndexArray<4>{L0, L1, L2, L3},
         KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2,
                       const index_t i3) {
+          // printf("half Index: [%i,%i,%i,%i]\n", i0, i1, i2, i3);
+
           auto generator = rng.get_state();
 #pragma unroll
-          for (index_t c1 = 0; c1 < Nc; ++c1) {
+          for (index_t c2 = 0; c2 < RepDim; ++c2) {
 #pragma unroll
-            for (index_t c2 = 0; c2 < RepDim; ++c2) {
+            for (index_t c1 = 0; c1 < Nc; ++c1) {
               V(i0, i1, i2, i3)
-              [c1][c2] = complex_t(generator.normal(mean, std),
+              [c2][c1] = complex_t(generator.normal(mean, std),
                                    generator.normal(mean, std));
             }
           }
@@ -214,6 +219,8 @@ struct deviceSpinorField3D {
       : dimensions({L0, L1, L2}) {
     do_init(L0, L1, L2, field, init);
   }
+  deviceSpinorField3D(deviceSpinorPointSource3D<Nc, RepDim>& a)
+      : field(a.field), dimensions(a.dimensions) {}
 
   deviceSpinorField3D(const IndexArray<rank>& dimensions, const complex_t init)
       : dimensions(dimensions) {
@@ -270,9 +277,9 @@ struct deviceSpinorField3D {
         IndexArray<rank>{L0, L1, L2},
         KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2) {
 #pragma unroll
-          for (index_t c1 = 0; c1 < Nc; ++c1) {
+          for (index_t c1 = 0; c1 < RepDim; ++c1) {
 #pragma unroll
-            for (index_t c2 = 0; c2 < RepDim; ++c2) {
+            for (index_t c2 = 0; c2 < Nc; ++c2) {
               V(i0, i1, i2)[c1][c2] = init;
             }
           }
@@ -308,9 +315,9 @@ struct deviceSpinorField3D {
         KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2) {
           auto generator = rng.get_state();
 #pragma unroll
-          for (index_t c1 = 0; c1 < Nc; ++c1) {
+          for (index_t c1 = 0; c1 < RepDim; ++c1) {
 #pragma unroll
-            for (index_t c2 = 0; c2 < RepDim; ++c2) {
+            for (index_t c2 = 0; c2 < Nc; ++c2) {
               V(i0, i1, i2)
               [c1][c2] = complex_t(generator.normal(mean, std),
                                    generator.normal(mean, std));
@@ -365,6 +372,8 @@ struct deviceSpinorField2D {
       : dimensions({L0, L1}) {
     do_init(L0, L1, field, init);
   }
+  deviceSpinorField2D(deviceSpinorPointSource2D<Nc, RepDim>& a)
+      : field(a.field), dimensions(a.dimensions) {}
 
   deviceSpinorField2D(const IndexArray<rank>& dimensions, const complex_t init)
       : dimensions(dimensions) {
@@ -418,9 +427,9 @@ struct deviceSpinorField2D {
         IndexArray<rank>{L0, L1},
         KOKKOS_LAMBDA(const index_t i0, const index_t i1) {
 #pragma unroll
-          for (index_t c1 = 0; c1 < Nc; ++c1) {
+          for (index_t c1 = 0; c1 < RepDim; ++c1) {
 #pragma unroll
-            for (index_t c2 = 0; c2 < RepDim; ++c2) {
+            for (index_t c2 = 0; c2 < Nc; ++c2) {
               V(i0, i1)[c1][c2] = init;
             }
           }
@@ -454,9 +463,9 @@ struct deviceSpinorField2D {
         KOKKOS_LAMBDA(const index_t i0, const index_t i1) {
           auto generator = rng.get_state();
 #pragma unroll
-          for (index_t c1 = 0; c1 < Nc; ++c1) {
+          for (index_t c1 = 0; c1 < RepDim; ++c1) {
 #pragma unroll
-            for (index_t c2 = 0; c2 < RepDim; ++c2) {
+            for (index_t c2 = 0; c2 < Nc; ++c2) {
               V(i0, i1)
               [c1][c2] = complex_t(generator.normal(mean, std),
                                    generator.normal(mean, std));

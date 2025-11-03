@@ -1,7 +1,9 @@
 #include <getopt.h>
+
 #include <cassert>
 #include <cstddef>
 #include <memory>
+
 #include "AdjointSUN.hpp"
 #include "FieldTypeHelper.hpp"
 #include "GLOBAL.hpp"
@@ -121,7 +123,7 @@ int test_reversability(const std::string& input_file,
   hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
   hmc.add_kinetic_monomial(0);
   if (resParsef > 0) {
-    auto diracParams = getDiracParams<4>(g_4_SU2.dimensions, fermionParams);
+    auto diracParams = getDiracParams(fermionParams);
     hmc.add_fermion_monomial<CGSolver, HWilsonDiracOperator, DSpinorFieldType>(
         s_4_SU2, diracParams, fermionParams.tol, rng, 0);
   }

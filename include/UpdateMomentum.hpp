@@ -17,6 +17,24 @@
 // along with KLFT.  If not, see <http://www.gnu.org/licenses/>.
 //
 //******************************************************************************/
+//******************************************************************************/
+//
+// This file is part of the Kokkos Lattice Field Theory (KLFT) library.
+//
+// KLFT is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// KLFT is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with KLFT.  If not, see <http://www.gnu.org/licenses/>.
+//
+//******************************************************************************/
 #pragma once
 #include "FieldTypeHelper.hpp"
 #include "GLOBAL.hpp"
@@ -53,11 +71,12 @@ class UpdateMomentumGauge : public UpdateMomentum {
   using GaugeFieldType = typename DGaugeFieldType::type;
   using AdjFieldType = typename DAdjFieldType::type;
   GaugeFieldType gauge_field;
+  typename DeviceGaugeFieldType<rank, Nc>::type staple_field;
   AdjFieldType adjoint_field;
   real_t beta;
 
   real_t eps;
-  ConstGaugeFieldType<rank, Nc> staple_field;
+  // ConstGaugeFieldType<rank, Nc> staple_field;
 
   UpdateMomentumGauge() = delete;
   ~UpdateMomentumGauge() = default;
@@ -69,7 +88,10 @@ class UpdateMomentumGauge : public UpdateMomentum {
         gauge_field(gauge_field_),
         adjoint_field(adjoint_field_),
         beta(beta_),
-        eps(0.0) {}
+        eps(0.0) {
+    this->staple_field = typename DeviceGaugeFieldType<rank, Nc>::type(
+        gauge_field.dimensions, complex_t(0.0, 0.0));
+  }
   // todo: Add Force as a function instead of it being incorporated into the
   // functor.
 
@@ -86,6 +108,7 @@ class UpdateMomentumGauge : public UpdateMomentum {
   }
 
   void update(const real_t step_size) override {
+    Kokkos::Profiling::pushRegion("updateMomentumGauge");
     eps = step_size;
     IndexArray<rank> start;
     for (size_t i = 0; i < rank; ++i) {
@@ -93,11 +116,12 @@ class UpdateMomentumGauge : public UpdateMomentum {
     }
 
     // launch the kernels
-    staple_field = stapleField<DGaugeFieldType>(gauge_field);
+    stapleField<DGaugeFieldType>(gauge_field, staple_field);
     Kokkos::fence();
     tune_and_launch_for<rank>("UpdateMomentumGauge", start,
                               gauge_field.dimensions, *this);
     Kokkos::fence();
+    Kokkos::Profiling::popRegion();
   }
 };
 

@@ -22,6 +22,7 @@
 
 #pragma once
 #include <mpi.h>
+
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -122,7 +123,6 @@ typedef enum {
   MPI_GAUGE_OBSERVABLES_WILSONFLOW_DETAILS = 8,
   MPI_GAUGE_OBSERVABLES_WILSONFLOW_DETAILS_SIZE = 9
 } MPI_GaugeObservableTags;
-
 template <typename DGaugeFieldType>
 void measureGaugeObservablesPTBC(const typename DGaugeFieldType::type& g_in,
                                  GaugeObservableParams& params,
@@ -135,8 +135,7 @@ void measureGaugeObservablesPTBC(const typename DGaugeFieldType::type& g_in,
       DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc;
 
   if ((params.measurement_interval == 0) ||
-      (step % params.measurement_interval != 0) || (step == 0) ||
-      step < params.thermalization_steps) {
+      (step % params.measurement_interval != 0) || (step == 0)) {
     return;
   }
 
@@ -159,23 +158,13 @@ void measureGaugeObservablesPTBC(const typename DGaugeFieldType::type& g_in,
 
     if constexpr (Nd == 4) {
       // Wilson flow is only defined for 4D gauge fields
-      WilsonFlow<DGaugeFieldType> wf(g_in, params.wilson_flow_params);
+      WilsonFlowParams wfparams = params.wilson_flow_params;
+      WilsonFlow<DGaugeFieldType> wf(g_in, wfparams);
       if (params.do_wilson_flow) {
         if (KLFT_VERBOSITY > 1) {
           printf("Performing Wilson flow...\n");
         }
         wf.flow();
-        DEBUG_MPI_PRINT("Wilson flow done on compute rank %d\n", compute_rank);
-        if (rank != 0 && params.wilson_flow_params.log_details) {
-          std::string log_string = params.wilson_flow_params.log_strings.back();
-          size_t log_string_size = log_string.size();
-          MPI_Send(&log_string_size, 1, mpi_size_t(), 0,
-                   MPI_GAUGE_OBSERVABLES_WILSONFLOW_DETAILS_SIZE,
-                   MPI_COMM_WORLD);
-          MPI_Send(log_string.c_str(), log_string.size(), MPI_CHAR, 0,
-                   MPI_GAUGE_OBSERVABLES_WILSONFLOW_DETAILS, MPI_COMM_WORLD);
-          params.wilson_flow_params.log_strings.clear();
-        }
         if (KLFT_VERBOSITY > 1) {
           printf("Wilson flow completed.\n");
         }
@@ -408,8 +397,7 @@ void measureGaugeObservables(const typename DGaugeFieldType::type& g_in,
       DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc;
   // check if the step is a measurement step
   if ((params.measurement_interval == 0) ||
-      (step % params.measurement_interval != 0) || (step == 0) ||
-      step < params.thermalization_steps) {
+      (step % params.measurement_interval != 0) || (step == 0)) {
     return;
   }
   // otherwise, carry out the measurements
@@ -559,7 +547,7 @@ inline void flushTopologicalCharge(std::ofstream& file,
     return;
   }
   if (HEADER)
-    file << "# step, topological_charge\n";
+    file << "step,topological_charge\n";
   for (size_t i = 0; i < params.measurement_steps.size(); ++i) {
     file << params.measurement_steps[i] << ", "
          << params.topological_charge_measurements[i] << "\n";
@@ -580,7 +568,7 @@ inline void flushActionDensity(std::ofstream& file,
     return;
   }
   if (HEADER)
-    file << "# step, action_density, tsquaredxaction_density\n";
+    file << "step, action_density,tsquaredxaction_density\n";
   for (size_t i = 0; i < params.measurement_steps.size(); ++i) {
     file << params.measurement_steps[i] << ", "
          << params.action_density_measurements[i] << ", "
@@ -605,7 +593,7 @@ inline void flushPlaquette(std::ofstream& file,
     return;
   }
   if (HEADER)
-    file << "# step, plaquette\n";
+    file << "step,plaquette\n";
   for (size_t i = 0; i < params.measurement_steps.size(); ++i) {
     file << params.measurement_steps[i] << ", "
          << params.plaquette_measurements[i] << "\n";
@@ -627,7 +615,7 @@ inline void flushWilsonLoopTemporal(std::ofstream& file,
     return;
   }
   if (HEADER)
-    file << "# step, L, T, W_temp\n";
+    file << "step,L,T,W_temp\n";
   for (size_t i = 0; i < params.measurement_steps.size(); ++i) {
     for (const auto& measurement : params.W_temp_measurements[i]) {
       file << params.measurement_steps[i] << ", " << measurement[0] << ", "
@@ -651,7 +639,7 @@ inline void flushWilsonLoopMuNu(std::ofstream& file,
     return;
   }
   if (HEADER)
-    file << "# step, mu, nu, Lmu, Lnu, W_mu_nu\n";
+    file << "step,mu,nu,Lmu,Lnu,W_mu_nu\n";
   for (size_t i = 0; i < params.measurement_steps.size(); ++i) {
     for (const auto& measurement : params.W_mu_nu_measurements[i]) {
       file << params.measurement_steps[i] << ", " << measurement[0] << ", "
@@ -690,7 +678,7 @@ inline void clearAllGaugeObservables(GaugeObservableParams& params) {
   params.W_mu_nu_measurements.clear();
   params.action_density_measurements.clear();
   params.sp_max_measurements.clear();
-  params.wilson_flow_params.log_strings.clear();
+
   // ...
   // add more clear functions for other observables here
 }
@@ -745,13 +733,6 @@ inline void forceflushAllGaugeObservables(
     file.close();
   }
 
-  if (params.do_wilson_flow && params.wilson_flow_params.log_details &&
-      params.wilson_flow_params.wilson_flow_filename != "") {
-    std::ofstream file(params.wilson_flow_params.wilson_flow_filename,
-                       std::ios::app);
-    flushWilsonFlowDetails(file, params, HEADER);
-    file.close();
-  }
   // ...
   // add more flush functions for other observables here
   if (clear_after_flush) {

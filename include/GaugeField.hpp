@@ -28,7 +28,7 @@ namespace klft {
 
 template <size_t Nd, size_t Nc>
 struct deviceGaugeField {
-  deviceGaugeField() = delete;
+  deviceGaugeField() = default;
 
   // deviceGaugeField(GaugeField<Nd, Nc> &f_in)
   //     : dimensions({static_cast<int>(f_in.extent(0)),
@@ -227,7 +227,7 @@ struct deviceGaugeField {
   }
 
   GaugeField<Nd, Nc> field;
-  const IndexArray<4> dimensions;
+  IndexArray<4> dimensions;
 
   // define accessors for the field
   template <typename indexType>
@@ -271,43 +271,48 @@ struct deviceGaugeField {
                                        const SUN<Nc>& value) const {
     field(i, j, k, l, mu) = (value);  // raw write
   }
+  template <index_t mu>
+  void openBC() {
+    static_assert(mu >= 0 && mu < 4, "Error: mu must be between 0 and 4");
 
-  // template <index_t mu> void openBC() {
-  //   const IndexArray<3> start{0, 0, 0};
-  //   std::vector<index_t> end_dims_no_mu;
-  //   for (index_t i = 0; i < 3; ++i) {
-  //     if (i == mu)
-  //       continue;
-  //     end_dims_no_mu.push_back(dimensions[i]);
-  //   }
-  //   const IndexArray<3> end_dims(
-  //       {end_dims_no_mu[0], end_dims_no_mu[1], end_dims_no_mu[2]});
-  //   tune_and_launch_for<3>(
-  //       "openBC", start, end_dims,
-  //       KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2) {
-  //         if constexpr (mu == 0) {
-  //           IndexArray<4> site{dimensions[0], i0, i1, i2};
-  //           field(site, mu) =
-  //               complex_t(std::numeric_limits<real_t>::epsilon(), 0.0);
-  //         }
-  //         if constexpr (mu == 1) {
-  //           IndexArray<4> site{i0, dimensions[1], i1, i2};
-  //           field(site, mu) =
-  //               complex_t(std::numeric_limits<real_t>::epsilon(), 0.0);
-  //         }
-  //         if constexpr (mu == 2) {
-  //           IndexArray<4> site{i0, i1, dimensions[2], i2};
-  //           field(site, mu) =
-  //               complex_t(std::numeric_limits<real_t>::epsilon(), 0.0);
-  //         }
-  //         if constexpr (mu == 3) {
-  //           IndexArray<4> site{i0, i1, i2, dimensions[3]};
-  //           field(site, mu) =
-  //               complex_t(std::numeric_limits<real_t>::epsilon(), 0.0);
-  //         }
-  //       });
-  // }
-
+    const IndexArray<3> start{0, 0, 0};
+    std::vector<index_t> end_dims_no_mu;
+    for (index_t i = 0; i < 3; ++i) {
+      if (i == mu)
+        continue;
+      end_dims_no_mu.push_back(dimensions[i]);
+    }
+    const IndexArray<3> end_dims(
+        {end_dims_no_mu[0], end_dims_no_mu[1], end_dims_no_mu[2]});
+    tune_and_launch_for<3>(
+        "openBC", start, end_dims,
+        KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2) {
+          IndexArray<4> site{dimensions[0], dimensions[1], dimensions[2],
+                             dimensions[3]};
+          if constexpr (mu == 0) {
+            site[1] = i0;
+            site[2] = i1;
+            site[3] = i2;
+          }
+          if constexpr (mu == 1) {
+            site[0] = i0;
+            site[2] = i1;
+            site[3] = i2;
+          }
+          if constexpr (mu == 2) {
+            site[0] = i0;
+            site[1] = i1;
+            site[3] = i2;
+          }
+          if constexpr (mu == 3) {
+            site[0] = i0;
+            site[1] = i1;
+            site[2] = i2;
+          }
+          field(site, mu) =
+              complex_t(std::numeric_limits<real_t>::epsilon(), 0.0);
+        });
+  }
   template <typename indexType>
   KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> staple(
       const Kokkos::Array<indexType, 4> site,
@@ -526,9 +531,9 @@ struct deviceGaugeField {
 template <size_t Nd, size_t Nc>
 struct deviceGaugeField3D {
   GaugeField3D<Nd, Nc> field;
-  const IndexArray<3> dimensions;
+  IndexArray<3> dimensions;
 
-  deviceGaugeField3D() = delete;
+  deviceGaugeField3D() = default;
 
   // initialize all sites to a given value
   deviceGaugeField3D(const index_t L0,
@@ -725,36 +730,38 @@ struct deviceGaugeField3D {
                                        const SUN<Nc>& value) const {
     field(i, j, k, mu) = (value);  // raw write
   }
+  template <index_t mu>
+  void openBC() {
+    static_assert(mu >= 0 && mu < 3, "Error: mu must be between 0 and 3");
 
-  // template <index_t mu> void openBC() {
-  //   const IndexArray<2> start{0, 0};
-  //   std::vector<index_t> end_dims_no_mu;
-  //   for (index_t i = 0; i < 2; ++i) {
-  //     if (i == mu)
-  //       continue;
-  //     end_dims_no_mu.push_back(dimensions[i]);
-  //   }
-  //   const IndexArray<2> end_dims({end_dims_no_mu[0], end_dims_no_mu[1]});
-  //   tune_and_launch_for<2>(
-  //       "openBC3D", start, end_dims,
-  //       KOKKOS_LAMBDA(const index_t i0, const index_t i1) {
-  //         if constexpr (mu == 0) {
-  //           IndexArray<3> site{dimensions[0], i0, i1};
-  //           field(site, mu) =
-  //               complex_t(std::numeric_limits<real_t>::epsilon(), 0.0);
-  //         }
-  //         if constexpr (mu == 1) {
-  //           IndexArray<3> site{i0, dimensions[1], i1};
-  //           field(site, mu) =
-  //               complex_t(std::numeric_limits<real_t>::epsilon(), 0.0);
-  //         }
-  //         if constexpr (mu == 2) {
-  //           IndexArray<3> site{i0, i1, dimensions[2]};
-  //           field(site, mu) =
-  //               complex_t(std::numeric_limits<real_t>::epsilon(), 0.0);
-  //         }
-  //       });
-  // }
+    const IndexArray<2> start{0, 0};
+    std::vector<index_t> end_dims_no_mu;
+    for (index_t i = 0; i < 2; ++i) {
+      if (i == mu)
+        continue;
+      end_dims_no_mu.push_back(dimensions[i]);
+    }
+    const IndexArray<2> end_dims({end_dims_no_mu[0], end_dims_no_mu[1]});
+    tune_and_launch_for<2>(
+        "openBC3D", start, end_dims,
+        KOKKOS_LAMBDA(const index_t i0, const index_t i1) {
+          IndexArray<3> site{this->dimensions[0], dimensions[1], dimensions[2]};
+          if constexpr (mu == 0) {
+            site[1] = i0;
+            site[2] = i1;
+          }
+          if constexpr (mu == 1) {
+            site[0] = i0;
+            site[2] = i1;
+          }
+          if constexpr (mu == 2) {
+            site[0] = i0;
+            site[1] = i1;
+          }
+          field(site, mu) =
+              complex_t(std::numeric_limits<real_t>::epsilon(), 0.0);
+        });
+  }
 
   template <typename indexType>
   KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> staple(
@@ -817,7 +824,7 @@ struct deviceGaugeField3D {
 
 template <size_t Nd, size_t Nc>
 struct deviceGaugeField2D {
-  deviceGaugeField2D() = delete;
+  deviceGaugeField2D() = default;
 
   // initialize all sites to a given value
   deviceGaugeField2D(const index_t L0, const index_t L1, const complex_t init)
@@ -954,7 +961,7 @@ struct deviceGaugeField2D {
   }
 
   GaugeField2D<Nd, Nc> field;
-  const IndexArray<2> dimensions;
+  IndexArray<2> dimensions;
 
   // define accessors for the field
   template <typename indexType>
@@ -986,6 +993,26 @@ struct deviceGaugeField2D {
     return field(site[0], site[1], mu);
   }
 
+  template <index_t mu>
+  void openBC() {
+    static_assert(mu >= 0 && mu < 2, "Error: mu must be between 0 and 2");
+
+    const index_t start = 0;
+    const index_t end = mu == 0 ? dimensions[0] : dimensions[1];
+    Kokkos::parallel_for(
+        Policy1D<>(start, end), KOKKOS_LAMBDA(const index_t i0) {
+          IndexArray<2> site{dimensions[0], dimensions[1]};
+
+          if constexpr (mu == 0) {
+            site[1] = i0;
+          }
+          if constexpr (mu == 1) {
+            site[0] = i0;
+          }
+          field(site, mu) =
+              complex_t(std::numeric_limits<real_t>::epsilon(), 0.0);
+        });
+  }
   template <typename indexType>
   KOKKOS_FORCEINLINE_FUNCTION void set(const indexType i,
                                        const indexType j,
@@ -993,24 +1020,6 @@ struct deviceGaugeField2D {
                                        const SUN<Nc>& value) const {
     field(i, j, mu) = (value);  // raw write
   }
-
-  // template <index_t mu> void openBC() {
-  //   const index_t start = 0;
-  //   const index_t end = mu == 0 ? dimensions[0] : dimensions[1];
-  //   Kokkos::parallel_for(
-  //       Policy1D<>(start, end), KOKKOS_LAMBDA(const index_t i0) {
-  //         if constexpr (mu == 0) {
-  //           IndexArray<2> site{dimensions[0], i0};
-  //           field(site, mu) =
-  //               complex_t(std::numeric_limits<real_t>::epsilon(), 0.0);
-  //         }
-  //         if constexpr (mu == 1) {
-  //           IndexArray<2> site{i0, dimensions[1]};
-  //           field(site, mu) =
-  //               complex_t(std::numeric_limits<real_t>::epsilon(), 0.0);
-  //         }
-  //       });
-  // }
 
   template <typename indexType>
   KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> staple(

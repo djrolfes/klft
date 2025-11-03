@@ -3,7 +3,7 @@
 #include <Kokkos_Complex.hpp>
 #include <Kokkos_Core.hpp>
 
-#include "../../include/GDiracOperator.hpp"
+#include "../../include/DiracOperator.hpp"
 #include "../../include/GammaMatrix.hpp"
 #include "../../include/Solver.hpp"
 #include "../../include/SpinorField.hpp"
@@ -35,16 +35,14 @@ int main(int argc, char* argv[]) {
     const int verbosity = std::getenv("KLFT_VERBOSITY")
                               ? std::atoi(std::getenv("KLFT_VERBOSITY"))
                               : 10;
-    setVerbosity(verbosity);
+    setVerbosity(5);
     printf("%i", KLFT_VERBOSITY);
     const size_t N = 3;
     printf("\n=== Testing DiracOperator SU(%zu)  ===\n", N);
     printf("\n= Testing hermiticity =\n");
     index_t L0 = 32, L1 = 32, L2 = 32, L3 = 32;
-    auto gammas = get_gammas<4>();
-    GammaMat<4> gamma5 = get_gamma5();
     IndexArray<4> dims = {L0, L1, L2, L3};
-    diracParams<4, 4> param(dims, gammas, gamma5, 0.1);
+    diracParams param(0.15);
 
     printf("Lattice Dimension %ix%ix%ix%i \n", L0, L1, L2, L3);
     printf("Generate SpinorFields...\n");
@@ -55,8 +53,8 @@ int main(int argc, char* argv[]) {
     deviceSpinorField<N, 4> x0(L0, L1, L2, L3, complex_t(0.0, 0.0));
     deviceGaugeField<4, N> gauge(L0, L1, L2, L3, random_pool, 1);
     printf("Instantiate DiracOperator...\n");
-    DiracOperator<WilsonDiracOperator, DeviceSpinorFieldType<4, N, 4>,
-                  DeviceGaugeFieldType<4, N>>
+    WilsonDiracOperator<DeviceSpinorFieldType<4, N, 4>,
+                        DeviceGaugeFieldType<4, N>>
         D(gauge, param);
     printf("Apply dirac Operator...\n");
     // print_spinor(u(0, 0, 0, 0));
@@ -66,7 +64,7 @@ int main(int argc, char* argv[]) {
     printf("QQ^\\dagger Kernel Time:     %11.4e s\n", diracTime1);
     // print_spinor(test(0, 0, 0, 0), "Spinor to solve before solving");
     printf("Initialize Solver...\n");
-    CGSolver<WilsonDiracOperator, DeviceSpinorFieldType<4, N, 4>,
+    BiCGStab<WilsonDiracOperator, DeviceSpinorFieldType<4, N, 4>,
              DeviceGaugeFieldType<4, N>>
         solver(test, x, D);
 
@@ -81,8 +79,8 @@ int main(int argc, char* argv[]) {
     printf("Comparing Solver result to expected result...\n");
     // print_spinor<3, 4>(solver.x(0, 0, 0, 0) - u(0, 0, 0, 0), "Solver
     // Result");
-    auto res_norm =
-        spinor_norm<4, N, 4>(spinor_sub_mul<4, N, 4>(u, solver.x, 1));
+    auto res_norm = spinor_norm<4, N, 4>(
+        axpy<DeviceSpinorFieldType<4, N, 4>>(-1, solver.x, u));
     auto norm = spinor_norm<4, N, 4>(u);
 
     printf("Norm of Residual: %.20f\n", res_norm / norm);

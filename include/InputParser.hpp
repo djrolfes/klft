@@ -23,6 +23,9 @@
 
 #pragma once
 #include <yaml-cpp/yaml.h>
+
+#include "FermionObservable.hpp"
+#include "FermionParams.hpp"
 #include "GaugeObservable.hpp"
 #include "HMC_Params.hpp"
 #include "Metropolis_Params.hpp"
@@ -138,23 +141,6 @@ inline int parseInputFile(const std::string& filename,
             wfp_node["tau"].as<real_t>();
         gaugeObservableParams.wilson_flow_params.eps =
             wfp_node["eps"].as<real_t>();
-        gaugeObservableParams.wilson_flow_params.dynamical_flow =
-            wfp_node["dynamical_flow"].as<bool>(false);
-        gaugeObservableParams.wilson_flow_params.min_flow_time =
-            wfp_node["min_flow_time"].as<real_t>(-1.0);
-        gaugeObservableParams.wilson_flow_params.max_flow_time =
-            wfp_node["max_flow_time"].as<real_t>(-1.0);
-        gaugeObservableParams.wilson_flow_params.sp_max_target =
-            wfp_node["sp_max_target"].as<real_t>(0.067);
-        gaugeObservableParams.wilson_flow_params.t_sqrd_E_target =
-            wfp_node["t_sqrd_E_target"].as<real_t>(0.1);
-        gaugeObservableParams.wilson_flow_params.first_tE_measure_step =
-            wfp_node["first_tE_measure_step"].as<size_t>(10);
-        gaugeObservableParams.wilson_flow_params.log_details =
-            wfp_node["log_details"].as<bool>(false);
-        gaugeObservableParams.wilson_flow_params.wilson_flow_filename =
-            output_directory +
-            wfp_node["wilson_flow_filename"].as<std::string>("");
 
         // Recalculate eps based on parsed values
         if (gaugeObservableParams.wilson_flow_params.eps > 0) {
@@ -172,8 +158,10 @@ inline int parseInputFile(const std::string& filename,
           gp["topological_charge_filename"].as<std::string>("");
       gaugeObservableParams.plaquette_filename =
           output_directory + gp["plaquette_filename"].as<std::string>("");
+      output_directory + gp["plaquette_filename"].as<std::string>("");
       gaugeObservableParams.W_temp_filename =
           output_directory + gp["W_temp_filename"].as<std::string>("");
+      output_directory + gp["W_temp_filename"].as<std::string>("");
       gaugeObservableParams.W_mu_nu_filename =
           output_directory + gp["W_mu_nu_filename"].as<std::string>("");
       gaugeObservableParams.action_density_filename =
@@ -198,7 +186,39 @@ inline int parseInputFile(const std::string& filename,
     return false;
   }
 }
+inline int parseInputFile(const std::string& filename,
+                          const std::string& output_directory,
+                          FermionObservableParams& fobs) {
+  try {
+    YAML::Node config = YAML::LoadFile(filename);
+    if (config["FermionObservableParams"]) {
+      const auto& mp = config["FermionObservableParams"];
+      fobs.measurement_interval = mp["measurement_interval"].as<size_t>(0);
 
+      fobs.measure_pion_correlator =
+          mp["measure_pion_correlator"].as<bool>(false);
+      fobs.pion_correlator_filename =
+          output_directory + mp["pion_correlator_filename"].as<std::string>("");
+      fobs.tol = mp["tol"].as<real_t>(10e-8);
+      fobs.flush = mp["flush"].as<size_t>(25);
+      fobs.write_to_file = mp["write_to_file"].as<bool>(false);
+      fobs.kappa = mp["kappa"].as<real_t>(0.15);
+      fobs.RepDim = mp["RepDim"].as<size_t>(4);
+      fobs.write_to_file = mp["write_to_file"].as<bool>(false);
+      fobs.preconditioning = mp["preconditioning"].as<bool>(false);
+      fobs.n_sources = mp["n_sources"].as<index_t>(12);
+    } else {
+      printf("Info: No Fermionic Measurments are done!\n");
+      return false;
+    }
+
+  } catch (const YAML::Exception& e) {
+    printf("(FermionObservableParams) Error parsing input file: %s\n",
+           e.what());
+    return false;
+  }
+  return true;
+}
 // get GaugeObservableParams from input file
 inline bool parseInputFile(const std::string& filename,
                            const std::string& output_directory,
@@ -223,7 +243,7 @@ inline bool parseInputFile(const std::string& filename,
         // Default: single defect value
         ptbcParams.n_sims = 1;
         ptbcParams.defects = {1.0};  // will this error without resizing?
-      }                              // ...
+      }  // ...
     } else {
       printf("Error: PTBCParams not found in input file\n");
       return false;
@@ -307,7 +327,7 @@ inline int parseInputFile(const std::string& filename,
       fermionParams.Solver = fp["solver"].as<std::string>("CG");
       fermionParams.RepDim = fp["RepDim"].as<size_t>(4);
       fermionParams.kappa = fp["kappa"].as<real_t>(0.1);
-
+      fermionParams.preconditioning = fp["preconditioning"].as<bool>(false);
       fermionParams.tol = fp["tol"].as<real_t>(1e-8);
     } else {
       // No Fermions
@@ -414,6 +434,8 @@ inline int parseInputFile(const std::string& filename,
       simParams.log_interval = mp["log_interval"].as<size_t>(0);
       simParams.log_filename =
           output_directory + mp["log_filename"].as<std::string>("");
+      simParams.log_filename =
+          output_directory + mp["log_filename"].as<std::string>("");
       simParams.write_to_file = mp["write_to_file"].as<bool>(false);
       simParams.flush = mp["flush"].as<size_t>(25);
 
@@ -446,8 +468,8 @@ inline int parseSanityChecks(const Integrator_Params& iparams,
   // Check if the gauge monomial parameters are set
   if (gmparams.beta <= 0) {
     printf("Error: Gauge Monomial beta must be positive\n");
-    // TODO: Change back
-    //  return false;
+
+    return false;
   }
   printf("resParsef: %d\n", resParsef);
   if (!(resParsef <= 0)) {
@@ -462,7 +484,8 @@ inline int parseSanityChecks(const Integrator_Params& iparams,
       return false;
     }
     // Check for correct solver
-    if (!(fparams.Solver == "CG" && fparams.fermion_type == "HWilson")) {
+    if (!(fparams.Solver == "CG" && (fparams.fermion_type == "HWilson" ||
+                                     fparams.fermion_type == "Wilson"))) {
       printf(
           "Error: Unsupported Fermion Monomial solver: %s for Fermion Type: "
           "%s\n",
@@ -476,10 +499,10 @@ inline int parseSanityChecks(const Integrator_Params& iparams,
       return false;
     }
     // Check if the fermion monomial parameters are set
-    // if (fparams.kappa < 0) {
-    //   printf("Error: Fermion Monomial kappa must be positive\n");
-    //   return false;
-    // }
+    if (fparams.kappa < 0) {
+      printf("Error: Fermion Monomial kappa must be positive\n");
+      return false;
+    }
   }
   return true;
   //

@@ -25,6 +25,7 @@
 
 #pragma once
 #include <mpi.h>
+
 #include <Kokkos_Core.hpp>
 #include <Kokkos_Random.hpp>
 #include <type_traits>
@@ -190,8 +191,8 @@ template <size_t Nc>
 using SUN = Wrapper<Kokkos::Array<Kokkos::Array<complex_t, Nc>, Nc>>;
 
 // define Spinor Type
-// info correct dispatch is only guaranteed for    Nd != Nc ! -> Conflicts with
-// SUN.hpp version Maybe via class to make it safe
+// info correct dispatch is only guaranteed for    Nd != Nc ! -> Conflicts
+// with SUN.hpp version Maybe via class to make it safe
 template <typename T>
 struct WrapperSpinor {
   T data;
@@ -244,7 +245,9 @@ struct WrapperSpinor {
 };
 template <size_t Nc, size_t Nd>
 using Spinor = WrapperSpinor<Kokkos::Array<Kokkos::Array<complex_t, Nc>, Nd>>;
-
+template <size_t Nc, size_t RepDim>
+using PropagatorMatrix =
+    Kokkos::Array<Kokkos::Array<complex_t, RepDim * Nc>, RepDim * Nc>;
 // define field view types
 // by default all views are 4D
 // some dimensions are set to 1 for lower dimensions
@@ -261,13 +264,10 @@ using SpinorField3D =
 template <size_t Nc, size_t RepDim>
 using SpinorField2D =
     Kokkos::View<Spinor<Nc, RepDim>**, Kokkos::MemoryTraits<Kokkos::Restrict>>;
-// define adjoint groups of gauge fields
-template <size_t Nc>
-using sun = Kokkos::Array<real_t, std::max<size_t>(Nc* Nc - 1, 1)>;
 
 // define adjoint groups
 template <size_t Nc>
-constexpr size_t NcAdj = (Nc * Nc > 1) ? Nc* Nc - 1 : 1;
+constexpr size_t NcAdj = (Nc * Nc > 1) ? Nc * Nc - 1 : 1;
 
 template <size_t Nc>
 struct SUNAdj {
@@ -303,6 +303,9 @@ struct SUNAdj {
 template <size_t Nd, size_t Nc>
 using GaugeField =
     Kokkos::View<SUN<Nc>**** [Nd], Kokkos::MemoryTraits<Kokkos::Restrict>>;
+template <size_t Nc, size_t RepDim>
+using Propagator = Kokkos::View<PropagatorMatrix<Nc, RepDim>****,
+                                Kokkos::MemoryTraits<Kokkos::Restrict>>;
 
 template <size_t Nd, size_t Nc>
 using GaugeField3D =
@@ -575,7 +578,20 @@ constexpr KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> zeroSUN() {
   }
   return zero;
 }
-
+// define a global zero generator
+// for spinor
+template <size_t Nc, size_t Nd>
+constexpr KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, Nd> zeroSpinor() {
+  Spinor<Nc, Nd> zero;
+#pragma unroll
+  for (size_t i = 0; i < Nd; ++i) {
+#pragma unroll
+    for (size_t j = 0; j < Nc; ++j) {
+      zero[i][j] = complex_t(0.0, 0.0);
+    }
+  }
+  return zero;
+}
 // define a global identity field generator
 // for the color x color matrix
 template <size_t Nc>
@@ -622,6 +638,20 @@ KOKKOS_FORCEINLINE_FUNCTION Kokkos::Array<Kokkos::Array<T, N>, N> operator*(
   return c;
 }
 
+// define a global one generator
+// for spinor
+template <size_t Nc, size_t Nd>
+constexpr KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, Nd> oneSpinor() {
+  Spinor<Nc, Nd> id = zeroSpinor<Nc, Nd>();
+#pragma unroll
+  for (size_t i = 0; i < Nd; ++i) {
+#pragma unroll
+    for (size_t j = 0; j < Nc; ++j) {
+      id[i][j] = complex_t(1.0, 0.0);
+    }
+  }
+  return id;
+}
 // --- real_t ---
 template <typename T>
 inline MPI_Datatype mpi_real_type() {

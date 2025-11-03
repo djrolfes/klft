@@ -38,10 +38,10 @@ struct defectParams {
 
 template <size_t Nd, size_t Nc>
 struct devicePTBCGaugeField {
-  devicePTBCGaugeField() = delete;
+  devicePTBCGaugeField() = default;
 
   GaugeField<Nd, Nc> field;
-  const IndexArray<Nd> dimensions;
+  IndexArray<Nd> dimensions;
   LinkScalarField<Nd> defectField;
   using deviceDefectParams = defectParams<Nd>;
   deviceDefectParams dParams;
@@ -80,7 +80,9 @@ struct devicePTBCGaugeField {
   operator deviceGaugeField<Nd, Nc>() const {
     return deviceGaugeField<Nd, Nc>(this->field, this->dimensions);
   }
-
+  operator deviceGaugeField<Nd, Nc>() {
+    return deviceGaugeField<Nd, Nc>(this->field, this->dimensions);
+  }
   // should defect_length and cr be encompassed in a defect struct?
   devicePTBCGaugeField(const index_t L0,
                        const index_t L1,
@@ -323,9 +325,9 @@ struct devicePTBCGaugeField {
     // set the current defect regions defect to 1.0, update the position of the
     // defect and set the defect value.
     real_t tmp = this->dParams.defect_value;
-    set_defect(real_t(1.0));
+    set_defect<index_t>(real_t(1.0));
     this->dParams.defect_position = new_position;
-    set_defect(tmp);
+    set_defect<index_t>(tmp);
   }
 
   real_t get_defect() const {
@@ -595,10 +597,10 @@ struct devicePTBCGaugeField {
 
 template <size_t Nd, size_t Nc>
 struct devicePTBCGaugeField3D {
-  devicePTBCGaugeField3D() = delete;
+  devicePTBCGaugeField3D() = default;
 
   GaugeField3D<Nd, Nc> field;
-  const IndexArray<Nd> dimensions;
+  IndexArray<Nd> dimensions;
   LinkScalarField3D<Nd> defectField;
   using deviceDefectParams = defectParams<Nd>;
   deviceDefectParams dParams;
@@ -842,9 +844,9 @@ struct devicePTBCGaugeField3D {
     // set the current defect regions defect to 1.0, update the position of the
     // defect and set the defect value.
     real_t tmp = this->dParams.defect_value;
-    set_defect(real_t(1.0));
+    set_defect<index_t>(real_t(1.0));
     this->dParams.defect_position = new_position;
-    set_defect(tmp);
+    set_defect<index_t>(tmp);
   }
 
   real_t get_defect() const {
@@ -855,11 +857,10 @@ struct devicePTBCGaugeField3D {
   // define accessors for the field
   template <typename indexType>  // why do we template indexType here, when it
                                  // is defined in GLOBAL.hpp?
-                                 KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> operator()(
-                                     const indexType i,
-                                     const indexType j,
-                                     const indexType k,
-                                     const index_t mu) const {
+  KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> operator()(const indexType i,
+                                                 const indexType j,
+                                                 const indexType k,
+                                                 const index_t mu) const {
     return field(i, j, k, mu) * defectField(i, j, k, mu);
   }
 
@@ -959,11 +960,11 @@ struct devicePTBCGaugeField3D {
 
 template <size_t Nd, size_t Nc>
 struct devicePTBCGaugeField2D {
-  devicePTBCGaugeField2D() = delete;
+  devicePTBCGaugeField2D() = default;
 
   GaugeField2D<Nd, Nc> field;
   constGaugeField2D<Nd, Nc> cfield;
-  const IndexArray<Nd> dimensions;
+  IndexArray<Nd> dimensions;
   LinkScalarField2D<Nd> defectField;
   using deviceDefectParams = defectParams<Nd>;
   deviceDefectParams dParams;
@@ -1184,9 +1185,9 @@ struct devicePTBCGaugeField2D {
     // set the current defect regions defect to 1.0, update the position of the
     // defect and set the defect value.
     real_t tmp = this->dParams.defect_value;
-    set_defect(real_t(1.0));
+    this->set_defect<index_t>(real_t(1.0));
     this->dParams.defect_position = new_position;
-    set_defect(tmp);
+    this->set_defect<index_t>(tmp);
   }
 
   real_t get_defect() const {

@@ -1,6 +1,8 @@
 
 #include <getopt.h>
+
 #include <filesystem>
+
 #include "InputParser.hpp"
 #include "PTBC.hpp"
 
@@ -143,8 +145,8 @@ int test_wilsonflow(const std::string& input_file,
   hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
   hmc.add_kinetic_monomial(0);
   if (resParsef > 0) {
-    auto diracParams = getDiracParams<4>(g_4_SU2.dimensions, fermionParams);
-    hmc.add_fermion_monomial<CGSolver, HWilsonDiracOperator, DSpinorFieldType>(
+    auto diracParams = getDiracParams(fermionParams);
+    hmc.add_fermion_monomial<CGSolver, WilsonDiracOperator, DSpinorFieldType>(
         s_4_SU2, diracParams, fermionParams.tol, rng, 0);
   }
 

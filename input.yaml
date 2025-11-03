@@ -1,10 +1,10 @@
 
 HMCParams:
   Ndims: 4
-  L0: 8
-  L1: 8
-  L2: 8
-  L3: 8
+  L0: 12
+  L1: 12
+  L2: 12
+  L3: 12
   seed: 1234
   Nd: 4
   Nc: 2
@@ -12,28 +12,27 @@ HMCParams:
   rngDelta: 1
 # Level 0 is the innermost level of the Integrator, i.e that is executed most frequently.
 Integrator:
-
   tau: 1
-  nSteps: 1000
+  nSteps: 11
   Monomials:
     - Type: "Leapfrog"
       level: 0
-      steps: 50
-    # - Type: "Leapfrog"
-    #   level: 1
-    #   steps: 20
+      steps: 20
+    - Type: "Leapfrog"
+      level: 1
+      steps: 30
 Gauge Monomial:
   level: 0
-  beta: 2.5
+  beta: 2.12
 
-# Fermion Monomial:
-#   level: 1
-#   fermion: "HWilson"
-#   solver: "CG"
-#   RepDim: 4
-#   kappa: 0.15
-#   tol: 1e-10
-
+Fermion Monomial:
+  level: 1
+  fermion: "Wilson"
+  solver: "CG"
+  RepDim: 4
+  kappa: 0.15
+  tol: 1e-10
+  preconditioning: true
 GaugeObservableParams:
   thermalization_steps: 500
   measurement_interval: 2
@@ -46,14 +45,6 @@ GaugeObservableParams:
   WilsonFlowParams:
     tau: 8.0
     eps: 0.01
-    dynamical_flow: true
-    min_flow_time: 0.5
-    max_flow_time: 10.0
-    sp_max_target: 0.067
-    t_sqrd_E_target: 0.1
-    first_tE_measure_step: 10
-    log_details: true
-    wilson_flow_filename: "wilsonflow_details.txt"
 
   W_temp_L_T_pairs:
     - [2, 3]
@@ -74,6 +65,32 @@ GaugeObservableParams:
   sp_max_filename: "sp_max.txt"
 
   write_to_file: true
+FermionObservableParams:
+  pion_correlator_filename: "pion_correlator_output.txt"
+  measurement_interval: 2
+  measure_pion_correlator: true
+  tol: 1e-10
+  kappa: 0.15
+  RepDim: 4
+  write_to_file: true
+  flush: 5
+  preconditioning: true
+  n_sources: 12
+PTBCParams:
+  defect_length: 2
+  defect_values: [0.714, 0.857, 1.0]
+
+PTBCSimulationLoggingParams:
+  log_interval: 1
+  log_delta_H_swap: true
+  log_swap_start: true
+  log_swap_accepts: true
+  log_defects: true
+  flush: 25
+  log_filename: "ptbcsimulation_log.txt"
+  write_to_file: true
+
+
 
 SimulationLoggingParams:
   log_interval: 1

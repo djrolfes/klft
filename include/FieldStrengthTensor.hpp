@@ -19,6 +19,7 @@
 
 #pragma once
 #include <unistd.h>
+
 #include "FieldTypeHelper.hpp"
 #include "GLOBAL.hpp"
 
@@ -182,8 +183,8 @@ struct FieldStrengthTensor {
                                                     const indexType i3,
                                                     index_t mu,
                                                     index_t nu) const {
-    // implemented according to https://doi.org/10.1140/epjc/s10052-020-7984-9
-    // (21)
+    // implemented according to
+    // https://doi.org/10.1140/epjc/s10052-020-7984-9 (21)
 
     SUN<Nc> P_munu = zeroSUN<Nc>();
     const IndexArray<Nd> x{static_cast<index_t>(i0), static_cast<index_t>(i1),

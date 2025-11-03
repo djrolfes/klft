@@ -21,6 +21,7 @@
 // for 2D, 3D and 4D SU(N) gauge fields
 
 #include "Metropolis.hpp"
+
 #include "InputParser.hpp"
 
 // we are hard coding the RNG now to use Kokkos::Random_XorShift64_Pool

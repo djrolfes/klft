@@ -2,6 +2,7 @@
 build
 *.code-workspace
 arc
+CMakePresets.json
 .cache
 .clangd
 cmake-build-*

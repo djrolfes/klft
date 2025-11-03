@@ -1,15 +1,18 @@
 #pragma once
 #include <mpi.h>
+
 #include <random>
 #include <sstream>
+
+#include "FermionObservable.hpp"
 #include "FieldTypeHelper.hpp"
 #include "GLOBAL.hpp"
 #include "GaugeObservable.hpp"
 #include "HMC.hpp"
 #include "HMC_Params.hpp"
 #include "HamiltonianField.hpp"
+#include "IndexHelper.hpp"
 #include "SimulationLogging.hpp"
-
 using RNGType = Kokkos::Random_XorShift64_Pool<Kokkos::DefaultExecutionSpace>;
 
 namespace klft {
@@ -24,7 +27,7 @@ struct PTBCParams {
   PTBCSimulationLoggingParams ptbcSimLogParams;
   GaugeObservableParams gaugeObsParams;
   SimulationLoggingParams simLogParams;
-
+  FermionObservableParams fermionObsParams;
   std::string to_string() const {
     std::ostringstream oss;
     oss << "PTBCParams: n_sims = " << n_sims
@@ -65,8 +68,8 @@ class PTBC {  // do I need the AdjFieldType here?
 
   index_t current_index;
 
-  std::vector<bool> swap_accepts;  // a vector that hold the last values shown
-                                   // if a given swap was accepted
+  std::vector<bool> swap_accepts;   // a vector that hold the last values shown
+                                    // if a given swap was accepted
   std::vector<real_t> swap_deltas;  // a vector that holds the partial Delta_S
                                     // values for each swap
   int _swap_start;                  // holds the rank of the last swap start
@@ -75,7 +78,8 @@ class PTBC {  // do I need the AdjFieldType here?
     TAG_DELTAS = 0,
     TAG_ACCEPT = 1,
     TAG_INDEX = 2,
-    TAG_SWAPSTART = 3
+    TAG_SWAPSTART = 3,
+    TAG_SHIFTDEFECT = 4
   } MPI_Tags;
 
   PTBC() = delete;  // default constructor is not allowed
@@ -159,6 +163,44 @@ class PTBC {  // do I need the AdjFieldType here?
     }
   }
 
+  void measure(FermionObservableParams& fermionObsParam, size_t step) {
+    // measure the gauge observables
+    int rank, size;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+    int compute_rank{0};
+    int dummy_rank{0};
+
+    if (rank == 0 || getDefectValue() >= 0.99999) {
+      // only the computing rank or the defect rank measures the observables
+      MPI_Reduce(
+          &rank, &compute_rank, 1, MPI_INT, MPI_SUM, 0,
+          MPI_COMM_WORLD);  // sum the ranks to get the computing rank in rank 0
+      if (getDefectValue() >= 0.99999) {
+        // if the defect value is close to 1, we measure the observables
+        // for the PTBC case
+        if (KLFT_VERBOSITY > 1) {
+          printf("Measuring   Fermionic observables at step %zu\n", step);
+        }
+        measureFermionObservablesPTBC<
+            std::mt19937, DeviceSpinorFieldType<HMCType::rank, HMCType::Nc, 4>,
+            DGaugeFieldType, CGSolver, WilsonDiracOperator>(
+            hmc.hamiltonian_field.gauge_field, fermionObsParam, step, 0, hmc.mt,
+            true);
+      } else {
+        measureFermionObservablesPTBC<
+            std::mt19937, DeviceSpinorFieldType<HMCType::rank, HMCType::Nc, 4>,
+            DGaugeFieldType, CGSolver, WilsonDiracOperator>(
+            hmc.hamiltonian_field.gauge_field, fermionObsParam, step,
+            compute_rank, hmc.mt, false);
+      }
+    } else {
+      MPI_Reduce(&dummy_rank, &compute_rank, 1, MPI_INT, MPI_SUM, 0,
+                 MPI_COMM_WORLD);
+      return;  // skip measurement for other ranks
+    }
+  }
+
   void measure(SimulationLoggingParams& simLogParams,
                index_t step,
                real_t acc_rate,
@@ -224,7 +266,35 @@ class PTBC {  // do I need the AdjFieldType here?
 #endif
     }
   }
+  void shift_defect() {
+    int size, rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+    // shift[0] is the direction, shift [1] is the amount (1 or -1)
+    int shift[2];
+    if (rank == 0) {
+      shift[0] =
+          int(dist(mt) *
+              (Nd - 1));  // random direction but not in t direction ( so 0,1,2)
+      shift[1] = (dist(mt) > 0.5) ? 1 : -1;
+    }
+    MPI_Bcast(shift, 2, MPI_INT, 0, MPI_COMM_WORLD);
 
+    /* code */
+    if (getDefectValue() == 1) {
+      /* code */
+
+      auto old_position =
+          hmc.hamiltonian_field.gauge_field.dParams.defect_position;
+      auto new_position = old_position;
+      new_position[shift[0]] =
+          (old_position[shift[0]] + shift[1] +
+           (old_position[shift[0]] == 0) * (shift[1] < 0) *
+               hmc.hamiltonian_field.gauge_field.dimensions[shift[0]]) %
+          hmc.hamiltonian_field.gauge_field.dimensions[shift[0]];
+      hmc.hamiltonian_field.gauge_field.shift_defect(new_position);
+    }
+  }
   int swap() {
     int rank, size;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -329,8 +399,9 @@ class PTBC {  // do I need the AdjFieldType here?
         _swap_start = swap_start;  // store the swap start rank
       }
     }
-
     // TODO: shift the defect by one lattice spacing in a random direction
+    shift_defect();
+    MPI_Barrier(MPI_COMM_WORLD);
     //
     return 0;
   }
@@ -355,11 +426,7 @@ class PTBC {  // do I need the AdjFieldType here?
 // below: Functions used to dispatch the PTBC algorithm
 
 template <typename PTBCType>
-int run_PTBC(PTBCType& ptbc,
-             Integrator_Params& int_params,
-             GaugeObservableParams& gaugeObsParams,
-             PTBCSimulationLoggingParams& ptbcSimLogParams,
-             SimulationLoggingParams& simLogParams) {
+int run_PTBC(PTBCType& ptbc, Integrator_Params& int_params) {
   Kokkos::Timer timer;
   real_t acc_sum{0.0};
   real_t acc_rate{0.0};
@@ -382,32 +449,37 @@ int run_PTBC(PTBCType& ptbc,
     const real_t time = timer.seconds();
     timer.reset();
     // Gauge observables
-    ptbc.measure(gaugeObsParams, step);
+    ptbc.measure(ptbc.params.gaugeObsParams, step);
+
     const real_t obs_time = timer.seconds();
-    ptbc.measure(ptbcSimLogParams, step);
+    ptbc.measure(ptbc.params.ptbcSimLogParams, step);
+    ptbc.measure(ptbc.params.fermionObsParams, step);
 
     if (rank == 0) {
-      flushAllGaugeObservables(gaugeObsParams, step, true);
-      flushPTBCSimulationLogs(ptbcSimLogParams, step, true);
+      flushAllGaugeObservables(ptbc.params.gaugeObsParams, step, true);
+      flushPTBCSimulationLogs(ptbc.params.ptbcSimLogParams, step, true);
+      flushAllFermionObservables(ptbc.params.fermionObsParams, step, true);
     }
     // PTBC swap/accept
 
     acc_sum += static_cast<real_t>(accept);
     acc_rate = acc_sum / static_cast<real_t>(step + 1);
-    ptbc.measure(simLogParams, step, acc_rate, accept, time, obs_time);
+    ptbc.measure(ptbc.params.simLogParams, step, acc_rate, accept, time,
+                 obs_time);
     if (rank == 0) {
       Kokkos::printf("Step: %zu, accepted: %d, Acceptance rate: %f, Time: %f\n",
                      step, accept, acc_rate, time);
     }
-    flushSimulationLogs(simLogParams, step, true);
+    flushSimulationLogs(ptbc.params.simLogParams, step, true);
   }
 
   MPI_Barrier(MPI_COMM_WORLD);  // synchronize all ranks after the loop
   if (rank == 0) {
-    forceflushAllGaugeObservables(gaugeObsParams, true);
-    forceflushPTBCSimulationLogs(ptbcSimLogParams, true);
+    forceflushAllGaugeObservables(ptbc.params.gaugeObsParams, true);
+    forceflushPTBCSimulationLogs(ptbc.params.ptbcSimLogParams, true);
+    forceflushAllFermionObservables(ptbc.params.fermionObsParams, true);
   }
-  forceflushSimulationLogs(simLogParams, true);
+  forceflushSimulationLogs(ptbc.params.simLogParams, true);
 
   return 0;
 }
