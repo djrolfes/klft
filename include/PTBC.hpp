@@ -281,16 +281,19 @@ class PTBC {  // do I need the AdjFieldType here?
     MPI_Bcast(shift, 2, MPI_INT, 0, MPI_COMM_WORLD);
 
     /* code */
+    if (getDefectValue() == 1) {
+      /* code */
 
-    auto old_position =
-        hmc.hamiltonian_field.gauge_field.dParams.defect_position;
-    auto new_position = old_position;
-    new_position[shift[0]] =
-        (old_position[shift[0]] + shift[1] +
-         (old_position[shift[0]] == 0) * (shift[1] < 0) *
-             hmc.hamiltonian_field.gauge_field.dimensions[shift[0]]) %
-        hmc.hamiltonian_field.gauge_field.dimensions[shift[0]];
-    hmc.hamiltonian_field.gauge_field.shift_defect(new_position);
+      auto old_position =
+          hmc.hamiltonian_field.gauge_field.dParams.defect_position;
+      auto new_position = old_position;
+      new_position[shift[0]] =
+          (old_position[shift[0]] + shift[1] +
+           (old_position[shift[0]] == 0) * (shift[1] < 0) *
+               hmc.hamiltonian_field.gauge_field.dimensions[shift[0]]) %
+          hmc.hamiltonian_field.gauge_field.dimensions[shift[0]];
+      hmc.hamiltonian_field.gauge_field.shift_defect(new_position);
+    }
   }
   int swap() {
     int rank, size;
