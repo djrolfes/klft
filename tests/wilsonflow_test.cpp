@@ -111,7 +111,6 @@ int test_wilsonflow(const std::string& input_file,
     printf("Error parsing input file\n");
     return -1;
   }
-  gaugeObsParams.wilson_flow_params.beta = gaugeMonomialParams.beta;
 
   simLogParams.log_filename = (simLogParams.log_filename);
   RNGType rng(hmcParams.seed);
