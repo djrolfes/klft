@@ -32,8 +32,8 @@ using RNGType = Kokkos::Random_XorShift64_Pool<Kokkos::DefaultExecutionSpace>;
 
 namespace klft {
 
-int Metropolis(const std::string &input_file,
-               const std::string &output_directory) {
+int Metropolis(const std::string& input_file,
+               const std::string& output_directory) {
   // get verbosity from environment
   const int verbosity = std::getenv("KLFT_VERBOSITY")
                             ? std::atoi(std::getenv("KLFT_VERBOSITY"))
@@ -46,7 +46,7 @@ int Metropolis(const std::string &input_file,
   // if tuning is enbled, check if the user has set the
   // KLFT_CACHE_FILE environment variable
   if (tuning) {
-    const char *cache_file = std::getenv("KLFT_CACHE_FILE");
+    const char* cache_file = std::getenv("KLFT_CACHE_FILE");
     // if it exists, read the cache
     if (cache_file) {
       if (KLFT_VERBOSITY > 0) {
@@ -159,7 +159,7 @@ int Metropolis(const std::string &input_file,
   }
   // if tuning is enabled, write the cache file
   if (KLFT_TUNING) {
-    const char *cache_file = std::getenv("KLFT_CACHE_FILE");
+    const char* cache_file = std::getenv("KLFT_CACHE_FILE");
     if (cache_file) {
       writeTuneCache(cache_file);
     } else {
@@ -169,4 +169,4 @@ int Metropolis(const std::string &input_file,
   return 0;
 }
 
-} // namespace klft
+}  // namespace klft

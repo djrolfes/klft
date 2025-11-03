@@ -31,20 +31,21 @@
 // and use it through out the simulation
 namespace klft {
 // using RepDim =size_t 4;
-template <size_t RepDim> struct GammaMat {
+template <size_t RepDim>
+struct GammaMat {
   Kokkos::Array<Kokkos::Array<complex_t, RepDim>, RepDim> matrix;
 
   GammaMat() = default;
   GammaMat(
-      const Kokkos::Array<Kokkos::Array<complex_t, RepDim>, RepDim> &_mat) {
+      const Kokkos::Array<Kokkos::Array<complex_t, RepDim>, RepDim>& _mat) {
     matrix = _mat;
   }
   KOKKOS_FORCEINLINE_FUNCTION
-  complex_t &operator()(size_t i, size_t j) { return matrix[i][j]; }
+  complex_t& operator()(size_t i, size_t j) { return matrix[i][j]; }
   KOKKOS_FORCEINLINE_FUNCTION
-  const complex_t &operator()(size_t i, size_t j) const { return matrix[i][j]; }
+  const complex_t& operator()(size_t i, size_t j) const { return matrix[i][j]; }
   KOKKOS_FORCEINLINE_FUNCTION
-  GammaMat<RepDim> operator-(const GammaMat<RepDim> &b) const {
+  GammaMat<RepDim> operator-(const GammaMat<RepDim>& b) const {
     GammaMat c{};
 #pragma unroll
     for (size_t i = 0; i < RepDim; ++i) {
@@ -56,7 +57,7 @@ template <size_t RepDim> struct GammaMat {
     return c;
   }
   KOKKOS_FORCEINLINE_FUNCTION
-  GammaMat<RepDim> operator+(const GammaMat<RepDim> &b) const {
+  GammaMat<RepDim> operator+(const GammaMat<RepDim>& b) const {
     GammaMat c{};
 #pragma unroll
     for (size_t i = 0; i < RepDim; ++i) {
@@ -68,7 +69,7 @@ template <size_t RepDim> struct GammaMat {
     return c;
   }
   KOKKOS_FORCEINLINE_FUNCTION
-  GammaMat<RepDim> operator*(const GammaMat<RepDim> &b) const {
+  GammaMat<RepDim> operator*(const GammaMat<RepDim>& b) const {
     GammaMat<RepDim> c;
 #pragma unroll
     for (size_t i = 0; i < RepDim; ++i) {
@@ -84,7 +85,7 @@ template <size_t RepDim> struct GammaMat {
     return c;
   }
   KOKKOS_FORCEINLINE_FUNCTION
-  GammaMat<RepDim> operator*(const real_t &b) const {
+  GammaMat<RepDim> operator*(const real_t& b) const {
     GammaMat<RepDim> c;
 #pragma unroll
     for (size_t i = 0; i < RepDim; ++i) {
@@ -96,7 +97,7 @@ template <size_t RepDim> struct GammaMat {
     return c;
   }
   KOKKOS_FORCEINLINE_FUNCTION
-  GammaMat<RepDim> operator*(const complex_t &b) const {
+  GammaMat<RepDim> operator*(const complex_t& b) const {
     GammaMat<RepDim> c;
 #pragma unroll
     for (size_t i = 0; i < RepDim; ++i) {
@@ -108,9 +109,9 @@ template <size_t RepDim> struct GammaMat {
     return c;
   }
   KOKKOS_FORCEINLINE_FUNCTION
-  bool operator==(const GammaMat<RepDim> &b) { return matrix == b.matrix; }
+  bool operator==(const GammaMat<RepDim>& b) { return matrix == b.matrix; }
   KOKKOS_FORCEINLINE_FUNCTION
-  bool operator==(const GammaMat<RepDim> &b) const {
+  bool operator==(const GammaMat<RepDim>& b) const {
     return matrix == b.matrix;
   }
 };
@@ -218,7 +219,8 @@ inline GammaMat<4> get_gamma5() {
   g(3, 3) = complex_t(-1, 0);
   return g;
 }
-template <size_t RepDim> const Kokkos::Array<GammaMat<RepDim>, 4> get_gammas() {
+template <size_t RepDim>
+const Kokkos::Array<GammaMat<RepDim>, 4> get_gammas() {
   Kokkos::Array<GammaMat<RepDim>, 4> c;
   c[0] = get_gamma0();
   c[1] = get_gamma1();
@@ -226,7 +228,8 @@ template <size_t RepDim> const Kokkos::Array<GammaMat<RepDim>, 4> get_gammas() {
   c[3] = get_gamma3();
   return c;
 }
-template <size_t RepDim> const GammaMat<RepDim> get_identity() {
+template <size_t RepDim>
+const GammaMat<RepDim> get_identity() {
   GammaMat<RepDim> c;
   for (size_t i = 0; i < RepDim; ++i) {
     for (size_t j = 0; j < RepDim; ++j) {
@@ -238,4 +241,4 @@ template <size_t RepDim> const GammaMat<RepDim> get_identity() {
   }
   return c;
 }
-} // namespace klft
+}  // namespace klft

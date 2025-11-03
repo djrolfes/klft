@@ -25,10 +25,13 @@
 
 namespace klft {
 
-template <template <template <typename, typename> class DiracOpT, typename,
-                    typename> class _Derived,
-          template <typename, typename> class DiracOpT,
-          typename DSpinorFieldType, typename DGaugeFieldType>
+template <
+    template <template <typename, typename> class DiracOpT, typename, typename>
+    class _Derived,
+    template <typename, typename>
+    class DiracOpT,
+    typename DSpinorFieldType,
+    typename DGaugeFieldType>
 class Solver {
   // using DSpinorFieldType =
   //     typename DiracOpFieldTypeTraits<DiracOperator>::DSpinorFieldType;
@@ -53,17 +56,17 @@ class Solver {
   // using ConcreteSolver =
   //     _ConcreteSolver<DiracOperator, DSpinorFieldType, DGaugeFieldType>;
 
-public:
+ public:
   using SpinorFieldType = typename DSpinorFieldType::type;
   using GaugeFieldType = typename DGaugeFieldType::type;
   const SpinorFieldType b;
-  SpinorFieldType x; // Solution to DiracOP*x=b
+  SpinorFieldType x;  // Solution to DiracOP*x=b
   DiracOp dirac_op;
-  Solver(const SpinorFieldType &b, SpinorFieldType &x, const DiracOp &dirac_op)
+  Solver(const SpinorFieldType& b, SpinorFieldType& x, const DiracOp& dirac_op)
       : b(b), x(x), dirac_op(dirac_op) {}
   template <typename Tag>
-  void solve(const SpinorFieldType &x0, const real_t &tol) {
-    static_cast<Derived *>(this)->template solve_int<Tag>(x0, tol);
+  void solve(const SpinorFieldType& x0, const real_t& tol) {
+    static_cast<Derived*>(this)->template solve_int<Tag>(x0, tol);
   }
 };
 // // Deduction guide for Solver
@@ -75,7 +78,8 @@ public:
 //               SpinorType::RepDim>;
 
 template <template <typename, typename> class DiracOpT,
-          typename DSpinorFieldType, typename DGaugeFieldType>
+          typename DSpinorFieldType,
+          typename DGaugeFieldType>
 class CGSolver
     : public Solver<CGSolver, DiracOpT, DSpinorFieldType, DGaugeFieldType> {
   // using DSpinorFieldType =
@@ -83,7 +87,7 @@ class CGSolver
   // using DGaugeFieldType =
   //     typename DiracOpFieldTypeTraits<DiracOperator>::DGaugeFieldType;
 
-public:
+ public:
   using SpinorFieldType = typename DSpinorFieldType::type;
   using GaugeFieldType = typename DGaugeFieldType::type;
   constexpr static size_t rank =
@@ -99,23 +103,23 @@ public:
   using Base::Base;
 
   template <typename Tag>
-  void solve_int(const SpinorFieldType &x0, const real_t &tol) {
+  void solve_int(const SpinorFieldType& x0, const real_t& tol) {
     SpinorFieldType xk(this->dirac_op.params.dimensions, complex_t(0.0, 0.0));
-    Kokkos::deep_copy(xk.field, x0.field); // x_0
+    Kokkos::deep_copy(xk.field, x0.field);  // x_0
 
     SpinorFieldType rk = spinor_sub_mul<rank, Nc, RepDim>(
         this->b, this->dirac_op.template apply<Tag>(xk), 1.0);
 
     SpinorFieldType pk(this->dirac_op.params.dimensions, complex_t(0.0, 0.0));
-    Kokkos::deep_copy(pk.field, rk.field); // p_0                        // d_0
-    real_t rk_norm = spinor_norm<rank, Nc, RepDim>(rk); //\delta_0
+    Kokkos::deep_copy(pk.field, rk.field);  // p_0                        // d_0
+    real_t rk_norm = spinor_norm<rank, Nc, RepDim>(rk);  //\delta_0
     int num_iter = 0;
     while (rk_norm > tol) {
       const SpinorFieldType apk =
-          this->dirac_op.template apply<Tag>(pk); // z = Ad_k
+          this->dirac_op.template apply<Tag>(pk);  // z = Ad_k
       const complex_t rkrk = spinor_dot_product<rank, Nc, RepDim>(rk, rk);
-      const complex_t alpha =
-          (rkrk / spinor_dot_product<rank, Nc, RepDim>(pk, apk)); // Always real
+      const complex_t alpha = (rkrk / spinor_dot_product<rank, Nc, RepDim>(
+                                          pk, apk));  // Always real
       xk = spinor_add_mul<rank, Nc, RepDim>(xk, pk, alpha);
       rk = spinor_sub_mul<rank, Nc, RepDim>(rk, apk, alpha);
       const complex_t beta =
@@ -139,9 +143,10 @@ public:
             this->b, this->dirac_op.template apply<Tag>(xk), 1.0));
 
     if (Kokkos::abs(ex_res / spinor_norm<rank, Nc, RepDim>(xk)) > tol) {
-      printf("EX_res: %.20f, Roundoff Error, relaunching CG solver with new "
-             "initial guess\n",
-             ex_res);
+      printf(
+          "EX_res: %.20f, Roundoff Error, relaunching CG solver with new "
+          "initial guess\n",
+          ex_res);
       this->template solve<Tag>(xk, tol);
     } else {
       if (KLFT_VERBOSITY > 1) {
@@ -154,4 +159,4 @@ public:
 // After CGSolver class definition
 // template <typename D, typename S>
 // CGSolver(S, S, D) -> CGSolver<D, S, typename D::DGaugeFieldType::type>;
-} // namespace klft
+}  // namespace klft

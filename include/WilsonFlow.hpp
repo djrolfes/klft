@@ -1,10 +1,10 @@
 #pragma once
+#include <string>
 #include "ActionDensity.hpp"
 #include "AdjointSUN.hpp"
 #include "FieldTypeHelper.hpp"
 #include "GLOBAL.hpp"
 #include "Gauge_Util.hpp"
-#include <string>
 
 namespace klft {
 struct WilsonFlowParams {
@@ -36,10 +36,10 @@ struct WilsonFlowParams {
     min_flow_time = -1.0;
     max_flow_time = -1.0;
     sp_max_target = real_t(0.067);
-    t_sqrd_E_target = real_t(0.1); // this is Nc dependent
+    t_sqrd_E_target = real_t(0.1);  // this is Nc dependent
     first_tE_measure_step = 10;
     log_details =
-        false; // for now this will only do something for the dynamical wflow
+        false;  // for now this will only do something for the dynamical wflow
     wilson_flow_filename = "";
   }
 };
@@ -71,7 +71,8 @@ struct WilsonFlowData {
   }
 };
 
-template <typename DGaugeFieldType> struct WilsonFlow {
+template <typename DGaugeFieldType>
+struct WilsonFlow {
   // implement the Wilson flow, for now the field will not be copied, but it
   // will be flown in place -> copying needs to be done before
   constexpr static const size_t rank =
@@ -80,8 +81,8 @@ template <typename DGaugeFieldType> struct WilsonFlow {
       DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc;
   constexpr static const GaugeFieldKind Kind =
       DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Kind;
-  static_assert(rank == 4); // The wilson flow is only defined for 4D Fields
-  WilsonFlowParams &params;
+  static_assert(rank == 4);  // The wilson flow is only defined for 4D Fields
+  WilsonFlowParams& params;
   WilsonFlowData wfdata;
 
   // get the correct deviceGaugeFieldType
@@ -94,8 +95,10 @@ template <typename DGaugeFieldType> struct WilsonFlow {
 
   WilsonFlow() = delete;
 
-  WilsonFlow(const GaugeFieldT &_field, WilsonFlowParams &_params)
-      : params(_params), field(_field.field), tmp_staple(_field.field),
+  WilsonFlow(const GaugeFieldT& _field, WilsonFlowParams& _params)
+      : params(_params),
+        field(_field.field),
+        tmp_staple(_field.field),
         wfdata() {
     const IndexArray<rank> dims = _field.dimensions;
     eps = params.eps;
@@ -105,7 +108,6 @@ template <typename DGaugeFieldType> struct WilsonFlow {
   }
 
   void flow_step() {
-
 #pragma unroll
     for (index_t fstep = 0; fstep < 3; ++fstep) {
       this->current_step = fstep;
@@ -119,8 +121,8 @@ template <typename DGaugeFieldType> struct WilsonFlow {
   }
 
   // execute the wilson flow
-  void flow() { // todo: check this once by saving a staple field and once by
-                // locally calculating the staple
+  void flow() {  // todo: check this once by saving a staple field and once by
+                 // locally calculating the staple
     if (params.dynamical_flow) {
       if (KLFT_VERBOSITY > 2) {
         printf("Using dynamical Wilson flow...\n");
@@ -157,7 +159,6 @@ template <typename DGaugeFieldType> struct WilsonFlow {
       wfdata.flow_time = this->params.tau;
 
       if (this->params.tau > this->params.min_flow_time) {
-
         // quick napkin math:
         // each flow_step() call calculates the staple field 3 times and
         // multiplies this to the field(...) each time. A staple_field * field
@@ -196,7 +197,7 @@ template <typename DGaugeFieldType> struct WilsonFlow {
           wfdata.measure_step =
               wfdata.measure_step < wfdata.step + 100
                   ? wfdata.measure_step
-                  : wfdata.measure_step_old + 100; // avoid too large steps
+                  : wfdata.measure_step_old + 100;  // avoid too large steps
           if (KLFT_VERBOSITY > 1) {
             printf("Wilson Flow prediction: next measurement at step %zu\n",
                    wfdata.measure_step);
@@ -233,10 +234,9 @@ template <typename DGaugeFieldType> struct WilsonFlow {
     }
   }
 
-  void flow_DBW2() { // todo: check this once by saving a staple field and
-                     // once by locally calculating the staple
+  void flow_DBW2() {  // todo: check this once by saving a staple field and
+                      // once by locally calculating the staple
     for (int step = 0; step < params.n_steps; ++step) {
-
 #pragma unroll
       for (index_t fstep = 0; fstep < 3; ++fstep) {
         this->current_step = fstep;
@@ -253,7 +253,6 @@ template <typename DGaugeFieldType> struct WilsonFlow {
 
   void flow_impr(real_t b1) {
     for (int step = 0; step < params.n_steps; ++step) {
-
 #pragma unroll
       for (index_t fstep = 0; fstep < 3; ++fstep) {
         this->current_step = fstep;
@@ -269,27 +268,33 @@ template <typename DGaugeFieldType> struct WilsonFlow {
   }
 
   template <typename indexType>
-  KOKKOS_INLINE_FUNCTION void stepW1(indexType i0, indexType i1, indexType i2,
-                                     indexType i3, index_t mu) const {
+  KOKKOS_INLINE_FUNCTION void stepW1(indexType i0,
+                                     indexType i1,
+                                     indexType i2,
+                                     indexType i3,
+                                     index_t mu) const {
     // SUN<Nc> Z0_SUN = (field.field(i0, i1, i2, i3, mu)) *
     //                  (tmp_staple.field(i0, i1, i2, i3, mu));
     SUN<Nc> Z0_SUN = (field.field(i0, i1, i2, i3, mu) *
                       tmp_staple.field(i0, i1, i2, i3, mu));
-    SUNAdj<Nc> Z0 = 2.0 * traceT(Z0_SUN); //* (Nc / params.beta);
-    tmp_Z(i0, i1, i2, i3, mu) = Z0;       // does this need to be deep copied?
+    SUNAdj<Nc> Z0 = 2.0 * traceT(Z0_SUN);  //* (Nc / params.beta);
+    tmp_Z(i0, i1, i2, i3, mu) = Z0;        // does this need to be deep copied?
     field.field(i0, i1, i2, i3, mu) =
         expoSUN(Z0 * -0.25 * this->eps) * field.field(i0, i1, i2, i3, mu);
     // restoreSUN(field.field(i0, i1, i2, i3, mu));
   }
 
   template <typename indexType>
-  KOKKOS_INLINE_FUNCTION void stepW2(indexType i0, indexType i1, indexType i2,
-                                     indexType i3, index_t mu) const {
+  KOKKOS_INLINE_FUNCTION void stepW2(indexType i0,
+                                     indexType i1,
+                                     indexType i2,
+                                     indexType i3,
+                                     index_t mu) const {
     // SUN<Nc> Z1_SUN = (field.field(i0, i1, i2, i3, mu)) *
     //                  (tmp_staple.field(i0, i1, i2, i3, mu));
     SUN<Nc> Z1_SUN = (field.field(i0, i1, i2, i3, mu) *
                       tmp_staple.field(i0, i1, i2, i3, mu));
-    SUNAdj<Nc> Z1 = 2.0 * traceT(Z1_SUN); // * (Nc / params.beta);
+    SUNAdj<Nc> Z1 = 2.0 * traceT(Z1_SUN);  // * (Nc / params.beta);
     SUNAdj<Nc> Z0 = tmp_Z(i0, i1, i2, i3, mu);
     Z1 = Z1 * static_cast<real_t>(8.0 / 9.0) -
          Z0 * static_cast<real_t>(17.0 / 36.0);
@@ -300,13 +305,16 @@ template <typename DGaugeFieldType> struct WilsonFlow {
   }
 
   template <typename indexType>
-  KOKKOS_INLINE_FUNCTION void stepV(indexType i0, indexType i1, indexType i2,
-                                    indexType i3, index_t mu) const {
+  KOKKOS_INLINE_FUNCTION void stepV(indexType i0,
+                                    indexType i1,
+                                    indexType i2,
+                                    indexType i3,
+                                    index_t mu) const {
     // SUN<Nc> Z2_SUN = (field.field(i0, i1, i2, i3, mu)) *
     //                  (tmp_staple.field(i0, i1, i2, i3, mu));
     SUN<Nc> Z2_SUN = (field.field(i0, i1, i2, i3, mu) *
                       tmp_staple.field(i0, i1, i2, i3, mu));
-    SUNAdj<Nc> Z2 = 2.0 * traceT(Z2_SUN); // * (Nc / params.beta);
+    SUNAdj<Nc> Z2 = 2.0 * traceT(Z2_SUN);  // * (Nc / params.beta);
     SUNAdj<Nc> Z_old = tmp_Z(i0, i1, i2, i3, mu);
     Z2 = (Z2 * 0.75 - Z_old);
     // SUNAdj<Nc> tmp = (Z2);
@@ -316,24 +324,25 @@ template <typename DGaugeFieldType> struct WilsonFlow {
   }
 
   template <typename indexType>
-  KOKKOS_INLINE_FUNCTION void operator()(const indexType i0, const indexType i1,
+  KOKKOS_INLINE_FUNCTION void operator()(const indexType i0,
+                                         const indexType i1,
                                          const indexType i2,
                                          const indexType i3) const {
 #pragma unroll
     for (index_t mu = 0; mu < 4; ++mu) {
       switch (this->current_step) {
-      case 0:
-        stepW1(i0, i1, i2, i3, mu);
-        break;
-      case 1:
-        stepW2(i0, i1, i2, i3, mu);
-        break;
-      case 2:
-        stepV(i0, i1, i2, i3, mu);
-        break;
+        case 0:
+          stepW1(i0, i1, i2, i3, mu);
+          break;
+        case 1:
+          stepW2(i0, i1, i2, i3, mu);
+          break;
+        case 2:
+          stepV(i0, i1, i2, i3, mu);
+          break;
       }
     }
   }
 };
 
-} // namespace klft
+}  // namespace klft

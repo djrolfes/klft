@@ -1,8 +1,8 @@
 
 
+#include <getopt.h>
 #include <cassert>
 #include <cmath>
-#include <getopt.h>
 
 #include "ActionDensity.hpp"
 #include "FieldTypeHelper.hpp"
@@ -16,7 +16,7 @@ using RNGType = Kokkos::Random_XorShift64_Pool<Kokkos::DefaultExecutionSpace>;
 
 using namespace klft;
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
   Kokkos::initialize(argc, argv);
   {
     using DeviceGaugeFieldType = DeviceGaugeFieldType<4, 2>;

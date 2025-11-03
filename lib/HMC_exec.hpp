@@ -11,9 +11,10 @@ using RNGType = Kokkos::Random_XorShift64_Pool<Kokkos::DefaultExecutionSpace>;
 namespace klft {
 
 template <typename HMCType>
-int run_HMC(HMCType &hmc, const Integrator_Params &integratorParams,
-            GaugeObservableParams &gaugeObsParams,
-            SimulationLoggingParams &simLogParams) {
+int run_HMC(HMCType& hmc,
+            const Integrator_Params& integratorParams,
+            GaugeObservableParams& gaugeObsParams,
+            SimulationLoggingParams& simLogParams) {
   // initiate and execute the HMC with the given parameters
   printf("Executing HMC ...");
   static_assert(isHMCClass<HMCType>::value,
@@ -59,4 +60,4 @@ int run_HMC(HMCType &hmc, const Integrator_Params &integratorParams,
   return 0;
 }
 
-} // namespace klft
+}  // namespace klft

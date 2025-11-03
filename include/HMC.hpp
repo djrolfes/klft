@@ -16,7 +16,7 @@ namespace klft {
 
 template <typename DGaugeFieldType, typename DAdjFieldType, class RNG>
 class HMC {
-public:
+ public:
   // template argument deduction and safety
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
   static_assert(isDeviceAdjFieldType<DAdjFieldType>::value);
@@ -33,7 +33,7 @@ public:
 
   struct randomize_momentum_s {};
   Integrator_Params params;
-  HamiltonianField<DGaugeFieldType, DAdjFieldType> &hamiltonian_field;
+  HamiltonianField<DGaugeFieldType, DAdjFieldType>& hamiltonian_field;
   std::vector<std::unique_ptr<Monomial<DGaugeFieldType, DAdjFieldType>>>
       monomials;
   std::shared_ptr<Integrator> integrator;
@@ -45,10 +45,15 @@ public:
   HMC() = default;
 
   HMC(const Integrator_Params params_,
-      HamiltonianField<DGaugeFieldType, DAdjFieldType> &hamiltonian_field_,
-      std::shared_ptr<Integrator> integrator_, RNG rng_,
-      std::uniform_real_distribution<real_t> dist_, std::mt19937 mt_)
-      : params(params_), rng(rng_), dist(dist_), mt(mt_),
+      HamiltonianField<DGaugeFieldType, DAdjFieldType>& hamiltonian_field_,
+      std::shared_ptr<Integrator> integrator_,
+      RNG rng_,
+      std::uniform_real_distribution<real_t> dist_,
+      std::mt19937 mt_)
+      : params(params_),
+        rng(rng_),
+        dist(dist_),
+        mt(mt_),
         hamiltonian_field(hamiltonian_field_),
         integrator(std::move(integrator_)) {}
 
@@ -63,24 +68,29 @@ public:
         std::make_unique<KineticMonomial<DGaugeFieldType, DAdjFieldType>>(
             _time_scale));
   }
-  template <template <template <typename, typename> class DiracOpT, typename,
-                      typename> class _Solver,
-            template <typename, typename> class DiracOpT,
+  template <template <template <typename, typename> class DiracOpT,
+                      typename,
+                      typename>
+            class _Solver,
+            template <typename, typename>
+            class DiracOpT,
             typename DSpinorFieldType>
   void add_fermion_monomial(
-      typename DSpinorFieldType::type &spinorField,
+      typename DSpinorFieldType::type& spinorField,
       diracParams<DeviceFermionFieldTypeTraits<DSpinorFieldType>::Rank,
 
-                  DeviceFermionFieldTypeTraits<DSpinorFieldType>::RepDim>
-          &params_,
-      const real_t &tol_, RNG &rng, const unsigned int _time_scale) {
+                  DeviceFermionFieldTypeTraits<DSpinorFieldType>::RepDim>&
+          params_,
+      const real_t& tol_,
+      RNG& rng,
+      const unsigned int _time_scale) {
     monomials.emplace_back(
         std::make_unique<FermionMonomial<RNG, DSpinorFieldType, DGaugeFieldType,
                                          DAdjFieldType, _Solver, DiracOpT>>(
             spinorField, params_, tol_, rng, _time_scale));
   }
 
-  bool hmc_step(const bool &check_Reversibility = false) {
+  bool hmc_step(const bool& check_Reversibility = false) {
     Kokkos::fence();
     hamiltonian_field.randomize_momentum(rng);
     // print_SUNAdj(hamiltonian_field.adjoint_field(0, 0, 0, 0, 0),
@@ -146,11 +156,12 @@ public:
 };
 
 // compile time check for the appropriate types
-template <typename T> struct isHMCClass : std::false_type {};
+template <typename T>
+struct isHMCClass : std::false_type {};
 
 template <size_t rank, size_t Nc, GaugeFieldKind k, class RNG>
 struct isHMCClass<
     HMC<DeviceGaugeFieldType<rank, Nc, k>, DeviceAdjFieldType<rank, Nc>, RNG>>
     : std::true_type {};
 
-} // namespace klft
+}  // namespace klft

@@ -9,10 +9,10 @@
 namespace klft {
 
 template <typename DGaugeFieldType, typename HMCType>
-index_t do_wflowtest(HMCType &hmc, GaugeObservableParams &gaugeObsParams,
-                     SimulationLoggingParams &simLogParams,
+index_t do_wflowtest(HMCType& hmc,
+                     GaugeObservableParams& gaugeObsParams,
+                     SimulationLoggingParams& simLogParams,
                      std::string output_directory) {
-
   static const size_t Nc = DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc;
   // Construct the output filename. Each MPI rank will get its own file.
   std::string output_filename =
@@ -22,7 +22,7 @@ index_t do_wflowtest(HMCType &hmc, GaugeObservableParams &gaugeObsParams,
   if (!output_file_topologicalcharge.is_open()) {
     fprintf(stderr, "Error: Could not open output file %s\n",
             output_filename.c_str());
-    return -1; // Or handle the error as appropriate
+    return -1;  // Or handle the error as appropriate
   }
 
   std::string output_filename_action_density_clover =
@@ -33,7 +33,7 @@ index_t do_wflowtest(HMCType &hmc, GaugeObservableParams &gaugeObsParams,
   if (!output_file_actiondensity_clover.is_open()) {
     fprintf(stderr, "Error: Could not open output file %s\n",
             output_filename_action_density_clover.c_str());
-    return -1; // Or handle the error as appropriate
+    return -1;  // Or handle the error as appropriate
   }
 
   std::string output_filename_sp_dist = output_directory + "sp_avg.txt";
@@ -42,7 +42,7 @@ index_t do_wflowtest(HMCType &hmc, GaugeObservableParams &gaugeObsParams,
   if (!output_file_sp_avg.is_open()) {
     fprintf(stderr, "Error: Could not open output file %s\n",
             output_filename_sp_dist.c_str());
-    return -1; // Or handle the error as appropriate
+    return -1;  // Or handle the error as appropriate
   }
 
   std::string output_filename_sp_max = output_directory + "sp_max.txt";
@@ -51,7 +51,7 @@ index_t do_wflowtest(HMCType &hmc, GaugeObservableParams &gaugeObsParams,
   if (!output_file_sp_max.is_open()) {
     fprintf(stderr, "Error: Could not open output file %s\n",
             output_filename_sp_max.c_str());
-    return -1; // Or handle the error as appropriate
+    return -1;  // Or handle the error as appropriate
   }
 
   // Set precision for floating point numbers in the output file
@@ -145,7 +145,7 @@ index_t do_wflowtest(HMCType &hmc, GaugeObservableParams &gaugeObsParams,
       output_file_actiondensity_clover << "hmc_step";
       output_file_sp_avg << "hmc_step";
       output_file_sp_max << "hmc_step";
-      for (const auto &t : flow_times) {
+      for (const auto& t : flow_times) {
         output_file_topologicalcharge << "," << t;
         output_file_actiondensity_clover << "," << t;
         output_file_sp_max << "," << t;
@@ -160,24 +160,24 @@ index_t do_wflowtest(HMCType &hmc, GaugeObservableParams &gaugeObsParams,
 
     // Write the data for the current step
     output_file_topologicalcharge << step;
-    for (const auto &charge : topological_charges) {
+    for (const auto& charge : topological_charges) {
       output_file_topologicalcharge << "," << charge;
     }
     output_file_topologicalcharge << "\n";
 
     output_file_actiondensity_clover << step;
-    for (const auto &density : action_densities_clover) {
+    for (const auto& density : action_densities_clover) {
       output_file_actiondensity_clover << "," << density;
     }
     output_file_actiondensity_clover << "\n";
 
     output_file_sp_avg << step;
-    for (const auto &dist : sp_avg) {
+    for (const auto& dist : sp_avg) {
       output_file_sp_avg << "," << dist;
     }
     output_file_sp_avg << "\n";
     output_file_sp_max << step;
-    for (const auto &max : sp_max) {
+    for (const auto& max : sp_max) {
       output_file_sp_max << "," << max;
     }
     output_file_sp_max << "\n";
@@ -187,4 +187,4 @@ index_t do_wflowtest(HMCType &hmc, GaugeObservableParams &gaugeObsParams,
   return 0;
 }
 
-} // namespace klft
+}  // namespace klft

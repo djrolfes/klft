@@ -49,11 +49,24 @@ struct WLmunu {
   index_t Lmu, Lnu;
   // dimensions of the field
   const IndexArray<rank> dimensions;
-  WLmunu(const GaugeFieldType &g_in, const index_t mu, const index_t nu,
-         const index_t Lmu, const index_t Lnu, SUNFieldType &WLmu,
-         SUNFieldType &WLnu, const IndexArray<rank> &dimensions)
-      : g_in(g_in), mu(mu), nu(nu), Lmu(Lmu), Lnu(Lnu), Lmu_old(0), Lnu_old(0),
-        WLmu(WLmu), WLnu(WLnu), dimensions(dimensions) {}
+  WLmunu(const GaugeFieldType& g_in,
+         const index_t mu,
+         const index_t nu,
+         const index_t Lmu,
+         const index_t Lnu,
+         SUNFieldType& WLmu,
+         SUNFieldType& WLnu,
+         const IndexArray<rank>& dimensions)
+      : g_in(g_in),
+        mu(mu),
+        nu(nu),
+        Lmu(Lmu),
+        Lnu(Lnu),
+        Lmu_old(0),
+        Lnu_old(0),
+        WLmu(WLmu),
+        WLnu(WLnu),
+        dimensions(dimensions) {}
 
   template <typename... Indices>
   KOKKOS_FORCEINLINE_FUNCTION void operator()(const Indices... Idcs) const {
@@ -100,7 +113,8 @@ struct WLmunu {
 };
 
 // define a second functor to build the Wilson loop out of WLmu and WLnu
-template <size_t rank, size_t Nc> struct WLoop_munu {
+template <size_t rank, size_t Nc>
+struct WLoop_munu {
   // all of this works strictly for the case Nd = rank
   constexpr static const size_t Nd = rank;
   // define the SUN field type
@@ -117,12 +131,22 @@ template <size_t rank, size_t Nc> struct WLoop_munu {
   FieldType Wmunu_per_site;
   // dimensions of the field
   const IndexArray<rank> dimensions;
-  WLoop_munu(const SUNFieldType &WLmu, const SUNFieldType &WLnu,
-             const index_t mu, const index_t nu, const index_t Lmu,
-             const index_t Lnu, FieldType &Wmunu_per_site,
-             const IndexArray<rank> &dimensions)
-      : WLmu(WLmu), WLnu(WLnu), mu(mu), nu(nu), Lmu(Lmu), Lnu(Lnu),
-        Wmunu_per_site(Wmunu_per_site), dimensions(dimensions) {}
+  WLoop_munu(const SUNFieldType& WLmu,
+             const SUNFieldType& WLnu,
+             const index_t mu,
+             const index_t nu,
+             const index_t Lmu,
+             const index_t Lnu,
+             FieldType& Wmunu_per_site,
+             const IndexArray<rank>& dimensions)
+      : WLmu(WLmu),
+        WLnu(WLnu),
+        mu(mu),
+        nu(nu),
+        Lmu(Lmu),
+        Lnu(Lnu),
+        Wmunu_per_site(Wmunu_per_site),
+        dimensions(dimensions) {}
 
   template <typename... Indices>
   KOKKOS_FORCEINLINE_FUNCTION void operator()(const Indices... Idcs) const {
@@ -165,10 +189,11 @@ template <size_t rank, size_t Nc> struct WLoop_munu {
 // the Lmu and Lnu pairs must be strictly non-decreasing
 template <size_t rank, size_t Nc, GaugeFieldKind k = GaugeFieldKind::Standard>
 void WilsonLoop_mu_nu(
-    const typename DeviceGaugeFieldType<rank, Nc, k>::type &g_in,
-    const index_t mu, const index_t nu,
-    const std::vector<Kokkos::Array<index_t, 2>> &Lmu_nu_pairs,
-    std::vector<Kokkos::Array<real_t, 5>> &Wmunu_vals,
+    const typename DeviceGaugeFieldType<rank, Nc, k>::type& g_in,
+    const index_t mu,
+    const index_t nu,
+    const std::vector<Kokkos::Array<index_t, 2>>& Lmu_nu_pairs,
+    std::vector<Kokkos::Array<real_t, 5>>& Wmunu_vals,
     const bool normalize = true) {
   // this kernel is defined for Nd = rank
   constexpr static const size_t Nd = rank;
@@ -176,7 +201,7 @@ void WilsonLoop_mu_nu(
   complex_t Wmunu;
 
   // get the start and end indices
-  const auto &dimensions = g_in.field.layout().dimension;
+  const auto& dimensions = g_in.field.layout().dimension;
   IndexArray<rank> start;
   IndexArray<rank> end;
   for (index_t i = 0; i < Nd; ++i) {
@@ -199,7 +224,7 @@ void WilsonLoop_mu_nu(
   WLmunu<rank, Nc, k> wlmunu(g_in, mu, nu, 0, 0, WLmu, WLnu, end);
 
   // iterate over all pairs of Lmu and Lnu
-  for (const auto &Lmu_nu : Lmu_nu_pairs) {
+  for (const auto& Lmu_nu : Lmu_nu_pairs) {
     // get the lengths
     const index_t Lmu = Lmu_nu[0];
     const index_t Lnu = Lmu_nu[1];
@@ -248,9 +273,9 @@ void WilsonLoop_mu_nu(
 // result is normalized based on bool normalize
 template <size_t rank, size_t Nc, GaugeFieldKind k = GaugeFieldKind::Standard>
 void WilsonLoop_temporal(
-    const typename DeviceGaugeFieldType<rank, Nc, k>::type &g_in,
-    const std::vector<Kokkos::Array<index_t, 2>> &L_T_pairs,
-    std::vector<Kokkos::Array<real_t, 3>> &Wtemporal_vals,
+    const typename DeviceGaugeFieldType<rank, Nc, k>::type& g_in,
+    const std::vector<Kokkos::Array<index_t, 2>>& L_T_pairs,
+    std::vector<Kokkos::Array<real_t, 3>>& Wtemporal_vals,
     const bool normalize = true) {
   // this kernel is defined for Nd = rank
   constexpr static const size_t Nd = rank;
@@ -261,7 +286,7 @@ void WilsonLoop_temporal(
   WilsonLoop_mu_nu<rank, Nc, k>(g_in, 0, Nd - 1, L_T_pairs, Wmunu_vals,
                                 normalize);
   // push the results to the output vector
-  for (const auto &Wmunu : Wmunu_vals) {
+  for (const auto& Wmunu : Wmunu_vals) {
     Wtemporal_vals.push_back(
         Kokkos::Array<real_t, 3>{Wmunu[2], Wmunu[3], Wmunu[4]});
   }
@@ -310,4 +335,4 @@ void WilsonLoop_temporal(
   }
 }
 
-} // namespace klft
+}  // namespace klft

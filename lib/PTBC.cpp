@@ -1,17 +1,17 @@
 #include "PTBC.hpp"
+#include <mpi.h>
 #include "FieldTypeHelper.hpp"
 #include "GLOBAL.hpp"
 #include "GaugeObservable.hpp"
 #include "HamiltonianField.hpp"
 #include "InputParser.hpp"
 #include "SimulationLogging.hpp"
-#include <mpi.h>
 
 using RNGType = Kokkos::Random_XorShift64_Pool<Kokkos::DefaultExecutionSpace>;
 
 namespace klft {
 
-std::string ranked_filename(const std::string &base_filename, int rank) {
+std::string ranked_filename(const std::string& base_filename, int rank) {
   auto pos = base_filename.rfind('.');
   if (pos == std::string::npos) {
     // No extension → just append
@@ -23,9 +23,8 @@ std::string ranked_filename(const std::string &base_filename, int rank) {
   }
 }
 
-int PTBC_execute(const std::string &input_file,
-                 const std::string &output_directory) {
-
+int PTBC_execute(const std::string& input_file,
+                 const std::string& output_directory) {
   const int verbosity = std::getenv("KLFT_VERBOSITY")
                             ? std::atoi(std::getenv("KLFT_VERBOSITY"))
                             : 0;
@@ -220,7 +219,6 @@ int PTBC_execute(const std::string &input_file,
         //
       }
     } else if (hmcParams.Ndims == 3) {
-
       if (resParsef > 0) {
         printf("Error: Fermions are currently not supported in 3D\n");
         return 1;
@@ -342,7 +340,6 @@ int PTBC_execute(const std::string &input_file,
         //         );
       }
     } else if (hmcParams.Ndims == 2) {
-
       if (resParsef > 0) {
         printf("Error: Fermions are currently not supported in 2D\n");
         return 1;
@@ -459,7 +456,7 @@ int PTBC_execute(const std::string &input_file,
         //         );
       }
     }
-  } else { // Hotstart
+  } else {  // Hotstart
     if (hmcParams.Ndims == 4) {
       defectParams<4> dParams;
       dParams.defect_length = ptbcParams.defect_length;
@@ -538,10 +535,11 @@ int PTBC_execute(const std::string &input_file,
         PTBC ptbc(ptbcParams, hmc, rng, dist, mt);
 
         if (KLFT_VERBOSITY > 1) {
-          printf("Running PTBC with Nc = %zu, Ndims = %d, L0 = %d, L1 = %d, "
-                 "L2 = %d, L3 = %d\n",
-                 hmcParams.Nc, hmcParams.Ndims, hmcParams.L0, hmcParams.L1,
-                 hmcParams.L2, hmcParams.L3);
+          printf(
+              "Running PTBC with Nc = %zu, Ndims = %d, L0 = %d, L1 = %d, "
+              "L2 = %d, L3 = %d\n",
+              hmcParams.Nc, hmcParams.Ndims, hmcParams.L0, hmcParams.L1,
+              hmcParams.L2, hmcParams.L3);
         }
 
         run_PTBC(ptbc, integratorParams, gaugeObsParams, ptbcSimLogParams,
@@ -551,7 +549,6 @@ int PTBC_execute(const std::string &input_file,
         return 1;
       }
     } else if (hmcParams.Ndims == 3) {
-
       if (resParsef > 0) {
         printf("Error: Fermions are currently not supported in 3D\n");
         return 1;
@@ -730,4 +727,4 @@ int PTBC_execute(const std::string &input_file,
   // }
   return 0;
 }
-} // namespace klft
+}  // namespace klft

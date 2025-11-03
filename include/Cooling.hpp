@@ -17,7 +17,8 @@ struct CoolingParams {
   }
 };
 
-template <typename DGaugeFieldType, class RNG> struct CoolingFunctors {
+template <typename DGaugeFieldType, class RNG>
+struct CoolingFunctors {
   // implement the Wilson flow, for now the field will not be copied, but it
   // will be flown in place -> copying needs to be done before
   constexpr static const size_t rank =
@@ -26,7 +27,7 @@ template <typename DGaugeFieldType, class RNG> struct CoolingFunctors {
       DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc;
   constexpr static const GaugeFieldKind Kind =
       DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Kind;
-  static_assert(rank == 4); // The wilson flow is only defined for 4D Fields
+  static_assert(rank == 4);  // The wilson flow is only defined for 4D Fields
   CoolingParams params;
 
   // get the correct deviceGaugeFieldType
@@ -34,11 +35,11 @@ template <typename DGaugeFieldType, class RNG> struct CoolingFunctors {
   GaugeFieldT field;
   GaugeFieldT tmp_staple;
   SUNAdjField<rank, Nc> tmp_Z;
-  RNG &rng;
+  RNG& rng;
 
   CoolingFunctors() = delete;
 
-  CoolingFunctors(const GaugeFieldT &_field, CoolingParams &_params, RNG &rng)
+  CoolingFunctors(const GaugeFieldT& _field, CoolingParams& _params, RNG& rng)
       : params(_params), field(_field.field), tmp_staple(_field.field) {
     const IndexArray<rank> dims = _field.dimensions;
     Kokkos::realloc(Kokkos::WithoutInitializing, tmp_Z, dims[0], dims[1],
@@ -53,8 +54,8 @@ template <typename DGaugeFieldType, class RNG> struct CoolingFunctors {
   }
 
   // execute the wilson flow
-  void cool() { // todo: check this once by saving a staple field and once by
-                // locally calculating the staple
+  void cool() {  // todo: check this once by saving a staple field and once by
+                 // locally calculating the staple
     for (int step = 0; step < params.n_steps; ++step) {
       stapleField<DGaugeFieldType>(this->field, this->tmp_staple);
       Kokkos::fence();
@@ -66,7 +67,8 @@ template <typename DGaugeFieldType, class RNG> struct CoolingFunctors {
   }
 
   template <typename indexType>
-  KOKKOS_INLINE_FUNCTION void operator()(const indexType i0, const indexType i1,
+  KOKKOS_INLINE_FUNCTION void operator()(const indexType i0,
+                                         const indexType i1,
                                          const indexType i2,
                                          const indexType i3) const {
 #pragma unroll
@@ -79,4 +81,4 @@ template <typename DGaugeFieldType, class RNG> struct CoolingFunctors {
   }
 };
 
-} // namespace klft
+}  // namespace klft

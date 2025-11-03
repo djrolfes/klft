@@ -21,7 +21,7 @@ class GaugeMonomial : public Monomial<DGaugeFieldType, DAdjFieldType> {
 
   using GaugeFieldType = typename DGaugeFieldType::type;
 
-public:
+ public:
   real_t beta;
 
   GaugeMonomial(real_t _beta, unsigned int _time_scale)
@@ -45,4 +45,4 @@ public:
   }
 };
 
-} // namespace klft
+}  // namespace klft

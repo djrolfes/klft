@@ -44,10 +44,13 @@ struct GaugePlaq {
   using FieldType = typename DeviceFieldType<rank>::type;
   FieldType plaq_per_site;
   const IndexArray<rank> dimensions;
-  GaugePlaq(const GaugeFieldType &g_in, FieldType &plaq_per_site,
-            const IndexArray<rank> &dimensions)
-      : g_in(g_in), plaq_per_site(plaq_per_site), dimensions(dimensions) {
-  } // TODO: g_in does copy construction (does it?), this needs to be changed
+  GaugePlaq(const GaugeFieldType& g_in,
+            FieldType& plaq_per_site,
+            const IndexArray<rank>& dimensions)
+      : g_in(g_in),
+        plaq_per_site(plaq_per_site),
+        dimensions(dimensions) {
+  }  // TODO: g_in does copy construction (does it?), this needs to be changed
 
   template <typename... Indices>
   KOKKOS_FORCEINLINE_FUNCTION complex_t
@@ -125,9 +128,9 @@ struct GaugePlaq {
 };
 
 template <size_t rank, size_t Nc, GaugeFieldKind k = GaugeFieldKind::Standard>
-real_t
-GaugePlaquette(const typename DeviceGaugeFieldType<rank, Nc, k>::type &g_in,
-               const bool normalize = true) {
+real_t GaugePlaquette(
+    const typename DeviceGaugeFieldType<rank, Nc, k>::type& g_in,
+    const bool normalize = true) {
   // this kernel is defined for rank = Nd
   constexpr static const size_t Nd = rank;
   // final return variable
@@ -194,7 +197,7 @@ real_t get_spmax(const typename DGaugeFieldType::type gauge_field) {
   Kokkos::parallel_reduce(
       "get h (sp_max)", policy,
       KOKKOS_LAMBDA(size_t i0, size_t i1, size_t i2, size_t i3,
-                    real_t &local_max) {
+                    real_t & local_max) {
         // GPlaq(i0, i1, i2, i3);
         real_t s = 0.0;
         for (index_t mu = 0; mu < Nd; ++mu) {
@@ -232,7 +235,8 @@ real_t get_spavg(const typename DGaugeFieldType::type gauge_field) {
   auto policy = Policy<Nd>({0, 0, 0, 0}, gauge_field.dimensions);
   Kokkos::parallel_reduce(
       "get h (sp_max)", policy,
-      KOKKOS_LAMBDA(size_t i0, size_t i1, size_t i2, size_t i3, real_t &local) {
+      KOKKOS_LAMBDA(size_t i0, size_t i1, size_t i2, size_t i3,
+                    real_t & local) {
         // GPlaq(i0, i1, i2, i3);
         real_t local_avg = 0.0;
         int tmp = 0;
@@ -251,4 +255,4 @@ real_t get_spavg(const typename DGaugeFieldType::type gauge_field) {
 
   return rtn / gauge_field.field.size();
 }
-} // namespace klft
+}  // namespace klft

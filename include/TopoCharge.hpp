@@ -18,11 +18,11 @@
 //******************************************************************************/
 
 #pragma once
+#include <unistd.h>
 #include "FieldStrengthTensor.hpp"
 #include "FieldTypeHelper.hpp"
 #include "GLOBAL.hpp"
 #include "Kokkos_Macros.hpp"
-#include <unistd.h>
 
 namespace klft {
 // first define the necessary functor
@@ -56,8 +56,10 @@ struct TopoCharge {
   const IndexArray<Nd> dimensions;
 
   TopoCharge(const GaugeFieldType g_in)
-      : g_in(g_in), dimensions(g_in.dimensions),
-        charge_per_site(g_in.dimensions, real_t(0)), fst(g_in) {}
+      : g_in(g_in),
+        dimensions(g_in.dimensions),
+        charge_per_site(g_in.dimensions, real_t(0)),
+        fst(g_in) {}
 
   /// Return the 4-D Levi–Civita symbol ε_{μνρσ} for indices 0..3.
   /// Zero if any indices repeat; +1 or –1 otherwise.
@@ -79,9 +81,10 @@ struct TopoCharge {
   // now define the topological charge calculation for a single site (should
   // this also be parallized over some directions?)
   template <typename indexType>
-  KOKKOS_FORCEINLINE_FUNCTION void
-  operator()(const indexType i0, const indexType i1, const indexType i2,
-             const indexType i3) const {
+  KOKKOS_FORCEINLINE_FUNCTION void operator()(const indexType i0,
+                                              const indexType i1,
+                                              const indexType i2,
+                                              const indexType i3) const {
     real_t local_charge{0.0};
     ComplexMatrix C1, C2;
     Kokkos::Array<Kokkos::Array<SUNAdj<Nc>, Nd>, Nd> C;
@@ -148,9 +151,9 @@ real_t get_topological_charge(const typename DGaugeFieldType::type g_in) {
 }
 
 template <typename DGaugeFieldType>
-real_t
-get_topological_charge_improved(const typename DGaugeFieldType::type g_in,
-                                const real_t b1) {
+real_t get_topological_charge_improved(
+    const typename DGaugeFieldType::type g_in,
+    const real_t b1) {
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>(),
                 "get_topological_charge requires a device gauge field type.");
   constexpr static const size_t Nd =
@@ -180,4 +183,4 @@ get_topological_charge_improved(const typename DGaugeFieldType::type g_in,
   return -4.0 * charge / (32 * PI * PI);
 }
 
-} // namespace klft
+}  // namespace klft

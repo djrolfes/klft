@@ -36,10 +36,11 @@ struct TagDdagger {};
 struct TagDDdagger {};
 // applys Composid Operator Mdagger= DdaggerD*s_in
 struct TagDdaggerD {};
-} // namespace Tags
+}  // namespace Tags
 
 template <template <typename, typename> class _Derived,
-          typename DSpinorFieldType, typename DGaugeFieldType>
+          typename DSpinorFieldType,
+          typename DGaugeFieldType>
 class DiracOperator {
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
   static_assert(isDeviceFermionFieldType<DSpinorFieldType>::value);
@@ -57,32 +58,33 @@ class DiracOperator {
   using SpinorFieldType = typename DSpinorFieldType::type;
   using GaugeFieldType = typename DeviceGaugeFieldType<rank, Nc>::type;
 
-public:
-  DiracOperator(const GaugeFieldType &g_in,
-                const diracParams<rank, RepDim> &params)
+ public:
+  DiracOperator(const GaugeFieldType& g_in,
+                const diracParams<rank, RepDim>& params)
       : g_in(g_in), params(params) {}
   ~DiracOperator() = default;
   // Define callabale apply functions
-  template <typename Tag> SpinorFieldType apply(const SpinorFieldType &s_in) {
+  template <typename Tag>
+  SpinorFieldType apply(const SpinorFieldType& s_in) {
     this->s_in = s_in;
     this->s_out = SpinorFieldType(params.dimensions, complex_t(0.0, 0.0));
     // Apply the operator
     return this->apply(Tag{});
   }
   template <typename Tag>
-  void apply(const SpinorFieldType &s_in, const SpinorFieldType &s_out) {
+  void apply(const SpinorFieldType& s_in, const SpinorFieldType& s_out) {
     this->s_in = s_in;
     this->s_out = s_out;
     // Apply the operator
     this->apply(Tag{});
   }
 
-private:
+ private:
   SpinorFieldType apply(Tags::TagD) {
     // Apply the operator
     tune_and_launch_for<rank, Tags::TagD>(typeid(Derived).name(),
                                           IndexArray<rank>{}, params.dimensions,
-                                          static_cast<Derived &>(*this));
+                                          static_cast<Derived&>(*this));
     Kokkos::fence();
     return s_out;
   }
@@ -91,7 +93,7 @@ private:
     // Apply the operator
     tune_and_launch_for<rank, Tags::TagDdagger>(
         typeid(Derived).name(), IndexArray<rank>{}, params.dimensions,
-        static_cast<Derived &>(*this));
+        static_cast<Derived&>(*this));
     Kokkos::fence();
     return s_out;
   }
@@ -112,21 +114,21 @@ private:
     return this->apply(Tags::TagDdagger{});
   }
 
-public:
+ public:
   SpinorFieldType s_in;
   SpinorFieldType s_out;
   const GaugeFieldType g_in;
   const diracParams<rank, RepDim> params;
 
-protected:
+ protected:
   DiracOperator() = default;
 };
 
 template <typename DSpinorFieldType, typename DGaugeFieldType>
-class WilsonDiracOperator
-    : public DiracOperator<WilsonDiracOperator, DSpinorFieldType,
-                           DGaugeFieldType> {
-public:
+class WilsonDiracOperator : public DiracOperator<WilsonDiracOperator,
+                                                 DSpinorFieldType,
+                                                 DGaugeFieldType> {
+ public:
   constexpr static size_t Nc =
       DeviceFermionFieldTypeTraits<DSpinorFieldType>::Nc;
   constexpr static size_t RepDim =
@@ -189,10 +191,10 @@ public:
 };
 
 template <typename DSpinorFieldType, typename DGaugeFieldType>
-class HWilsonDiracOperator
-    : public DiracOperator<HWilsonDiracOperator, DSpinorFieldType,
-                           DGaugeFieldType> {
-public:
+class HWilsonDiracOperator : public DiracOperator<HWilsonDiracOperator,
+                                                  DSpinorFieldType,
+                                                  DGaugeFieldType> {
+ public:
   constexpr static size_t Nc =
       DeviceFermionFieldTypeTraits<DSpinorFieldType>::Nc;
   constexpr static size_t RepDim =
@@ -235,4 +237,4 @@ public:
   }
 };
 
-} // namespace klft
+}  // namespace klft

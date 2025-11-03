@@ -1,8 +1,8 @@
 
 
+#include <getopt.h>
 #include <cassert>
 #include <cmath>
-#include <getopt.h>
 
 #include "ActionDensity.hpp"
 #include "FieldTypeHelper.hpp"
@@ -18,7 +18,7 @@ using RNGType = Kokkos::Random_XorShift64_Pool<Kokkos::DefaultExecutionSpace>;
 
 using namespace klft;
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
   Kokkos::initialize(argc, argv);
   {
     using DeviceGaugeFieldType = DeviceGaugeFieldType<4, 2>;
@@ -41,12 +41,12 @@ int main(int argc, char *argv[]) {
         KOKKOS_LAMBDA(size_t i0, size_t i1, size_t i2, size_t i3) {
           real_t local_E1 = 0;
           for (int mu = 0; mu < 4; ++mu) {
-            auto tmp = traceT(f(i0, i1, i2, i3, mu) *
-                              stap.staple(IndexArray<4>{static_cast<int>(i0),
-                                                        static_cast<int>(i1),
-                                                        static_cast<int>(i2),
-                                                        static_cast<int>(i3)},
-                                          mu));
+            auto tmp = traceT(
+                f(i0, i1, i2, i3, mu) *
+                stap.staple(
+                    IndexArray<4>{static_cast<int>(i0), static_cast<int>(i1),
+                                  static_cast<int>(i2), static_cast<int>(i3)},
+                    mu));
             local_E1 += tr<2>(tmp, tmp);
           }
           E1(i0, i1, i2, i3) = local_E1;
@@ -57,12 +57,12 @@ int main(int argc, char *argv[]) {
         KOKKOS_LAMBDA(size_t i0, size_t i1, size_t i2, size_t i3) {
           real_t local_E2 = 0;
           for (int mu = 0; mu < 4; ++mu) {
-            auto tmp = traceT(ginv.field(i0, i1, i2, i3, mu) *
-                              tstap.staple(IndexArray<4>{static_cast<int>(i0),
-                                                         static_cast<int>(i1),
-                                                         static_cast<int>(i2),
-                                                         static_cast<int>(i3)},
-                                           mu));
+            auto tmp = traceT(
+                ginv.field(i0, i1, i2, i3, mu) *
+                tstap.staple(
+                    IndexArray<4>{static_cast<int>(i0), static_cast<int>(i1),
+                                  static_cast<int>(i2), static_cast<int>(i3)},
+                    mu));
             local_E2 += tr<2>(tmp, tmp);
           }
           E2(i0, i1, i2, i3) = local_E2;

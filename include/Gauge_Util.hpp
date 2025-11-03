@@ -19,11 +19,11 @@
 
 // utility functions for gauge fields
 #pragma once
+#include <cassert>
 #include "FieldTypeHelper.hpp"
 #include "GLOBAL.hpp"
 #include "Kokkos_Macros.hpp"
 #include "SUN.hpp"
-#include <cassert>
 
 namespace klft {
 
@@ -205,7 +205,7 @@ auto stapleField(const typename DGaugeFieldType::type g_in)
   typename DGaugeFieldType::type g_out(g_in.dimensions, 0);
 
   // get the start and end indices
-  const auto &dimensions = g_in.field.layout().dimension;
+  const auto& dimensions = g_in.field.layout().dimension;
   IndexArray<Nd> start;
   IndexArray<Nd> end;
   for (index_t i = 0; i < Nd; ++i) {
@@ -255,7 +255,7 @@ auto stapleField(const typename DGaugeFieldType::type g_in)
 // calculate staple per site and store in another gauge
 template <typename DGaugeFieldType>
 void stapleField(const typename DGaugeFieldType::type g_in,
-                 typename DGaugeFieldType::type &g_out) {
+                 typename DGaugeFieldType::type& g_out) {
   // initialize the output field
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
   constexpr static size_t Nd =
@@ -265,7 +265,7 @@ void stapleField(const typename DGaugeFieldType::type g_in,
   // TODO: add a check that g_out and g_in match
 
   // get the start and end indices
-  const auto &dimensions = g_in.field.layout().dimension;
+  const auto& dimensions = g_in.field.layout().dimension;
   IndexArray<Nd> start;
   IndexArray<Nd> end;
   for (index_t i = 0; i < Nd; ++i) {
@@ -317,18 +317,19 @@ void stapleField(const typename DGaugeFieldType::type g_in,
 // (https://journals.aps.org/prd/pdf/10.1103/53vh-wm6v)
 template <typename DGaugeFieldType>
 void stapleField(const typename DGaugeFieldType::type g_in,
-                 typename DGaugeFieldType::type &g_out, real_t c1) {
+                 typename DGaugeFieldType::type& g_out,
+                 real_t c1) {
   // initialize the output field
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
   constexpr static size_t Nd =
       DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank;
-  static_assert(Nd == 4); // too lazy to implement for other Nd for now
+  static_assert(Nd == 4);  // too lazy to implement for other Nd for now
   // constexpr static size_t Nc =
   // DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc;
   real_t c0 = 1.0 - 8.0 * c1;
 
   // get the start and end indices
-  const auto &dimensions = g_in.field.layout().dimension;
+  const auto& dimensions = g_in.field.layout().dimension;
   IndexArray<Nd> start;
   IndexArray<Nd> end;
   for (index_t i = 0; i < Nd; ++i) {
@@ -374,7 +375,8 @@ void stapleField(const typename DGaugeFieldType::type g_in,
   // return the output field
 }
 
-template <typename DGaugeFieldType> struct restoreSUNFunctor {
+template <typename DGaugeFieldType>
+struct restoreSUNFunctor {
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
   constexpr static size_t rank =
       DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank;
@@ -384,7 +386,7 @@ template <typename DGaugeFieldType> struct restoreSUNFunctor {
   using GaugeField = typename DGaugeFieldType::type;
 
   GaugeField gauge_field;
-  restoreSUNFunctor(GaugeField &_gauge_field) : gauge_field(_gauge_field) {}
+  restoreSUNFunctor(GaugeField& _gauge_field) : gauge_field(_gauge_field) {}
   template <typename... Indices>
   KOKKOS_FORCEINLINE_FUNCTION void operator()(Indices... Idcs) const {
     // restore the SUN matrices to the correct shape
@@ -395,7 +397,7 @@ template <typename DGaugeFieldType> struct restoreSUNFunctor {
 };
 
 template <typename DGaugeFieldType>
-void restoreSUN(typename DGaugeFieldType::type &gauge_field) {
+void restoreSUN(typename DGaugeFieldType::type& gauge_field) {
   restoreSUNFunctor<DGaugeFieldType> restoreSUNFunctor(gauge_field);
   tune_and_launch_for<DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank>(
       "restoreSUN",
@@ -403,4 +405,4 @@ void restoreSUN(typename DGaugeFieldType::type &gauge_field) {
       gauge_field.dimensions, restoreSUNFunctor);
   Kokkos::fence();
 }
-} // namespace klft
+}  // namespace klft
