@@ -90,8 +90,8 @@ int run_HMC(HMCType& hmc,
     addLogData(simLogParams, step, hmc.delta_H, acc_rate, accept, time);
     flushSimulationLogs(simLogParams, step, true);
     flushAllGaugeObservables(gaugeObsParams, step, true);
-    flushIO<HMCType::rank, HMCType::Nc>(hmc.ioParams, step,
-                                        hmc.hamiltonian_field.gauge_field);
+    flushIO<DeviceGaugeFieldType<HMCType::rank, HMCType::Nc>>(
+        hmc.ioParams, step, hmc.hamiltonian_field.gauge_field);
     // flush the measurements to the files
     // if flush is set to 0, we flush with the  header at the end of
     // the simulation
@@ -99,8 +99,9 @@ int run_HMC(HMCType& hmc,
 
   forceflushSimulationLogs(simLogParams, true);
   forceflushAllGaugeObservables(gaugeObsParams, true);
-  flushIO<HMCType::rank, HMCType::Nc>(hmc.ioParams, integratorParams.nsteps,
-                                      hmc.hamiltonian_field.gauge_field, true);
+  flushIO<DeviceGaugeFieldType<HMCType::rank, HMCType::Nc>>(
+      hmc.ioParams, integratorParams.nsteps, hmc.hamiltonian_field.gauge_field,
+      true);
 
   printf("Total Acceptance rate: %f, Accept %f Configs", acc_rate, acc_sum);
   return 0;

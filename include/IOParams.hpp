@@ -18,7 +18,8 @@ struct IOParams {
   }
 };
 template <typename DGaugeFieldType>
-void flushIO(const IOParams& params, const size_t& step,
+void flushIO(const IOParams& params,
+             const size_t& step,
              const typename DGaugeFieldType::type& gauge_field,
              const bool last_step = false) {
   if (!params.save_gauge_field) {
