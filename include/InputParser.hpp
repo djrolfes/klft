@@ -23,9 +23,6 @@
 
 #pragma once
 #include <yaml-cpp/yaml.h>
-
-#include "FermionObservable.hpp"
-#include "FermionParams.hpp"
 #include "GaugeObservable.hpp"
 #include "HMC_Params.hpp"
 #include "Metropolis_Params.hpp"
@@ -141,6 +138,23 @@ inline int parseInputFile(const std::string& filename,
             wfp_node["tau"].as<real_t>();
         gaugeObservableParams.wilson_flow_params.eps =
             wfp_node["eps"].as<real_t>();
+        gaugeObservableParams.wilson_flow_params.dynamical_flow =
+            wfp_node["dynamical_flow"].as<bool>(false);
+        gaugeObservableParams.wilson_flow_params.min_flow_time =
+            wfp_node["min_flow_time"].as<real_t>(-1.0);
+        gaugeObservableParams.wilson_flow_params.max_flow_time =
+            wfp_node["max_flow_time"].as<real_t>(-1.0);
+        gaugeObservableParams.wilson_flow_params.sp_max_target =
+            wfp_node["sp_max_target"].as<real_t>(0.067);
+        gaugeObservableParams.wilson_flow_params.t_sqrd_E_target =
+            wfp_node["t_sqrd_E_target"].as<real_t>(0.1);
+        gaugeObservableParams.wilson_flow_params.first_tE_measure_step =
+            wfp_node["first_tE_measure_step"].as<size_t>(10);
+        gaugeObservableParams.wilson_flow_params.log_details =
+            wfp_node["log_details"].as<bool>(false);
+        gaugeObservableParams.wilson_flow_params.wilson_flow_filename =
+            output_directory +
+            wfp_node["wilson_flow_filename"].as<std::string>("");
 
         // Recalculate eps based on parsed values
         if (gaugeObservableParams.wilson_flow_params.eps > 0) {
@@ -158,10 +172,8 @@ inline int parseInputFile(const std::string& filename,
           gp["topological_charge_filename"].as<std::string>("");
       gaugeObservableParams.plaquette_filename =
           output_directory + gp["plaquette_filename"].as<std::string>("");
-      output_directory + gp["plaquette_filename"].as<std::string>("");
       gaugeObservableParams.W_temp_filename =
           output_directory + gp["W_temp_filename"].as<std::string>("");
-      output_directory + gp["W_temp_filename"].as<std::string>("");
       gaugeObservableParams.W_mu_nu_filename =
           output_directory + gp["W_mu_nu_filename"].as<std::string>("");
       gaugeObservableParams.action_density_filename =
@@ -186,6 +198,7 @@ inline int parseInputFile(const std::string& filename,
     return false;
   }
 }
+
 inline int parseInputFile(const std::string& filename,
                           const std::string& output_directory,
                           FermionObservableParams& fobs) {
@@ -219,14 +232,15 @@ inline int parseInputFile(const std::string& filename,
   }
   return true;
 }
-// get GaugeObservableParams from input file
+
+// get PTBCParams from input file
 inline bool parseInputFile(const std::string& filename,
                            const std::string& output_directory,
                            PTBCParams& ptbcParams) {
   try {
     YAML::Node config = YAML::LoadFile(filename);
 
-    // Parse GaugeObservableParams
+    // Parse PTBCParams
     if (config["PTBCParams"]) {
       const auto& pp = config["PTBCParams"];
       ptbcParams.defect_length = pp["defect_length"].as<index_t>(1);
@@ -262,7 +276,7 @@ inline bool parseInputFile(const std::string& filename,
   try {
     YAML::Node config = YAML::LoadFile(filename);
 
-    // Parse MetropolisParams
+    // Parse HMCParams
     if (config["HMCParams"]) {
       const auto& mp = config["HMCParams"];
       // general parameters
@@ -432,8 +446,6 @@ inline int parseInputFile(const std::string& filename,
       const auto& mp = config["PTBCSimulationLoggingParams"];
       // general parameters
       simParams.log_interval = mp["log_interval"].as<size_t>(0);
-      simParams.log_filename =
-          output_directory + mp["log_filename"].as<std::string>("");
       simParams.log_filename =
           output_directory + mp["log_filename"].as<std::string>("");
       simParams.write_to_file = mp["write_to_file"].as<bool>(false);
