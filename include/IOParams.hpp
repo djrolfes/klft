@@ -1,4 +1,5 @@
 #pragma once
+
 #include "GLOBAL.hpp"
 namespace klft {
 struct IOParams {
@@ -18,8 +19,7 @@ struct IOParams {
   }
 };
 template <typename DGaugeFieldType>
-void flushIO(const IOParams& params,
-             const size_t& step,
+void flushIO(const IOParams& params, const size_t& step,
              const typename DGaugeFieldType::type& gauge_field,
              const bool last_step = false) {
   if (!params.save_gauge_field) {
@@ -27,20 +27,44 @@ void flushIO(const IOParams& params,
   }
   if (step % params.save_gauge_field_interval == 0 ||
       (last_step && params.save_after_trajectory)) {
-    if constexpr (DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Kind ==
-                  GaugeFieldKind::PTBC) {
-      gauge_field.save(encode_ptbc_info(params.output_dir + "step_" +
-                                            std::to_string(step) + "_" +
-                                            params.gauge_field_filename,
-                                        gauge_field.dParams));
-    }
     if (params.overwrite_gauge_field_file) {
-      gauge_field.save(params.output_dir + params.gauge_field_filename);
+      gauge_field.save(params.output_dir + "/" + params.gauge_field_filename);
       return;
       /* code */
     }
-    gauge_field.save(params.output_dir + "step_" + std::to_string(step) + "_" +
-                     params.gauge_field_filename);
+    std::string output_dir =
+        params.output_dir + "/step_" + std::to_string(step) + "/";
+    if (!std::filesystem::exists(output_dir)) {
+      std::filesystem::create_directories(output_dir);
+    }
+
+    gauge_field.save(output_dir + params.gauge_field_filename);
+  }
+  return;
+}
+
+template <typename DGaugeFieldType>
+void flushIOPTBC(const IOParams& params, const int& rank, const size_t& step,
+                 const typename DGaugeFieldType::type& gauge_field,
+                 const bool last_step = false) {
+  if (!params.save_gauge_field) {
+    return;
+  }
+  if (step % params.save_gauge_field_interval == 0 ||
+      (last_step && params.save_after_trajectory)) {
+    if (params.overwrite_gauge_field_file) {
+      printf(
+          "Warning: overwriting the GuageField is currently not supported\n");
+    }
+    std::string output_dir =
+        params.output_dir + "/step" + std::to_string(step) + "/";
+    if (!std::filesystem::exists(output_dir)) {
+      std::filesystem::create_directories(output_dir);
+    }
+
+    gauge_field.save((output_dir + "rank" + std::to_string(rank) + "_" +
+                      gauge_field.dParams.format() + "_" +
+                      params.gauge_field_filename));
   }
   return;
 }

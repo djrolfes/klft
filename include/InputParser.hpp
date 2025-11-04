@@ -481,14 +481,25 @@ inline int parseInputFile(const std::string& filename,
       const auto& mp = config["IOParams"];
       // general parameters
       ioParams.save_gauge_field = mp["save"].as<bool>(0);
-      ioParams.gauge_field_filename =
-          mp["filename"].as<std::string>("config.dat");
       ioParams.overwrite_gauge_field_file = mp["overwrite"].as<bool>(true);
       ioParams.save_gauge_field_interval = mp["interval"].as<size_t>(0);
 
       ioParams.save_after_trajectory =
           mp["save_after_trajectory"].as<bool>(true);
-      ioParams.output_dir = output_directory + "gauge_fields/";
+      size_t pos =
+          mp["filename"].as<std::string>("config.dat").find_last_of("/");
+
+      if (pos != std::string::npos) {
+        ioParams.output_dir =
+            output_directory +
+            mp["filename"].as<std::string>("config.dat").substr(0, pos);
+        ioParams.gauge_field_filename =
+            mp["filename"].as<std::string>("config.dat").substr(pos + 1);
+      } else {
+        ioParams.output_dir = output_directory;
+        ioParams.gauge_field_filename =
+            mp["filename"].as<std::string>("config.dat");
+      }
       if (!std::filesystem::exists(ioParams.output_dir) &&
           ioParams.save_gauge_field) {
         std::filesystem::create_directories(ioParams.output_dir);

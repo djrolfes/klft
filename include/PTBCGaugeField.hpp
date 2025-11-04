@@ -457,7 +457,7 @@ struct devicePTBCGaugeField {
   void load(std::string filename) {
     try {
       set_defect<index_t>(1.0);  // reset defect to 1.0 before loading
-      decode_ptbc_info<Nd>(filename, this->dParams);
+      this->dParams = parse<Nd>(filename);
       set_defect<index_t>(this->dParams.defect_value);
       auto h_field = Kokkos::create_mirror_view(field);
       std::ifstream file;
@@ -825,7 +825,7 @@ struct devicePTBCGaugeField3D {
   void load(std::string filename) {
     try {
       set_defect<index_t>(1.0);  // reset defect to 1.0 before loading
-      decode_ptbc_info(filename, this->dParams);
+      this->dParams = parse<Nd>(filename);
       set_defect<index_t>(this->dParams.defect_value);
       auto h_field = Kokkos::create_mirror_view(field);
       std::ifstream file;
@@ -1167,7 +1167,7 @@ struct devicePTBCGaugeField2D {
   void load(std::string filename) {
     try {
       set_defect<index_t>(1.0);  // reset defect to 1.0 before loading
-      decode_ptbc_info(filename, this->dParams);
+      this->dParams = parse<Nd>(filename);
       set_defect<index_t>(this->dParams.defect_value);
       auto h_field = Kokkos::create_mirror_view(field);
       std::ifstream file;

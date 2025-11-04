@@ -1,6 +1,7 @@
 #pragma once
 #include <mpi.h>
 
+#include <filesystem>
 #include <random>
 #include <sstream>
 
@@ -85,11 +86,8 @@ class PTBC {  // do I need the AdjFieldType here?
 
   PTBC() = delete;  // default constructor is not allowed
 
-  PTBC(PTBCParams& params_,
-       HMCType& hmc_,
-       RNG& rng_,
-       std::uniform_real_distribution<real_t> dist_,
-       std::mt19937 mt_)
+  PTBC(PTBCParams& params_, HMCType& hmc_, RNG& rng_,
+       std::uniform_real_distribution<real_t> dist_, std::mt19937 mt_)
       : params(params_), rng(rng_), dist(dist_), mt(mt_), hmc(hmc_) {
     device_id = Kokkos::device_id();  // default device id
     int rank;
@@ -111,6 +109,49 @@ class PTBC {  // do I need the AdjFieldType here?
       partner_device_id =
           (device_id + 1) % Kokkos::num_devices();  // default partner device id
     }
+  }
+  void load(const std::string path_to_file) {
+    size_t pos = path_to_file.find_last_of("/");
+    std::string folder;
+
+    if (pos != std::string::npos) {
+      folder = path_to_file.substr(0, pos);
+    } else {
+      folder = "";
+    }
+    std::cout << "Folder found:" << folder << " . \n";
+    int rank, size;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+    std::string substr = "rank" + std::to_string(rank);
+    for (const auto& entry : std::filesystem::directory_iterator(folder)) {
+      if (entry.path().string().find(substr) != std::string::npos) {
+        // s contains substr
+        hmc.hamiltonian_field.gauge_field.load(entry.path());
+        MPI_Allgather(&hmc.hamiltonian_field.gauge_field.dParams.defect_value,
+                      1, mpi_real_t(), params.defects.data(), 1, mpi_real_t(),
+                      MPI_COMM_WORLD);
+        params.defect_length =
+            hmc.hamiltonian_field.gauge_field.dParams.defect_length;
+        if (KLFT_VERBOSITY > 1) {
+          /* code */
+
+          std::cout << "Rank " << rank << " loaded from path:" << entry.path()
+                    << "with the following paramets:\n";
+          std::cout << "Rank " << rank << " Pares: "
+                    << hmc.hamiltonian_field.gauge_field.dParams.format()
+                    << "\n";
+          std::cout << "Rank " << rank << " PTBCParams:" << params.to_string()
+                    << "\n";
+        }
+
+        MPI_Barrier(MPI_COMM_WORLD);
+        return;
+      }
+    }
+    std::string err = "FATAL ERROR: Rank " + std::to_string(rank) +
+                      "could't load, it's gauge config!";
+    throw std::runtime_error(err);
   }
 
   real_t getDefectValue() const {
@@ -163,11 +204,8 @@ class PTBC {  // do I need the AdjFieldType here?
     }
   }
 
-  void measure(SimulationLoggingParams& simLogParams,
-               index_t step,
-               real_t acc_rate,
-               bool accept,
-               real_t time) {
+  void measure(SimulationLoggingParams& simLogParams, index_t step,
+               real_t acc_rate, bool accept, real_t time) {
     // measure the simulation logging observables
     addLogData(simLogParams, step, hmc.delta_H, acc_rate, accept, time);
   }
@@ -340,8 +378,7 @@ class PTBC {  // do I need the AdjFieldType here?
         oss << "Defects after broadcast: [";
         for (size_t i = 0; i < params.defects.size(); ++i) {
           oss << params.defects[i];
-          if (i + 1 < params.defects.size())
-            oss << ", ";
+          if (i + 1 < params.defects.size()) oss << ", ";
         }
         oss << "]";
         // DEBUG_MPI_PRINT("%s", oss.str().c_str());
@@ -380,8 +417,7 @@ class PTBC {  // do I need the AdjFieldType here?
 // below: Functions used to dispatch the PTBC algorithm
 
 template <typename PTBCType>
-int run_PTBC(PTBCType& ptbc,
-             Integrator_Params& int_params,
+int run_PTBC(PTBCType& ptbc, Integrator_Params& int_params,
              GaugeObservableParams& gaugeObsParams,
              PTBCSimulationLoggingParams& ptbcSimLogParams,
              SimulationLoggingParams& simLogParams) {
@@ -423,9 +459,9 @@ int run_PTBC(PTBCType& ptbc,
                      step, accept, acc_rate, time);
     }
     flushSimulationLogs(simLogParams, step, true);
-    flushIO<
+    flushIOPTBC<
         DeviceGaugeFieldType<PTBCType::Nd, PTBCType::Nc, GaugeFieldKind::PTBC>>(
-        ptbc.hmc.ioParams, step, ptbc.hmc.hamiltonian_field.gauge_field);
+        ptbc.hmc.ioParams, rank, step, ptbc.hmc.hamiltonian_field.gauge_field);
   }
 
   MPI_Barrier(MPI_COMM_WORLD);  // synchronize all ranks after the loop
@@ -434,9 +470,9 @@ int run_PTBC(PTBCType& ptbc,
     forceflushPTBCSimulationLogs(ptbcSimLogParams, true);
   }
   forceflushSimulationLogs(simLogParams, true);
-  flushIO<
+  flushIOPTBC<
       DeviceGaugeFieldType<PTBCType::Nd, PTBCType::Nc, GaugeFieldKind::PTBC>>(
-      ptbc.hmc.ioParams, int_params.nsteps,
+      ptbc.hmc.ioParams, rank, int_params.nsteps,
       ptbc.hmc.hamiltonian_field.gauge_field, true);
   return 0;
 }

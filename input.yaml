@@ -9,18 +9,18 @@ HMCParams:
   Nc: 2
   coldStart: false
   rngDelta: 1
-  # loadfile: "gaugeconfig.txt" #for ptbc this is the folder where all configs are stored
+  loadfile: "gaugeconfig/step10/gaugeconfig_ptbc.txt" #the first underscore is allowed in the file name
 IOParams:
   save: true
-  interval: 2
-  filename: "gaugeconfig.txt" 
-  overwrite: false
+  interval: 10
+  filename: "gaugeconfig/gaugeconfig_ptbc.txt" 
+  overwrite: true
   save_after_trajectory: true
 # Level 0 is the innermost level of the Integrator, i.e that is executed most frequently.
 Integrator:
 
   tau: 1
-  nSteps: 15
+  nSteps: 150
   Monomials:
     - Type: "Leapfrog"
       level: 0

@@ -83,11 +83,6 @@ int PTBC_execute(const std::string& input_file,
   gaugeObsParams.wilson_flow_params.beta = gaugeMonomialParams.beta;
 
   simLogParams.log_filename = ranked_filename(simLogParams.log_filename, rank);
-  ioParams.gauge_field_filename =
-      ranked_filename(ioParams.gauge_field_filename, rank);
-  if (hmcParams.loadfile != "") {
-    hmcParams.loadfile = ranked_filename(ioParams.gauge_field_filename, rank);
-  }
 
   if (ptbcParams.defects.size() != size) {
     printf("Error: Number of defects (%zu) does not match size (%d)\n",
@@ -132,13 +127,7 @@ int PTBC_execute(const std::string& input_file,
               fermionParams, resParsef);
           using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
           HField hamiltonian_field = HField(g_4_U1, a_4_U1);
-          if (hmcParams.loadfile != "") {
-            try {
-              hamiltonian_field.gauge_field.load(hmcParams.loadfile);
-            } catch (const std::exception& e) {
-              std::cerr << e.what() << '\n';
-            }
-          }
+
           using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
           HMC hmc(integratorParams, ioParams, hamiltonian_field, integrator,
                   rng, dist, mt);
@@ -153,6 +142,13 @@ int PTBC_execute(const std::string& input_file,
 
           using PTBC = PTBC<DGaugeFieldType, DAdjFieldType, RNGType>;
           PTBC ptbc(ptbcParams, hmc, rng, dist, mt);
+          if (hmcParams.loadfile != "") {
+            try {
+              ptbc.load(hmcParams.loadfile);
+            } catch (const std::exception& e) {
+              std::cerr << e.what() << "\n";
+            }
+          }
 
           run_PTBC(ptbc, integratorParams, gaugeObsParams, ptbcSimLogParams,
                    simLogParams);
@@ -175,13 +171,7 @@ int PTBC_execute(const std::string& input_file,
               fermionParams, resParsef);
           using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
           HField hamiltonian_field = HField(g_4_U1, a_4_U1);
-          if (hmcParams.loadfile != "") {
-            try {
-              hamiltonian_field.gauge_field.load(hmcParams.loadfile);
-            } catch (const std::exception& e) {
-              std::cerr << e.what() << '\n';
-            }
-          }
+
           using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
           HMC hmc(integratorParams, ioParams, hamiltonian_field, integrator,
                   rng, dist, mt);
@@ -196,6 +186,13 @@ int PTBC_execute(const std::string& input_file,
 
           using PTBC = PTBC<DGaugeFieldType, DAdjFieldType, RNGType>;
           PTBC ptbc(ptbcParams, hmc, rng, dist, mt);
+          if (hmcParams.loadfile != "") {
+            try {
+              ptbc.load(hmcParams.loadfile);
+            } catch (const std::exception& e) {
+              std::cerr << e.what() << "\n";
+            }
+          }
 
           run_PTBC(ptbc, integratorParams, gaugeObsParams, ptbcSimLogParams,
                    simLogParams);
@@ -223,13 +220,7 @@ int PTBC_execute(const std::string& input_file,
               fermionParams, resParsef);
           using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
           HField hamiltonian_field = HField(g_4_SU2, a_4_SU2);
-          if (hmcParams.loadfile != "") {
-            try {
-              hamiltonian_field.gauge_field.load(hmcParams.loadfile);
-            } catch (const std::exception& e) {
-              std::cerr << e.what() << '\n';
-            }
-          }
+
           const auto& dimensions = g_4_SU2.dimensions;
 
           using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
@@ -246,6 +237,13 @@ int PTBC_execute(const std::string& input_file,
 
           using PTBC = PTBC<DGaugeFieldType, DAdjFieldType, RNGType>;
           PTBC ptbc(ptbcParams, hmc, rng, dist, mt);
+          if (hmcParams.loadfile != "") {
+            try {
+              ptbc.load(hmcParams.loadfile);
+            } catch (const std::exception& e) {
+              std::cerr << e.what() << "\n";
+            }
+          }
 
           run_PTBC(ptbc, integratorParams, gaugeObsParams, ptbcSimLogParams,
                    simLogParams);
@@ -268,13 +266,7 @@ int PTBC_execute(const std::string& input_file,
               fermionParams, resParsef);
           using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
           HField hamiltonian_field = HField(g_4_SU2, a_4_SU2);
-          if (hmcParams.loadfile != "") {
-            try {
-              hamiltonian_field.gauge_field.load(hmcParams.loadfile);
-            } catch (const std::exception& e) {
-              std::cerr << e.what() << '\n';
-            }
-          }
+
           using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
           HMC hmc(integratorParams, ioParams, hamiltonian_field, integrator,
                   rng, dist, mt);
@@ -289,6 +281,13 @@ int PTBC_execute(const std::string& input_file,
 
           using PTBC = PTBC<DGaugeFieldType, DAdjFieldType, RNGType>;
           PTBC ptbc(ptbcParams, hmc, rng, dist, mt);
+          if (hmcParams.loadfile != "") {
+            try {
+              ptbc.load(hmcParams.loadfile);
+            } catch (const std::exception& e) {
+              std::cerr << e.what() << "\n";
+            }
+          }
 
           run_PTBC(ptbc, integratorParams, gaugeObsParams, ptbcSimLogParams,
                    simLogParams);
@@ -317,13 +316,7 @@ int PTBC_execute(const std::string& input_file,
         //       gaugeMonomialParams, fermionParams, resParsef);
         //   using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
         //   HField hamiltonian_field = HField(g_4_SU3, a_4_SU3);
-        // if (hmcParams.loadfile != "") {
-        //   try {
-        //     hamiltonian_field.gauge_field.load(hmcParams.loadfile);
-        //   } catch (const std::exception& e) {
-        //     std::cerr << e.what() << '\n';
-        //   }
-        // }
+
         //   const auto& dimensions = g_4_SU3.dimensions;
 
         //   using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
@@ -341,7 +334,14 @@ int PTBC_execute(const std::string& input_file,
 
         //
         // using PTBC = PTBC<DGaugeFieldType, DAdjFieldType, RNGType>;
-        // PTBC ptbc(ptbcParams, hmc, rng, dist, mt);
+        //  PTBC ptbc(ptbcParams, hmc, rng, dist, mt);
+        // if (hmcParams.loadfile != "") {
+        //   try {
+        //     ptbc.load(hmcParams.loadfile);
+        //   } catch (const std::exception& e) {
+        //     std::cerr << e.what() << "\n";
+        //   }
+        // }
         //
         // run_PTBC(ptbc, integratorParams, gaugeObsParams, ptbcSimLogParams,
         //          simLogParams);
@@ -365,13 +365,7 @@ int PTBC_execute(const std::string& input_file,
         //         gaugeMonomialParams, fermionParams, resParsef);
         // using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
         // HField hamiltonian_field = HField(g_4_U1, a_4_U1);
-        //          if (hmcParams.loadfile != "") {
-        //   try {
-        //     hamiltonian_field.gauge_field.load(hmcParams.loadfile);
-        //   } catch (const std::exception& e) {
-        //     std::cerr << e.what() << '\n';
-        //   }
-        // }
+        //
         //
         // using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
         // HMC hmc(integratorParams,ioParams, hamiltonian_field, integrator,
@@ -387,7 +381,14 @@ int PTBC_execute(const std::string& input_file,
         // }
         //
         // using PTBC = PTBC<DGaugeFieldType, DAdjFieldType, RNGType>;
-        // PTBC ptbc(ptbcParams, hmc, rng, dist, mt);
+        //  PTBC ptbc(ptbcParams, hmc, rng, dist, mt);
+        // if (hmcParams.loadfile != "") {
+        //   try {
+        //     ptbc.load(hmcParams.loadfile);
+        //   } catch (const std::exception& e) {
+        //     std::cerr << e.what() << "\n";
+        //   }
+        // }
         //
         // run_PTBC(ptbc, integratorParams, gaugeObsParams, ptbcSimLogParams,
         //          simLogParams);}
@@ -420,13 +421,7 @@ int PTBC_execute(const std::string& input_file,
                 fermionParams, resParsef);
         using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
         HField hamiltonian_field = HField(g_3_U1, a_3_U1);
-        if (hmcParams.loadfile != "") {
-          try {
-            hamiltonian_field.gauge_field.load(hmcParams.loadfile);
-          } catch (const std::exception& e) {
-            std::cerr << e.what() << '\n';
-          }
-        }
+
         using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
         HMC hmc(integratorParams, ioParams, hamiltonian_field, integrator, rng,
                 dist, mt);
@@ -441,6 +436,13 @@ int PTBC_execute(const std::string& input_file,
 
         using PTBC = PTBC<DGaugeFieldType, DAdjFieldType, RNGType>;
         PTBC ptbc(ptbcParams, hmc, rng, dist, mt);
+        if (hmcParams.loadfile != "") {
+          try {
+            ptbc.load(hmcParams.loadfile);
+          } catch (const std::exception& e) {
+            std::cerr << e.what() << "\n";
+          }
+        }
 
         run_PTBC(ptbc, integratorParams, gaugeObsParams, ptbcSimLogParams,
                  simLogParams);
@@ -463,13 +465,7 @@ int PTBC_execute(const std::string& input_file,
                 gaugeMonomialParams, fermionParams, resParsef);
         using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
         HField hamiltonian_field = HField(g_3_SU2, a_3_SU2);
-        if (hmcParams.loadfile != "") {
-          try {
-            hamiltonian_field.gauge_field.load(hmcParams.loadfile);
-          } catch (const std::exception& e) {
-            std::cerr << e.what() << '\n';
-          }
-        }
+
         using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
         HMC hmc(integratorParams, ioParams, hamiltonian_field, integrator, rng,
                 dist, mt);
@@ -484,6 +480,13 @@ int PTBC_execute(const std::string& input_file,
 
         using PTBC = PTBC<DGaugeFieldType, DAdjFieldType, RNGType>;
         PTBC ptbc(ptbcParams, hmc, rng, dist, mt);
+        if (hmcParams.loadfile != "") {
+          try {
+            ptbc.load(hmcParams.loadfile);
+          } catch (const std::exception& e) {
+            std::cerr << e.what() << "\n";
+          }
+        }
 
         run_PTBC(ptbc, integratorParams, gaugeObsParams, ptbcSimLogParams,
                  simLogParams);
@@ -515,12 +518,7 @@ int PTBC_execute(const std::string& input_file,
         // using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
         // HField hamiltonian_field = HField(g_3_SU3, a_3_SU3);
         // if (hmcParams.loadfile != "") {
-        //   try {
-        //     hamiltonian_field.gauge_field.load(hmcParams.loadfile);
-        //   } catch (const std::exception& e) {
-        //     std::cerr << e.what() << '\n';
-        //   }
-        // }
+
         // const auto& dimensions = g_3_SU3.dimensions;
 
         // using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
@@ -557,13 +555,7 @@ int PTBC_execute(const std::string& input_file,
                 fermionParams, resParsef);
         using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
         HField hamiltonian_field = HField(g_2_U1, a_2_U1);
-        if (hmcParams.loadfile != "") {
-          try {
-            hamiltonian_field.gauge_field.load(hmcParams.loadfile);
-          } catch (const std::exception& e) {
-            std::cerr << e.what() << '\n';
-          }
-        }
+
         using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
         HMC hmc(integratorParams, ioParams, hamiltonian_field, integrator, rng,
                 dist, mt);
@@ -578,6 +570,13 @@ int PTBC_execute(const std::string& input_file,
 
         using PTBC = PTBC<DGaugeFieldType, DAdjFieldType, RNGType>;
         PTBC ptbc(ptbcParams, hmc, rng, dist, mt);
+        if (hmcParams.loadfile != "") {
+          try {
+            ptbc.load(hmcParams.loadfile);
+          } catch (const std::exception& e) {
+            std::cerr << e.what() << "\n";
+          }
+        }
 
         run_PTBC(ptbc, integratorParams, gaugeObsParams, ptbcSimLogParams,
                  simLogParams);
@@ -598,13 +597,7 @@ int PTBC_execute(const std::string& input_file,
                 gaugeMonomialParams, fermionParams, resParsef);
         using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
         HField hamiltonian_field = HField(g_2_SU2, a_2_SU2);
-        if (hmcParams.loadfile != "") {
-          try {
-            hamiltonian_field.gauge_field.load(hmcParams.loadfile);
-          } catch (const std::exception& e) {
-            std::cerr << e.what() << '\n';
-          }
-        }
+
         using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
         HMC hmc(integratorParams, ioParams, hamiltonian_field, integrator, rng,
                 dist, mt);
@@ -619,6 +612,13 @@ int PTBC_execute(const std::string& input_file,
 
         using PTBC = PTBC<DGaugeFieldType, DAdjFieldType, RNGType>;
         PTBC ptbc(ptbcParams, hmc, rng, dist, mt);
+        if (hmcParams.loadfile != "") {
+          try {
+            ptbc.load(hmcParams.loadfile);
+          } catch (const std::exception& e) {
+            std::cerr << e.what() << "\n";
+          }
+        }
 
         run_PTBC(ptbc, integratorParams, gaugeObsParams, ptbcSimLogParams,
                  simLogParams);
@@ -648,13 +648,7 @@ int PTBC_execute(const std::string& input_file,
         //         gaugeMonomialParams, fermionParams, resParsef);
         // using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
         // HField hamiltonian_field = HField(g_2_SU3, a_2_SU3);
-        // if (hmcParams.loadfile != "") {
-        //   try {
-        //     hamiltonian_field.gauge_field.load(hmcParams.loadfile);
-        //   } catch (const std::exception& e) {
-        //     std::cerr << e.what() << '\n';
-        //   }
-        // }
+
         // const auto& dimensions = g_2_SU3.dimensions;
 
         // using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
@@ -694,13 +688,7 @@ int PTBC_execute(const std::string& input_file,
               fermionParams, resParsef);
           using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
           HField hamiltonian_field = HField(g_4_U1, a_4_U1);
-          if (hmcParams.loadfile != "") {
-            try {
-              hamiltonian_field.gauge_field.load(hmcParams.loadfile);
-            } catch (const std::exception& e) {
-              std::cerr << e.what() << '\n';
-            }
-          }
+
           const auto& dimensions = g_4_U1.dimensions;
 
           using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
@@ -717,6 +705,13 @@ int PTBC_execute(const std::string& input_file,
 
           using PTBC = PTBC<DGaugeFieldType, DAdjFieldType, RNGType>;
           PTBC ptbc(ptbcParams, hmc, rng, dist, mt);
+          if (hmcParams.loadfile != "") {
+            try {
+              ptbc.load(hmcParams.loadfile);
+            } catch (const std::exception& e) {
+              std::cerr << e.what() << "\n";
+            }
+          }
 
           run_PTBC(ptbc, integratorParams, gaugeObsParams, ptbcSimLogParams,
                    simLogParams);
@@ -739,13 +734,7 @@ int PTBC_execute(const std::string& input_file,
               fermionParams, resParsef);
           using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
           HField hamiltonian_field = HField(g_4_U1, a_4_U1);
-          if (hmcParams.loadfile != "") {
-            try {
-              hamiltonian_field.gauge_field.load(hmcParams.loadfile);
-            } catch (const std::exception& e) {
-              std::cerr << e.what() << '\n';
-            }
-          }
+
           using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
           HMC hmc(integratorParams, ioParams, hamiltonian_field, integrator,
                   rng, dist, mt);
@@ -760,6 +749,13 @@ int PTBC_execute(const std::string& input_file,
 
           using PTBC = PTBC<DGaugeFieldType, DAdjFieldType, RNGType>;
           PTBC ptbc(ptbcParams, hmc, rng, dist, mt);
+          if (hmcParams.loadfile != "") {
+            try {
+              ptbc.load(hmcParams.loadfile);
+            } catch (const std::exception& e) {
+              std::cerr << e.what() << "\n";
+            }
+          }
 
           run_PTBC(ptbc, integratorParams, gaugeObsParams, ptbcSimLogParams,
                    simLogParams);
@@ -786,13 +782,7 @@ int PTBC_execute(const std::string& input_file,
               fermionParams, resParsef);
           using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
           HField hamiltonian_field = HField(g_4_SU2, a_4_SU2);
-          if (hmcParams.loadfile != "") {
-            try {
-              hamiltonian_field.gauge_field.load(hmcParams.loadfile);
-            } catch (const std::exception& e) {
-              std::cerr << e.what() << '\n';
-            }
-          }
+
           const auto& dimensions = g_4_SU2.dimensions;
 
           using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
@@ -809,6 +799,13 @@ int PTBC_execute(const std::string& input_file,
 
           using PTBC = PTBC<DGaugeFieldType, DAdjFieldType, RNGType>;
           PTBC ptbc(ptbcParams, hmc, rng, dist, mt);
+          if (hmcParams.loadfile != "") {
+            try {
+              ptbc.load(hmcParams.loadfile);
+            } catch (const std::exception& e) {
+              std::cerr << e.what() << "\n";
+            }
+          }
 
           if (KLFT_VERBOSITY > 1) {
             printf(
@@ -839,13 +836,7 @@ int PTBC_execute(const std::string& input_file,
               fermionParams, resParsef);
           using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
           HField hamiltonian_field = HField(g_4_SU2, a_4_SU2);
-          if (hmcParams.loadfile != "") {
-            try {
-              hamiltonian_field.gauge_field.load(hmcParams.loadfile);
-            } catch (const std::exception& e) {
-              std::cerr << e.what() << '\n';
-            }
-          }
+
           using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
           HMC hmc(integratorParams, ioParams, hamiltonian_field, integrator,
                   rng, dist, mt);
@@ -860,6 +851,13 @@ int PTBC_execute(const std::string& input_file,
 
           using PTBC = PTBC<DGaugeFieldType, DAdjFieldType, RNGType>;
           PTBC ptbc(ptbcParams, hmc, rng, dist, mt);
+          if (hmcParams.loadfile != "") {
+            try {
+              ptbc.load(hmcParams.loadfile);
+            } catch (const std::exception& e) {
+              std::cerr << e.what() << "\n";
+            }
+          }
 
           if (KLFT_VERBOSITY > 1) {
             printf(
@@ -903,13 +901,7 @@ int PTBC_execute(const std::string& input_file,
                 fermionParams, resParsef);
         using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
         HField hamiltonian_field = HField(g_3_U1, a_3_U1);
-        if (hmcParams.loadfile != "") {
-          try {
-            hamiltonian_field.gauge_field.load(hmcParams.loadfile);
-          } catch (const std::exception& e) {
-            std::cerr << e.what() << '\n';
-          }
-        }
+
         using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
         HMC hmc(integratorParams, ioParams, hamiltonian_field, integrator, rng,
                 dist, mt);
@@ -924,6 +916,13 @@ int PTBC_execute(const std::string& input_file,
 
         using PTBC = PTBC<DGaugeFieldType, DAdjFieldType, RNGType>;
         PTBC ptbc(ptbcParams, hmc, rng, dist, mt);
+        if (hmcParams.loadfile != "") {
+          try {
+            ptbc.load(hmcParams.loadfile);
+          } catch (const std::exception& e) {
+            std::cerr << e.what() << "\n";
+          }
+        }
 
         run_PTBC(ptbc, integratorParams, gaugeObsParams, ptbcSimLogParams,
                  simLogParams);
@@ -945,13 +944,7 @@ int PTBC_execute(const std::string& input_file,
                 gaugeMonomialParams, fermionParams, resParsef);
         using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
         HField hamiltonian_field = HField(g_3_SU2, a_3_SU2);
-        if (hmcParams.loadfile != "") {
-          try {
-            hamiltonian_field.gauge_field.load(hmcParams.loadfile);
-          } catch (const std::exception& e) {
-            std::cerr << e.what() << '\n';
-          }
-        }
+
         using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
         HMC hmc(integratorParams, ioParams, hamiltonian_field, integrator, rng,
                 dist, mt);
@@ -966,6 +959,13 @@ int PTBC_execute(const std::string& input_file,
 
         using PTBC = PTBC<DGaugeFieldType, DAdjFieldType, RNGType>;
         PTBC ptbc(ptbcParams, hmc, rng, dist, mt);
+        if (hmcParams.loadfile != "") {
+          try {
+            ptbc.load(hmcParams.loadfile);
+          } catch (const std::exception& e) {
+            std::cerr << e.what() << "\n";
+          }
+        }
 
         run_PTBC(ptbc, integratorParams, gaugeObsParams, ptbcSimLogParams,
                  simLogParams);
@@ -998,13 +998,7 @@ int PTBC_execute(const std::string& input_file,
                 fermionParams, resParsef);
         using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
         HField hamiltonian_field = HField(g_2_U1, a_2_U1);
-        if (hmcParams.loadfile != "") {
-          try {
-            hamiltonian_field.gauge_field.load(hmcParams.loadfile);
-          } catch (const std::exception& e) {
-            std::cerr << e.what() << '\n';
-          }
-        }
+
         using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
         HMC hmc(integratorParams, ioParams, hamiltonian_field, integrator, rng,
                 dist, mt);
@@ -1019,6 +1013,13 @@ int PTBC_execute(const std::string& input_file,
 
         using PTBC = PTBC<DGaugeFieldType, DAdjFieldType, RNGType>;
         PTBC ptbc(ptbcParams, hmc, rng, dist, mt);
+        if (hmcParams.loadfile != "") {
+          try {
+            ptbc.load(hmcParams.loadfile);
+          } catch (const std::exception& e) {
+            std::cerr << e.what() << "\n";
+          }
+        }
 
         run_PTBC(ptbc, integratorParams, gaugeObsParams, ptbcSimLogParams,
                  simLogParams);
@@ -1038,13 +1039,7 @@ int PTBC_execute(const std::string& input_file,
                 gaugeMonomialParams, fermionParams, resParsef);
         using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
         HField hamiltonian_field = HField(g_2_SU2, a_2_SU2);
-        if (hmcParams.loadfile != "") {
-          try {
-            hamiltonian_field.gauge_field.load(hmcParams.loadfile);
-          } catch (const std::exception& e) {
-            std::cerr << e.what() << '\n';
-          }
-        }
+
         using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
         HMC hmc(integratorParams, ioParams, hamiltonian_field, integrator, rng,
                 dist, mt);
@@ -1059,6 +1054,13 @@ int PTBC_execute(const std::string& input_file,
 
         using PTBC = PTBC<DGaugeFieldType, DAdjFieldType, RNGType>;
         PTBC ptbc(ptbcParams, hmc, rng, dist, mt);
+        if (hmcParams.loadfile != "") {
+          try {
+            ptbc.load(hmcParams.loadfile);
+          } catch (const std::exception& e) {
+            std::cerr << e.what() << "\n";
+          }
+        }
 
         run_PTBC(ptbc, integratorParams, gaugeObsParams, ptbcSimLogParams,
                  simLogParams);
