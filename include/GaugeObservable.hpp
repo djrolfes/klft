@@ -135,7 +135,8 @@ void measureGaugeObservablesPTBC(const typename DGaugeFieldType::type& g_in,
       DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc;
 
   if ((params.measurement_interval == 0) ||
-      (step % params.measurement_interval != 0) || (step == 0)) {
+      (step % params.measurement_interval != 0) || (step == 0) ||
+      (step < params.thermalization_steps)) {
     return;
   }
 
@@ -397,7 +398,8 @@ void measureGaugeObservables(const typename DGaugeFieldType::type& g_in,
       DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc;
   // check if the step is a measurement step
   if ((params.measurement_interval == 0) ||
-      (step % params.measurement_interval != 0) || (step == 0)) {
+      (step % params.measurement_interval != 0) || (step == 0) ||
+      (step < params.thermalization_steps)) {
     return;
   }
   // otherwise, carry out the measurements
