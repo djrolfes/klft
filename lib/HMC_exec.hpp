@@ -77,6 +77,8 @@ int run_HMC(HMCType& hmc,
                obs_time);
     flushSimulationLogs(simLogParams, step, true);
     flushAllGaugeObservables(gaugeObsParams, step, true);
+    flushIO<DeviceGaugeFieldType<HMCType::rank, HMCType::Nc>>(
+        hmc.ioParams, step, hmc.hamiltonian_field.gauge_field);
     if (fermionObsParams.flush != 0 && step % fermionObsParams.flush == 0) {
       flushAllFermionObservables(fermionObsParams, step == simLogParams.flush);
       clearAllFermionObservables(fermionObsParams);
@@ -89,6 +91,9 @@ int run_HMC(HMCType& hmc,
   forceflushSimulationLogs(simLogParams, true);
   forceflushAllGaugeObservables(gaugeObsParams, true);
   flushAllFermionObservables(fermionObsParams, fermionObsParams.flush == 0);
+  flushIO<DeviceGaugeFieldType<HMCType::rank, HMCType::Nc>>(
+      hmc.ioParams, integratorParams.nsteps, hmc.hamiltonian_field.gauge_field,
+      true);
 
   printf("Total Acceptance rate: %f, Accept %f Configs", acc_rate, acc_sum);
   return 0;

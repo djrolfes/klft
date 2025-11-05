@@ -1,6 +1,7 @@
 #pragma once
 #include <mpi.h>
 
+#include <filesystem>
 #include <random>
 #include <sstream>
 
@@ -23,6 +24,7 @@ struct PTBCParams {
   std::vector<real_t>
       defects;            // a vector that hold the different defect values
   index_t defect_length;  // size of the defect on the lattice
+
   GaugeMonomial_Params gauge_params;  // HMC parameters´
   PTBCSimulationLoggingParams ptbcSimLogParams;
   GaugeObservableParams gaugeObsParams;
@@ -47,6 +49,8 @@ class PTBC {  // do I need the AdjFieldType here?
                 GaugeFieldKind::PTBC);
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
   static_assert(isDeviceAdjFieldType<DAdjFieldType>::value);
+
+ public:
   constexpr static size_t Nd =
       DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank;
   constexpr static size_t Nc = DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc;
@@ -58,7 +62,6 @@ class PTBC {  // do I need the AdjFieldType here?
   using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
   using HMCType = HMC<DGaugeFieldType, DAdjFieldType, RNG>;
 
- public:
   PTBCParams& params;  // parameters for the PTBC algorithm
   HMCType& hmc;
   // std::shared_ptr<LeapFrog> integrator; // TODO: make integrator agnostic
@@ -110,6 +113,49 @@ class PTBC {  // do I need the AdjFieldType here?
       partner_device_id =
           (device_id + 1) % Kokkos::num_devices();  // default partner device id
     }
+  }
+  void load(const std::string path_to_file) {
+    size_t pos = path_to_file.find_last_of("/");
+    std::string folder;
+
+    if (pos != std::string::npos) {
+      folder = path_to_file.substr(0, pos);
+    } else {
+      folder = "";
+    }
+    std::cout << "Folder found:" << folder << " . \n";
+    int rank, size;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+    std::string substr = "rank" + std::to_string(rank);
+    for (const auto& entry : std::filesystem::directory_iterator(folder)) {
+      if (entry.path().string().find(substr) != std::string::npos) {
+        // s contains substr
+        hmc.hamiltonian_field.gauge_field.load(entry.path());
+        MPI_Allgather(&hmc.hamiltonian_field.gauge_field.dParams.defect_value,
+                      1, mpi_real_t(), params.defects.data(), 1, mpi_real_t(),
+                      MPI_COMM_WORLD);
+        params.defect_length =
+            hmc.hamiltonian_field.gauge_field.dParams.defect_length;
+        if (KLFT_VERBOSITY > 1) {
+          /* code */
+
+          std::cout << "Rank " << rank << " loaded from path:" << entry.path()
+                    << "with the following paramets:\n";
+          std::cout << "Rank " << rank << " Pares: "
+                    << hmc.hamiltonian_field.gauge_field.dParams.format()
+                    << "\n";
+          std::cout << "Rank " << rank << " PTBCParams:" << params.to_string()
+                    << "\n";
+        }
+
+        MPI_Barrier(MPI_COMM_WORLD);
+        return;
+      }
+    }
+    std::string err = "FATAL ERROR: Rank " + std::to_string(rank) +
+                      "could't load, it's gauge config!";
+    throw std::runtime_error(err);
   }
 
   real_t getDefectValue() const {
@@ -468,6 +514,9 @@ int run_PTBC(PTBCType& ptbc, Integrator_Params& int_params) {
                      step, accept, acc_rate, time);
     }
     flushSimulationLogs(ptbc.params.simLogParams, step, true);
+    flushIOPTBC<
+        DeviceGaugeFieldType<PTBCType::Nd, PTBCType::Nc, GaugeFieldKind::PTBC>>(
+        ptbc.hmc.ioParams, rank, step, ptbc.hmc.hamiltonian_field.gauge_field);
   }
 
   MPI_Barrier(MPI_COMM_WORLD);  // synchronize all ranks after the loop
@@ -477,7 +526,10 @@ int run_PTBC(PTBCType& ptbc, Integrator_Params& int_params) {
     forceflushAllFermionObservables(ptbc.params.fermionObsParams, true);
   }
   forceflushSimulationLogs(ptbc.params.simLogParams, true);
-
+  flushIOPTBC<
+      DeviceGaugeFieldType<PTBCType::Nd, PTBCType::Nc, GaugeFieldKind::PTBC>>(
+      ptbc.hmc.ioParams, rank, int_params.nsteps,
+      ptbc.hmc.hamiltonian_field.gauge_field, true);
   return 0;
 }
 
