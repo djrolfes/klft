@@ -1,10 +1,10 @@
 #pragma once
-#include <string>
 #include "ActionDensity.hpp"
 #include "AdjointSUN.hpp"
 #include "FieldTypeHelper.hpp"
 #include "GLOBAL.hpp"
 #include "Gauge_Util.hpp"
+#include <string>
 
 namespace klft {
 struct WilsonFlowParams {
@@ -16,12 +16,31 @@ struct WilsonFlowParams {
   index_t n_steps;
   // flow time step size
   real_t eps;
+  bool dynamical_flow;
+  real_t min_flow_time;
+  real_t max_flow_time;
+  real_t sp_max_target;
+  real_t t_sqrd_E_target;
+  size_t first_tE_measure_step;
+  bool log_details;
+  std::string wilson_flow_filename;
+
+  std::vector<std::string> log_strings;
 
   WilsonFlowParams() {
     // default parameters (eps = 0.01)
     n_steps = 10;
     tau = 1.0;
     eps = real_t(tau / n_steps);
+    dynamical_flow = false;
+    min_flow_time = -1.0;
+    max_flow_time = -1.0;
+    sp_max_target = real_t(0.067);
+    t_sqrd_E_target = real_t(0.1); // this is Nc dependent
+    first_tE_measure_step = 10;
+    log_details =
+        false; // for now this will only do something for the dynamical wflow
+    wilson_flow_filename = "";
   }
 };
 
@@ -52,8 +71,7 @@ struct WilsonFlowData {
   }
 };
 
-template <typename DGaugeFieldType>
-struct WilsonFlow {
+template <typename DGaugeFieldType> struct WilsonFlow {
   // implement the Wilson flow, for now the field will not be copied, but it
   // will be flown in place -> copying needs to be done before
   constexpr static const size_t rank =
@@ -62,8 +80,8 @@ struct WilsonFlow {
       DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc;
   constexpr static const GaugeFieldKind Kind =
       DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Kind;
-  static_assert(rank == 4);  // The wilson flow is only defined for 4D Fields
-  WilsonFlowParams& params;
+  static_assert(rank == 4); // The wilson flow is only defined for 4D Fields
+  WilsonFlowParams &params;
   WilsonFlowData wfdata;
 
   // get the correct deviceGaugeFieldType
@@ -76,10 +94,8 @@ struct WilsonFlow {
 
   WilsonFlow() = delete;
 
-  WilsonFlow(const GaugeFieldT& _field, WilsonFlowParams& _params)
-      : params(_params),
-        field(_field.field),
-        tmp_staple(_field.field),
+  WilsonFlow(const GaugeFieldT &_field, WilsonFlowParams &_params)
+      : params(_params), field(_field.field), tmp_staple(_field.field),
         wfdata() {
     const IndexArray<rank> dims = _field.dimensions;
     eps = params.eps;
@@ -87,7 +103,9 @@ struct WilsonFlow {
                     dims[2], dims[3]);
     Kokkos::fence();
   }
+
   void flow_step() {
+
 #pragma unroll
     for (index_t fstep = 0; fstep < 3; ++fstep) {
       this->current_step = fstep;
@@ -99,18 +117,126 @@ struct WilsonFlow {
       Kokkos::fence();
     }
   }
-  // execute the wilson flow
-  void flow() {  // todo: check this once by saving a staple field and once by
-                 // locally calculating the staple
 
+  // execute the wilson flow
+  void flow() { // todo: check this once by saving a staple field and once by
+                // locally calculating the staple
+    if (params.dynamical_flow) {
+      if (KLFT_VERBOSITY > 2) {
+        printf("Using dynamical Wilson flow...\n");
+      }
+      flow_dynamical();
+      return;
+    }
     for (int step = 0; step < params.n_steps; ++step) {
       flow_step();
     }
   }
 
-  void flow_DBW2() {  // todo: check this once by saving a staple field and
-                      // once by locally calculating the staple
+  // TODO: make a struct holding the gradient data
+  void flow_dynamical() {
+    // dynamically does the wilson flow either until sp_max is below
+    // sp_max_target or until t^2E is above t_sqd_E_target.
+    bool continue_flow = true;
+    wfdata.sp_max = 0;
+    wfdata.sp_max_old = 0;
+    wfdata.step = 0;
+    wfdata.measure_step = params.first_tE_measure_step;
+    wfdata.measure_step_old = 0;
+    wfdata.t_sqrd_E = 0;
+    wfdata.t_sqrd_E_old = 0;
+
+    wfdata.sp_max_deriv = 0;
+
+    wfdata.sp_max_init = get_spmax<DGaugeFieldType>(this->field);
+
+    while (continue_flow) {
+      flow_step();
+      wfdata.step++;
+      this->params.tau = wfdata.step * params.eps;
+      wfdata.flow_time = this->params.tau;
+
+      if (this->params.tau > this->params.min_flow_time) {
+
+        // quick napkin math:
+        // each flow_step() call calculates the staple field 3 times and
+        // multiplies this to the field(...) each time. A staple_field * field
+        // should be a bit less than 2 plaquette calculations in terms of
+        // instruction count. The get_spmax call does one sweep over the GPlaq
+        // Functor within a parallel reduction.
+        // -> a get_spmax call (- the overhead from the reduction vs. the
+        // parallel for) should be about(slightly larger than) 1/6'th of a
+        // flow_step() call
+        wfdata.sp_max = get_spmax<DGaugeFieldType>(this->field);
+        if (wfdata.step > 1) {
+          wfdata.sp_max_deriv += (wfdata.sp_max - wfdata.sp_max_old);
+        } else {
+          wfdata.sp_max_deriv += (wfdata.sp_max - wfdata.sp_max_init);
+        }
+        wfdata.sp_max_old = wfdata.sp_max;
+
+        if (wfdata.step >= wfdata.measure_step) {
+          // linearlise the measured wfdata.t_sqrd_E to get a prediction for the
+          // end step
+          wfdata.measure_step = wfdata.step;
+          wfdata.t_sqrd_E =
+              getActionDensity_clover<DGaugeFieldType>(this->field) *
+              params.tau * params.tau;
+          real_t slope = (wfdata.t_sqrd_E - wfdata.t_sqrd_E_old) /
+                         (wfdata.step - wfdata.measure_step_old);
+          real_t intercept =
+              wfdata.t_sqrd_E - slope * static_cast<real_t>(wfdata.step);
+          wfdata.measure_step_old = wfdata.measure_step;
+          wfdata.measure_step = static_cast<index_t>(
+              ((params.t_sqrd_E_target - intercept) / slope) + 1);
+          wfdata.measure_step =
+              wfdata.measure_step > wfdata.measure_step_old + 10
+                  ? wfdata.measure_step
+                  : wfdata.measure_step_old + 10;
+          wfdata.measure_step =
+              wfdata.measure_step < wfdata.step + 100
+                  ? wfdata.measure_step
+                  : wfdata.measure_step_old + 100; // avoid too large steps
+          if (KLFT_VERBOSITY > 1) {
+            printf("Wilson Flow prediction: next measurement at step %zu\n",
+                   wfdata.measure_step);
+            printf("  slope: %1.6f, intercept: %1.6f\n", slope, intercept);
+            printf("  current t^2E: %1.6f\n", wfdata.t_sqrd_E);
+          }
+        }
+        if (KLFT_VERBOSITY > 4) {
+          printf("Wilson Flow step %zu: wfdata.sp_max = %1.6f, t^2E = %1.6f\n",
+                 wfdata.step, wfdata.sp_max, wfdata.t_sqrd_E);
+        }
+        if ((wfdata.sp_max <= params.sp_max_target ||
+             wfdata.t_sqrd_E >= params.t_sqrd_E_target)) {
+          continue_flow = false;
+        }
+      }
+
+      if (this->params.tau >= params.max_flow_time &&
+          params.max_flow_time > 0.0) {
+        continue_flow = false;
+      }
+    }
+    wfdata.sp_max_deriv =
+        wfdata.sp_max_deriv / static_cast<real_t>(wfdata.step - 1);
+    if (KLFT_VERBOSITY > 1) {
+      printf("Wilson Flow completed in %zu steps, total flow time %1.6f\n",
+             wfdata.step, wfdata.step * params.eps);
+    }
+    if (params.log_details) {
+      wfdata.t_sqrd_E_old = wfdata.t_sqrd_E;
+      wfdata.t_sqrd_E = getActionDensity_clover<DGaugeFieldType>(this->field) *
+                        params.tau * params.tau;
+      params.log_strings.push_back(wfdata.to_string());
+    }
+  }
+
+  void flow_DBW2() { // todo: check this once by saving a staple field and
+                     // once by locally calculating the staple
     for (int step = 0; step < params.n_steps; ++step) {
+
 #pragma unroll
       for (index_t fstep = 0; fstep < 3; ++fstep) {
         this->current_step = fstep;
@@ -127,6 +253,7 @@ struct WilsonFlow {
 
   void flow_impr(real_t b1) {
     for (int step = 0; step < params.n_steps; ++step) {
+
 #pragma unroll
       for (index_t fstep = 0; fstep < 3; ++fstep) {
         this->current_step = fstep;
@@ -142,33 +269,27 @@ struct WilsonFlow {
   }
 
   template <typename indexType>
-  KOKKOS_INLINE_FUNCTION void stepW1(indexType i0,
-                                     indexType i1,
-                                     indexType i2,
-                                     indexType i3,
-                                     index_t mu) const {
+  KOKKOS_INLINE_FUNCTION void stepW1(indexType i0, indexType i1, indexType i2,
+                                     indexType i3, index_t mu) const {
     // SUN<Nc> Z0_SUN = (field.field(i0, i1, i2, i3, mu)) *
     //                  (tmp_staple.field(i0, i1, i2, i3, mu));
     SUN<Nc> Z0_SUN = (field.field(i0, i1, i2, i3, mu) *
                       tmp_staple.field(i0, i1, i2, i3, mu));
-    SUNAdj<Nc> Z0 = 2.0 * traceT(Z0_SUN);  //* (Nc / params.beta);
-    tmp_Z(i0, i1, i2, i3, mu) = Z0;        // does this need to be deep copied?
+    SUNAdj<Nc> Z0 = 2.0 * traceT(Z0_SUN); //* (Nc / params.beta);
+    tmp_Z(i0, i1, i2, i3, mu) = Z0;       // does this need to be deep copied?
     field.field(i0, i1, i2, i3, mu) =
         expoSUN(Z0 * -0.25 * this->eps) * field.field(i0, i1, i2, i3, mu);
     // restoreSUN(field.field(i0, i1, i2, i3, mu));
   }
 
   template <typename indexType>
-  KOKKOS_INLINE_FUNCTION void stepW2(indexType i0,
-                                     indexType i1,
-                                     indexType i2,
-                                     indexType i3,
-                                     index_t mu) const {
+  KOKKOS_INLINE_FUNCTION void stepW2(indexType i0, indexType i1, indexType i2,
+                                     indexType i3, index_t mu) const {
     // SUN<Nc> Z1_SUN = (field.field(i0, i1, i2, i3, mu)) *
     //                  (tmp_staple.field(i0, i1, i2, i3, mu));
     SUN<Nc> Z1_SUN = (field.field(i0, i1, i2, i3, mu) *
                       tmp_staple.field(i0, i1, i2, i3, mu));
-    SUNAdj<Nc> Z1 = 2.0 * traceT(Z1_SUN);  // * (Nc / params.beta);
+    SUNAdj<Nc> Z1 = 2.0 * traceT(Z1_SUN); // * (Nc / params.beta);
     SUNAdj<Nc> Z0 = tmp_Z(i0, i1, i2, i3, mu);
     Z1 = Z1 * static_cast<real_t>(8.0 / 9.0) -
          Z0 * static_cast<real_t>(17.0 / 36.0);
@@ -179,16 +300,13 @@ struct WilsonFlow {
   }
 
   template <typename indexType>
-  KOKKOS_INLINE_FUNCTION void stepV(indexType i0,
-                                    indexType i1,
-                                    indexType i2,
-                                    indexType i3,
-                                    index_t mu) const {
+  KOKKOS_INLINE_FUNCTION void stepV(indexType i0, indexType i1, indexType i2,
+                                    indexType i3, index_t mu) const {
     // SUN<Nc> Z2_SUN = (field.field(i0, i1, i2, i3, mu)) *
     //                  (tmp_staple.field(i0, i1, i2, i3, mu));
     SUN<Nc> Z2_SUN = (field.field(i0, i1, i2, i3, mu) *
                       tmp_staple.field(i0, i1, i2, i3, mu));
-    SUNAdj<Nc> Z2 = 2.0 * traceT(Z2_SUN);  // * (Nc / params.beta);
+    SUNAdj<Nc> Z2 = 2.0 * traceT(Z2_SUN); // * (Nc / params.beta);
     SUNAdj<Nc> Z_old = tmp_Z(i0, i1, i2, i3, mu);
     Z2 = (Z2 * 0.75 - Z_old);
     // SUNAdj<Nc> tmp = (Z2);
@@ -198,25 +316,24 @@ struct WilsonFlow {
   }
 
   template <typename indexType>
-  KOKKOS_INLINE_FUNCTION void operator()(const indexType i0,
-                                         const indexType i1,
+  KOKKOS_INLINE_FUNCTION void operator()(const indexType i0, const indexType i1,
                                          const indexType i2,
                                          const indexType i3) const {
 #pragma unroll
     for (index_t mu = 0; mu < 4; ++mu) {
       switch (this->current_step) {
-        case 0:
-          stepW1(i0, i1, i2, i3, mu);
-          break;
-        case 1:
-          stepW2(i0, i1, i2, i3, mu);
-          break;
-        case 2:
-          stepV(i0, i1, i2, i3, mu);
-          break;
+      case 0:
+        stepW1(i0, i1, i2, i3, mu);
+        break;
+      case 1:
+        stepW2(i0, i1, i2, i3, mu);
+        break;
+      case 2:
+        stepV(i0, i1, i2, i3, mu);
+        break;
       }
     }
   }
 };
 
-}  // namespace klft
+} // namespace klft

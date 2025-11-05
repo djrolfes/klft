@@ -20,7 +20,9 @@ using RNGType = Kokkos::Random_XorShift64_Pool<Kokkos::DefaultExecutionSpace>;
 #define HLINE \
   "====================================================================\n"
 
-int parse_args(int argc, char** argv, std::string& input_file,
+int parse_args(int argc,
+               char** argv,
+               std::string& input_file,
                std::string& output_directory) {
   // Defaults
   input_file = "../../../input.yaml";

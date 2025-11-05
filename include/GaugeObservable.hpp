@@ -135,7 +135,8 @@ void measureGaugeObservablesPTBC(const typename DGaugeFieldType::type& g_in,
       DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc;
 
   if ((params.measurement_interval == 0) ||
-      (step % params.measurement_interval != 0) || (step == 0)) {
+      (step % params.measurement_interval != 0) || (step == 0) ||
+      (step < params.thermalization_steps)) {
     return;
   }
 
@@ -285,6 +286,27 @@ void measureGaugeObservablesPTBC(const typename DGaugeFieldType::type& g_in,
     // only the computing rank measures the observables
     params.measurement_steps.push_back(step);
 
+    // ... inside if (rank == 0) { ...
+    if (compute_rank != 0 && params.wilson_flow_params.log_details) {
+      DEBUG_MPI_PRINT(
+          "Receiving wilson flow log details size from compute rank: %d\n",
+          compute_rank);
+      size_t size{0};
+
+      MPI_Recv(&size, 1, mpi_size_t(), compute_rank,
+               MPI_GAUGE_OBSERVABLES_WILSONFLOW_DETAILS_SIZE, MPI_COMM_WORLD,
+               MPI_STATUS_IGNORE);
+
+      char* buffer = new char[size + 1];
+      MPI_Recv(buffer, size, MPI_CHAR, compute_rank,
+               MPI_GAUGE_OBSERVABLES_WILSONFLOW_DETAILS, MPI_COMM_WORLD,
+               MPI_STATUS_IGNORE);
+      std::string log_string(buffer, size);
+      params.wilson_flow_params.log_strings.push_back(log_string);
+      delete[] buffer;  // <-- Added memory cleanup
+    }
+    // ...
+
     if constexpr (Nd == 4) {
       if (params.measure_action_density) {
         // send the gauge density measurement to the compute rank
@@ -376,7 +398,8 @@ void measureGaugeObservables(const typename DGaugeFieldType::type& g_in,
       DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc;
   // check if the step is a measurement step
   if ((params.measurement_interval == 0) ||
-      (step % params.measurement_interval != 0) || (step == 0)) {
+      (step % params.measurement_interval != 0) || (step == 0) ||
+      (step < params.thermalization_steps)) {
     return;
   }
   // otherwise, carry out the measurements
@@ -386,7 +409,7 @@ void measureGaugeObservables(const typename DGaugeFieldType::type& g_in,
   }
 
   if constexpr (Nd == 4) {
-    WilsonFlowParams wfparams = params.wilson_flow_params;
+    WilsonFlowParams& wfparams = params.wilson_flow_params;
     WilsonFlow<DGaugeFieldType> wf(g_in, wfparams);
     if (params.do_wilson_flow) {
       if (KLFT_VERBOSITY > 1) {
@@ -625,6 +648,26 @@ inline void flushWilsonLoopMuNu(std::ofstream& file,
            << measurement[1] << ", " << measurement[2] << ", " << measurement[3]
            << ", " << measurement[4] << "\n";
     }
+  }
+}
+
+inline void flushWilsonFlowDetails(std::ofstream& file,
+                                   GaugeObservableParams& params,
+                                   const bool HEADER = true) {
+  // check if the file is open
+  if (!file.is_open()) {
+    printf("Error: file is not open\n");
+    return;
+  }
+  WilsonFlowParams& wfparams = params.wilson_flow_params;
+  if (HEADER) {
+    file << "# step, flow_step, flow_time, sp_max_init, sp_max, sp_max_deriv, "
+            "tsquaredxaction_density(old), next_measure_t^E_step, "
+            "tsquaredxaction_density\n";
+  }
+  for (size_t i = 0; i < params.measurement_steps.size(); ++i) {
+    file << params.measurement_steps[i] << ", " << wfparams.log_strings[i]
+         << "\n";
   }
 }
 

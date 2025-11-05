@@ -2,10 +2,6 @@
 #include "wilsonflow_improv_testing.hpp"
 
 #include <getopt.h>
-
-#include <filesystem>
-
-#include <getopt.h>
 #include <filesystem>
 #include "InputParser.hpp"
 #include "PTBC.hpp"

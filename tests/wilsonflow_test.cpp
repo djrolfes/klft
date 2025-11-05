@@ -18,7 +18,9 @@ using RNGType = Kokkos::Random_XorShift64_Pool<Kokkos::DefaultExecutionSpace>;
 #define HLINE \
   "====================================================================\n"
 
-int parse_args(int argc, char** argv, std::string& input_file,
+int parse_args(int argc,
+               char** argv,
+               std::string& input_file,
                std::string& output_directory) {
   // Defaults
   input_file = "../../../input.yaml";
@@ -109,7 +111,6 @@ int test_wilsonflow(const std::string& input_file,
     printf("Error parsing input file\n");
     return -1;
   }
-  gaugeObsParams.wilson_flow_params.beta = gaugeMonomialParams.beta;
 
   simLogParams.log_filename = (simLogParams.log_filename);
   RNGType rng(hmcParams.seed);

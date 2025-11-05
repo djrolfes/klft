@@ -191,8 +191,8 @@ template <size_t Nc>
 using SUN = Wrapper<Kokkos::Array<Kokkos::Array<complex_t, Nc>, Nc>>;
 
 // define Spinor Type
-// info correct dispatch is only guaranteed for    Nd != Nc ! -> Conflicts with
-// SUN.hpp version Maybe via class to make it safe
+// info correct dispatch is only guaranteed for    Nd != Nc ! -> Conflicts
+// with SUN.hpp version Maybe via class to make it safe
 template <typename T>
 struct WrapperSpinor {
   T data;
@@ -264,7 +264,6 @@ using SpinorField3D =
 template <size_t Nc, size_t RepDim>
 using SpinorField2D =
     Kokkos::View<Spinor<Nc, RepDim>**, Kokkos::MemoryTraits<Kokkos::Restrict>>;
-// define adjoint groups of gauge fields
 
 // define adjoint groups
 template <size_t Nc>

@@ -10,11 +10,10 @@
 namespace klft {
 
 template <typename DGaugeFieldType, typename HMCType>
-index_t do_wilsonflow_improv_test(HMCType &hmc,
-                                  GaugeObservableParams &gaugeObsParams,
-                                  SimulationLoggingParams &simLogParams,
+index_t do_wilsonflow_improv_test(HMCType& hmc,
+                                  GaugeObservableParams& gaugeObsParams,
+                                  SimulationLoggingParams& simLogParams,
                                   std::string output_directory) {
-
   static const size_t Nc = DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc;
   // Construct the output filename. Each MPI rank will get its own file.
 
@@ -29,7 +28,7 @@ index_t do_wilsonflow_improv_test(HMCType &hmc,
   if (!output_file_actiondensity_clover.is_open()) {
     fprintf(stderr, "Error: Could not open output file %s\n",
             output_filename_action_density_clover.c_str());
-    return -1; // Or handle the error as appropriate
+    return -1;  // Or handle the error as appropriate
   }
 
   // Set precision for floating point numbers in the output file
@@ -46,7 +45,7 @@ index_t do_wilsonflow_improv_test(HMCType &hmc,
   if (!header_written) {
     output_file_actiondensity_clover << "hmc_step";
     output_file_actiondensity_clover << ",W_normal";
-    for (const auto &t : factors) {
+    for (const auto& t : factors) {
       output_file_actiondensity_clover << "," << t;
     }
     output_file_actiondensity_clover << "\n";
@@ -87,7 +86,7 @@ index_t do_wilsonflow_improv_test(HMCType &hmc,
       action_densities_clover.push_back(
           getActionDensity_clover<DGaugeFieldType>(wilson_flow.field));
 
-      for (const auto &t : factors) {
+      for (const auto& t : factors) {
         auto tmp_params = gaugeObsParams.wilson_flow_params;
         tmp_params.eps *= static_cast<real_t>(t);
         tmp_params.n_steps = static_cast<int>(tmp_params.tau / tmp_params.eps);
@@ -100,7 +99,7 @@ index_t do_wilsonflow_improv_test(HMCType &hmc,
 
       // Write the data for the current step
       output_file_actiondensity_clover << step;
-      for (const auto &density : action_densities_clover) {
+      for (const auto& density : action_densities_clover) {
         output_file_actiondensity_clover << "," << density;
       }
       output_file_actiondensity_clover << "\n";
@@ -111,4 +110,4 @@ index_t do_wilsonflow_improv_test(HMCType &hmc,
   return 0;
 }
 
-} // namespace klft
+}  // namespace klft
