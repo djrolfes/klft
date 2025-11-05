@@ -380,8 +380,9 @@ struct deviceGaugeField {
   }
 
   template <typename indexType>
-  KOKKOS_FORCEINLINE_FUNCTION SUN<Nc>
-  staple_rect(const Kokkos::Array<indexType, 4> site, const index_t mu) const {
+  KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> staple_rect(
+      const Kokkos::Array<indexType, 4> site,
+      const index_t mu) const {
     // this only works if Nd == 4
     assert(Nd == 4);
     Kokkos::Array<indexType, 4> temp_site1 = site;
@@ -397,7 +398,7 @@ struct deviceGaugeField {
     };
 
 #pragma unroll
-    for (index_t nu = 0; nu < Nd; ++nu) { // loop over nu
+    for (index_t nu = 0; nu < Nd; ++nu) {  // loop over nu
       // do nothing for mu = nu
       if (nu == mu)
         continue;

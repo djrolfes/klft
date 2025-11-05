@@ -26,9 +26,11 @@
 
 namespace klft {
 
-template <typename DSpinorFieldType, typename DGaugeFieldType,
+template <typename DSpinorFieldType,
+          typename DGaugeFieldType,
           typename DAdjFieldType,
-          template <template <typename, typename> class DiracOpT, typename,
+          template <template <typename, typename> class DiracOpT,
+                    typename,
                     typename> class _Solver,
           template <typename, typename> class DiracOpT>
 class UpdateMomentumWilson : public UpdateMomentum {
@@ -68,8 +70,10 @@ class UpdateMomentumWilson : public UpdateMomentum {
   UpdateMomentumWilson() = delete;
   ~UpdateMomentumWilson() = default;
 
-  UpdateMomentumWilson(FermionField& phi_, const GaugeFieldType& gauge_field_,
-                       AdjFieldType& adjoint_field_, const diracParams& params_,
+  UpdateMomentumWilson(FermionField& phi_,
+                       const GaugeFieldType& gauge_field_,
+                       AdjFieldType& adjoint_field_,
+                       const diracParams& params_,
                        const real_t& tol_)
       : UpdateMomentum(0),
         phi(phi_),

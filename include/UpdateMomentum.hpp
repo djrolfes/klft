@@ -82,7 +82,8 @@ class UpdateMomentumGauge : public UpdateMomentum {
   ~UpdateMomentumGauge() = default;
 
   UpdateMomentumGauge(GaugeFieldType& gauge_field_,
-                      AdjFieldType& adjoint_field_, const real_t& beta_)
+                      AdjFieldType& adjoint_field_,
+                      const real_t& beta_)
       : UpdateMomentum(0),
         gauge_field(gauge_field_),
         adjoint_field(adjoint_field_),
@@ -100,7 +101,7 @@ class UpdateMomentumGauge : public UpdateMomentum {
 #pragma unroll
     for (index_t mu = 0; mu < rank; ++mu) {
       adjoint_field(Idcs..., mu) -=
-          this->eps * ((this->beta / this->Nc) * // 0.5 *
+          this->eps * ((this->beta / this->Nc) *  // 0.5 *
                        (traceT((this->gauge_field(Idcs..., mu) *
                                 (this->staple_field(Idcs..., mu))))));
     }

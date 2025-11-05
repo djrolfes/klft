@@ -29,8 +29,11 @@ struct deviceField {
   deviceField() = delete;
 
   // initialize all sites to a given value
-  deviceField(const index_t L0, const index_t L1, const index_t L2,
-              const index_t L3, const complex_t init)
+  deviceField(const index_t L0,
+              const index_t L1,
+              const index_t L2,
+              const index_t L3,
+              const complex_t init)
       : dimensions({L0, L1, L2, L3}) {
     do_init(L0, L1, L2, L3, field, init);
   }
@@ -41,8 +44,12 @@ struct deviceField {
             init);
   }
 
-  void do_init(const index_t L0, const index_t L1, const index_t L2,
-               const index_t L3, Field& V, const complex_t init) {
+  void do_init(const index_t L0,
+               const index_t L1,
+               const index_t L2,
+               const index_t L3,
+               Field& V,
+               const complex_t init) {
     Kokkos::realloc(Kokkos::WithoutInitializing, V, L0, L1, L2, L3);
     tune_and_launch_for<4>(
         "init_deviceField", IndexArray<4>{0, 0, 0, 0},
@@ -121,7 +128,9 @@ struct deviceField3D {
   deviceField3D() = delete;
 
   // initialize all sites to a given value
-  deviceField3D(const index_t L0, const index_t L1, const index_t L2,
+  deviceField3D(const index_t L0,
+                const index_t L1,
+                const index_t L2,
                 const complex_t init)
       : dimensions({L0, L1, L2}) {
     do_init(L0, L1, L2, field, init);
@@ -132,7 +141,10 @@ struct deviceField3D {
     do_init(dimensions[0], dimensions[1], dimensions[2], field, init);
   }
 
-  void do_init(const index_t L0, const index_t L1, const index_t L2, Field3D& V,
+  void do_init(const index_t L0,
+               const index_t L1,
+               const index_t L2,
+               Field3D& V,
                const complex_t init) {
     Kokkos::realloc(Kokkos::WithoutInitializing, V, L0, L1, L2);
     tune_and_launch_for<3>(
@@ -211,7 +223,9 @@ struct deviceField2D {
     do_init(dimensions[0], dimensions[1], field, init);
   }
 
-  void do_init(const index_t L0, const index_t L1, Field2D& V,
+  void do_init(const index_t L0,
+               const index_t L1,
+               Field2D& V,
                const complex_t init) {
     Kokkos::realloc(Kokkos::WithoutInitializing, V, L0, L1);
     tune_and_launch_for<2>(

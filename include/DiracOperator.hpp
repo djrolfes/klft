@@ -99,11 +99,13 @@ class BaseDiracOperator {
   BaseDiracOperator() = default;
 };
 template <template <typename, typename> class _Derived,
-          typename DSpinorFieldType, typename DGaugeFieldType>
+          typename DSpinorFieldType,
+          typename DGaugeFieldType>
 class DiracOperator
     : public BaseDiracOperator<
           DiracOperator<_Derived, DSpinorFieldType, DGaugeFieldType>,
-          DSpinorFieldType, DGaugeFieldType> {
+          DSpinorFieldType,
+          DGaugeFieldType> {
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
   static_assert(isDeviceFermionFieldType<DSpinorFieldType>::value);
   constexpr static size_t rank =
@@ -119,7 +121,8 @@ class DiracOperator
 
   using BaseDiracOperator<
       DiracOperator<_Derived, DSpinorFieldType, DGaugeFieldType>,
-      DSpinorFieldType, DGaugeFieldType>::BaseDiracOperator;
+      DSpinorFieldType,
+      DGaugeFieldType>::BaseDiracOperator;
   using Derived = _Derived<DSpinorFieldType, DGaugeFieldType>;
   using SpinorFieldType = typename DSpinorFieldType::type;
 
@@ -197,11 +200,13 @@ class DiracOperator
 };
 
 template <template <typename, typename> class _Derived,
-          typename DSpinorFieldType, typename DGaugeFieldType>
+          typename DSpinorFieldType,
+          typename DGaugeFieldType>
 class EODiracOperator
     : public BaseDiracOperator<
           EODiracOperator<_Derived, DSpinorFieldType, DGaugeFieldType>,
-          DSpinorFieldType, DGaugeFieldType> {
+          DSpinorFieldType,
+          DGaugeFieldType> {
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
   static_assert(isDeviceFermionFieldType<DSpinorFieldType>::value);
   constexpr static size_t rank =
@@ -218,7 +223,8 @@ class EODiracOperator
  public:
   using BaseDiracOperator<
       EODiracOperator<_Derived, DSpinorFieldType, DGaugeFieldType>,
-      DSpinorFieldType, DGaugeFieldType>::BaseDiracOperator;
+      DSpinorFieldType,
+      DGaugeFieldType>::BaseDiracOperator;
   using Derived = _Derived<DSpinorFieldType, DGaugeFieldType>;
   using SpinorFieldType = typename DSpinorFieldType::type;
 

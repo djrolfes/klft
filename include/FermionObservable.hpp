@@ -56,13 +56,17 @@ auto getDiracParams(const FermionObservableParams& fparams) {
   }
 }
 
-template <typename RNG, typename DSpinorFieldType, typename DGaugeFieldType,
-          template <template <typename, typename> class DiracOpT, typename,
+template <typename RNG,
+          typename DSpinorFieldType,
+          typename DGaugeFieldType,
+          template <template <typename, typename> class DiracOpT,
+                    typename,
                     typename> class _Solver,
           template <typename, typename> class DiracOpT>
 void measureFermionObservables(const typename DGaugeFieldType::type& g_in,
                                FermionObservableParams& params,
-                               const size_t step, RNG& rng) {
+                               const size_t step,
+                               RNG& rng) {
   if ((params.measurement_interval == 0) ||
       (step % params.measurement_interval != 0) || (step == 0)) {
     return;
@@ -122,7 +126,8 @@ inline void flushPionCorrelator(std::ofstream& file,
     printf("Error: no plaquette measurements available\n");
     return;
   }
-  if (HEADER) file << "# step, pion correlator\n";
+  if (HEADER)
+    file << "# step, pion correlator\n";
   for (size_t i = 0; i < params.pion_correlator.size(); ++i) {
     file << params.measurement_steps[i] << ", ";
     for (auto&& j : params.pion_correlator[i]) {
@@ -133,7 +138,8 @@ inline void flushPionCorrelator(std::ofstream& file,
 }
 
 inline void forceflushAllFermionObservables(
-    FermionObservableParams& params, const bool clear_after_flush = false,
+    FermionObservableParams& params,
+    const bool clear_after_flush = false,
     const int& p = std::cout.precision()) {
   auto _ = std::setprecision(p);
   // check if write_to_file is enabled
@@ -171,15 +177,20 @@ typedef enum {
   MPI_FERMION_OBSERVABLE_PION_CORRELATOR = 1
 
 } MPI_FermionObservableTypes;
-template <typename RNG, typename DSpinorFieldType, typename DGaugeFieldType,
-          template <template <typename, typename> class DiracOpT, typename,
+template <typename RNG,
+          typename DSpinorFieldType,
+          typename DGaugeFieldType,
+          template <template <typename, typename> class DiracOpT,
+                    typename,
                     typename> class _Solver,
           template <typename, typename> class DiracOpT>
 void measureFermionObservablesPTBC(const typename DGaugeFieldType::type& g_in,
                                    FermionObservableParams& params,
 
-                                   const size_t step, const int compute_rank,
-                                   RNG& rng, const bool do_compute = false) {
+                                   const size_t step,
+                                   const int compute_rank,
+                                   RNG& rng,
+                                   const bool do_compute = false) {
   if ((params.measurement_interval == 0) ||
       (step % params.measurement_interval != 0) || (step == 0)) {
     return;

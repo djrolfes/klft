@@ -71,24 +71,35 @@ struct DevicePropagator<4, Nc, RepDim> {
 };
 
 // now do the same for the SpinorField field types
-template <size_t rank, size_t Nc, size_t RepDim,
+template <size_t rank,
+          size_t Nc,
+          size_t RepDim,
           SpinorFieldKind k = SpinorFieldKind::Standard,
           SpinorFieldLayout l = SpinorFieldLayout::FULL>
 struct DeviceSpinorFieldType;
 
 template <size_t Nc>
-struct DeviceSpinorFieldType<4, Nc, 4, SpinorFieldKind::Standard,
+struct DeviceSpinorFieldType<4,
+                             Nc,
+                             4,
+                             SpinorFieldKind::Standard,
                              SpinorFieldLayout::FULL> {
   using type = deviceSpinorField<Nc, 4>;
 };
 template <size_t Nc>
-struct DeviceSpinorFieldType<3, Nc, 4, SpinorFieldKind::Standard,
+struct DeviceSpinorFieldType<3,
+                             Nc,
+                             4,
+                             SpinorFieldKind::Standard,
                              SpinorFieldLayout::FULL> {
   using type = deviceSpinorField3D<Nc, 4>;
 };
 
 template <size_t Nc>
-struct DeviceSpinorFieldType<2, Nc, 4, SpinorFieldKind::Standard,
+struct DeviceSpinorFieldType<2,
+                             Nc,
+                             4,
+                             SpinorFieldKind::Standard,
                              SpinorFieldLayout::FULL> {
   using type = deviceSpinorField2D<Nc, 4>;
 };
@@ -96,7 +107,10 @@ struct DeviceSpinorFieldType<2, Nc, 4, SpinorFieldKind::Standard,
 // Checkerboarded spinor fields
 
 template <size_t Nc>
-struct DeviceSpinorFieldType<4, Nc, 4, SpinorFieldKind::Standard,
+struct DeviceSpinorFieldType<4,
+                             Nc,
+                             4,
+                             SpinorFieldKind::Standard,
                              SpinorFieldLayout::Checkerboard> {
   using type = deviceSpinorField<Nc, 4>;
 };
@@ -105,7 +119,10 @@ struct DeviceSpinorFieldType<4, Nc, 4, SpinorFieldKind::PointSource> {
   using type = deviceSpinorPointSource<Nc, 4>;
 };
 template <size_t Nc>
-struct DeviceSpinorFieldType<3, Nc, 4, SpinorFieldKind::Standard,
+struct DeviceSpinorFieldType<3,
+                             Nc,
+                             4,
+                             SpinorFieldKind::Standard,
                              SpinorFieldLayout::Checkerboard> {
   using type = deviceSpinorField3D<Nc, 4>;
 };
@@ -115,7 +132,10 @@ struct DeviceSpinorFieldType<3, Nc, 4, SpinorFieldKind::PointSource> {
 };
 
 template <size_t Nc>
-struct DeviceSpinorFieldType<2, Nc, 4, SpinorFieldKind::Standard,
+struct DeviceSpinorFieldType<2,
+                             Nc,
+                             4,
+                             SpinorFieldKind::Standard,
                              SpinorFieldLayout::Checkerboard> {
   using type = deviceSpinorField2D<Nc, 4>;
 };
@@ -174,7 +194,10 @@ template <size_t rank, size_t Nc, GaugeFieldKind k>
 struct isDeviceGaugeFieldType<DeviceGaugeFieldType<rank, Nc, k>>
     : std::true_type {};
 
-template <size_t rank, size_t Nc, size_t RepDim, SpinorFieldKind k,
+template <size_t rank,
+          size_t Nc,
+          size_t RepDim,
+          SpinorFieldKind k,
           SpinorFieldLayout l>
 struct isDeviceFermionFieldType<DeviceSpinorFieldType<rank, Nc, RepDim, k, l>>
     : std::true_type {};
@@ -182,7 +205,10 @@ struct isDeviceFermionFieldType<DeviceSpinorFieldType<rank, Nc, RepDim, k, l>>
 template <typename T>
 struct DeviceFermionFieldTypeTraits;
 
-template <size_t _rank, size_t _Nc, size_t _RepDim, SpinorFieldKind _k,
+template <size_t _rank,
+          size_t _Nc,
+          size_t _RepDim,
+          SpinorFieldKind _k,
           SpinorFieldLayout _l>
 struct DeviceFermionFieldTypeTraits<
     DeviceSpinorFieldType<_rank, _Nc, _RepDim, _k, _l>> {
@@ -311,7 +337,8 @@ struct WithSpinorFieldKind {
   using type = typename DeviceSpinorFieldType<
       DeviceFermionFieldTypeTraits<T>::Rank,
       DeviceFermionFieldTypeTraits<T>::Nc,
-      DeviceFermionFieldTypeTraits<T>::RepDim, NewKind,
+      DeviceFermionFieldTypeTraits<T>::RepDim,
+      NewKind,
       DeviceFermionFieldTypeTraits<T>::Layout>::type;
 };
 // Type alias for convenience

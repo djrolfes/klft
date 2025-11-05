@@ -279,8 +279,8 @@ template <size_t Nc, size_t RepDim>
 /// @param dim
 /// @param sign
 /// @return result spinor
-static constexpr KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, RepDim> project(
-    size_t dim, index_t sign, const Spinor<Nc, RepDim>& spinor) {
+static constexpr KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, RepDim>
+project(size_t dim, index_t sign, const Spinor<Nc, RepDim>& spinor) {
   constexpr auto id = get_identity<RepDim>();
 
   switch (dim) {
@@ -338,8 +338,8 @@ template <size_t Nc, size_t RepDim>
 /// @param dim
 /// @param sign
 /// @return result spinor
-static constexpr KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, RepDim> project_alt(
-    size_t dim, index_t sign, const Spinor<Nc, RepDim>& spinor) {
+static constexpr KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, RepDim>
+project_alt(size_t dim, index_t sign, const Spinor<Nc, RepDim>& spinor) {
   constexpr auto id = get_identity<RepDim>();
 
   switch (dim) {
@@ -397,8 +397,8 @@ template <size_t Nc>
 /// @param dim
 /// @param sign
 /// @return result spinor
-static constexpr KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, 2> project(
-    size_t dim, index_t sign, const Spinor<Nc, 4>& spinor) {
+static constexpr KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, 2>
+project(size_t dim, index_t sign, const Spinor<Nc, 4>& spinor) {
   Spinor<Nc, 2> result;
   switch (dim) {
     case 0:
@@ -486,8 +486,8 @@ template <size_t Nc>
 /// @param dim
 /// @param sign
 /// @return result spinor
-static constexpr KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, 2> project_alt(
-    size_t dim, index_t sign, const Spinor<Nc, 4>& spinor) {
+static constexpr KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, 2>
+project_alt(size_t dim, index_t sign, const Spinor<Nc, 4>& spinor) {
   Spinor<Nc, 2> result;
   switch (dim) {
     case 0:
@@ -576,8 +576,8 @@ template <size_t Nc, size_t RepDim>
 /// @param dim
 /// @param sign
 /// @return result spinor
-static constexpr KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, RepDim> reconstruct(
-    size_t dim, index_t sign, const Spinor<Nc, RepDim>& spinor) {
+static constexpr KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, RepDim>
+reconstruct(size_t dim, index_t sign, const Spinor<Nc, RepDim>& spinor) {
   return spinor;
 }
 template <size_t Nc, size_t RepDim>
@@ -586,7 +586,9 @@ template <size_t Nc, size_t RepDim>
 /// @param sign
 /// @return result spinor
 constexpr KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, RepDim> static reconstruct_alt(
-    size_t dim, index_t sign, const Spinor<Nc, RepDim>& spinor) {
+    size_t dim,
+    index_t sign,
+    const Spinor<Nc, RepDim>& spinor) {
   return spinor;
 }
 template <size_t Nc>
@@ -594,8 +596,8 @@ template <size_t Nc>
 /// @param dim
 /// @param sign
 /// @return result spinor
-static constexpr KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, 4> reconstruct(
-    size_t dim, index_t sign, const Spinor<Nc, 2>& spinor) {
+static constexpr KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, 4>
+reconstruct(size_t dim, index_t sign, const Spinor<Nc, 2>& spinor) {
   Spinor<Nc, 4> result;
   switch (dim) {
     case 0:
@@ -700,7 +702,9 @@ template <size_t Nc>
 /// @param sign
 /// @return result spinor
 constexpr KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, 4> static reconstruct_alt(
-    size_t dim, index_t sign, const Spinor<Nc, 2>& spinor) {
+    size_t dim,
+    index_t sign,
+    const Spinor<Nc, 2>& spinor) {
   Spinor<Nc, 4> result;
   switch (dim) {
     case 0:

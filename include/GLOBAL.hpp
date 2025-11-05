@@ -626,7 +626,8 @@ KOKKOS_FORCEINLINE_FUNCTION Kokkos::Array<Kokkos::Array<T, N>, N> operator*(
 
 template <typename T, typename U, size_t N>
 KOKKOS_FORCEINLINE_FUNCTION Kokkos::Array<Kokkos::Array<T, N>, N> operator*(
-    const Kokkos::Array<Kokkos::Array<T, N>, N>& a, const U& b) {
+    const Kokkos::Array<Kokkos::Array<T, N>, N>& a,
+    const U& b) {
   Kokkos::Array<Kokkos::Array<T, N>, N> c;
 #pragma unroll
   for (size_t i = 0; i < N; ++i) {

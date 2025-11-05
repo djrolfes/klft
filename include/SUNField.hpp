@@ -30,8 +30,11 @@ struct deviceSUNField {
   deviceSUNField() = delete;
 
   // initialize all sites to a given value
-  deviceSUNField(const index_t L0, const index_t L1, const index_t L2,
-                 const index_t L3, const complex_t init)
+  deviceSUNField(const index_t L0,
+                 const index_t L1,
+                 const index_t L2,
+                 const index_t L3,
+                 const complex_t init)
       : dimensions({L0, L1, L2, L3}) {
     do_init(L0, L1, L2, L3, field, init);
   }
@@ -43,8 +46,11 @@ struct deviceSUNField {
   }
 
   // initialize all sites to a given SUN matrix
-  deviceSUNField(const index_t L0, const index_t L1, const index_t L2,
-                 const index_t L3, const SUN<Nc>& init)
+  deviceSUNField(const index_t L0,
+                 const index_t L1,
+                 const index_t L2,
+                 const index_t L3,
+                 const SUN<Nc>& init)
       : dimensions({L0, L1, L2, L3}) {
     do_init(L0, L1, L2, L3, field, init);
   }
@@ -55,8 +61,12 @@ struct deviceSUNField {
             init);
   }
 
-  void do_init(const index_t L0, const index_t L1, const index_t L2,
-               const index_t L3, SUNField<Nc>& V, const complex_t init) {
+  void do_init(const index_t L0,
+               const index_t L1,
+               const index_t L2,
+               const index_t L3,
+               SUNField<Nc>& V,
+               const complex_t init) {
     Kokkos::realloc(Kokkos::WithoutInitializing, V, L0, L1, L2, L3);
     tune_and_launch_for<4>(
         "init_deviceSUNField", IndexArray<4>{0, 0, 0, 0},
@@ -74,8 +84,12 @@ struct deviceSUNField {
     Kokkos::fence();
   }
 
-  void do_init(const index_t L0, const index_t L1, const index_t L2,
-               const index_t L3, SUNField<Nc>& V, const SUN<Nc>& init) {
+  void do_init(const index_t L0,
+               const index_t L1,
+               const index_t L2,
+               const index_t L3,
+               SUNField<Nc>& V,
+               const SUN<Nc>& init) {
     Kokkos::realloc(Kokkos::WithoutInitializing, V, L0, L1, L2, L3);
     tune_and_launch_for<4>(
         "init_deviceSUNField", IndexArray<4>{0, 0, 0, 0},
@@ -124,7 +138,9 @@ struct deviceSUNField3D {
   deviceSUNField3D() = delete;
 
   // initialize all sites to a given value
-  deviceSUNField3D(const index_t L0, const index_t L1, const index_t L2,
+  deviceSUNField3D(const index_t L0,
+                   const index_t L1,
+                   const index_t L2,
                    const complex_t init)
       : dimensions({L0, L1, L2}) {
     do_init(L0, L1, L2, field, init);
@@ -136,7 +152,9 @@ struct deviceSUNField3D {
   }
 
   // initialize all sites to a given SUN matrix
-  deviceSUNField3D(const index_t L0, const index_t L1, const index_t L2,
+  deviceSUNField3D(const index_t L0,
+                   const index_t L1,
+                   const index_t L2,
                    const SUN<Nc>& init)
       : dimensions({L0, L1, L2}) {
     do_init(L0, L1, L2, field, init);
@@ -147,8 +165,11 @@ struct deviceSUNField3D {
     do_init(dimensions[0], dimensions[1], dimensions[2], field, init);
   }
 
-  void do_init(const index_t L0, const index_t L1, const index_t L2,
-               SUNField3D<Nc>& V, const complex_t init) {
+  void do_init(const index_t L0,
+               const index_t L1,
+               const index_t L2,
+               SUNField3D<Nc>& V,
+               const complex_t init) {
     Kokkos::realloc(Kokkos::WithoutInitializing, V, L0, L1, L2);
     tune_and_launch_for<3>(
         "init_deviceSUNField3D", IndexArray<3>{0, 0, 0},
@@ -165,8 +186,11 @@ struct deviceSUNField3D {
     Kokkos::fence();
   }
 
-  void do_init(const index_t L0, const index_t L1, const index_t L2,
-               SUNField3D<Nc>& V, const SUN<Nc>& init) {
+  void do_init(const index_t L0,
+               const index_t L1,
+               const index_t L2,
+               SUNField3D<Nc>& V,
+               const SUN<Nc>& init) {
     Kokkos::realloc(Kokkos::WithoutInitializing, V, L0, L1, L2);
     tune_and_launch_for<3>(
         "init_deviceSUNField3D", IndexArray<3>{0, 0, 0},
@@ -235,7 +259,9 @@ struct deviceSUNField2D {
     do_init(dimensions[0], dimensions[1], field, init);
   }
 
-  void do_init(const index_t L0, const index_t L1, SUNField2D<Nc>& V,
+  void do_init(const index_t L0,
+               const index_t L1,
+               SUNField2D<Nc>& V,
                const complex_t init) {
     Kokkos::realloc(Kokkos::WithoutInitializing, V, L0, L1);
     tune_and_launch_for<2>(
@@ -252,7 +278,9 @@ struct deviceSUNField2D {
     Kokkos::fence();
   }
 
-  void do_init(const index_t L0, const index_t L1, SUNField2D<Nc>& V,
+  void do_init(const index_t L0,
+               const index_t L1,
+               SUNField2D<Nc>& V,
                const SUN<Nc>& init) {
     Kokkos::realloc(Kokkos::WithoutInitializing, V, L0, L1);
     tune_and_launch_for<2>(

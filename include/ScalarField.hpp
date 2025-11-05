@@ -29,8 +29,11 @@ struct deviceScalarField {
   deviceScalarField() = delete;
 
   // initialize all sites to a given value
-  deviceScalarField(const index_t L0, const index_t L1, const index_t L2,
-                    const index_t L3, const real_t init)
+  deviceScalarField(const index_t L0,
+                    const index_t L1,
+                    const index_t L2,
+                    const index_t L3,
+                    const real_t init)
       : dimensions({L0, L1, L2, L3}) {
     do_init(L0, L1, L2, L3, field, init);
   }
@@ -41,8 +44,12 @@ struct deviceScalarField {
             init);
   }
 
-  void do_init(const index_t L0, const index_t L1, const index_t L2,
-               const index_t L3, ScalarField& V, const real_t init) {
+  void do_init(const index_t L0,
+               const index_t L1,
+               const index_t L2,
+               const index_t L3,
+               ScalarField& V,
+               const real_t init) {
     Kokkos::realloc(Kokkos::WithoutInitializing, V, L0, L1, L2, L3);
     tune_and_launch_for<4>(
         "init_deviceScalarField", IndexArray<4>{0, 0, 0, 0},
@@ -101,7 +108,9 @@ struct deviceScalarField3D {
   deviceScalarField3D() = delete;
 
   // initialize all sites to a given value
-  deviceScalarField3D(const index_t L0, const index_t L1, const index_t L2,
+  deviceScalarField3D(const index_t L0,
+                      const index_t L1,
+                      const index_t L2,
                       const real_t init)
       : dimensions({L0, L1, L2}) {
     do_init(L0, L1, L2, field, init);
@@ -112,8 +121,11 @@ struct deviceScalarField3D {
     do_init(dimensions[0], dimensions[1], dimensions[2], field, init);
   }
 
-  void do_init(const index_t L0, const index_t L1, const index_t L2,
-               ScalarField3D& V, const real_t init) {
+  void do_init(const index_t L0,
+               const index_t L1,
+               const index_t L2,
+               ScalarField3D& V,
+               const real_t init) {
     Kokkos::realloc(Kokkos::WithoutInitializing, V, L0, L1, L2);
     tune_and_launch_for<3>(
         "init_deviceScalarField3D", IndexArray<3>{0, 0, 0},
@@ -181,7 +193,9 @@ struct deviceScalarField2D {
     do_init(dimensions[0], dimensions[1], field, init);
   }
 
-  void do_init(const index_t L0, const index_t L1, ScalarField2D& V,
+  void do_init(const index_t L0,
+               const index_t L1,
+               ScalarField2D& V,
                const real_t init) {
     Kokkos::realloc(Kokkos::WithoutInitializing, V, L0, L1);
     tune_and_launch_for<2>(

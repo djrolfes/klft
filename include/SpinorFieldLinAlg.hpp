@@ -36,7 +36,8 @@ struct SpinorDotProduct {
   FieldType dot_product_per_site;
 
   const IndexArray<rank> dimensions;
-  SpinorDotProduct(const SpinorFieldType& a, const SpinorFieldType& b,
+  SpinorDotProduct(const SpinorFieldType& a,
+                   const SpinorFieldType& b,
                    FieldType& dot_product_per_site,
                    const IndexArray<rank>& dimensions)
       : a(a),
@@ -115,7 +116,8 @@ struct SpinorNorm {
   FieldType norm_per_site;
   const IndexArray<rank> dimensions;
 
-  SpinorNorm(const SpinorFieldType& a, FieldType& norm_per_site,
+  SpinorNorm(const SpinorFieldType& a,
+             FieldType& norm_per_site,
              const IndexArray<rank>& dimensions)
       : a(a), norm_per_site(norm_per_site), dimensions(dimensions) {}
 
@@ -179,8 +181,10 @@ struct axpyFunctor {
   const complex_t alpha;
   SpinorFieldType c;
   const IndexArray<rank> dimensions;
-  axpyFunctor(const complex_t& alpha, const SpinorFieldType& x,
-              const SpinorFieldType& y, SpinorFieldType& c,
+  axpyFunctor(const complex_t& alpha,
+              const SpinorFieldType& x,
+              const SpinorFieldType& y,
+              SpinorFieldType& c,
               const IndexArray<rank>& dimensions)
       : x(x), y(y), c(c), alpha(alpha), dimensions(dimensions) {}
   template <typename... Indices>
@@ -199,8 +203,10 @@ struct axpyG5Functor {
   const complex_t alpha;
   SpinorFieldType c;
   const IndexArray<rank> dimensions;
-  axpyG5Functor(const complex_t& alpha, const SpinorFieldType& x,
-                const SpinorFieldType& y, SpinorFieldType& c,
+  axpyG5Functor(const complex_t& alpha,
+                const SpinorFieldType& x,
+                const SpinorFieldType& y,
+                SpinorFieldType& c,
                 const IndexArray<rank>& dimensions)
       : x(x), y(y), c(c), alpha(alpha), dimensions(dimensions) {}
   template <typename... Indices>
@@ -217,7 +223,8 @@ struct axpyG5Functor {
 /// @return c = alpha*x+y
 template <typename DSpinorFieldType>
 typename DSpinorFieldType::type KOKKOS_FORCEINLINE_FUNCTION
-axpy(const complex_t& alpha, const typename DSpinorFieldType::type& x,
+axpy(const complex_t& alpha,
+     const typename DSpinorFieldType::type& x,
      const typename DSpinorFieldType::type& y) {
   constexpr static size_t rank =
       DeviceFermionFieldTypeTraits<DSpinorFieldType>::Rank;
@@ -286,7 +293,8 @@ void KOKKOS_FORCEINLINE_FUNCTION axpy(const complex_t& alpha,
 /// @return c = gamma5(alpha*x+y)
 template <typename DSpinorFieldType>
 typename DSpinorFieldType::type KOKKOS_FORCEINLINE_FUNCTION
-axpyG5(const complex_t& alpha, const typename DSpinorFieldType::type& x,
+axpyG5(const complex_t& alpha,
+       const typename DSpinorFieldType::type& x,
        const typename DSpinorFieldType::type& y) {
   constexpr static size_t rank =
       DeviceFermionFieldTypeTraits<DSpinorFieldType>::Rank;
@@ -321,7 +329,8 @@ axpyG5(const complex_t& alpha, const typename DSpinorFieldType::type& x,
 /// @return c = gamma5(alpha*x+y)
 template <typename DSpinorFieldType>
 void KOKKOS_FORCEINLINE_FUNCTION
-axpyG5(const complex_t& alpha, const typename DSpinorFieldType::type& x,
+axpyG5(const complex_t& alpha,
+       const typename DSpinorFieldType::type& x,
        const typename DSpinorFieldType::type& y,
        typename DSpinorFieldType::type& c) {
   constexpr static size_t rank =
@@ -354,8 +363,10 @@ struct axFunctor {
   const complex_t alpha;
   SpinorFieldType c;
   const IndexArray<rank> dimensions;
-  axFunctor(const complex_t& alpha, const SpinorFieldType& x,
-            SpinorFieldType& c, const IndexArray<rank>& dimensions)
+  axFunctor(const complex_t& alpha,
+            const SpinorFieldType& x,
+            SpinorFieldType& c,
+            const IndexArray<rank>& dimensions)
       : x(x), c(c), alpha(alpha), dimensions(dimensions) {}
   template <typename... Indices>
   KOKKOS_FORCEINLINE_FUNCTION void operator()(const Indices... Idcs) const {

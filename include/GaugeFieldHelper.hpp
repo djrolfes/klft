@@ -27,7 +27,9 @@ struct UnitarityCheckFunctor {
 
   // ——— rank-3 lattice  (x , y , t) ————————————————————————————
   KOKKOS_FORCEINLINE_FUNCTION
-  void operator()(const int x, const int y, const int t,
+  void operator()(const int x,
+                  const int y,
+                  const int t,
                   real_t& local_max) const {
     for (int mu = 0; mu < 3; ++mu) {
       const real_t d = unitary_defect(field(x, y, t, mu));
@@ -37,7 +39,10 @@ struct UnitarityCheckFunctor {
 
   // ——— rank-4 lattice  (x , y , z , t) ————————————————————————
   KOKKOS_FORCEINLINE_FUNCTION
-  void operator()(const int x, const int y, const int z, const int t,
+  void operator()(const int x,
+                  const int y,
+                  const int z,
+                  const int t,
                   real_t& local_max) const {
     for (int mu = 0; mu < 4; ++mu) {
       const real_t d = unitary_defect(field(x, y, z, t, mu));
