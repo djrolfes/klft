@@ -33,6 +33,7 @@ Fermion Monomial:
   kappa: 0.15
   tol: 1e-10
   preconditioning: true
+
 GaugeObservableParams:
   thermalization_steps: 500
   measurement_interval: 2
@@ -63,8 +64,8 @@ GaugeObservableParams:
   W_mu_nu_filename: "wilson_mu_nu_output.txt"
   action_density_filename: "action_density.txt"
   sp_max_filename: "sp_max.txt"
-
   write_to_file: true
+
 FermionObservableParams:
   pion_correlator_filename: "pion_correlator_output.txt"
   measurement_interval: 2
