@@ -73,6 +73,15 @@ class UpdateMomentumWilsonEO : public UpdateMomentum {
   FermionField sigma;
   const real_t tol;
   real_t eps;
+  // auxillary fields for solver
+  // auxillary fields
+  FermionField xk;
+  FermionField rk;
+  FermionField apk;
+  FermionField temp_D;
+  typename DeviceScalarFieldType<rank>::type norm_per_site;
+  typename DeviceFieldType<rank>::type dot_product_per_site;
+  FermionField pk;
 
   UpdateMomentumWilsonEO() = delete;
   ~UpdateMomentumWilsonEO() = default;
@@ -92,6 +101,15 @@ class UpdateMomentumWilsonEO : public UpdateMomentum {
     rho = FermionField(phi.dimensions, 0);
     sigma = FermionField(phi.dimensions, 0);
     y = FermionField(phi.dimensions, 0);
+    this->xk = FermionField(phi.dimensions, complex_t(0.0, 0.0));
+    this->rk = FermionField(phi.dimensions, complex_t(0.0, 0.0));
+    this->apk = FermionField(phi.dimensions, complex_t(0.0, 0.0));
+    this->temp_D = FermionField(phi.dimensions, complex_t(0.0, 0.0));
+    this->pk = FermionField(phi.dimensions, complex_t(0.0, 0.0));
+    this->norm_per_site =
+        typename DeviceScalarFieldType<rank>::type(phi.dimensions, 0.0);
+    this->dot_product_per_site = typename DeviceFieldType<rank>::type(
+        phi.dimensions, complex_t(0.0, 0.0));
   }
   struct TagEvenContribution {};
   struct TagOddContribution {};
@@ -202,7 +220,8 @@ class UpdateMomentumWilsonEO : public UpdateMomentum {
     FermionField x2(this->phi.dimensions, complex_t(0.0, 0.0));
     FermionField x0(this->phi.dimensions, complex_t(0.0, 0.0));
 
-    Solver solver(this->phi, x, D);
+    Solver solver(this->phi, x, D, this->xk, this->rk, this->apk, this->temp_D,
+                  this->pk, this->norm_per_site, this->dot_product_per_site);
     if (KLFT_VERBOSITY > 4) {
       printf("Solving insde UpdateMomentumWilson:");
     }

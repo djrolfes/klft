@@ -26,7 +26,7 @@
 namespace klft {
 
 struct deviceField {
-  deviceField() = delete;
+  deviceField() = default;
 
   // initialize all sites to a given value
   deviceField(const index_t L0,
@@ -60,7 +60,7 @@ struct deviceField {
   }
 
   Field field;
-  const IndexArray<4> dimensions;
+  IndexArray<4> dimensions;
 
   // define accessors
   template <typename indexType>
@@ -125,7 +125,7 @@ struct deviceField {
 };
 
 struct deviceField3D {
-  deviceField3D() = delete;
+  deviceField3D() = default;
 
   // initialize all sites to a given value
   deviceField3D(const index_t L0,
@@ -156,7 +156,7 @@ struct deviceField3D {
   }
 
   Field3D field;
-  const IndexArray<3> dimensions;
+  IndexArray<3> dimensions;
 
   // define accessors
   template <typename indexType>
@@ -210,7 +210,7 @@ struct deviceField3D {
 };
 
 struct deviceField2D {
-  deviceField2D() = delete;
+  deviceField2D() = default;
 
   // initialize all sites to a given value
   deviceField2D(const index_t L0, const index_t L1, const complex_t init)
@@ -237,7 +237,7 @@ struct deviceField2D {
   }
 
   Field2D field;
-  const IndexArray<2> dimensions;
+  IndexArray<2> dimensions;
 
   // define accessors
   template <typename indexType>
