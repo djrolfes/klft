@@ -74,6 +74,11 @@ class UpdateMomentumWilsonEO : public UpdateMomentum {
   const real_t tol;
   real_t eps;
   // auxillary fields for solver
+  // Solver Fields:
+
+  FermionField x;
+
+  FermionField x0;
   // auxillary fields
   FermionField xk;
   FermionField rk;
@@ -101,6 +106,12 @@ class UpdateMomentumWilsonEO : public UpdateMomentum {
     rho = FermionField(phi.dimensions, 0);
     sigma = FermionField(phi.dimensions, 0);
     y = FermionField(phi.dimensions, 0);
+    // Solver Fields:
+
+    this->x = FermionField(this->phi.dimensions, complex_t(0.0, 0.0));
+
+    this->x0 = FermionField(this->phi.dimensions, complex_t(0.0, 0.0));
+    // Auxillary
     this->xk = FermionField(phi.dimensions, complex_t(0.0, 0.0));
     this->rk = FermionField(phi.dimensions, complex_t(0.0, 0.0));
     this->apk = FermionField(phi.dimensions, complex_t(0.0, 0.0));
@@ -215,18 +226,18 @@ class UpdateMomentumWilsonEO : public UpdateMomentum {
 
     IndexArray<rank> start;
     DiracOp D(gauge_field, this->params);
+    // reset solver fields
+    Kokkos::deep_copy(this->x.field, zeroSpinor<Nc, RepDim>());
+    Kokkos::deep_copy(this->x0.field, zeroSpinor<Nc, RepDim>());
 
-    FermionField x(this->phi.dimensions, complex_t(0.0, 0.0));
-
-    FermionField x0(this->phi.dimensions, complex_t(0.0, 0.0));
-
-    Solver solver(this->phi, x, D, this->xk, this->rk, this->apk, this->temp_D,
-                  this->pk, this->norm_per_site, this->dot_product_per_site);
+    Solver solver(this->phi, this->x, D, this->xk, this->rk, this->apk,
+                  this->temp_D, this->pk, this->norm_per_site,
+                  this->dot_product_per_site);
     if (KLFT_VERBOSITY > 4) {
       printf("Solving insde UpdateMomentumWilson:");
     }
 
-    solver.template solve<Tags::TagDdaggerD>(x0, this->tol);
+    solver.template solve<Tags::TagDdaggerD>(this->x0, this->tol);
 
     this->chi = solver.x;  // chi = S_e^-1 S_e^-1 phi
 
