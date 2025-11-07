@@ -217,7 +217,7 @@ class UpdateMomentumWilsonEO : public UpdateMomentum {
     DiracOp D(gauge_field, this->params);
 
     FermionField x(this->phi.dimensions, complex_t(0.0, 0.0));
-    FermionField x2(this->phi.dimensions, complex_t(0.0, 0.0));
+
     FermionField x0(this->phi.dimensions, complex_t(0.0, 0.0));
 
     Solver solver(this->phi, x, D, this->xk, this->rk, this->apk, this->temp_D,
@@ -230,7 +230,8 @@ class UpdateMomentumWilsonEO : public UpdateMomentum {
 
     this->chi = solver.x;  // chi = S_e^-1 S_e^-1 phi
 
-    D.template apply<Tags::TagG5Se>(this->chi, this->y);  // y = S_e^-1 phi
+    D.template apply<Tags::TagG5Se>(this->chi, this->temp_D,
+                                    this->y);  // y = S_e^-1 phi
 
     D.template apply<Tags::TagHoe>(this->chi, this->rho);
     D.template apply<Tags::TagHoe>(this->y, this->sigma);
