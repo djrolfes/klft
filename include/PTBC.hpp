@@ -1,9 +1,11 @@
 #pragma once
 #include <mpi.h>
 
+#include <filesystem>
 #include <random>
 #include <sstream>
 
+#include "FermionObservable.hpp"
 #include "FieldTypeHelper.hpp"
 #include "GLOBAL.hpp"
 #include "GaugeObservable.hpp"
@@ -22,11 +24,12 @@ struct PTBCParams {
   std::vector<real_t>
       defects;            // a vector that hold the different defect values
   index_t defect_length;  // size of the defect on the lattice
+
   GaugeMonomial_Params gauge_params;  // HMC parameters´
   PTBCSimulationLoggingParams ptbcSimLogParams;
   GaugeObservableParams gaugeObsParams;
   SimulationLoggingParams simLogParams;
-
+  FermionObservableParams fermionObsParams;
   std::string to_string() const {
     std::ostringstream oss;
     oss << "PTBCParams: n_sims = " << n_sims
@@ -46,6 +49,8 @@ class PTBC {  // do I need the AdjFieldType here?
                 GaugeFieldKind::PTBC);
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
   static_assert(isDeviceAdjFieldType<DAdjFieldType>::value);
+
+ public:
   constexpr static size_t Nd =
       DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank;
   constexpr static size_t Nc = DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc;
@@ -57,7 +62,6 @@ class PTBC {  // do I need the AdjFieldType here?
   using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
   using HMCType = HMC<DGaugeFieldType, DAdjFieldType, RNG>;
 
- public:
   PTBCParams& params;  // parameters for the PTBC algorithm
   HMCType& hmc;
   // std::shared_ptr<LeapFrog> integrator; // TODO: make integrator agnostic
@@ -110,6 +114,49 @@ class PTBC {  // do I need the AdjFieldType here?
           (device_id + 1) % Kokkos::num_devices();  // default partner device id
     }
   }
+  void load(const std::string path_to_file) {
+    size_t pos = path_to_file.find_last_of("/");
+    std::string folder;
+
+    if (pos != std::string::npos) {
+      folder = path_to_file.substr(0, pos);
+    } else {
+      folder = "";
+    }
+    std::cout << "Folder found:" << folder << " . \n";
+    int rank, size;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+    std::string substr = "rank" + std::to_string(rank);
+    for (const auto& entry : std::filesystem::directory_iterator(folder)) {
+      if (entry.path().string().find(substr) != std::string::npos) {
+        // s contains substr
+        hmc.hamiltonian_field.gauge_field.load(entry.path());
+        MPI_Allgather(&hmc.hamiltonian_field.gauge_field.dParams.defect_value,
+                      1, mpi_real_t(), params.defects.data(), 1, mpi_real_t(),
+                      MPI_COMM_WORLD);
+        params.defect_length =
+            hmc.hamiltonian_field.gauge_field.dParams.defect_length;
+        if (KLFT_VERBOSITY > 1) {
+          /* code */
+
+          std::cout << "Rank " << rank << " loaded from path:" << entry.path()
+                    << "with the following paramets:\n";
+          std::cout << "Rank " << rank << " Pares: "
+                    << hmc.hamiltonian_field.gauge_field.dParams.format()
+                    << "\n";
+          std::cout << "Rank " << rank << " PTBCParams:" << params.to_string()
+                    << "\n";
+        }
+
+        MPI_Barrier(MPI_COMM_WORLD);
+        return;
+      }
+    }
+    std::string err = "FATAL ERROR: Rank " + std::to_string(rank) +
+                      "could't load, it's gauge config!";
+    throw std::runtime_error(err);
+  }
 
   real_t getDefectValue() const {
     // return the defect value for the current index
@@ -148,7 +195,8 @@ class PTBC {  // do I need the AdjFieldType here?
           printf("Measuring PTBC observables at step %zu\n", step);
         }
         measureGaugeObservablesPTBC<DGaugeFieldType>(
-            hmc.hamiltonian_field.gauge_field, gaugeObsParams, step, 0, true);
+            hmc.hamiltonian_field.gauge_field, gaugeObsParams, step, rank,
+            true);
       } else {
         measureGaugeObservablesPTBC<DGaugeFieldType>(
             hmc.hamiltonian_field.gauge_field, gaugeObsParams, step,
@@ -161,13 +209,53 @@ class PTBC {  // do I need the AdjFieldType here?
     }
   }
 
+  void measure(FermionObservableParams& fermionObsParam, size_t step) {
+    // measure the gauge observables
+    int rank, size;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+    int compute_rank{0};
+    int dummy_rank{0};
+
+    if (rank == 0 || getDefectValue() >= 0.99999) {
+      // only the computing rank or the defect rank measures the observables
+      MPI_Reduce(
+          &rank, &compute_rank, 1, MPI_INT, MPI_SUM, 0,
+          MPI_COMM_WORLD);  // sum the ranks to get the computing rank in rank 0
+      if (getDefectValue() >= 0.99999) {
+        // if the defect value is close to 1, we measure the observables
+        // for the PTBC case
+        if (KLFT_VERBOSITY > 1) {
+          printf("Measuring   Fermionic observables at step %zu\n", step);
+        }
+        measureFermionObservablesPTBC<
+            std::mt19937, DeviceSpinorFieldType<HMCType::rank, HMCType::Nc, 4>,
+            DGaugeFieldType, CGSolver, WilsonDiracOperator>(
+            hmc.hamiltonian_field.gauge_field, fermionObsParam, step, 0, hmc.mt,
+            true);
+      } else {
+        measureFermionObservablesPTBC<
+            std::mt19937, DeviceSpinorFieldType<HMCType::rank, HMCType::Nc, 4>,
+            DGaugeFieldType, CGSolver, WilsonDiracOperator>(
+            hmc.hamiltonian_field.gauge_field, fermionObsParam, step,
+            compute_rank, hmc.mt, false);
+      }
+    } else {
+      MPI_Reduce(&dummy_rank, &compute_rank, 1, MPI_INT, MPI_SUM, 0,
+                 MPI_COMM_WORLD);
+      return;  // skip measurement for other ranks
+    }
+  }
+
   void measure(SimulationLoggingParams& simLogParams,
                index_t step,
                real_t acc_rate,
                bool accept,
-               real_t time) {
+               real_t time,
+               real_t obs_time) {
     // measure the simulation logging observables
-    addLogData(simLogParams, step, hmc.delta_H, acc_rate, accept, time);
+    addLogData(simLogParams, step, hmc.delta_H, acc_rate, accept, time,
+               obs_time);
   }
 
   int step() {
@@ -237,15 +325,17 @@ class PTBC {  // do I need the AdjFieldType here?
       shift[1] = (dist(mt) > 0.5) ? 1 : -1;
     }
     MPI_Bcast(shift, 2, MPI_INT, 0, MPI_COMM_WORLD);
-    auto old_position =
-        hmc.hamiltonian_field.gauge_field.dParams.defect_position;
-    auto new_position = old_position;
-    new_position[shift[0]] =
-        (old_position[shift[0]] + shift[1] +
-         (old_position[shift[0]] == 0) * (shift[1] < 0) *
-             hmc.hamiltonian_field.gauge_field.dimensions[shift[0]]) %
-        hmc.hamiltonian_field.gauge_field.dimensions[shift[0]];
-    hmc.hamiltonian_field.gauge_field.shift_defect(new_position);
+    if (getDefectValue() == 1) {
+      auto old_position =
+          hmc.hamiltonian_field.gauge_field.dParams.defect_position;
+      auto new_position = old_position;
+      new_position[shift[0]] =
+          (old_position[shift[0]] + shift[1] +
+           (old_position[shift[0]] == 0) * (shift[1] < 0) *
+               hmc.hamiltonian_field.gauge_field.dimensions[shift[0]]) %
+          hmc.hamiltonian_field.gauge_field.dimensions[shift[0]];
+      hmc.hamiltonian_field.gauge_field.shift_defect(new_position);
+    }
   }
 
   int swap() {
@@ -382,11 +472,7 @@ class PTBC {  // do I need the AdjFieldType here?
 // below: Functions used to dispatch the PTBC algorithm
 
 template <typename PTBCType>
-int run_PTBC(PTBCType& ptbc,
-             Integrator_Params& int_params,
-             GaugeObservableParams& gaugeObsParams,
-             PTBCSimulationLoggingParams& ptbcSimLogParams,
-             SimulationLoggingParams& simLogParams) {
+int run_PTBC(PTBCType& ptbc, Integrator_Params& int_params) {
   Kokkos::Timer timer;
   real_t acc_sum{0.0};
   real_t acc_rate{0.0};
@@ -406,34 +492,47 @@ int run_PTBC(PTBCType& ptbc,
 
     int ptbc_accept = ptbc.swap();
 
+    const real_t time = timer.seconds();
+    timer.reset();
     // Gauge observables
-    ptbc.measure(gaugeObsParams, step);
-    ptbc.measure(ptbcSimLogParams, step);
+    ptbc.measure(ptbc.params.gaugeObsParams, step);
+
+    const real_t obs_time = timer.seconds();
+    ptbc.measure(ptbc.params.ptbcSimLogParams, step);
+    ptbc.measure(ptbc.params.fermionObsParams, step);
 
     if (rank == 0) {
-      flushAllGaugeObservables(gaugeObsParams, step, true);
-      flushPTBCSimulationLogs(ptbcSimLogParams, step, true);
+      flushAllGaugeObservables(ptbc.params.gaugeObsParams, step, true);
+      flushPTBCSimulationLogs(ptbc.params.ptbcSimLogParams, step, true);
+      flushAllFermionObservables(ptbc.params.fermionObsParams, step, true);
     }
     // PTBC swap/accept
 
-    const real_t time = timer.seconds();
     acc_sum += static_cast<real_t>(accept);
     acc_rate = acc_sum / static_cast<real_t>(step + 1);
-    ptbc.measure(simLogParams, step, acc_rate, accept, time);
+    ptbc.measure(ptbc.params.simLogParams, step, acc_rate, accept, time,
+                 obs_time);
     if (rank == 0) {
       Kokkos::printf("Step: %zu, accepted: %d, Acceptance rate: %f, Time: %f\n",
                      step, accept, acc_rate, time);
     }
-    flushSimulationLogs(simLogParams, step, true);
+    flushSimulationLogs(ptbc.params.simLogParams, step, true);
+    flushIOPTBC<
+        DeviceGaugeFieldType<PTBCType::Nd, PTBCType::Nc, GaugeFieldKind::PTBC>>(
+        ptbc.hmc.ioParams, rank, step, ptbc.hmc.hamiltonian_field.gauge_field);
   }
 
   MPI_Barrier(MPI_COMM_WORLD);  // synchronize all ranks after the loop
   if (rank == 0) {
-    forceflushAllGaugeObservables(gaugeObsParams, true);
-    forceflushPTBCSimulationLogs(ptbcSimLogParams, true);
+    forceflushAllGaugeObservables(ptbc.params.gaugeObsParams, true);
+    forceflushPTBCSimulationLogs(ptbc.params.ptbcSimLogParams, true);
+    forceflushAllFermionObservables(ptbc.params.fermionObsParams, true);
   }
-  forceflushSimulationLogs(simLogParams, true);
-
+  forceflushSimulationLogs(ptbc.params.simLogParams, true);
+  flushIOPTBC<
+      DeviceGaugeFieldType<PTBCType::Nd, PTBCType::Nc, GaugeFieldKind::PTBC>>(
+      ptbc.hmc.ioParams, rank, int_params.nsteps,
+      ptbc.hmc.hamiltonian_field.gauge_field, true);
   return 0;
 }
 

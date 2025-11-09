@@ -63,7 +63,8 @@ struct MetropolisGaugeField {
                        const MetropolisParams& params,
                        const IndexArray<rank>& dimensions,
                        const ScalarFieldType& nAccepted,
-                       const Kokkos::Array<bool, rank>& oddeven, const RNG& rng)
+                       const Kokkos::Array<bool, rank>& oddeven,
+                       const RNG& rng)
       : g_in(g_in),
         params(params),
         oddeven(oddeven),
@@ -120,7 +121,8 @@ struct MetropolisGaugeField {
 // returns acceptance rate
 template <size_t rank, size_t Nc, class RNG>
 real_t sweep_Metropolis(typename DeviceGaugeFieldType<rank, Nc>::type& g_in,
-                        const MetropolisParams& params, const RNG& rng) {
+                        const MetropolisParams& params,
+                        const RNG& rng) {
   // this works strictly for Nd = rank
   constexpr static const size_t Nd = rank;
   // get start and end indices
@@ -184,7 +186,8 @@ real_t sweep_Metropolis(typename DeviceGaugeFieldType<rank, Nc>::type& g_in,
 template <size_t rank, size_t Nc, class RNG, class GaugeFieldType>
 int run_metropolis(GaugeFieldType& g_in,
                    const MetropolisParams& metropolisParams,
-                   GaugeObservableParams& gaugeObsParams, const RNG& rng) {
+                   GaugeObservableParams& gaugeObsParams,
+                   const RNG& rng) {
   // this algorithm is strictly for Nd = rank
   constexpr const size_t Nd = rank;
   // get the dimensions

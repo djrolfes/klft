@@ -74,6 +74,20 @@ struct deviceGaugeField {
             init);
   }
 
+  deviceGaugeField(const IndexArray<4>& dimensions, const std::string& filepath)
+      : dimensions(dimensions) {
+    do_init(dimensions[0], dimensions[1], dimensions[2], dimensions[3], field,
+            filepath);
+  }
+  deviceGaugeField(const index_t L0,
+                   const index_t L1,
+                   const index_t L2,
+                   const index_t L3,
+                   const std::string& filepath)
+      : dimensions({L0, L1, L2, L3}) {
+    do_init(L0, L1, L2, L3, field, filepath);
+  }
+
   // initialize all links to a given SUN matrix
   deviceGaugeField(const index_t L0,
                    const index_t L1,
@@ -124,6 +138,16 @@ struct deviceGaugeField {
       : dimensions(dimensions) {
     do_init(dimensions[0], dimensions[1], dimensions[2], dimensions[3], field,
             rng);
+  }
+  void do_init(const index_t L0,
+               const index_t L1,
+               const index_t L2,
+               const index_t L3,
+               GaugeField<Nd, Nc>& V,
+               const std::string& filepath) {
+    Kokkos::realloc(Kokkos::WithoutInitializing, V, L0, L1, L2, L3);
+    this->load(filepath);
+    Kokkos::fence();
   }
 
   void do_init(const index_t L0,
@@ -380,8 +404,9 @@ struct deviceGaugeField {
   }
 
   template <typename indexType>
-  KOKKOS_FORCEINLINE_FUNCTION SUN<Nc>
-  staple_rect(const Kokkos::Array<indexType, 4> site, const index_t mu) const {
+  KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> staple_rect(
+      const Kokkos::Array<indexType, 4> site,
+      const index_t mu) const {
     // this only works if Nd == 4
     assert(Nd == 4);
     Kokkos::Array<indexType, 4> temp_site1 = site;
@@ -397,7 +422,7 @@ struct deviceGaugeField {
     };
 
 #pragma unroll
-    for (index_t nu = 0; nu < Nd; ++nu) { // loop over nu
+    for (index_t nu = 0; nu < Nd; ++nu) {  // loop over nu
       // do nothing for mu = nu
       if (nu == mu)
         continue;
@@ -524,6 +549,35 @@ struct deviceGaugeField {
       //       temp_site4 = site;
     }
     return temp;
+  }
+  void save(std::string filename) const {
+    printf("Saving gauge field to file %s\n", filename.c_str());
+    auto h_field = Kokkos::create_mirror_view(field);
+    Kokkos::deep_copy(h_field, field);
+    std::ofstream file;
+    try {
+      file.open(filename, std::ios::out | std::ios::binary);
+      file.write(reinterpret_cast<const char*>(h_field.data()),
+                 h_field.size() * sizeof(SUN<Nc>));
+      file.close();
+    } catch (const std::exception& e) {
+      printf("Error saving gauge field to file %s: %s\n", filename.c_str(),
+             e.what());
+    }
+  }
+  void load(std::string filename) {
+    try {
+      auto h_field = Kokkos::create_mirror_view(field);
+      std::ifstream file;
+      file.open(filename, std::ios::in | std::ios::binary);
+      file.read(reinterpret_cast<char*>(h_field.data()),
+                h_field.size() * sizeof(SUN<Nc>));
+      file.close();
+      Kokkos::deep_copy(field, h_field);
+    } catch (const std::exception& e) {
+      printf("Error loading gauge field from file %s: %s\n", filename.c_str(),
+             e.what());
+    }
   }
 };
 
@@ -819,6 +873,34 @@ struct deviceGaugeField3D {
 
     return temp;
   }
+  void save(std::string filename) const {
+    auto h_field = Kokkos::create_mirror_view(field);
+    Kokkos::deep_copy(h_field, field);
+    std::ofstream file;
+    try {
+      file.open(filename, std::ios::out | std::ios::binary);
+      file.write(reinterpret_cast<const char*>(h_field.data()),
+                 h_field.size() * sizeof(SUN<Nc>));
+      file.close();
+    } catch (const std::exception& e) {
+      printf("Error saving gauge field to file %s: %s\n", filename.c_str(),
+             e.what());
+    }
+  }
+  void load(std::string filename) {
+    try {
+      auto h_field = Kokkos::create_mirror_view(field);
+      std::ifstream file;
+      file.open(filename, std::ios::in | std::ios::binary);
+      file.read(reinterpret_cast<char*>(h_field.data()),
+                h_field.size() * sizeof(SUN<Nc>));
+      file.close();
+      Kokkos::deep_copy(field, h_field);
+    } catch (const std::exception& e) {
+      printf("Error loading gauge field from file %s: %s\n", filename.c_str(),
+             e.what());
+    }
+  }
 };
 
 template <size_t Nd, size_t Nc>
@@ -1067,6 +1149,34 @@ struct deviceGaugeField2D {
     }
 
     return temp;
+  }
+  void save(std::string filename) const {
+    auto h_field = Kokkos::create_mirror_view(field);
+    Kokkos::deep_copy(h_field, field);
+    std::ofstream file;
+    try {
+      file.open(filename, std::ios::out | std::ios::binary);
+      file.write(reinterpret_cast<const char*>(h_field.data()),
+                 h_field.size() * sizeof(SUN<Nc>));
+      file.close();
+    } catch (const std::exception& e) {
+      printf("Error saving gauge field to file %s: %s\n", filename.c_str(),
+             e.what());
+    }
+  }
+  void load(std::string filename) {
+    try {
+      auto h_field = Kokkos::create_mirror_view(field);
+      std::ifstream file;
+      file.open(filename, std::ios::in | std::ios::binary);
+      file.read(reinterpret_cast<char*>(h_field.data()),
+                h_field.size() * sizeof(SUN<Nc>));
+      file.close();
+      Kokkos::deep_copy(field, h_field);
+    } catch (const std::exception& e) {
+      printf("Error loading gauge field from file %s: %s\n", filename.c_str(),
+             e.what());
+    }
   }
 };
 

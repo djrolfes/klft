@@ -48,8 +48,11 @@ struct HamiltonianField {
       : gauge_field(_gauge_field), adjoint_field(_adjoint_field) {}
 
   // Rank-4 version
-  KOKKOS_INLINE_FUNCTION void operator()(EKin, index_t i0, index_t i1,
-                                         index_t i2, index_t i3,
+  KOKKOS_INLINE_FUNCTION void operator()(EKin,
+                                         index_t i0,
+                                         index_t i1,
+                                         index_t i2,
+                                         index_t i3,
                                          real_t& rtn) const {
     real_t tmp = 0.0;
     for (index_t mu = 0; mu < 4; ++mu) {
@@ -59,8 +62,11 @@ struct HamiltonianField {
   }
 
   // Rank-3 version
-  KOKKOS_INLINE_FUNCTION void operator()(EKin, index_t i0, index_t i1,
-                                         index_t i2, real_t& rtn) const {
+  KOKKOS_INLINE_FUNCTION void operator()(EKin,
+                                         index_t i0,
+                                         index_t i1,
+                                         index_t i2,
+                                         real_t& rtn) const {
     real_t tmp = 0.0;
     for (index_t mu = 0; mu < 3; ++mu) {
       tmp += 0.5 * norm2<Nc>(adjoint_field(i0, i1, i2, mu));
@@ -69,7 +75,9 @@ struct HamiltonianField {
   }
 
   // Rank-2 version
-  KOKKOS_INLINE_FUNCTION void operator()(EKin, index_t i0, index_t i1,
+  KOKKOS_INLINE_FUNCTION void operator()(EKin,
+                                         index_t i0,
+                                         index_t i1,
                                          real_t& rtn) const {
     real_t tmp = 0.0;
     for (index_t mu = 0; mu < 2; ++mu) {

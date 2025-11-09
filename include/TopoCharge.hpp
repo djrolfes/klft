@@ -76,7 +76,7 @@ struct TopoCharge {
                      (nu - sigma) * (rho - sigma);
 
     // parity of inversion count gives sign
-    return parity > 0 ? (parity == 0 ? 0 : 1) : -1;
+    return parity >= 0 ? (parity == 0 ? 0 : 1) : -1;
   }
 
   // now define the topological charge calculation for a single site (should
@@ -107,13 +107,16 @@ struct TopoCharge {
     for (int mu = 0; mu < Nd - 1; ++mu) {
 #pragma unroll
       for (int nu = mu + 1; nu < Nd; ++nu) {
-        if (mu == nu) continue;
+        if (mu == nu)
+          continue;
 #pragma unroll
         for (int rho = 0; rho < Nd - 1; ++rho) {
-          if (rho == mu || rho == nu) continue;
+          if (rho == mu || rho == nu)
+            continue;
 #pragma unroll
           for (int sigma = rho + 1; sigma < Nd; ++sigma) {
-            if (sigma == mu || sigma == nu) continue;
+            if (sigma == mu || sigma == nu)
+              continue;
             local_charge +=
                 epsilon4(mu, nu, rho, sigma) * tr<Nc>(C[mu][nu], C[rho][sigma]);
           }
@@ -150,7 +153,8 @@ real_t get_topological_charge(const typename DGaugeFieldType::type g_in) {
 
 template <typename DGaugeFieldType>
 real_t get_topological_charge_improved(
-    const typename DGaugeFieldType::type g_in, const real_t b1) {
+    const typename DGaugeFieldType::type g_in,
+    const real_t b1) {
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>(),
                 "get_topological_charge requires a device gauge field type.");
   constexpr static const size_t Nd =

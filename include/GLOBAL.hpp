@@ -88,7 +88,8 @@ template <size_t rank>
 KOKKOS_INLINE_FUNCTION IndexArray<rank> operator+(IndexArray<rank> const& a,
                                                   IndexArray<rank> const& b) {
   IndexArray<rank> c;
-  for (size_t i = 0; i < rank; ++i) c[i] = a[i] + b[i];
+  for (size_t i = 0; i < rank; ++i)
+    c[i] = a[i] + b[i];
   return c;
 }
 
@@ -97,7 +98,8 @@ template <size_t rank>
 KOKKOS_INLINE_FUNCTION IndexArray<rank> operator-(IndexArray<rank> const& a,
                                                   IndexArray<rank> const& b) {
   IndexArray<rank> c;
-  for (size_t i = 0; i < rank; ++i) c[i] = a[i] - b[i];
+  for (size_t i = 0; i < rank; ++i)
+    c[i] = a[i] - b[i];
   return c;
 }
 
@@ -106,7 +108,8 @@ template <size_t rank>
 KOKKOS_INLINE_FUNCTION IndexArray<rank> operator%(IndexArray<rank> const& a,
                                                   IndexArray<rank> const& b) {
   IndexArray<rank> c;
-  for (size_t i = 0; i < rank; ++i) c[i] = a[i] % b[i];
+  for (size_t i = 0; i < rank; ++i)
+    c[i] = a[i] % b[i];
   return c;
 }
 
@@ -115,7 +118,8 @@ template <size_t rank>
 KOKKOS_INLINE_FUNCTION IndexArray<rank> operator%(IndexArray<rank> const& a,
                                                   index_t m) {
   IndexArray<rank> c;
-  for (size_t i = 0; i < rank; ++i) c[i] = a[i] % m;
+  for (size_t i = 0; i < rank; ++i)
+    c[i] = a[i] % m;
   return c;
 }
 
@@ -124,7 +128,8 @@ template <size_t rank>
 KOKKOS_INLINE_FUNCTION IndexArray<rank> operator%(index_t m,
                                                   IndexArray<rank> const& a) {
   IndexArray<rank> c;
-  for (size_t i = 0; i < rank; ++i) c[i] = m % a[i];
+  for (size_t i = 0; i < rank; ++i)
+    c[i] = m % a[i];
   return c;
 }
 
@@ -186,8 +191,8 @@ template <size_t Nc>
 using SUN = Wrapper<Kokkos::Array<Kokkos::Array<complex_t, Nc>, Nc>>;
 
 // define Spinor Type
-// info correct dispatch is only guaranteed for    Nd != Nc ! -> Conflicts with
-// SUN.hpp version Maybe via class to make it safe
+// info correct dispatch is only guaranteed for    Nd != Nc ! -> Conflicts
+// with SUN.hpp version Maybe via class to make it safe
 template <typename T>
 struct WrapperSpinor {
   T data;
@@ -240,7 +245,9 @@ struct WrapperSpinor {
 };
 template <size_t Nc, size_t Nd>
 using Spinor = WrapperSpinor<Kokkos::Array<Kokkos::Array<complex_t, Nc>, Nd>>;
-
+template <size_t Nc, size_t RepDim>
+using PropagatorMatrix =
+    Kokkos::Array<Kokkos::Array<complex_t, RepDim * Nc>, RepDim * Nc>;
 // define field view types
 // by default all views are 4D
 // some dimensions are set to 1 for lower dimensions
@@ -257,9 +264,6 @@ using SpinorField3D =
 template <size_t Nc, size_t RepDim>
 using SpinorField2D =
     Kokkos::View<Spinor<Nc, RepDim>**, Kokkos::MemoryTraits<Kokkos::Restrict>>;
-// define adjoint groups of gauge fields
-template <size_t Nc>
-using sun = Kokkos::Array<real_t, std::max<size_t>(Nc* Nc - 1, 1)>;
 
 // define adjoint groups
 template <size_t Nc>
@@ -299,6 +303,9 @@ struct SUNAdj {
 template <size_t Nd, size_t Nc>
 using GaugeField =
     Kokkos::View<SUN<Nc>**** [Nd], Kokkos::MemoryTraits<Kokkos::Restrict>>;
+template <size_t Nc, size_t RepDim>
+using Propagator = Kokkos::View<PropagatorMatrix<Nc, RepDim>****,
+                                Kokkos::MemoryTraits<Kokkos::Restrict>>;
 
 template <size_t Nd, size_t Nc>
 using GaugeField3D =
@@ -618,7 +625,8 @@ KOKKOS_FORCEINLINE_FUNCTION Kokkos::Array<Kokkos::Array<T, N>, N> operator*(
 
 template <typename T, typename U, size_t N>
 KOKKOS_FORCEINLINE_FUNCTION Kokkos::Array<Kokkos::Array<T, N>, N> operator*(
-    const Kokkos::Array<Kokkos::Array<T, N>, N>& a, const U& b) {
+    const Kokkos::Array<Kokkos::Array<T, N>, N>& a,
+    const U& b) {
   Kokkos::Array<Kokkos::Array<T, N>, N> c;
 #pragma unroll
   for (size_t i = 0; i < N; ++i) {
@@ -714,10 +722,18 @@ inline MPI_Datatype mpi_complex_type() {
 }
 
 // Concrete instantiations for your typedefs:
-inline MPI_Datatype mpi_real_t() { return mpi_real_type<real_t>(); }
-inline MPI_Datatype mpi_index_t() { return mpi_index_type<index_t>(); }
-inline MPI_Datatype mpi_size_t() { return mpi_size_type<size_t>(); }
-inline MPI_Datatype mpi_complex_t() { return mpi_complex_type<complex_t>(); }
+inline MPI_Datatype mpi_real_t() {
+  return mpi_real_type<real_t>();
+}
+inline MPI_Datatype mpi_index_t() {
+  return mpi_index_type<index_t>();
+}
+inline MPI_Datatype mpi_size_t() {
+  return mpi_size_type<size_t>();
+}
+inline MPI_Datatype mpi_complex_t() {
+  return mpi_complex_type<complex_t>();
+}
 
 // global verbosity level
 // 0 = silent
@@ -728,13 +744,17 @@ inline MPI_Datatype mpi_complex_t() { return mpi_complex_type<complex_t>(); }
 // 5 = trace
 inline int KLFT_VERBOSITY = 0;
 
-inline void setVerbosity(int v) { KLFT_VERBOSITY = v; }
+inline void setVerbosity(int v) {
+  KLFT_VERBOSITY = v;
+}
 
 // variable that enables tuning
 // 0 = no tuning
 // 1 = tuning enabled
 inline int KLFT_TUNING = 0;
 
-inline void setTuning(int t) { KLFT_TUNING = t; }
+inline void setTuning(int t) {
+  KLFT_TUNING = t;
+}
 
 }  // namespace klft

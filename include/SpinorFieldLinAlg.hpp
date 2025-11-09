@@ -36,7 +36,8 @@ struct SpinorDotProduct {
   FieldType dot_product_per_site;
 
   const IndexArray<rank> dimensions;
-  SpinorDotProduct(const SpinorFieldType& a, const SpinorFieldType& b,
+  SpinorDotProduct(const SpinorFieldType& a,
+                   const SpinorFieldType& b,
                    FieldType& dot_product_per_site,
                    const IndexArray<rank>& dimensions)
       : a(a),
@@ -115,7 +116,8 @@ struct SpinorNorm {
   FieldType norm_per_site;
   const IndexArray<rank> dimensions;
 
-  SpinorNorm(const SpinorFieldType& a, FieldType& norm_per_site,
+  SpinorNorm(const SpinorFieldType& a,
+             FieldType& norm_per_site,
              const IndexArray<rank>& dimensions)
       : a(a), norm_per_site(norm_per_site), dimensions(dimensions) {}
 
@@ -179,8 +181,10 @@ struct axpyFunctor {
   const complex_t alpha;
   SpinorFieldType c;
   const IndexArray<rank> dimensions;
-  axpyFunctor(const complex_t& alpha, const SpinorFieldType& x,
-              const SpinorFieldType& y, SpinorFieldType& c,
+  axpyFunctor(const complex_t& alpha,
+              const SpinorFieldType& x,
+              const SpinorFieldType& y,
+              SpinorFieldType& c,
               const IndexArray<rank>& dimensions)
       : x(x), y(y), c(c), alpha(alpha), dimensions(dimensions) {}
   template <typename... Indices>
@@ -199,8 +203,10 @@ struct axpyG5Functor {
   const complex_t alpha;
   SpinorFieldType c;
   const IndexArray<rank> dimensions;
-  axpyG5Functor(const complex_t& alpha, const SpinorFieldType& x,
-                const SpinorFieldType& y, SpinorFieldType& c,
+  axpyG5Functor(const complex_t& alpha,
+                const SpinorFieldType& x,
+                const SpinorFieldType& y,
+                SpinorFieldType& c,
                 const IndexArray<rank>& dimensions)
       : x(x), y(y), c(c), alpha(alpha), dimensions(dimensions) {}
   template <typename... Indices>
@@ -217,7 +223,8 @@ struct axpyG5Functor {
 /// @return c = alpha*x+y
 template <typename DSpinorFieldType>
 typename DSpinorFieldType::type KOKKOS_FORCEINLINE_FUNCTION
-axpy(const complex_t& alpha, const typename DSpinorFieldType::type& x,
+axpy(const complex_t& alpha,
+     const typename DSpinorFieldType::type& x,
      const typename DSpinorFieldType::type& y) {
   constexpr static size_t rank =
       DeviceFermionFieldTypeTraits<DSpinorFieldType>::Rank;
@@ -286,7 +293,8 @@ void KOKKOS_FORCEINLINE_FUNCTION axpy(const complex_t& alpha,
 /// @return c = gamma5(alpha*x+y)
 template <typename DSpinorFieldType>
 typename DSpinorFieldType::type KOKKOS_FORCEINLINE_FUNCTION
-axpyG5(const complex_t& alpha, const typename DSpinorFieldType::type& x,
+axpyG5(const complex_t& alpha,
+       const typename DSpinorFieldType::type& x,
        const typename DSpinorFieldType::type& y) {
   constexpr static size_t rank =
       DeviceFermionFieldTypeTraits<DSpinorFieldType>::Rank;
@@ -321,7 +329,8 @@ axpyG5(const complex_t& alpha, const typename DSpinorFieldType::type& x,
 /// @return c = gamma5(alpha*x+y)
 template <typename DSpinorFieldType>
 void KOKKOS_FORCEINLINE_FUNCTION
-axpyG5(const complex_t& alpha, const typename DSpinorFieldType::type& x,
+axpyG5(const complex_t& alpha,
+       const typename DSpinorFieldType::type& x,
        const typename DSpinorFieldType::type& y,
        typename DSpinorFieldType::type& c) {
   constexpr static size_t rank =
@@ -344,6 +353,79 @@ axpyG5(const complex_t& alpha, const typename DSpinorFieldType::type& x,
 
   tune_and_launch_for<rank>("SpinorField_axpy_inplace", start, x.dimensions,
                             add);
+  Kokkos::fence();
+}
+template <size_t rank, size_t Nc, size_t RepDim>
+struct axFunctor {
+  using SpinorFieldType =
+      typename DeviceSpinorFieldType<rank, Nc, RepDim>::type;
+  const SpinorFieldType x;
+  const complex_t alpha;
+  SpinorFieldType c;
+  const IndexArray<rank> dimensions;
+  axFunctor(const complex_t& alpha,
+            const SpinorFieldType& x,
+            SpinorFieldType& c,
+            const IndexArray<rank>& dimensions)
+      : x(x), c(c), alpha(alpha), dimensions(dimensions) {}
+  template <typename... Indices>
+  KOKKOS_FORCEINLINE_FUNCTION void operator()(const Indices... Idcs) const {
+    // axpy(alpha, x(Idcs...), y(Idcs...), c(Idcs...));
+    c(Idcs...) = (alpha * x(Idcs...));
+  }
+};
+/// @brief Calculates alpha*x
+/// @param alpha
+/// @param x
+/// @return c = alpha*x
+template <typename DSpinorFieldType>
+typename DSpinorFieldType::type KOKKOS_FORCEINLINE_FUNCTION
+ax(const complex_t& alpha, const typename DSpinorFieldType::type& x) {
+  constexpr static size_t rank =
+      DeviceFermionFieldTypeTraits<DSpinorFieldType>::Rank;
+  constexpr static size_t Nc =
+      DeviceFermionFieldTypeTraits<DSpinorFieldType>::Nc;
+  constexpr static size_t RepDim =
+      DeviceFermionFieldTypeTraits<DSpinorFieldType>::RepDim;
+
+  using SpinorFieldType = typename DSpinorFieldType::type;
+  SpinorFieldType c(x.dimensions, complex_t(0.0, 0.0));
+  IndexArray<rank> start{};
+  axFunctor<rank, Nc, RepDim> add(alpha, x, c, x.dimensions);
+
+  tune_and_launch_for<rank>("SpinorField_a", start, x.dimensions, add);
+  Kokkos::fence();
+  return c;
+}
+/// @brief Calculates alpha*x
+/// @param alpha
+/// @param x
+/// @param y
+/// @param c
+/// @return c = alpha*x
+template <typename DSpinorFieldType>
+void KOKKOS_FORCEINLINE_FUNCTION ax(const complex_t& alpha,
+                                    const typename DSpinorFieldType::type& x,
+                                    typename DSpinorFieldType::type& c) {
+  constexpr static size_t rank =
+      DeviceFermionFieldTypeTraits<DSpinorFieldType>::Rank;
+  constexpr static size_t Nc =
+      DeviceFermionFieldTypeTraits<DSpinorFieldType>::Nc;
+  constexpr static size_t RepDim =
+      DeviceFermionFieldTypeTraits<DSpinorFieldType>::RepDim;
+  assert(x.dimensions == c.dimensions);
+  static_assert(
+      Kokkos::SpaceAccessibility<
+          typename decltype(x.field)::execution_space,
+          typename decltype(c.field)::memory_space>::accessible,
+      "Execution space of A cannot access memory space of B");  // allow only
+                                                                // device-device
+                                                                // or host-host
+                                                                // interaction
+  IndexArray<rank> start{};
+  axFunctor<rank, Nc, RepDim> add(alpha, x, c, x.dimensions);
+
+  tune_and_launch_for<rank>("SpinorField_ax_inplace", start, x.dimensions, add);
   Kokkos::fence();
 }
 }  // namespace klft

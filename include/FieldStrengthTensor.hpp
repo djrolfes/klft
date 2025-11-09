@@ -176,11 +176,15 @@ struct FieldStrengthTensor {
       : g_in(g_in), dimensions(g_in.dimensions) {}
 
   template <typename indexType>
-  KOKKOS_FORCEINLINE_FUNCTION SUNAdj<Nc> operator()(
-      CloverDef, const indexType i0, const indexType i1, const indexType i2,
-      const indexType i3, index_t mu, index_t nu) const {
-    // implemented according to https://doi.org/10.1140/epjc/s10052-020-7984-9
-    // (21)
+  KOKKOS_FORCEINLINE_FUNCTION SUNAdj<Nc> operator()(CloverDef,
+                                                    const indexType i0,
+                                                    const indexType i1,
+                                                    const indexType i2,
+                                                    const indexType i3,
+                                                    index_t mu,
+                                                    index_t nu) const {
+    // implemented according to
+    // https://doi.org/10.1140/epjc/s10052-020-7984-9 (21)
 
     SUN<Nc> P_munu = zeroSUN<Nc>();
     const IndexArray<Nd> x{static_cast<index_t>(i0), static_cast<index_t>(i1),
@@ -225,9 +229,13 @@ struct FieldStrengthTensor {
   }
 
   template <typename indexType>
-  KOKKOS_FORCEINLINE_FUNCTION SUNAdj<Nc> operator()(
-      RectangleDef, const indexType i0, const indexType i1, const indexType i2,
-      const indexType i3, index_t mu, index_t nu) const {
+  KOKKOS_FORCEINLINE_FUNCTION SUNAdj<Nc> operator()(RectangleDef,
+                                                    const indexType i0,
+                                                    const indexType i1,
+                                                    const indexType i2,
+                                                    const indexType i3,
+                                                    index_t mu,
+                                                    index_t nu) const {
     // implemented according to https://doi.org/10.1140/epjc/s10052-020-7984-9
     // (24)
 

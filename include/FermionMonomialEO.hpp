@@ -26,9 +26,12 @@
 #define SQRT2INV \
   0.707106781186547524400844362104849039284835937688474036588339868995366239231053519425193767163820786367506  // Oeis A010503
 namespace klft {
-template <class RNGType, typename DSpinorFieldType, typename DGaugeFieldType,
+template <class RNGType,
+          typename DSpinorFieldType,
+          typename DGaugeFieldType,
           typename DAdjFieldType,
-          template <template <typename, typename> class DiracOpT, typename,
+          template <template <typename, typename> class DiracOpT,
+                    typename,
                     typename> class _Solver,
           template <typename, typename> class DiracOpT>
 class FermionMonomialEO : public Monomial<DGaugeFieldType, DAdjFieldType> {
@@ -61,8 +64,11 @@ class FermionMonomialEO : public Monomial<DGaugeFieldType, DAdjFieldType> {
   const diracParams params;
   const real_t tol;
   RNGType rng;
-  FermionMonomialEO(FermionField& _phi, const diracParams& params_,
-                    const real_t& tol_, RNGType& RNG_, unsigned int _time_scale)
+  FermionMonomialEO(FermionField& _phi,
+                    const diracParams& params_,
+                    const real_t& tol_,
+                    RNGType& RNG_,
+                    unsigned int _time_scale)
       : Monomial<DGaugeFieldType, DAdjFieldType>(_time_scale),
         phi(_phi),
         params(params_),
@@ -82,7 +88,7 @@ class FermionMonomialEO : public Monomial<DGaugeFieldType, DAdjFieldType> {
     Monomial<DGaugeFieldType, DAdjFieldType>::H_old =
         spinor_norm_sq<rank, Nc, RepDim>(R);
     DiracOperator dirac_op(h.gauge_field, params);
-    dirac_op.template apply<Tags::TagSe>(R, this->phi);
+    dirac_op.template apply<Tags::TagG5Se>(R, this->phi);
     Kokkos::Profiling::popRegion();
   }
 

@@ -4,4 +4,7 @@ build
 arc
 CMakePresets.json
 .cache
+.clangd
+cmake-build-*
+compile_commands.json
 

@@ -20,6 +20,7 @@
 #pragma once
 #include <cstddef>
 
+#include "FermionObservable.hpp"
 #include "GLOBAL.hpp"
 #include "GaugeObservable.hpp"
 #include "HMC.hpp"
@@ -30,9 +31,11 @@ using RNGType = Kokkos::Random_XorShift64_Pool<Kokkos::DefaultExecutionSpace>;
 namespace klft {
 
 template <typename HMCType>
-int run_HMC(HMCType& hmc, const Integrator_Params& integratorParams,
+int run_HMC(HMCType& hmc,
+            const Integrator_Params& integratorParams,
             GaugeObservableParams& gaugeObsParams,
-            SimulationLoggingParams& simLogParams) {
+            SimulationLoggingParams& simLogParams,
+            FermionObservableParams& fermionObsParams) {
   // initiate and execute the HMC with the given parameters
   printf("Executing HMC ...");
   static_assert(isHMCClass<HMCType>::value,
@@ -60,11 +63,26 @@ int run_HMC(HMCType& hmc, const Integrator_Params& integratorParams,
           "%f\n",
           step, static_cast<size_t>(accept), acc_rate, time);
     }
+    timer.reset();
     measureGaugeObservables<typename HMCType::DeviceGaugeFieldType>(
         hmc.hamiltonian_field.gauge_field, gaugeObsParams, step);
-    addLogData(simLogParams, step, hmc.delta_H, acc_rate, accept, time);
+    // For now fix fermion measurment stuff:
+    measureFermionObservables<
+        std::mt19937, DeviceSpinorFieldType<HMCType::rank, HMCType::Nc, 4>,
+        typename HMCType::DeviceGaugeFieldType, CGSolver,
+        EOWilsonDiracOperator>(hmc.hamiltonian_field.gauge_field,
+                               fermionObsParams, step, hmc.mt);
+    const real_t obs_time = timer.seconds();
+    addLogData(simLogParams, step, hmc.delta_H, acc_rate, accept, time,
+               obs_time);
     flushSimulationLogs(simLogParams, step, true);
     flushAllGaugeObservables(gaugeObsParams, step, true);
+    flushIO<DeviceGaugeFieldType<HMCType::rank, HMCType::Nc>>(
+        hmc.ioParams, step, hmc.hamiltonian_field.gauge_field);
+    if (fermionObsParams.flush != 0 && step % fermionObsParams.flush == 0) {
+      flushAllFermionObservables(fermionObsParams, step == simLogParams.flush);
+      clearAllFermionObservables(fermionObsParams);
+    }
     // flush the measurements to the files
     // if flush is set to 0, we flush with the  header at the end of
     // the simulation
@@ -72,6 +90,10 @@ int run_HMC(HMCType& hmc, const Integrator_Params& integratorParams,
 
   forceflushSimulationLogs(simLogParams, true);
   forceflushAllGaugeObservables(gaugeObsParams, true);
+  flushAllFermionObservables(fermionObsParams, fermionObsParams.flush == 0);
+  flushIO<DeviceGaugeFieldType<HMCType::rank, HMCType::Nc>>(
+      hmc.ioParams, integratorParams.nsteps, hmc.hamiltonian_field.gauge_field,
+      true);
 
   printf("Total Acceptance rate: %f, Accept %f Configs", acc_rate, acc_sum);
   return 0;

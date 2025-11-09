@@ -26,9 +26,11 @@
 
 namespace klft {
 
-template <typename DSpinorFieldType, typename DGaugeFieldType,
+template <typename DSpinorFieldType,
+          typename DGaugeFieldType,
           typename DAdjFieldType,
-          template <template <typename, typename> class DiracOpT, typename,
+          template <template <typename, typename> class DiracOpT,
+                    typename,
                     typename> class _Solver,
           template <typename, typename> class DiracOpT>
 class UpdateMomentumWilson : public UpdateMomentum {
@@ -64,12 +66,23 @@ class UpdateMomentumWilson : public UpdateMomentum {
   FermionField chi_alt;
   const real_t tol;
   real_t eps;
+  // auxillary fields for solver
+  // auxillary fields
+  FermionField xk;
+  FermionField rk;
+  FermionField apk;
+  FermionField temp_D;
+  typename DeviceScalarFieldType<rank>::type norm_per_site;
+  typename DeviceFieldType<rank>::type dot_product_per_site;
+  FermionField pk;
 
   UpdateMomentumWilson() = delete;
   ~UpdateMomentumWilson() = default;
 
-  UpdateMomentumWilson(FermionField& phi_, const GaugeFieldType& gauge_field_,
-                       AdjFieldType& adjoint_field_, const diracParams& params_,
+  UpdateMomentumWilson(FermionField& phi_,
+                       const GaugeFieldType& gauge_field_,
+                       AdjFieldType& adjoint_field_,
+                       const diracParams& params_,
                        const real_t& tol_)
       : UpdateMomentum(0),
         phi(phi_),
@@ -78,7 +91,17 @@ class UpdateMomentumWilson : public UpdateMomentum {
         params(params_),
         eps(0.0),
         tol(tol_),
-        dimensions(phi_.dimensions) {}
+        dimensions(phi_.dimensions) {
+    this->xk = FermionField(dimensions, complex_t(0.0, 0.0));
+    this->rk = FermionField(dimensions, complex_t(0.0, 0.0));
+    this->apk = FermionField(dimensions, complex_t(0.0, 0.0));
+    this->temp_D = FermionField(dimensions, complex_t(0.0, 0.0));
+    this->pk = FermionField(dimensions, complex_t(0.0, 0.0));
+    this->norm_per_site =
+        typename DeviceScalarFieldType<rank>::type(dimensions, 0.0);
+    this->dot_product_per_site =
+        typename DeviceFieldType<rank>::type(dimensions, complex_t(0.0, 0.0));
+  }
 
   // Implemntation of the force correspondig to the Hermitian Wilson dirac
   // Operator
@@ -135,7 +158,8 @@ class UpdateMomentumWilson : public UpdateMomentum {
     FermionField x(this->phi.dimensions, complex_t(0.0, 0.0));
     FermionField x0(this->phi.dimensions, complex_t(0.0, 0.0));
 
-    Solver solver(this->phi, x, D);
+    Solver solver(this->phi, x, D, this->xk, this->rk, this->apk, this->temp_D,
+                  this->pk, this->norm_per_site, this->dot_product_per_site);
     if (KLFT_VERBOSITY > 4) {
       printf("Solving insde UpdateMomentumWilson:");
     }

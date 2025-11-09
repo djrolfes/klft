@@ -27,8 +27,10 @@ namespace klft {
 // return x + shift  mu
 template <size_t rank, typename indexType>
 constexpr KOKKOS_FORCEINLINE_FUNCTION Kokkos::Array<index_t, rank>
-shift_index_plus(const Kokkos::Array<indexType, rank>& idx, const index_t mu,
-                 const index_t shift, const IndexArray<rank>& dimensions) {
+shift_index_plus(const Kokkos::Array<indexType, rank>& idx,
+                 const index_t mu,
+                 const index_t shift,
+                 const IndexArray<rank>& dimensions) {
   // make sure mu makes sense
   assert(mu < rank && mu >= 0);
   Kokkos::Array<index_t, rank> new_idx;
@@ -43,8 +45,10 @@ shift_index_plus(const Kokkos::Array<indexType, rank>& idx, const index_t mu,
 // return x - shift mu
 template <size_t rank, typename indexType>
 constexpr KOKKOS_FORCEINLINE_FUNCTION Kokkos::Array<index_t, rank>
-shift_index_minus(const Kokkos::Array<indexType, rank>& idx, const index_t mu,
-                  const index_t shift, const IndexArray<rank>& dimensions) {
+shift_index_minus(const Kokkos::Array<indexType, rank>& idx,
+                  const index_t mu,
+                  const index_t shift,
+                  const IndexArray<rank>& dimensions) {
   // make sure mu makes sense
   assert(mu < rank && mu >= 0);
   Kokkos::Array<index_t, rank> new_idx;
@@ -89,8 +93,10 @@ template <size_t rank, typename indexType>
 constexpr KOKKOS_FORCEINLINE_FUNCTION
     Kokkos::pair<Kokkos::Array<index_t, rank>, real_t>
     shift_index_plus_bc(const Kokkos::Array<indexType, rank>& idx,
-                        const index_t mu, const index_t shift,
-                        const index_t bc_dim, const real_t bc_value,
+                        const index_t mu,
+                        const index_t shift,
+                        const index_t bc_dim,
+                        const real_t bc_value,
                         const IndexArray<rank>& dimensions) {
   // make sure mu makes sense
   assert(mu < rank && mu >= 0);
@@ -109,8 +115,10 @@ template <size_t rank, typename indexType>
 constexpr KOKKOS_FORCEINLINE_FUNCTION
     Kokkos::pair<Kokkos::Array<index_t, rank>, real_t>
     shift_index_minus_bc(const Kokkos::Array<indexType, rank>& idx,
-                         const index_t mu, const index_t shift,
-                         const index_t bc_dim, const real_t bc_value,
+                         const index_t mu,
+                         const index_t shift,
+                         const index_t bc_dim,
+                         const real_t bc_value,
                          const IndexArray<rank>& dimensions) {
   // make sure mu makes sense
   assert(mu < rank && mu >= 0);

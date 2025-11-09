@@ -24,8 +24,11 @@
 #pragma once
 #include <yaml-cpp/yaml.h>
 
+#include <filesystem>
+
 #include "GaugeObservable.hpp"
 #include "HMC_Params.hpp"
+#include "IOParams.hpp"
 #include "Metropolis_Params.hpp"
 #include "PTBC.hpp"
 #include "SimulationLogging.hpp"
@@ -65,7 +68,7 @@ inline bool parseInputFile(const std::string& filename,
     }
     return true;
   } catch (const YAML::Exception& e) {
-    printf("Error parsing input file: %s\n", e.what());
+    printf("(MetropolisParams) Error parsing input file: %s\n", e.what());
     return false;
   }
 }
@@ -80,9 +83,11 @@ inline int parseInputFile(const std::string& filename,
     // Parse GaugeObservableParams
     if (config["GaugeObservableParams"]) {
       const auto& gp = config["GaugeObservableParams"];
+      gaugeObservableParams.thermalization_steps =
+          gp["thermalization_steps"].as<size_t>(0);
       // interval between measurements
       gaugeObservableParams.measurement_interval =
-          gp["measurement_interval"].as<size_t>(0);
+          gp["measurement_interval"].as<size_t>(1);
       // whether to measure the topological charge
       gaugeObservableParams.measure_topological_charge =
           gp["measure_topological_charge"].as<bool>(false);
@@ -97,6 +102,8 @@ inline int parseInputFile(const std::string& filename,
           gp["measure_wilson_loop_mu_nu"].as<bool>(false);
       gaugeObservableParams.measure_action_density =
           gp["measure_action_density"].as<bool>(false);
+      gaugeObservableParams.measure_sp_max =
+          gp["measure_sp_max"].as<bool>(false);
 
       // pairs of (L,T) for the temporal Wilson loop
       if (gp["W_temp_L_T_pairs"]) {
@@ -135,6 +142,23 @@ inline int parseInputFile(const std::string& filename,
             wfp_node["tau"].as<real_t>();
         gaugeObservableParams.wilson_flow_params.eps =
             wfp_node["eps"].as<real_t>();
+        gaugeObservableParams.wilson_flow_params.dynamical_flow =
+            wfp_node["dynamical_flow"].as<bool>(false);
+        gaugeObservableParams.wilson_flow_params.min_flow_time =
+            wfp_node["min_flow_time"].as<real_t>(-1.0);
+        gaugeObservableParams.wilson_flow_params.max_flow_time =
+            wfp_node["max_flow_time"].as<real_t>(-1.0);
+        gaugeObservableParams.wilson_flow_params.sp_max_target =
+            wfp_node["sp_max_target"].as<real_t>(0.067);
+        gaugeObservableParams.wilson_flow_params.t_sqrd_E_target =
+            wfp_node["t_sqrd_E_target"].as<real_t>(0.1);
+        gaugeObservableParams.wilson_flow_params.first_tE_measure_step =
+            wfp_node["first_tE_measure_step"].as<size_t>(10);
+        gaugeObservableParams.wilson_flow_params.log_details =
+            wfp_node["log_details"].as<bool>(false);
+        gaugeObservableParams.wilson_flow_params.wilson_flow_filename =
+            output_directory +
+            wfp_node["wilson_flow_filename"].as<std::string>("");
 
         // Recalculate eps based on parsed values
         if (gaugeObservableParams.wilson_flow_params.eps > 0) {
@@ -152,14 +176,14 @@ inline int parseInputFile(const std::string& filename,
           gp["topological_charge_filename"].as<std::string>("");
       gaugeObservableParams.plaquette_filename =
           output_directory + gp["plaquette_filename"].as<std::string>("");
-      output_directory + gp["plaquette_filename"].as<std::string>("");
       gaugeObservableParams.W_temp_filename =
           output_directory + gp["W_temp_filename"].as<std::string>("");
-      output_directory + gp["W_temp_filename"].as<std::string>("");
       gaugeObservableParams.W_mu_nu_filename =
           output_directory + gp["W_mu_nu_filename"].as<std::string>("");
       gaugeObservableParams.action_density_filename =
           output_directory + gp["action_density_filename"].as<std::string>("");
+      gaugeObservableParams.sp_max_filename =
+          output_directory + gp["sp_max_filename"].as<std::string>("");
 
       // whether to write to file
       gaugeObservableParams.write_to_file = gp["write_to_file"].as<bool>(false);
@@ -179,14 +203,48 @@ inline int parseInputFile(const std::string& filename,
   }
 }
 
-// get GaugeObservableParams from input file
+inline int parseInputFile(const std::string& filename,
+                          const std::string& output_directory,
+                          FermionObservableParams& fobs) {
+  try {
+    YAML::Node config = YAML::LoadFile(filename);
+    if (config["FermionObservableParams"]) {
+      const auto& mp = config["FermionObservableParams"];
+      fobs.measurement_interval = mp["measurement_interval"].as<size_t>(0);
+
+      fobs.measure_pion_correlator =
+          mp["measure_pion_correlator"].as<bool>(false);
+      fobs.pion_correlator_filename =
+          output_directory + mp["pion_correlator_filename"].as<std::string>("");
+      fobs.tol = mp["tol"].as<real_t>(10e-8);
+      fobs.flush = mp["flush"].as<size_t>(25);
+      fobs.write_to_file = mp["write_to_file"].as<bool>(false);
+      fobs.kappa = mp["kappa"].as<real_t>(0.15);
+      fobs.RepDim = mp["RepDim"].as<size_t>(4);
+      fobs.write_to_file = mp["write_to_file"].as<bool>(false);
+      fobs.preconditioning = mp["preconditioning"].as<bool>(false);
+      fobs.n_sources = mp["n_sources"].as<index_t>(12);
+    } else {
+      printf("Info: No Fermionic Measurments are done!\n");
+      return false;
+    }
+
+  } catch (const YAML::Exception& e) {
+    printf("(FermionObservableParams) Error parsing input file: %s\n",
+           e.what());
+    return false;
+  }
+  return true;
+}
+
+// get PTBCParams from input file
 inline bool parseInputFile(const std::string& filename,
                            const std::string& output_directory,
                            PTBCParams& ptbcParams) {
   try {
     YAML::Node config = YAML::LoadFile(filename);
 
-    // Parse GaugeObservableParams
+    // Parse PTBCParams
     if (config["PTBCParams"]) {
       const auto& pp = config["PTBCParams"];
       ptbcParams.defect_length = pp["defect_length"].as<index_t>(1);
@@ -222,7 +280,7 @@ inline bool parseInputFile(const std::string& filename,
   try {
     YAML::Node config = YAML::LoadFile(filename);
 
-    // Parse MetropolisParams
+    // Parse HMCParams
     if (config["HMCParams"]) {
       const auto& mp = config["HMCParams"];
       // general parameters
@@ -237,6 +295,7 @@ inline bool parseInputFile(const std::string& filename,
       // parameters specific to the GaugeField
       hmcParams.Nd = mp["Nd"].as<size_t>(4);
       hmcParams.Nc = mp["Nc"].as<size_t>(2);
+      hmcParams.loadfile = mp["loadfile"].as<std::string>("");
       // add more parameters above this as needed
     } else {
       printf("Error: HMCParams not found in input file\n");
@@ -321,6 +380,7 @@ inline int parseInputFile(const std::string& filename,
       simParams.log_acceptance = mp["log_acceptance"].as<bool>(false);
       simParams.log_accept = mp["log_accept"].as<bool>(false);
       simParams.log_time = mp["log_time"].as<bool>(false);
+      simParams.log_observable_time = mp["log_observable_time"].as<bool>(false);
     } else {
       printf("Error: SimulationLoggingParams not found in input file\n");
       return false;
@@ -393,8 +453,6 @@ inline int parseInputFile(const std::string& filename,
       simParams.log_interval = mp["log_interval"].as<size_t>(0);
       simParams.log_filename =
           output_directory + mp["log_filename"].as<std::string>("");
-      simParams.log_filename =
-          output_directory + mp["log_filename"].as<std::string>("");
       simParams.write_to_file = mp["write_to_file"].as<bool>(false);
       simParams.flush = mp["flush"].as<size_t>(25);
 
@@ -465,6 +523,51 @@ inline int parseSanityChecks(const Integrator_Params& iparams,
   }
   return true;
   //
+}
+inline int parseInputFile(const std::string& filename,
+                          const std::string& output_directory,
+                          IOParams& ioParams) {
+  try {
+    YAML::Node config = YAML::LoadFile(filename);
+
+    // Parse MetropolisParams
+    if (config["IOParams"]) {
+      const auto& mp = config["IOParams"];
+      // general parameters
+      ioParams.save_gauge_field = mp["save"].as<bool>(0);
+      ioParams.overwrite_gauge_field_file = mp["overwrite"].as<bool>(true);
+      ioParams.save_gauge_field_interval = mp["interval"].as<size_t>(0);
+
+      ioParams.save_after_trajectory =
+          mp["save_after_trajectory"].as<bool>(true);
+      size_t pos =
+          mp["filename"].as<std::string>("config.dat").find_last_of("/");
+
+      if (pos != std::string::npos) {
+        ioParams.output_dir =
+            output_directory +
+            mp["filename"].as<std::string>("config.dat").substr(0, pos);
+        ioParams.gauge_field_filename =
+            mp["filename"].as<std::string>("config.dat").substr(pos + 1);
+      } else {
+        ioParams.output_dir = output_directory;
+        ioParams.gauge_field_filename =
+            mp["filename"].as<std::string>("config.dat");
+      }
+      if (!std::filesystem::exists(ioParams.output_dir) &&
+          ioParams.save_gauge_field) {
+        std::filesystem::create_directories(ioParams.output_dir);
+      }
+    } else {
+      printf("Error: IOParams not found in input file\n");
+      return false;
+    }
+    return true;
+  } catch (const YAML::Exception& e) {
+    printf("(SimulationLoggingParams) Error parsing input file: %s\n",
+           e.what());
+    return false;
+  }
 }
 
 }  // namespace klft

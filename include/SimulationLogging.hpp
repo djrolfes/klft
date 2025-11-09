@@ -1,21 +1,3 @@
-//******************************************************************************/
-//
-// This file is part of the Kokkos Lattice Field Theory (KLFT) library.
-//
-// KLFT is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// KLFT is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with KLFT.  If not, see <http://www.gnu.org/licenses/>.
-//
-//******************************************************************************/
 #pragma once
 #include <fstream>
 
@@ -36,6 +18,7 @@ struct SimulationLoggingParams {
   bool log_acceptance;
   bool log_accept;
   bool log_time;
+  bool log_observable_time;
 
   // define vectors to hold the logs
   std::vector<size_t> log_steps;
@@ -43,6 +26,7 @@ struct SimulationLoggingParams {
   std::vector<real_t> acceptance;
   std::vector<bool> accept;
   std::vector<real_t> time;
+  std::vector<real_t> observable_time;
 
   // constructor to initialize the parameters
   SimulationLoggingParams()
@@ -53,15 +37,19 @@ struct SimulationLoggingParams {
         log_delta_H(false),
         log_acceptance(false),
         log_accept(false),
-        log_time(false) {}
+        log_time(false),
+        log_observable_time(false) {}
 };
 
 // define a function to log simulation information
 inline void addLogData(
-    SimulationLoggingParams& params, const size_t step,
-    const real_t _delta_H = 0.0, const real_t _acceptance = 0.0,
+    SimulationLoggingParams& params,
+    const size_t step,
+    const real_t _delta_H = 0.0,
+    const real_t _acceptance = 0.0,
     const bool _accept = false,
-    const real_t _time =
+    const real_t _time = 0.0,
+    const real_t _observable_time =
         0.0) {  // TODO: add overloads for different passed parameters
   if (params.log_interval == 0 || step % params.log_interval != 0 ||
       step == 0) {
@@ -101,6 +89,13 @@ inline void addLogData(
     }
   }
 
+  if (params.log_observable_time) {
+    params.observable_time.push_back(_observable_time);
+    if (KLFT_VERBOSITY > 1) {
+      printf("observable_time: %11.6f\n", _observable_time);
+    }
+  }
+
   params.log_steps.push_back(step);
 }
 
@@ -111,6 +106,7 @@ inline void clearSimulationLogs(SimulationLoggingParams& params) {
   params.acceptance.clear();
   params.accept.clear();
   params.time.clear();
+  params.observable_time.clear();
 }
 
 inline void forceflushSimulationLogs(SimulationLoggingParams& params,
@@ -124,7 +120,6 @@ inline void forceflushSimulationLogs(SimulationLoggingParams& params,
   }
   // open the log file
   std::ofstream file(params.log_filename, std::ios::app);
-
   if (!file.is_open()) {
     printf("Error: could not open log file %s\n", params.log_filename.c_str());
     return;
@@ -146,6 +141,9 @@ inline void forceflushSimulationLogs(SimulationLoggingParams& params,
     if (params.log_time) {
       file << ", time";
     }
+    if (params.log_observable_time) {
+      file << ", observable_time";
+    }
     file << "\n";
   }
 
@@ -163,6 +161,9 @@ inline void forceflushSimulationLogs(SimulationLoggingParams& params,
     }
     if (params.log_time) {
       file << ", " << params.time[i];
+    }
+    if (params.log_observable_time) {
+      file << ", " << params.observable_time[i];
     }
     file << "\n";
   }
@@ -219,13 +220,15 @@ struct PTBCSimulationLoggingParams {
 
 // ---------- PTBC logging: add / flush / clear ----------
 
-inline void addPTBCLogData(PTBCSimulationLoggingParams& p, const size_t step,
+inline void addPTBCLogData(PTBCSimulationLoggingParams& p,
+                           const size_t step,
                            const size_t _swap_start = 0,
                            const std::vector<bool>* _accepts = nullptr,
                            const std::vector<real_t>* _delta_H_swap = nullptr,
                            const std::vector<real_t>* _defects = nullptr) {
   // obey interval (skip step 0, like your other logger)
-  if (p.log_interval == 0 || step % p.log_interval != 0 || step == 0) return;
+  if (p.log_interval == 0 || step % p.log_interval != 0 || step == 0)
+    return;
 
   if (KLFT_VERBOSITY > 1) {
     printf("Logging PTBC Data (step %zu)\n", step);
@@ -237,7 +240,8 @@ inline void addPTBCLogData(PTBCSimulationLoggingParams& p, const size_t step,
   // For each enabled stream, push an entry (empty if nullptr provided)
   if (p.log_swap_start) {
     p.swap_start.push_back(_swap_start);
-    if (KLFT_VERBOSITY > 1) printf("swap_start: %zu\n", _swap_start);
+    if (KLFT_VERBOSITY > 1)
+      printf("swap_start: %zu\n", _swap_start);
   }
 
   if (p.log_swap_accepts) {
@@ -247,7 +251,8 @@ inline void addPTBCLogData(PTBCSimulationLoggingParams& p, const size_t step,
       p.accepts.emplace_back();  // empty vector keeps indices aligned
     if (KLFT_VERBOSITY > 1 && _accepts) {
       printf("accepts: ");
-      for (bool b : *_accepts) printf("%d ", b ? 1 : 0);
+      for (bool b : *_accepts)
+        printf("%d ", b ? 1 : 0);
       printf("\n");
     }
   }
@@ -286,7 +291,8 @@ template <class T>
 static inline void _write_vec(std::ostream& os, const std::vector<T>& v) {
   os << "[";
   for (size_t i = 0; i < v.size(); ++i) {
-    if (i) os << ' ';
+    if (i)
+      os << ' ';
     os << v[i];
   }
   os << "]";
@@ -297,7 +303,8 @@ static inline void _write_vec_bool(std::ostream& os,
                                    const std::vector<bool>& v) {
   os << "[";
   for (size_t i = 0; i < v.size(); ++i) {
-    if (i) os << ' ';
+    if (i)
+      os << ' ';
     os << (v[i] ? 1 : 0);
   }
   os << "]";
@@ -306,7 +313,8 @@ static inline void _write_vec_bool(std::ostream& os,
 inline void forceflushPTBCSimulationLogs(PTBCSimulationLoggingParams& p,
                                          const bool clear_after_flush = false) {
   if (!p.write_to_file) {
-    if (KLFT_VERBOSITY > 0) printf("PTBC write_to_file is not enabled\n");
+    if (KLFT_VERBOSITY > 0)
+      printf("PTBC write_to_file is not enabled\n");
     return;
   }
 
@@ -318,11 +326,15 @@ inline void forceflushPTBCSimulationLogs(PTBCSimulationLoggingParams& p,
 
   const bool HEADER = !p.flushed;
   if (HEADER) {
-    file << "step";
-    if (p.log_swap_start) file << ",swap_start";
-    if (p.log_swap_accepts) file << ",accepts";
-    if (p.log_delta_H_swap) file << ",delta_H_swap";
-    if (p.log_defects) file << ",defects";
+    file << "# step";
+    if (p.log_swap_start)
+      file << ", swap_start";
+    if (p.log_swap_accepts)
+      file << ", accepts";
+    if (p.log_delta_H_swap)
+      file << ", delta_H_swap";
+    if (p.log_defects)
+      file << ", defects";
     file << "\n";
   }
 
@@ -364,7 +376,8 @@ inline void forceflushPTBCSimulationLogs(PTBCSimulationLoggingParams& p,
   }
 
   file.close();
-  if (clear_after_flush) clearPTBCSimulationLogs(p);
+  if (clear_after_flush)
+    clearPTBCSimulationLogs(p);
   p.flushed = true;
 }
 

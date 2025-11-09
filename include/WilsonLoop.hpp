@@ -49,9 +49,14 @@ struct WLmunu {
   index_t Lmu, Lnu;
   // dimensions of the field
   const IndexArray<rank> dimensions;
-  WLmunu(const GaugeFieldType& g_in, const index_t mu, const index_t nu,
-         const index_t Lmu, const index_t Lnu, SUNFieldType& WLmu,
-         SUNFieldType& WLnu, const IndexArray<rank>& dimensions)
+  WLmunu(const GaugeFieldType& g_in,
+         const index_t mu,
+         const index_t nu,
+         const index_t Lmu,
+         const index_t Lnu,
+         SUNFieldType& WLmu,
+         SUNFieldType& WLnu,
+         const IndexArray<rank>& dimensions)
       : g_in(g_in),
         mu(mu),
         nu(nu),
@@ -126,9 +131,13 @@ struct WLoop_munu {
   FieldType Wmunu_per_site;
   // dimensions of the field
   const IndexArray<rank> dimensions;
-  WLoop_munu(const SUNFieldType& WLmu, const SUNFieldType& WLnu,
-             const index_t mu, const index_t nu, const index_t Lmu,
-             const index_t Lnu, FieldType& Wmunu_per_site,
+  WLoop_munu(const SUNFieldType& WLmu,
+             const SUNFieldType& WLnu,
+             const index_t mu,
+             const index_t nu,
+             const index_t Lmu,
+             const index_t Lnu,
+             FieldType& Wmunu_per_site,
              const IndexArray<rank>& dimensions)
       : WLmu(WLmu),
         WLnu(WLnu),
@@ -181,7 +190,8 @@ struct WLoop_munu {
 template <size_t rank, size_t Nc, GaugeFieldKind k = GaugeFieldKind::Standard>
 void WilsonLoop_mu_nu(
     const typename DeviceGaugeFieldType<rank, Nc, k>::type& g_in,
-    const index_t mu, const index_t nu,
+    const index_t mu,
+    const index_t nu,
     const std::vector<Kokkos::Array<index_t, 2>>& Lmu_nu_pairs,
     std::vector<Kokkos::Array<real_t, 5>>& Wmunu_vals,
     const bool normalize = true) {

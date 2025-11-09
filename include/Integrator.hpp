@@ -15,7 +15,8 @@ class Integrator : public std::enable_shared_from_this<Integrator> {
   Integrator() = delete;
   virtual ~Integrator() = default;
 
-  Integrator(const size_t n_steps_, const bool outermost_,
+  Integrator(const size_t n_steps_,
+             const bool outermost_,
              std::shared_ptr<Integrator> nested_,
              std::shared_ptr<UpdatePosition> update_q_,
              std::shared_ptr<UpdateMomentum> update_p_)
@@ -40,7 +41,8 @@ class LeapFrog : public Integrator {  // <UpdatePosition, UpdateMomentum> {
  public:
   LeapFrog() = delete;
 
-  LeapFrog(const size_t n_steps_, const bool outermost_,
+  LeapFrog(const size_t n_steps_,
+           const bool outermost_,
            std::shared_ptr<Integrator> nested_,
            std::shared_ptr<UpdatePosition> update_q_,
            std::shared_ptr<UpdateMomentum> update_p_)
@@ -51,11 +53,13 @@ class LeapFrog : public Integrator {  // <UpdatePosition, UpdateMomentum> {
   void halfstep(const real_t tau) const override {
     const real_t eps = tau / n_steps;
     update_p->update(eps * 0.5);
-    if (nested) nested->halfstep(eps);
+    if (nested)
+      nested->halfstep(eps);
   }
 
   void integrate(const real_t tau, const bool last_step) const override {
-    if (outermost) halfstep(tau);
+    if (outermost)
+      halfstep(tau);
     const real_t eps = tau / n_steps;
     for (size_t i = 0; i < n_steps - 1; ++i) {
       if (nested) {
@@ -78,22 +82,27 @@ class LeapFrog : public Integrator {  // <UpdatePosition, UpdateMomentum> {
     } else {
       update_q->update(eps);
     }
-    if (!last_step && !outermost) update_p->update(eps);
-    if (outermost) halfstep(tau);
+    if (!last_step && !outermost)
+      update_p->update(eps);
+    if (outermost)
+      halfstep(tau);
   }
 
 };  // class LeapFrog
 //
 
 // Still need to add check for different Dirac Operators
-template <typename DGaugeFieldType, typename DAdjFieldType,
+template <typename DGaugeFieldType,
+          typename DAdjFieldType,
           typename DSpinorFieldType>
 std::shared_ptr<Integrator> createIntegrator(
-    typename DGaugeFieldType::type& g_in, typename DAdjFieldType::type& a_in,
+    typename DGaugeFieldType::type& g_in,
+    typename DAdjFieldType::type& a_in,
     typename DSpinorFieldType::type& s_in,
     const Integrator_Params& integratorParams,
     const GaugeMonomial_Params& gaugeMonomialParams,
-    const FermionMonomial_Params& fermionParams, const int& resParsef) {
+    const FermionMonomial_Params& fermionParams,
+    const int& resParsef) {
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
   static_assert(isDeviceAdjFieldType<DAdjFieldType>::value);
   constexpr static size_t rank =

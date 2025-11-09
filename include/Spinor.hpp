@@ -26,7 +26,8 @@
 namespace klft {
 template <size_t Nc, size_t Nd>
 KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, Nd> operator*(
-    const SUN<Nc>& U, const Spinor<Nc, Nd>& spinor) {
+    const SUN<Nc>& U,
+    const Spinor<Nc, Nd>& spinor) {
   Spinor<Nc, Nd> res{};
 #pragma unroll
   for (size_t k = 0; k < Nd; k++) {
@@ -42,7 +43,8 @@ KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, Nd> operator*(
 }
 template <size_t Nc, size_t Nd>
 KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, Nd> operator*(
-    const Spinor<Nc, Nd>& spinor, const SUN<Nc>& U) {
+    const Spinor<Nc, Nd>& spinor,
+    const SUN<Nc>& U) {
   Spinor<Nc, Nd> res{};
 
 #pragma unroll
@@ -63,7 +65,8 @@ KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, Nd> operator*(
 
 template <size_t Nc, size_t Nd>
 KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, Nd> operator*(
-    const complex_t& scalar, const Spinor<Nc, Nd>& spinor) {
+    const complex_t& scalar,
+    const Spinor<Nc, Nd>& spinor) {
   Spinor<Nc, Nd> res;
 #pragma unroll
   for (size_t j = 0; j < Nd; j++) {
@@ -103,7 +106,8 @@ KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, Nd> operator*=(Spinor<Nc, Nd>& spinor,
 
 template <size_t Nc, size_t Nd>
 KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, Nd> operator*(
-    const real_t& scalar, const Spinor<Nc, Nd>& spinor) {
+    const real_t& scalar,
+    const Spinor<Nc, Nd>& spinor) {
   Spinor<Nc, Nd> res;
 #pragma unroll
   for (size_t j = 0; j < Nd; j++) {
@@ -124,7 +128,8 @@ KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, Nd> operator*=(Spinor<Nc, Nd>& spinor,
 
 template <size_t Nc, size_t Nd>
 KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, Nd> operator+(
-    const Spinor<Nc, Nd>& spinor1, const Spinor<Nc, Nd>& spinor2) {
+    const Spinor<Nc, Nd>& spinor1,
+    const Spinor<Nc, Nd>& spinor2) {
   Spinor<Nc, Nd> res;
 #pragma unroll
   for (size_t j = 0; j < Nd; j++) {
@@ -137,7 +142,8 @@ KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, Nd> operator+(
 }
 template <size_t Nc, size_t Nd>
 KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, Nd> operator+=(
-    Spinor<Nc, Nd>& spinor1, const Spinor<Nc, Nd>& spinor2) {
+    Spinor<Nc, Nd>& spinor1,
+    const Spinor<Nc, Nd>& spinor2) {
   Spinor<Nc, Nd> res = spinor1 + spinor2;
   spinor1 = res;
   return spinor1;
@@ -145,7 +151,8 @@ KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, Nd> operator+=(
 
 template <size_t Nc, size_t Nd>
 KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, Nd> axpy(
-    const complex_t& alpha, const Spinor<Nc, Nd>& spinor1,
+    const complex_t& alpha,
+    const Spinor<Nc, Nd>& spinor1,
     const Spinor<Nc, Nd>& spinor2) {  // returns alpha*spinor1 + spinor2
   Spinor<Nc, Nd> res;
 #pragma unroll
@@ -174,7 +181,8 @@ KOKKOS_FORCEINLINE_FUNCTION void axpy(const complex_t& alpha,
 
 template <size_t Nc, size_t Nd>
 KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, Nd> operator-(
-    const Spinor<Nc, Nd>& spinor1, const Spinor<Nc, Nd>& spinor2) {
+    const Spinor<Nc, Nd>& spinor1,
+    const Spinor<Nc, Nd>& spinor2) {
   Spinor<Nc, Nd> res;
 #pragma unroll
   for (size_t j = 0; j < Nd; j++) {
@@ -187,7 +195,8 @@ KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, Nd> operator-(
 }
 template <size_t Nc, size_t Nd>
 KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, Nd> operator-=(
-    Spinor<Nc, Nd>& spinor1, const Spinor<Nc, Nd>& spinor2) {
+    Spinor<Nc, Nd>& spinor1,
+    const Spinor<Nc, Nd>& spinor2) {
   Spinor<Nc, Nd> res = spinor1 - spinor2;
   spinor1 = res;
   return spinor1;
@@ -212,7 +221,8 @@ KOKKOS_FORCEINLINE_FUNCTION real_t sqnorm(const Spinor<Nc, Nd>& spinor) {
 // This is ineficnet because of the sparsity of the gamma matrices
 template <size_t Nc, size_t Nd>
 KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, Nd> operator*(
-    const GammaMat<Nd>& matrix, const Spinor<Nc, Nd>& spinor) {
+    const GammaMat<Nd>& matrix,
+    const Spinor<Nc, Nd>& spinor) {
   Spinor<Nc, Nd> c;
 #pragma unroll
   for (size_t j = 0; j < Nd; j++) {
@@ -231,7 +241,8 @@ KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, Nd> operator*(
 
 template <size_t Nc, size_t Nd>
 KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, Nd> operator*(
-    const Spinor<Nc, Nd>& spinor, const GammaMat<Nd>& matrix) {
+    const Spinor<Nc, Nd>& spinor,
+    const GammaMat<Nd>& matrix) {
   Spinor<Nc, Nd> c;
 #pragma unroll
   for (size_t j = 0; j < Nd; ++j) {
@@ -250,7 +261,8 @@ KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, Nd> operator*(
 
 // Random generation of Spinors
 template <size_t Nc, size_t Nd, class RNG>
-KOKKOS_FORCEINLINE_FUNCTION void randSpinor(Spinor<Nc, Nd>& r, RNG& generator,
+KOKKOS_FORCEINLINE_FUNCTION void randSpinor(Spinor<Nc, Nd>& r,
+                                            RNG& generator,
                                             const real_t& mean,
                                             const real_t& var) {
 #pragma unroll
@@ -288,6 +300,17 @@ KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, Nd> conj(const Spinor<Nc, Nd>& a) {
     }
   }
   return res;
+}
+
+template <size_t Nc, size_t Nd>
+KOKKOS_INLINE_FUNCTION Spinor<Nc, Nd> deltaSpinor(index_t i) {
+  KOKKOS_ASSERT(i < Nc * Nd);
+  KOKKOS_ASSERT(i >= 0);
+  Spinor<Nc, Nd> a;
+  index_t dirac = i / Nc;
+  index_t color = i % Nc;
+  a[dirac][color] = 1;
+  return a;
 }
 template <size_t Nc, size_t Nd>
 void print_spinor_int(const Spinor<Nc, Nd>& s, const char* name = "Spinor") {

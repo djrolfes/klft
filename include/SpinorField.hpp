@@ -21,6 +21,7 @@
 
 #pragma once
 #include "GLOBAL.hpp"
+#include "SpinorPointSource.hpp"
 #include "Tuner.hpp"
 // Nc number of colors
 // RepDim Dimension of Gamma matrices, Nd = RepDim
@@ -32,7 +33,9 @@ struct deviceSpinorField {
   static const size_t RepDim =
       _RepDim;  // RepDim is the dimension of the Gamma matrices
   deviceSpinorField() = default;
-
+  // Is this the best option?
+  deviceSpinorField(deviceSpinorPointSource<Nc, RepDim>& a)
+      : field(a.field), dimensions(a.dimensions) {}
   // initialize all sites to a given value
 
   deviceSpinorField(const index_t L0,
@@ -216,6 +219,8 @@ struct deviceSpinorField3D {
       : dimensions({L0, L1, L2}) {
     do_init(L0, L1, L2, field, init);
   }
+  deviceSpinorField3D(deviceSpinorPointSource3D<Nc, RepDim>& a)
+      : field(a.field), dimensions(a.dimensions) {}
 
   deviceSpinorField3D(const IndexArray<rank>& dimensions, const complex_t init)
       : dimensions(dimensions) {
@@ -367,6 +372,8 @@ struct deviceSpinorField2D {
       : dimensions({L0, L1}) {
     do_init(L0, L1, field, init);
   }
+  deviceSpinorField2D(deviceSpinorPointSource2D<Nc, RepDim>& a)
+      : field(a.field), dimensions(a.dimensions) {}
 
   deviceSpinorField2D(const IndexArray<rank>& dimensions, const complex_t init)
       : dimensions(dimensions) {

@@ -1,6 +1,4 @@
-// TODO: cooling needs to happen iteratively and thus is not parallelizable
 #pragma once
-#include "AdjointSUN.hpp"
 #include "FieldTypeHelper.hpp"
 #include "GLOBAL.hpp"
 #include "Gauge_Util.hpp"
@@ -19,7 +17,7 @@ struct CoolingParams {
   }
 };
 
-template <typename DGaugeFieldType>
+template <typename DGaugeFieldType, class RNG>
 struct CoolingFunctors {
   // implement the Wilson flow, for now the field will not be copied, but it
   // will be flown in place -> copying needs to be done before
@@ -37,10 +35,11 @@ struct CoolingFunctors {
   GaugeFieldT field;
   GaugeFieldT tmp_staple;
   SUNAdjField<rank, Nc> tmp_Z;
+  RNG& rng;
 
   CoolingFunctors() = delete;
 
-  CoolingFunctors(const GaugeFieldT& _field, CoolingParams& _params)
+  CoolingFunctors(const GaugeFieldT& _field, CoolingParams& _params, RNG& rng)
       : params(_params), field(_field.field), tmp_staple(_field.field) {
     const IndexArray<rank> dims = _field.dimensions;
     Kokkos::realloc(Kokkos::WithoutInitializing, tmp_Z, dims[0], dims[1],
@@ -68,11 +67,14 @@ struct CoolingFunctors {
   }
 
   template <typename indexType>
-  KOKKOS_INLINE_FUNCTION void operator()(const indexType i0, const indexType i1,
+  KOKKOS_INLINE_FUNCTION void operator()(const indexType i0,
+                                         const indexType i1,
                                          const indexType i2,
                                          const indexType i3) const {
 #pragma unroll
     for (index_t mu = 0; mu < 4; ++mu) {
+      bool accepted = false;
+
       this->field(i0, i1, i2, i3, mu) = (this->tmp_staple(i0, i1, i2, i3, mu));
       restoreSUN(this->field(i0, i1, i2, i3, mu));
     }
