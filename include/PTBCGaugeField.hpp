@@ -337,16 +337,32 @@ struct devicePTBCGaugeField {
 
   // TODO: return as deviceGaugeField
 
-  template <class FieldView, class DefectView>
+  template <class FieldView, class DefectView, class DefectParams>
   struct PTBCLinkRef {
     FieldView field;
     DefectView defect;
+    DefectParams dParams;
     index_t i, j, k, l, mu;
 
     // read: multiply by defect
     KOKKOS_INLINE_FUNCTION
     operator SUN<Nc>() const {
-      return field(i, j, k, l, mu) * defect(i, j, k, l, mu);
+      bool is_in_defect =
+          (i == 0 && mu == 0 && j >= this->dParams.defect_position[0] &&
+           k >= this->dParams.defect_position[1] &&
+           l >= this->dParams.defect_position[2] &&
+           j <= ((this->dParams.defect_position[0] +
+                  this->dParams.defect_length) %
+                 this->field.dimensions[1]) &&
+           k <= ((this->dParams.defect_position[1] +
+                  this->dParams.defect_length) %
+                 this->field.dimensions[2]) &&
+           l <= ((this->dParams.defect_position[2] +
+                  this->dParams.defect_length) %
+                 this->field.dimensions[3]));
+      return field(i, j, k, l, mu) *
+             (1 * static_cast<int>(!is_in_defect) +
+              this->dParams.defect_value * static_cast<int>(is_in_defect));
     }
 
     // write: raw write (no defect factor)
@@ -373,14 +389,31 @@ struct devicePTBCGaugeField {
   template <typename I>
   KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> operator()(I i, I j, I k, I l, index_t mu)
       const {
-    return field(i, j, k, l, mu) * defectField(i, j, k, l, mu);
+    bool is_in_defect =
+        (i == 0 && mu == 0 && j >= this->dParams.defect_position[0] &&
+         k >= this->dParams.defect_position[1] &&
+         l >= this->dParams.defect_position[2] &&
+         j <=
+             ((this->dParams.defect_position[0] + this->dParams.defect_length) %
+              this->dimensions[1]) &&
+         k <=
+             ((this->dParams.defect_position[1] + this->dParams.defect_length) %
+              this->dimensions[2]) &&
+         l <=
+             ((this->dParams.defect_position[2] + this->dParams.defect_length) %
+              this->dimensions[3]));
+    return field(i, j, k, l, mu) *
+           (1 * static_cast<int>(!is_in_defect) +
+            this->dParams.defect_value * static_cast<int>(is_in_defect));
   }
 
   // READ/WRITE (non-const): return proxy
   template <typename I>
   KOKKOS_FORCEINLINE_FUNCTION auto operator()(I i, I j, I k, I l, index_t mu) {
-    return PTBCLinkRef<decltype(field), decltype(defectField)>{
-        field, defectField, (index_t)i, (index_t)j, (index_t)k, (index_t)l, mu};
+    return PTBCLinkRef<decltype(field), decltype(defectField),
+                       decltype(dParams)>{field,      defectField, dParams,
+                                          (index_t)i, (index_t)j,  (index_t)k,
+                                          (index_t)l, mu};
   }
 
   // Array overloads
