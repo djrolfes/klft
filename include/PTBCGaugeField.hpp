@@ -54,9 +54,8 @@ struct defectParams {
   template <typename I>
   KOKKOS_FORCEINLINE_FUNCTION real_t
   DefectValue(I i, I j, I k, I l, index_t mu) const {
-    bool in_defect = this->is_in_defect(i, j, k, l, mu);
-    real_t defect_val = 1.0 * !in_defect + this->defect_value * in_defect;
-    return defect_val;
+    return 1.0 -
+           (1.0 - this->defect_value) * this->is_in_defect(i, j, k, l, mu);
   }
 };
 
