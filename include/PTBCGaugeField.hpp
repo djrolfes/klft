@@ -447,10 +447,10 @@ struct devicePTBCGaugeField {
     // temporary SUN matrix to store the staple
     SUN<Nc> temp = zeroSUN<Nc>();
     // get the x + mu indices
-    const indexType i0pmu = mu == 0 ? (i0 + 1) % dimensions[0] : i0;
-    const indexType i1pmu = mu == 1 ? (i1 + 1) % dimensions[1] : i1;
-    const indexType i2pmu = mu == 2 ? (i2 + 1) % dimensions[2] : i2;
-    const indexType i3pmu = mu == 3 ? (i3 + 1) % dimensions[3] : i3;
+    const indexType i0pmu = ((mu == 0) + i0) % dimensions[0];
+    const indexType i1pmu = ((mu == 1) + i1) % dimensions[1];
+    const indexType i2pmu = ((mu == 2) + i2) % dimensions[2];
+    const indexType i3pmu = ((mu == 3) + i3) % dimensions[3];
 // positive directions
 #pragma unroll
     for (index_t nu = 0; nu < Nd; ++nu) {  // loop over nu
@@ -458,10 +458,10 @@ struct devicePTBCGaugeField {
       if (nu == mu)
         continue;
       // get the x + nu indices
-      const indexType i0pnu = nu == 0 ? (i0 + 1) % dimensions[0] : i0;
-      const indexType i1pnu = nu == 1 ? (i1 + 1) % dimensions[1] : i1;
-      const indexType i2pnu = nu == 2 ? (i2 + 1) % dimensions[2] : i2;
-      const indexType i3pnu = nu == 3 ? (i3 + 1) % dimensions[3] : i3;
+      const indexType i0pnu = ((nu == 0) + i0) % dimensions[0];
+      const indexType i1pnu = ((nu == 1) + i1) % dimensions[1];
+      const indexType i2pnu = ((nu == 2) + i2) % dimensions[2];
+      const indexType i3pnu = ((nu == 3) + i3) % dimensions[3];
       // get the staple
       temp +=
           this->operator()<indexType>(i0pmu, i1pmu, i2pmu, i3pmu, nu) *
@@ -476,22 +476,22 @@ struct devicePTBCGaugeField {
         continue;
       // get the x + mu - nu indices
       const indexType i0pmu_mnu =
-          nu == 0 ? (i0pmu - 1 + dimensions[0]) % dimensions[0] : i0pmu;
+          ((nu == 0) * (dimensions[0] - 1) + i0pmu) % dimensions[0];
       const indexType i1pmu_mnu =
-          nu == 1 ? (i1pmu - 1 + dimensions[1]) % dimensions[1] : i1pmu;
+          ((nu == 1) * (dimensions[1] - 1) + i1pmu) % dimensions[1];
       const indexType i2pmu_mnu =
-          nu == 2 ? (i2pmu - 1 + dimensions[2]) % dimensions[2] : i2pmu;
+          ((nu == 2) * (dimensions[2] - 1) + i2pmu) % dimensions[2];
       const indexType i3pmu_mnu =
-          nu == 3 ? (i3pmu - 1 + dimensions[3]) % dimensions[3] : i3pmu;
+          ((nu == 3) * (dimensions[3] - 1) + i3pmu) % dimensions[3];
       // get the x - nu indices
       const indexType i0mnu =
-          nu == 0 ? (i0 - 1 + dimensions[0]) % dimensions[0] : i0;
+          ((nu == 0) * (dimensions[0] - 1) + i0) % dimensions[0];
       const indexType i1mnu =
-          nu == 1 ? (i1 - 1 + dimensions[1]) % dimensions[1] : i1;
+          ((nu == 1) * (dimensions[1] - 1) + i1) % dimensions[1];
       const indexType i2mnu =
-          nu == 2 ? (i2 - 1 + dimensions[2]) % dimensions[2] : i2;
+          ((nu == 2) * (dimensions[2] - 1) + i2) % dimensions[2];
       const indexType i3mnu =
-          nu == 3 ? (i3 - 1 + dimensions[3]) % dimensions[3] : i3;
+          ((nu == 3) * (dimensions[3] - 1) + i3) % dimensions[3];
       // get the staple
       temp +=
           conj(this->operator()<indexType>(i0pmu_mnu, i1pmu_mnu, i2pmu_mnu,
