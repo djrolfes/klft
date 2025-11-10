@@ -73,7 +73,6 @@ struct devicePTBCGaugeField {
                     dimensions[1], dimensions[2], dimensions[3]);
     Kokkos::fence();
     Kokkos::deep_copy(field, dGaugeField);
-    do_init_defect(defectField);
     Kokkos::fence();
   }
 
@@ -92,7 +91,7 @@ struct devicePTBCGaugeField {
                        const deviceDefectParams dParam)
       : dimensions({L0, L1, L2, L3}) {
     do_init(field, init);
-    do_init_defect(defectField, dParam);
+    do_init_defect(dParam);
   }
 
   // initialize all links to a given SUN matrix
@@ -104,7 +103,7 @@ struct devicePTBCGaugeField {
                        const deviceDefectParams dParam)
       : dimensions({L0, L1, L2, L3}) {
     do_init(field, init);
-    do_init_defect(defectField, dParam);
+    do_init_defect(dParam);
   }
 
   // initialize all links randomized with a given delta
@@ -118,7 +117,7 @@ struct devicePTBCGaugeField {
                        const deviceDefectParams dParam)
       : dimensions({L0, L1, L2, L3}) {
     do_init(L0, L1, L2, L3, field, rng, delta);
-    do_init_defect(defectField, dParam);
+    do_init_defect(dParam);
   }
 
   // initialize all links randomized
@@ -131,19 +130,17 @@ struct devicePTBCGaugeField {
                        const deviceDefectParams dParam)
       : dimensions({L0, L1, L2, L3}) {
     do_init(L0, L1, L2, L3, field, rng);
-    do_init_defect(defectField, dParam);
+    do_init_defect(dParam);
   }
 
   devicePTBCGaugeField(const IndexArray<4>& dimensions, const SUN<Nc>& init)
       : dimensions(dimensions) {
     do_init(field, init);
-    do_init_defect(defectField);
   }
 
   devicePTBCGaugeField(const IndexArray<4>& dimensions, const complex_t init)
       : dimensions(dimensions) {
     do_init(field, init);
-    do_init_defect(defectField);
   }
 
   void do_init(GaugeField<Nd, Nc>& V, complex_t init) {
@@ -193,25 +190,8 @@ struct devicePTBCGaugeField {
     Kokkos::fence();
   }
 
-  // without any defect information, set defect to be non-existent.
-  void do_init_defect(LinkScalarField<Nd>& V) {
-    Kokkos::realloc(Kokkos::WithoutInitializing, V, dimensions[0],
-                    dimensions[1], dimensions[2], dimensions[3]);
-    tune_and_launch_for<Nd>(
-        "init_PTBCdeviceGaugeField", IndexArray<Nd>{0}, dimensions,
-        KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2,
-                      const index_t i3) {
-#pragma unroll
-          for (index_t mu = 0; mu < Nd; ++mu) {
-            V(i0, i1, i2, i3, mu) = 1.0;
-          }
-        });
-    Kokkos::fence();
-  }
-
   // This fixes the defect location according to (2.3) in 2404.14151
-  void do_init_defect(LinkScalarField<Nd>& V, const deviceDefectParams dP) {
-    do_init_defect(V);
+  void do_init_defect(const deviceDefectParams dP) {
     this->dParams = dP;
     set_defect<index_t>(this->dParams.defect_value);
     Kokkos::fence();
@@ -278,30 +258,6 @@ struct devicePTBCGaugeField {
   template <typename indexType>
   void set_defect(real_t cr) {
     this->dParams.defect_value = cr;
-    auto dimensions_local = this->dimensions;
-    auto defect_position_local = this->dParams.defect_position;
-    // DEBUG_MPI_PRINT("Setting defect at position (%d, %d, %d) with value %f",
-    //                 defect_position_local[0], defect_position_local[1],
-    //                 defect_position_local[2], cr);
-    // DEBUG_MPI_PRINT("Defect length: %d", this->dParams.defect_length);
-    auto defectField_local = this->defectField;
-
-    tune_and_launch_for<Nd - 1>(
-        "set_defect", IndexArray<Nd - 1>{0},
-        IndexArray<Nd - 1>{this->dParams.defect_length,
-                           this->dParams.defect_length,
-                           this->dParams.defect_length},
-        KOKKOS_LAMBDA(const indexType i1, const indexType i2,
-                      const indexType i3) {
-          const indexType i1_shift =
-              (i1 + defect_position_local[0]) % dimensions_local[1];
-          const indexType i2_shift =
-              (i2 + defect_position_local[1]) % dimensions_local[2];
-          const indexType i3_shift =
-              (i3 + defect_position_local[2]) % dimensions_local[3];
-          defectField_local(0, i1_shift, i2_shift, i3_shift, 0) = cr;
-        });
-    Kokkos::fence();
   }
 
   // void check_defect_application() {
@@ -324,10 +280,7 @@ struct devicePTBCGaugeField {
   void shift_defect(IndexArray<Nd - 1> new_position) {
     // set the current defect regions defect to 1.0, update the position of the
     // defect and set the defect value.
-    real_t tmp = this->dParams.defect_value;
-    set_defect<index_t>(real_t(1.0));
     this->dParams.defect_position = new_position;
-    set_defect<index_t>(tmp);
   }
 
   real_t get_defect() const {
@@ -337,10 +290,10 @@ struct devicePTBCGaugeField {
 
   // TODO: return as deviceGaugeField
 
-  template <class FieldView, class DefectView, class DefectParams>
+  template <class FieldView, class DefectParams, class Dimensions>
   struct PTBCLinkRef {
     FieldView field;
-    DefectView defect;
+    Dimensions dimensions;
     DefectParams dParams;
     index_t i, j, k, l, mu;
 
@@ -353,15 +306,15 @@ struct devicePTBCGaugeField {
            l >= this->dParams.defect_position[2] &&
            j <= ((this->dParams.defect_position[0] +
                   this->dParams.defect_length) %
-                 this->field.dimensions[1]) &&
+                 this->dimensions[1]) &&
            k <= ((this->dParams.defect_position[1] +
                   this->dParams.defect_length) %
-                 this->field.dimensions[2]) &&
+                 this->dimensions[2]) &&
            l <= ((this->dParams.defect_position[2] +
                   this->dParams.defect_length) %
-                 this->field.dimensions[3]));
+                 this->dimensions[3]));
       return field(i, j, k, l, mu) *
-             (1 * static_cast<int>(!is_in_defect) +
+             (static_cast<int>(!is_in_defect) +
               this->dParams.defect_value * static_cast<int>(is_in_defect));
     }
 
@@ -410,10 +363,10 @@ struct devicePTBCGaugeField {
   // READ/WRITE (non-const): return proxy
   template <typename I>
   KOKKOS_FORCEINLINE_FUNCTION auto operator()(I i, I j, I k, I l, index_t mu) {
-    return PTBCLinkRef<decltype(field), decltype(defectField),
-                       decltype(dParams)>{field,      defectField, dParams,
-                                          (index_t)i, (index_t)j,  (index_t)k,
-                                          (index_t)l, mu};
+    return PTBCLinkRef<decltype(field), decltype(dParams),
+                       decltype(dimensions)>{field,      dimensions, dParams,
+                                             (index_t)i, (index_t)j, (index_t)k,
+                                             (index_t)l, mu};
   }
 
   // Array overloads
