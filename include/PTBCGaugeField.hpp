@@ -20,8 +20,10 @@
 // define structs for initializing ptbc gauge fields
 
 #pragma once
+#include <string>
 #include "GLOBAL.hpp"
 #include "GaugeField.hpp"
+#include "Kokkos_Macros.hpp"
 #include "SUN.hpp"
 #include "Tuner.hpp"
 
@@ -34,6 +36,28 @@ struct defectParams {
   real_t defect_value{1.0};
   IndexArray<Nd - 1> defect_position{
       0};  // origin of the defect in mu = 1,2,3 directions
+  IndexArray<Nd> dimensions;
+
+  template <typename I>
+  KOKKOS_FORCEINLINE_FUNCTION bool is_in_defect(I i, I j, I k, I l, index_t mu)
+      const {
+    // shift the coords such that the defect start at index 0
+    return (i == 0 && mu == 0 &&
+            ((this->dimensions[1] + j - defect_position[0]) %
+             this->dimensions[1]) < this->defect_length &&
+            ((this->dimensions[2] + k - defect_position[1]) %
+             this->dimensions[2]) < this->defect_length &&
+            ((this->dimensions[3] + l - defect_position[2]) %
+             this->dimensions[3]) < this->defect_length);
+  }
+
+  template <typename I>
+  KOKKOS_FORCEINLINE_FUNCTION real_t
+  DefectValue(I i, I j, I k, I l, index_t mu) const {
+    bool in_defect = this->is_in_defect(i, j, k, l, mu);
+    real_t defect_val = 1.0 * !in_defect + this->defect_value * in_defect;
+    return defect_val;
+  }
 };
 
 template <size_t Nd, size_t Nc>
@@ -69,6 +93,7 @@ struct devicePTBCGaugeField {
                     static_cast<index_t>(dGaugeField.extent(1)),
                     static_cast<index_t>(dGaugeField.extent(2)),
                     static_cast<index_t>(dGaugeField.extent(3))}) {
+    dParams.dimensions = this->dimensions;
     Kokkos::realloc(Kokkos::WithoutInitializing, field, dimensions[0],
                     dimensions[1], dimensions[2], dimensions[3]);
     Kokkos::fence();
@@ -135,11 +160,13 @@ struct devicePTBCGaugeField {
 
   devicePTBCGaugeField(const IndexArray<4>& dimensions, const SUN<Nc>& init)
       : dimensions(dimensions) {
+    dParams.dimensions = this->dimensions;
     do_init(field, init);
   }
 
   devicePTBCGaugeField(const IndexArray<4>& dimensions, const complex_t init)
       : dimensions(dimensions) {
+    dParams.dimensions = this->dimensions;
     do_init(field, init);
   }
 
@@ -193,6 +220,7 @@ struct devicePTBCGaugeField {
   // This fixes the defect location according to (2.3) in 2404.14151
   void do_init_defect(const deviceDefectParams dP) {
     this->dParams = dP;
+    this->dParams.dimensions = this->dimensions;
     set_defect<index_t>(this->dParams.defect_value);
     Kokkos::fence();
   }
@@ -257,30 +285,77 @@ struct devicePTBCGaugeField {
   // Sets the defect value
   template <typename indexType>
   void set_defect(real_t cr) {
+    // DEBUG_MPI_PRINT("setting defect value to %f", cr);
     this->dParams.defect_value = cr;
+    // DEBUG_MPI_PRINT("set defect value to %f", this->dParams.defect_value);
+    // check_defect_application();
   }
 
   // void check_defect_application() {
-  //   int rank, size;
-  //   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  //   MPI_Comm_size(MPI_COMM_WORLD, &size);
   //   // Raw field entry at site (0,0,0,0,mu=0)
-  //   SUN<Nc> field_value = field(0, 0, 0, 0, 0);
+  //   SUN<Nc> field_value = field(0, this->dParams.defect_position[0],
+  //                               this->dParams.defect_position[1],
+  //                               this->dParams.defect_position[2], 0);
+  //   bool in_defect = dParams.is_in_defect(0,
+  //   this->dParams.defect_position[0],
+  //                                         this->dParams.defect_position[1],
+  //                                         this->dParams.defect_position[2],
+  //                                         0);
+  //   std::string general_info =
+  //       "Defect value: " + std::to_string(this->dParams.defect_value) +
+  //       ", Defect position: (" +
+  //       std::to_string(this->dParams.defect_position[0]) + "," +
+  //       std::to_string(this->dParams.defect_position[1]) + "," +
+  //       std::to_string(this->dParams.defect_position[2]) +
+  //       "), Defect length: " + std::to_string(this->dParams.defect_length) +
+  //       ", Is in defect: " + (in_defect ? "true" : "false") +
+  //       ", defect value in dParams: " +
+  //       std::to_string(dParams.DefectValue(0,
+  //       this->dParams.defect_position[0],
+  //                                          this->dParams.defect_position[1],
+  //                                          this->dParams.defect_position[2],
+  //                                          0)) +
+  //       ", defect value as calculated: " +
+  //       std::to_string(1.0 * !in_defect +
+  //                      this->dParams.defect_value * in_defect) +
+  //       "\n";
+  //   std::string sun_str = std::string("Raw field entry at defect position: ")
+  //   +
+  //                         SUN_to_string(field_value);
   //
   //   // Defect-applied entry via operator()
-  //   SUN<Nc> defect_SUN = this->operator()(0, 0, 0, 0, 0);
+  //   SUN<Nc> defect_SUN = this->operator()(0,
+  //   this->dParams.defect_position[0],
+  //                                         this->dParams.defect_position[1],
+  //                                         this->dParams.defect_position[2],
+  //                                         0);
+  //   std::string defect_sun_str =
+  //       std::string("defect field entry at defect position: ") +
+  //       SUN_to_string(defect_SUN);
   //
-  //   print_SUN<Nc>(field_value, "[Rank " + std::to_string(rank) +
-  //                                  "] Field value at (0,0,0,0,mu=0): ");
-  //   print_SUN<Nc>(defect_SUN, "[Rank " + std::to_string(rank) +
-  //                                 "] Defect-applied value at (0,0,0,0,mu=0):
-  //                                 ");
+  //   std::string manually_computed_defect_str =
+  //       std::string(
+  //           "manually computed defect-applied entry at defect position: ") +
+  //       SUN_to_string(field_value * this->dParams.defect_value);
+  //
+  //   std::string log_sting =
+  //       general_info + sun_str + defect_sun_str +
+  //       manually_computed_defect_str;
+  //   DEBUG_MPI_PRINT("%s", log_sting.c_str());
   // }
 
   void shift_defect(IndexArray<Nd - 1> new_position) {
     // set the current defect regions defect to 1.0, update the position of the
-    // defect and set the defect value.
-    this->dParams.defect_position = new_position;
+    // DEBUG_MPI_PRINT("shifting defect to new position (%d,%d,%d)",
+    //                 new_position[0], new_position[1], new_position[2]);
+    for (int i = 0; i < Nd - 1; i++) {
+      this->dParams.defect_position[i] = new_position[i];
+    }
+    // DEBUG_MPI_PRINT("New defect position set to (%d,%d,%d)",
+    //                 this->dParams.defect_position[0],
+    //                 this->dParams.defect_position[1],
+    //                 this->dParams.defect_position[2]);
+    // check_defect_application();
   }
 
   real_t get_defect() const {
@@ -290,32 +365,16 @@ struct devicePTBCGaugeField {
 
   // TODO: return as deviceGaugeField
 
-  template <class FieldView, class DefectParams, class Dimensions>
+  template <class FieldView, class DefectParams>
   struct PTBCLinkRef {
     FieldView field;
-    Dimensions dimensions;
     DefectParams dParams;
     index_t i, j, k, l, mu;
 
     // read: multiply by defect
     KOKKOS_INLINE_FUNCTION
     operator SUN<Nc>() const {
-      bool is_in_defect =
-          (i == 0 && mu == 0 && j >= this->dParams.defect_position[0] &&
-           k >= this->dParams.defect_position[1] &&
-           l >= this->dParams.defect_position[2] &&
-           j <= ((this->dParams.defect_position[0] +
-                  this->dParams.defect_length) %
-                 this->dimensions[1]) &&
-           k <= ((this->dParams.defect_position[1] +
-                  this->dParams.defect_length) %
-                 this->dimensions[2]) &&
-           l <= ((this->dParams.defect_position[2] +
-                  this->dParams.defect_length) %
-                 this->dimensions[3]));
-      return field(i, j, k, l, mu) *
-             (static_cast<int>(!is_in_defect) +
-              this->dParams.defect_value * static_cast<int>(is_in_defect));
+      return field(i, j, k, l, mu) * dParams.DefectValue(i, j, k, l, mu);
     }
 
     // write: raw write (no defect factor)
@@ -338,35 +397,19 @@ struct devicePTBCGaugeField {
       return (*this = static_cast<SUN<Nc>>(rhs));
     }
   };
+
   // READ (const): return value = field * defect
   template <typename I>
   KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> operator()(I i, I j, I k, I l, index_t mu)
       const {
-    bool is_in_defect =
-        (i == 0 && mu == 0 && j >= this->dParams.defect_position[0] &&
-         k >= this->dParams.defect_position[1] &&
-         l >= this->dParams.defect_position[2] &&
-         j <=
-             ((this->dParams.defect_position[0] + this->dParams.defect_length) %
-              this->dimensions[1]) &&
-         k <=
-             ((this->dParams.defect_position[1] + this->dParams.defect_length) %
-              this->dimensions[2]) &&
-         l <=
-             ((this->dParams.defect_position[2] + this->dParams.defect_length) %
-              this->dimensions[3]));
-    return field(i, j, k, l, mu) *
-           (1 * static_cast<int>(!is_in_defect) +
-            this->dParams.defect_value * static_cast<int>(is_in_defect));
+    return field(i, j, k, l, mu) * dParams.DefectValue(i, j, k, l, mu);
   }
 
   // READ/WRITE (non-const): return proxy
   template <typename I>
   KOKKOS_FORCEINLINE_FUNCTION auto operator()(I i, I j, I k, I l, index_t mu) {
-    return PTBCLinkRef<decltype(field), decltype(dParams),
-                       decltype(dimensions)>{field,      dimensions, dParams,
-                                             (index_t)i, (index_t)j, (index_t)k,
-                                             (index_t)l, mu};
+    return PTBCLinkRef<decltype(field), decltype(dParams)>{
+        field, dParams, (index_t)i, (index_t)j, (index_t)k, (index_t)l, mu};
   }
 
   // Array overloads
