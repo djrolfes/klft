@@ -561,53 +561,54 @@ inline int parseInputFile(const std::string& filename,
 inline int parseSanityChecks(const Integrator_Params& iparams,
                              const GaugeMonomial_Params& gmparams,
                              const FermionMonomial_Params& fparams,
+                             const int resParsef) {
   // Check if the integrator has at least one monomial
   if (iparams.monomials.empty()) {
-  printf("Error: Integrator must have at least one monomial\n");
-  return false;
+    printf("Error: Integrator must have at least one monomial\n");
+    return false;
   }
 
   // Check if the gauge monomial parameters are set
   if (gmparams.beta <= 0) {
-  printf("Error: Gauge Monomial beta must be positive\n");
+    printf("Error: Gauge Monomial beta must be positive\n");
 
-  return false;
+    return false;
   }
   printf("resParsef: %d\n", resParsef);
   if (!(resParsef <= 0)) {
-  if (fparams.fermion_type.empty()) {
-    printf("Error: Fermion Monomial type must be specified\n");
-    return false;
-  }
-  if (!(fparams.fermion_type == "HWilson" ||
-        fparams.fermion_type == "Wilson")) {
-    printf("Error: Unsupported Fermion Monomial type: %s\n",
-           fparams.fermion_type.c_str());
-    return false;
-  }
-  // Check for correct solver
-  if (!(fparams.Solver == "CG" && (fparams.fermion_type == "HWilson" ||
-                                   fparams.fermion_type == "Wilson"))) {
-    printf(
-        "Error: Unsupported Fermion Monomial solver: %s for Fermion Type: "
-        "%s\n",
-        fparams.Solver.c_str(), fparams.fermion_type.c_str());
-    return false;
-  }
+    if (fparams.fermion_type.empty()) {
+      printf("Error: Fermion Monomial type must be specified\n");
+      return false;
+    }
+    if (!(fparams.fermion_type == "HWilson" ||
+          fparams.fermion_type == "Wilson")) {
+      printf("Error: Unsupported Fermion Monomial type: %s\n",
+             fparams.fermion_type.c_str());
+      return false;
+    }
+    // Check for correct solver
+    if (!(fparams.Solver == "CG" && (fparams.fermion_type == "HWilson" ||
+                                     fparams.fermion_type == "Wilson"))) {
+      printf(
+          "Error: Unsupported Fermion Monomial solver: %s for Fermion Type: "
+          "%s\n",
+          fparams.Solver.c_str(), fparams.fermion_type.c_str());
+      return false;
+    }
 
-  // Check if the fermion monomial parameters are set
-  if (fparams.RepDim != 4 && fparams.RepDim != 2) {
-    printf("Error: Fermion Monomial RepDim must be 2 or 4\n");
-    return false;
-  }
-  // Check if the fermion monomial parameters are set
-  if (fparams.kappa < 0) {
-    printf("Error: Fermion Monomial kappa must be positive\n");
-    return false;
-  }
+    // Check if the fermion monomial parameters are set
+    if (fparams.RepDim != 4 && fparams.RepDim != 2) {
+      printf("Error: Fermion Monomial RepDim must be 2 or 4\n");
+      return false;
+    }
+    // Check if the fermion monomial parameters are set
+    if (fparams.kappa < 0) {
+      printf("Error: Fermion Monomial kappa must be positive\n");
+      return false;
+    }
   }
   return true;
-//
+  //
 }
 
 }  // namespace klft
