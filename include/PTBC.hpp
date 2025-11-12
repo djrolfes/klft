@@ -293,6 +293,19 @@ class PTBC {  // do I need the AdjFieldType here?
     }
   }
   int swap() {
+    auto defect_value = getDefectValue();
+    auto defect_value_field =
+        hmc.hamiltonian_field.gauge_field.dParams.defect_value;
+    auto dimensions_field =
+        hmc.hamiltonian_field.gauge_field.dParams.dimensions;
+    auto defect_position =
+        hmc.hamiltonian_field.gauge_field.dParams.defect_position;
+    DEBUG_MPI_PRINT(
+        "Before swap and shift: defect value: %f, defect value field: %f, "
+        "defect position: (%d,%d,%d), dimensions: (%d,%d,%d,%d)",
+        defect_value, defect_value_field, defect_position[0],
+        defect_position[1], defect_position[2], dimensions_field[0],
+        dimensions_field[1], dimensions_field[2], dimensions_field[3]);
     int rank, size;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -398,6 +411,15 @@ class PTBC {  // do I need the AdjFieldType here?
     }
     // TODO: shift the defect by one lattice spacing in a random direction
     shift_defect();
+    defect_value = getDefectValue();
+    defect_value_field = hmc.hamiltonian_field.gauge_field.dParams.defect_value;
+    defect_position = hmc.hamiltonian_field.gauge_field.dParams.defect_position;
+    DEBUG_MPI_PRINT(
+        "After swap and shift: defect value: %f, defect value (field): %f, "
+        "defect position: (%d,%d,%d)",
+        defect_value, defect_value_field, defect_position[0],
+        defect_position[1], defect_position[2]);
+
     MPI_Barrier(MPI_COMM_WORLD);
     //
     return 0;
