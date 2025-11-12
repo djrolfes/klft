@@ -11,7 +11,6 @@
 #include "HMC.hpp"
 #include "HMC_Params.hpp"
 #include "HamiltonianField.hpp"
-#include "IndexHelper.hpp"
 #include "SimulationLogging.hpp"
 using RNGType = Kokkos::Random_XorShift64_Pool<Kokkos::DefaultExecutionSpace>;
 
@@ -213,6 +212,9 @@ class PTBC {  // do I need the AdjFieldType here?
   }
 
   int step() {
+    if constexpr (Nd == 4) {
+      hmc.hamiltonian_field.gauge_field.scan_for_defect();
+    }
     auto rtn = hmc.hmc_step();
     return rtn;
   }

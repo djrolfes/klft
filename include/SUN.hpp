@@ -93,6 +93,22 @@ KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> operator+(const SUN<Nc>& a,
 }
 
 template <size_t Nc>
+KOKKOS_FORCEINLINE_FUNCTION bool isEqual(const SUN<Nc>& a,
+                                         const SUN<Nc>& b,
+                                         real_t eps = REAL_T_EPSILON) {
+  bool rtn = true;
+#pragma unroll
+  for (size_t i = 0; i < Nc; ++i) {
+#pragma unroll
+    for (size_t j = 0; j < Nc; ++j) {
+      rtn = rtn && Kokkos::abs(a[i][j].real() - b[i][j].real()) < eps &&
+            Kokkos::abs(a[i][j].imag() - b[i][j].imag()) < eps;
+    }
+  }
+  return rtn;
+}
+
+template <size_t Nc>
 KOKKOS_FORCEINLINE_FUNCTION void operator+=(SUN<Nc>& a, const SUN<Nc>& b) {
 #pragma unroll
   for (size_t i = 0; i < Nc; ++i) {

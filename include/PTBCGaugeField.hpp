@@ -169,6 +169,87 @@ struct devicePTBCGaugeField {
     do_init(field, init);
   }
 
+  void scan_for_defect() {
+    for (index_t i0 = 0; i0 < dimensions[0]; ++i0) {
+      for (index_t i1 = 0; i1 < dimensions[1]; ++i1) {
+        for (index_t i2 = 0; i2 < dimensions[2]; ++i2) {
+          for (index_t i3 = 0; i3 < dimensions[3]; ++i3) {
+            for (index_t mu = 0; mu < Nd; ++mu) {
+              // Get values through different accessors
+              const auto& const_this = static_cast<const devicePTBCGaugeField<Nd, Nc>&>(*this);
+              SUN<Nc> const_accessor = const_this(i0, i1, i2, i3, mu);
+              SUN<Nc> non_const_accessor = (*this)(i0, i1, i2, i3, mu);
+              SUN<Nc> raw_field = this->field(i0, i1, i2, i3, mu);
+              
+              // Check that const and non-const accessors agree
+              if (!isEqual(const_accessor, non_const_accessor)) {
+                DEBUG_MPI_PRINT("!!! ACCESSOR MISMATCH at (%d,%d,%d,%d, %d)", i0, i1, i2, i3, mu);
+                DEBUG_MPI_PRINT("!!! Const accessor: %s", SUN_to_string(const_accessor).c_str());
+                DEBUG_MPI_PRINT("!!! Non-const accessor: %s", SUN_to_string(non_const_accessor).c_str());
+              }
+              
+              bool in_defect = this->dParams.is_in_defect(i0, i1, i2, i3, mu);
+              real_t defect_value = this->dParams.DefectValue(i0, i1, i2, i3, mu);
+              
+              if (in_defect) {
+                DEBUG_MPI_PRINT("Defect position at (%d,%d,%d)",
+                                this->dParams.defect_position[0],
+                                this->dParams.defect_position[1],
+                                this->dParams.defect_position[2]);
+                DEBUG_MPI_PRINT("Defect at (%d,%d,%d,%d) mu=%d", i0, i1, i2, i3, mu);
+                DEBUG_MPI_PRINT("Defect value: %f", defect_value);
+                DEBUG_MPI_PRINT("Raw field (base link): %s", SUN_to_string(raw_field).c_str());
+                DEBUG_MPI_PRINT("Accessor (with defect): %s", SUN_to_string(const_accessor).c_str());
+                
+                // At defect: accessor should return raw_field * defect_value
+                SUN<Nc> expected = raw_field * defect_value;
+                if (!isEqual(const_accessor, expected)) {
+                  DEBUG_MPI_PRINT("!!! DEFECT APPLICATION ERROR at (%d,%d,%d,%d, %d)", i0, i1, i2, i3, mu);
+                  DEBUG_MPI_PRINT("!!! Expected (raw * defect): %s", SUN_to_string(expected).c_str());
+                  DEBUG_MPI_PRINT("!!! Got from accessor: %s", SUN_to_string(const_accessor).c_str());
+                }
+              } else {
+                // Outside defect: check defect value is 1.0
+                if (defect_value != 1.0) {
+                  DEBUG_MPI_PRINT("!!! Found defect value %f at non-defect position (%d,%d,%d,%d, %d)",
+                                  defect_value, i0, i1, i2, i3, mu);
+                }
+                
+                // Outside defect: accessor should return raw_field unchanged
+                if (!isEqual(const_accessor, raw_field) || !isEqual(non_const_accessor, raw_field)) {
+                  DEBUG_MPI_PRINT("!!! MISMATCH outside defect at (%d,%d,%d,%d, %d)", i0, i1, i2, i3, mu);
+                  DEBUG_MPI_PRINT("!!! Raw field: %s", SUN_to_string(raw_field).c_str());
+                  DEBUG_MPI_PRINT("!!! Accessor: %s", SUN_to_string(const_accessor).c_str());
+                }
+              }
+              
+              // Check that raw field is always SU(N)
+              SUN<Nc> restored_raw = raw_field;
+              restoreSUN(restored_raw);
+              if (!isEqual(raw_field, restored_raw, 1e-12)) {
+                DEBUG_MPI_PRINT("!!! Raw field is NOT SU(N) at (%d,%d,%d,%d, %d)", i0, i1, i2, i3, mu);
+                DEBUG_MPI_PRINT("!!! Raw field: %s", SUN_to_string(raw_field).c_str());
+                DEBUG_MPI_PRINT("!!! Restored: %s", SUN_to_string(restored_raw).c_str());
+              }
+              
+              // Check that accessor values are SU(N) (or at least close) outside defect
+              if (!in_defect) {
+                SUN<Nc> restored_accessor = const_accessor;
+                restoreSUN(restored_accessor);
+                if (!isEqual(const_accessor, restored_accessor, 1e-12)) {
+                  DEBUG_MPI_PRINT("!!! Accessor value NOT SU(N) outside defect at (%d,%d,%d,%d, %d)", 
+                                  i0, i1, i2, i3, mu);
+                  DEBUG_MPI_PRINT("!!! Accessor: %s", SUN_to_string(const_accessor).c_str());
+                  DEBUG_MPI_PRINT("!!! Restored: %s", SUN_to_string(restored_accessor).c_str());
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
   void do_init(GaugeField<Nd, Nc>& V, complex_t init) {
     Kokkos::realloc(Kokkos::WithoutInitializing, V, dimensions[0],
                     dimensions[1], dimensions[2], dimensions[3]);
@@ -306,7 +387,8 @@ struct devicePTBCGaugeField {
   //       std::to_string(this->dParams.defect_position[0]) + "," +
   //       std::to_string(this->dParams.defect_position[1]) + "," +
   //       std::to_string(this->dParams.defect_position[2]) +
-  //       "), Defect length: " + std::to_string(this->dParams.defect_length) +
+  //       "), Defect length: " + std::to_string(this->dParams.defect_length)
+  //       +
   //       ", Is in defect: " + (in_defect ? "true" : "false") +
   //       ", defect value in dParams: " +
   //       std::to_string(dParams.DefectValue(0,
@@ -318,7 +400,8 @@ struct devicePTBCGaugeField {
   //       std::to_string(1.0 * !in_defect +
   //                      this->dParams.defect_value * in_defect) +
   //       "\n";
-  //   std::string sun_str = std::string("Raw field entry at defect position: ")
+  //   std::string sun_str = std::string("Raw field entry at defect position:
+  //   ")
   //   +
   //                         SUN_to_string(field_value);
   //
@@ -334,7 +417,8 @@ struct devicePTBCGaugeField {
   //
   //   std::string manually_computed_defect_str =
   //       std::string(
-  //           "manually computed defect-applied entry at defect position: ") +
+  //           "manually computed defect-applied entry at defect position: ")
+  //           +
   //       SUN_to_string(field_value * this->dParams.defect_value);
   //
   //   std::string log_sting =
@@ -344,17 +428,13 @@ struct devicePTBCGaugeField {
   // }
 
   void shift_defect(IndexArray<Nd - 1> new_position) {
-    // set the current defect regions defect to 1.0, update the position of the
-    // DEBUG_MPI_PRINT("shifting defect to new position (%d,%d,%d)",
+    // set the current defect regions defect to 1.0, update the position of
+    // the DEBUG_MPI_PRINT("shifting defect to new position (%d,%d,%d)",
     //                 new_position[0], new_position[1], new_position[2]);
     for (int i = 0; i < Nd - 1; i++) {
       this->dParams.defect_position[i] = new_position[i];
     }
-    // DEBUG_MPI_PRINT("New defect position set to (%d,%d,%d)",
-    //                 this->dParams.defect_position[0],
-    //                 this->dParams.defect_position[1],
-    //                 this->dParams.defect_position[2]);
-    // check_defect_application();
+    Kokkos::fence();
   }
 
   real_t get_defect() const {
@@ -379,6 +459,8 @@ struct devicePTBCGaugeField {
     // write: raw write (no defect factor)
     KOKKOS_INLINE_FUNCTION
     PTBCLinkRef& operator=(const SUN<Nc>& v) {
+      // The value 'v' should already be a proper SU(N) matrix
+      // Store it directly as the base link
       field(i, j, k, l, mu) = v;
       return *this;
     }
@@ -634,7 +716,8 @@ struct devicePTBCGaugeField3D {
   deviceDefectParams dParams;
 
   // // copy constructor from a given devicePTBCGaugeField
-  // devicePTBCGaugeField3D(const devicePTBCGaugeField<Nd, Nc> &dPTBCGaugeField)
+  // devicePTBCGaugeField3D(const devicePTBCGaugeField<Nd, Nc>
+  // &dPTBCGaugeField)
   //     : dimensions(dPTBCGaugeField.dimensions) {
   //   Kokkos::realloc(Kokkos::WithoutInitializing, field, dimensions[0],
   //                   dimensions[1], dimensions[2]);
@@ -869,8 +952,8 @@ struct devicePTBCGaugeField3D {
   }
 
   void shift_defect(IndexArray<Nd - 1> new_position) {
-    // set the current defect regions defect to 1.0, update the position of the
-    // defect and set the defect value.
+    // set the current defect regions defect to 1.0, update the position of
+    // the defect and set the defect value.
     real_t tmp = this->dParams.defect_value;
     set_defect<index_t>(real_t(1.0));
     this->dParams.defect_position = new_position;
@@ -998,7 +1081,8 @@ struct devicePTBCGaugeField2D {
   deviceDefectParams dParams;
 
   // // copy constructor from a given devicePTBCGaugeField
-  // devicePTBCGaugeField2D(const devicePTBCGaugeField<Nd, Nc> &dPTBCGaugeField)
+  // devicePTBCGaugeField2D(const devicePTBCGaugeField<Nd, Nc>
+  // &dPTBCGaugeField)
   //     : dimensions(dPTBCGaugeField.dimensions) {
   //   Kokkos::realloc(Kokkos::WithoutInitializing, field, dimensions[0],
   //                   dimensions[1]);
@@ -1210,8 +1294,8 @@ struct devicePTBCGaugeField2D {
   }
 
   void shift_defect(IndexArray<Nd - 1> new_position) {
-    // set the current defect regions defect to 1.0, update the position of the
-    // defect and set the defect value.
+    // set the current defect regions defect to 1.0, update the position of
+    // the defect and set the defect value.
     real_t tmp = this->dParams.defect_value;
     this->set_defect<index_t>(real_t(1.0));
     this->dParams.defect_position = new_position;
