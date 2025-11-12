@@ -295,7 +295,8 @@ void measureGaugeObservablesPTBC(const typename DGaugeFieldType::type& g_in,
     params.measurement_steps.push_back(step);
 
     // ... inside if (rank == 0) { ...
-    if (compute_rank != 0 && params.wilson_flow_params.log_details) {
+    if (compute_rank != 0 &&
+        params.wilson_flow_params.dynamicParams.log_details) {
       DEBUG_MPI_PRINT(
           "Receiving wilson flow log details size from compute rank: %d\n",
           compute_rank);
@@ -310,7 +311,7 @@ void measureGaugeObservablesPTBC(const typename DGaugeFieldType::type& g_in,
                MPI_GAUGE_OBSERVABLES_WILSONFLOW_DETAILS, MPI_COMM_WORLD,
                MPI_STATUS_IGNORE);
       std::string log_string(buffer, size);
-      params.wilson_flow_params.log_strings.push_back(log_string);
+      params.wilson_flow_params.dynamicParams.log_strings.push_back(log_string);
       delete[] buffer;  // <-- Added memory cleanup
     }
     // ...
@@ -674,8 +675,8 @@ inline void flushWilsonFlowDetails(std::ofstream& file,
             "tsquaredxaction_density\n";
   }
   for (size_t i = 0; i < params.measurement_steps.size(); ++i) {
-    file << params.measurement_steps[i] << ", " << wfparams.log_strings[i]
-         << "\n";
+    file << params.measurement_steps[i] << ", "
+         << wfparams.dynamicParams.log_strings[i] << "\n";
   }
 }
 
