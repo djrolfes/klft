@@ -19,11 +19,12 @@
 
 // utility functions for gauge fields
 #pragma once
+#include <cassert>
+
 #include "FieldTypeHelper.hpp"
 #include "GLOBAL.hpp"
 #include "Kokkos_Macros.hpp"
 #include "SUN.hpp"
-#include <cassert>
 
 namespace klft {
 
@@ -190,82 +191,36 @@ struct GaugeFieldMultFunctor<4, FieldA, FieldB> {
 //   Kokkos::fence();
 // }
 //
-
-// calculate staple per site and store in another gauge
 template <typename DGaugeFieldType>
-auto stapleField(const typename DGaugeFieldType::type g_in)
-    -> ConstGaugeFieldType<DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank,
-                           DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc> {
-  // initialize the output field
-  static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
+auto stapleField(const typename DGaugeFieldType::type g_in) {
   constexpr static size_t Nd =
       DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank;
   constexpr static size_t Nc = DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc;
-
-  typename DGaugeFieldType::type g_out(g_in.dimensions, 0);
-
-  // get the start and end indices
-  const auto &dimensions = g_in.field.layout().dimension;
-  IndexArray<Nd> start;
-  IndexArray<Nd> end;
-  for (index_t i = 0; i < Nd; ++i) {
-    start[i] = 0;
-    end[i] = dimensions[i];
-  }
-
-  // It would be trivial to add a stapleField return into each
-  // DeviceGaugeFieldType, though as already done with .staple, shouldn't the
-  // definition and calculations be seperated?
-  if constexpr (Nd == 4) {
-    tune_and_launch_for<4>(
-        "stapleField_GaugeField", start, end,
-        KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2,
-                      const index_t i3) {
-          for (index_t mu = 0; mu < Nd; ++mu) {
-            g_out.field(i0, i1, i2, i3, mu) =
-                g_in.staple(IndexArray<4>{i0, i1, i2, i3}, mu);
-          }
-        });
-  } else if constexpr (Nd == 3) {
-    tune_and_launch_for<3>(
-        "stapleField_GaugeField3D", start, end,
-        KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2) {
-          for (index_t mu = 0; mu < Nd; ++mu) {
-            g_out.field(i0, i1, i2, mu) =
-                g_in.staple(IndexArray<3>{i0, i1, i2}, mu);
-          }
-        });
-  } else if constexpr (Nd == 2) {
-    tune_and_launch_for<2>(
-        "stapleField_GaugeField3D", start, end,
-        KOKKOS_LAMBDA(const index_t i0, const index_t i1) {
-          for (index_t mu = 0; mu < Nd; ++mu) {
-            g_out.field(i0, i1, mu) = g_in.staple(IndexArray<2>{i0, i1}, mu);
-          }
-        });
-  } else {
-    static_assert(Nd == 2 || Nd == 3 || Nd == 4, "Unsupported Nd");
-  }
-
-  Kokkos::fence();
-  // return the output field
+  typename DeviceGaugeFieldType<Nd, Nc>::type g_out(g_in.dimensions, 0);
+  stapleField(g_in, g_out);
   return ConstGaugeFieldType<Nd, Nc>(g_out.field);
 }
-
 // calculate staple per site and store in another gauge
 template <typename DGaugeFieldType>
-void stapleField(const typename DGaugeFieldType::type g_in,
-                 typename DGaugeFieldType::type &g_out) {
+void stapleField(
+    const typename DGaugeFieldType::type g_in,
+    typename DeviceGaugeFieldType<
+        DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank,
+        DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc>::type g_out)
+// -> ConstGaugeFieldType<DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank,
+//                        DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc>
+{
   // initialize the output field
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
   constexpr static size_t Nd =
       DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank;
-  // constexpr static size_t Nc =
-  // DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc;
-  // TODO: add a check that g_out and g_in match
+  constexpr static size_t Nc =
+      DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank;
+
+  // typename DGaugeFieldType::type g_out(g_in.dimensions, 0);
 
   // get the start and end indices
-  const auto &dimensions = g_in.field.layout().dimension;
+  const auto& dimensions = g_in.field.layout().dimension;
   IndexArray<Nd> start;
   IndexArray<Nd> end;
   for (index_t i = 0; i < Nd; ++i) {
@@ -306,9 +261,68 @@ void stapleField(const typename DGaugeFieldType::type g_in,
   } else {
     static_assert(Nd == 2 || Nd == 3 || Nd == 4, "Unsupported Nd");
   }
+
   Kokkos::fence();
   // return the output field
 }
+
+// calculate staple per site and store in another gauge
+// template <typename DGaugeFieldType>
+// void stapleField(const typename DGaugeFieldType::type g_in,
+//                  typename DGaugeFieldType::type& g_out) {
+//   // initialize the output field
+//   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
+//   constexpr static size_t Nd =
+//       DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank;
+//   // constexpr static size_t Nc =
+//   // DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc;
+//   // TODO: add a check that g_out and g_in match
+
+//   // get the start and end indices
+//   const auto& dimensions = g_in.field.layout().dimension;
+//   IndexArray<Nd> start;
+//   IndexArray<Nd> end;
+//   for (index_t i = 0; i < Nd; ++i) {
+//     start[i] = 0;
+//     end[i] = dimensions[i];
+//   }
+
+//   // It would be trivial to add a stapleField return into each
+//   // DeviceGaugeFieldType, though as already done with .staple, shouldn't the
+//   // definition and calculations be seperated?
+//   if constexpr (Nd == 4) {
+//     tune_and_launch_for<4>(
+//         "stapleField_GaugeField", start, end,
+//         KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2,
+//                       const index_t i3) {
+//           for (index_t mu = 0; mu < Nd; ++mu) {
+//             g_out.field(i0, i1, i2, i3, mu) =
+//                 g_in.staple(IndexArray<4>{i0, i1, i2, i3}, mu);
+//           }
+//         });
+//   } else if constexpr (Nd == 3) {
+//     tune_and_launch_for<3>(
+//         "stapleField_GaugeField3D", start, end,
+//         KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2) {
+//           for (index_t mu = 0; mu < Nd; ++mu) {
+//             g_out.field(i0, i1, i2, mu) =
+//                 g_in.staple(IndexArray<3>{i0, i1, i2}, mu);
+//           }
+//         });
+//   } else if constexpr (Nd == 2) {
+//     tune_and_launch_for<2>(
+//         "stapleField_GaugeField3D", start, end,
+//         KOKKOS_LAMBDA(const index_t i0, const index_t i1) {
+//           for (index_t mu = 0; mu < Nd; ++mu) {
+//             g_out.field(i0, i1, mu) = g_in.staple(IndexArray<2>{i0, i1}, mu);
+//           }
+//         });
+//   } else {
+//     static_assert(Nd == 2 || Nd == 3 || Nd == 4, "Unsupported Nd");
+//   }
+//   Kokkos::fence();
+//   // return the output field
+// }
 
 // calculate staple per site and store in another gauge
 // this uses the Flow action
@@ -316,19 +330,32 @@ void stapleField(const typename DGaugeFieldType::type g_in,
 // with the convention that c_0 + 8*c_1 = 1
 // (https://journals.aps.org/prd/pdf/10.1103/53vh-wm6v)
 template <typename DGaugeFieldType>
-void stapleField(const typename DGaugeFieldType::type g_in,
-                 typename DGaugeFieldType::type &g_out, real_t c1) {
+auto stapleField(const typename DGaugeFieldType::type g_in, real_t c1) {
+  constexpr static size_t Nd =
+      DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank;
+  constexpr static size_t Nc = DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc;
+  typename DeviceGaugeFieldType<Nd, Nc>::type g_out(g_in.dimensions, 0);
+  stapleField(g_in, g_out, c1);
+  return ConstGaugeFieldType<Nd, Nc>(g_out.field);
+}
+template <typename DGaugeFieldType>
+void stapleField(
+    const typename DGaugeFieldType::type g_in,
+    typename DeviceGaugeFieldType<
+        DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank,
+        DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc>::type& g_out,
+    real_t c1) {
   // initialize the output field
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
   constexpr static size_t Nd =
       DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank;
-  static_assert(Nd == 4); // too lazy to implement for other Nd for now
+  static_assert(Nd == 4);  // too lazy to implement for other Nd for now
   // constexpr static size_t Nc =
   // DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc;
   real_t c0 = 1.0 - 8.0 * c1;
 
   // get the start and end indices
-  const auto &dimensions = g_in.field.layout().dimension;
+  const auto& dimensions = g_in.field.layout().dimension;
   IndexArray<Nd> start;
   IndexArray<Nd> end;
   for (index_t i = 0; i < Nd; ++i) {
@@ -374,7 +401,8 @@ void stapleField(const typename DGaugeFieldType::type g_in,
   // return the output field
 }
 
-template <typename DGaugeFieldType> struct restoreSUNFunctor {
+template <typename DGaugeFieldType>
+struct restoreSUNFunctor {
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
   constexpr static size_t rank =
       DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank;
@@ -384,7 +412,7 @@ template <typename DGaugeFieldType> struct restoreSUNFunctor {
   using GaugeField = typename DGaugeFieldType::type;
 
   GaugeField gauge_field;
-  restoreSUNFunctor(GaugeField &_gauge_field) : gauge_field(_gauge_field) {}
+  restoreSUNFunctor(GaugeField& _gauge_field) : gauge_field(_gauge_field) {}
   template <typename... Indices>
   KOKKOS_FORCEINLINE_FUNCTION void operator()(Indices... Idcs) const {
     // restore the SUN matrices to the correct shape
@@ -395,7 +423,7 @@ template <typename DGaugeFieldType> struct restoreSUNFunctor {
 };
 
 template <typename DGaugeFieldType>
-void restoreSUN(typename DGaugeFieldType::type &gauge_field) {
+void restoreSUN(typename DGaugeFieldType::type& gauge_field) {
   restoreSUNFunctor<DGaugeFieldType> restoreSUNFunctor(gauge_field);
   tune_and_launch_for<DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank>(
       "restoreSUN",
@@ -403,4 +431,4 @@ void restoreSUN(typename DGaugeFieldType::type &gauge_field) {
       gauge_field.dimensions, restoreSUNFunctor);
   Kokkos::fence();
 }
-} // namespace klft
+}  // namespace klft

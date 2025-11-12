@@ -32,16 +32,17 @@ struct ActionDensityFunctor {
         fst(_gauge_field) {}
 
   template <typename indexType>
-  KOKKOS_FORCEINLINE_FUNCTION void
-  operator()(const indexType i0, const indexType i1, const indexType i2,
-             const indexType i3) const {
+  KOKKOS_FORCEINLINE_FUNCTION void operator()(const indexType i0,
+                                              const indexType i1,
+                                              const indexType i2,
+                                              const indexType i3) const {
     Kokkos::Array<Kokkos::Array<SUNAdj<Nc>, Nd>, Nd> C;
 
     for (int mu = 0; mu < Nd; ++mu) {
       for (int nu = mu + 1; nu < Nd; ++nu) {
         // get the clover C_munu
         C[mu][nu] = fst(FSTTag{}, i0, i1, i2, i3, mu, nu);
-        C[nu][mu] = -1.0 * C[mu][nu]; // fst(FSTTag{}, i0, i1, i2, i3, nu, mu);
+        C[nu][mu] = -1.0 * C[mu][nu];  // fst(FSTTag{}, i0, i1, i2, i3, nu, mu);
       }
     }
 
@@ -55,8 +56,8 @@ struct ActionDensityFunctor {
           local_density +=
               0.5 *
               tr<Nc>(C[mu][nu],
-                     C[mu][nu]); // 0.5*: from E=1/4 G^a_{mu,nu}G^a_{mu,nu}
-                                 // (one factor 1/2 is contained in tr)
+                     C[mu][nu]);  // 0.5*: from E=1/4 G^a_{mu,nu}G^a_{mu,nu}
+                                  // (one factor 1/2 is contained in tr)
         }
       }
       density_per_site(i0, i1, i2, i3) = local_density;
@@ -158,4 +159,4 @@ real_t getActionDensity_rect(const typename DGaugeFieldType::type g_in) {
 
   return density;
 }
-} // namespace klft
+}  // namespace klft

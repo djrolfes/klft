@@ -1,9 +1,10 @@
 
 #include "wilsonflow_improv_testing.hpp"
+
+#include <getopt.h>
+#include <filesystem>
 #include "InputParser.hpp"
 #include "PTBC.hpp"
-#include <filesystem>
-#include <getopt.h>
 
 using namespace klft;
 
@@ -14,11 +15,13 @@ using namespace klft;
 
 using RNGType = Kokkos::Random_XorShift64_Pool<Kokkos::DefaultExecutionSpace>;
 
-#define HLINE                                                                  \
+#define HLINE \
   "====================================================================\n"
 
-int parse_args(int argc, char **argv, std::string &input_file,
-               std::string &output_directory) {
+int parse_args(int argc,
+               char** argv,
+               std::string& input_file,
+               std::string& output_directory) {
   // Defaults
   input_file = "../../../input.yaml";
   output_directory = "./";
@@ -46,33 +49,33 @@ int parse_args(int argc, char **argv, std::string &input_file,
   while ((c = getopt_long(argc, argv, "f:o:h", long_options, &option_index)) !=
          -1)
     switch (c) {
-    case 'f':
-      input_file = optarg;
-      break;
-    case 'o':
-      output_directory = optarg;
-      if (output_directory.back() != '/') {
-        output_directory += '/';
-      }
-      if (!std::filesystem::exists(output_directory)) {
-        std::filesystem::create_directories(output_directory);
-      }
-      break;
-    case 'h':
-      printf("%s", help_string.c_str());
-      return -2;
-      break;
-    case 0:
-      break;
-    default:
-      printf("%s", help_string.c_str());
-      return -1;
-      break;
+      case 'f':
+        input_file = optarg;
+        break;
+      case 'o':
+        output_directory = optarg;
+        if (output_directory.back() != '/') {
+          output_directory += '/';
+        }
+        if (!std::filesystem::exists(output_directory)) {
+          std::filesystem::create_directories(output_directory);
+        }
+        break;
+      case 'h':
+        printf("%s", help_string.c_str());
+        return -2;
+        break;
+      case 0:
+        break;
+      default:
+        printf("%s", help_string.c_str());
+        return -1;
+        break;
     }
   return 0;
 }
 
-std::string ranked_filename(const std::string &base_filename, int rank) {
+std::string ranked_filename(const std::string& base_filename, int rank) {
   auto pos = base_filename.rfind('.');
   if (pos == std::string::npos) {
     // No extension → just append
@@ -84,9 +87,8 @@ std::string ranked_filename(const std::string &base_filename, int rank) {
   }
 }
 
-int test_wflow_improvement(const std::string &input_file,
-                           const std::string &output_directory) {
-
+int test_wflow_improvement(const std::string& input_file,
+                           const std::string& output_directory) {
   PTBCParams ptbcParams;
   HMCParams hmcParams;
   GaugeObservableParams gaugeObsParams;
@@ -141,7 +143,7 @@ int test_wflow_improvement(const std::string &input_file,
     hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
     hmc.add_kinetic_monomial(0);
     if (resParsef > 0) {
-      auto diracParams = getDiracParams<4>(g_4_SU2.dimensions, fermionParams);
+      auto diracParams = getDiracParams(fermionParams);
       hmc.add_fermion_monomial<CGSolver, HWilsonDiracOperator,
                                DSpinorFieldType>(s_4_SU2, diracParams,
                                                  fermionParams.tol, rng, 0);
@@ -175,7 +177,7 @@ int test_wflow_improvement(const std::string &input_file,
     hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
     hmc.add_kinetic_monomial(0);
     if (resParsef > 0) {
-      auto diracParams = getDiracParams<4>(g_4_SU3.dimensions, fermionParams);
+      auto diracParams = getDiracParams(fermionParams);
       hmc.add_fermion_monomial<CGSolver, HWilsonDiracOperator,
                                DSpinorFieldType>(s_4_SU3, diracParams,
                                                  fermionParams.tol, rng, 0);
@@ -186,7 +188,7 @@ int test_wflow_improvement(const std::string &input_file,
   return 0;
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
   printf(HLINE);
   printf("HMC for SU(N) gauge fields\n");
   printf(HLINE);

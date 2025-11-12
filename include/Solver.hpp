@@ -19,16 +19,19 @@
 
 #pragma once
 #include "DiracOPTypeHelper.hpp"
+#include "DiracOperator.hpp"
 #include "FieldTypeHelper.hpp"
 #include "GLOBAL.hpp"
 #include "SpinorFieldLinAlg.hpp"
 
 namespace klft {
 
-template <template <template <typename, typename> class DiracOpT, typename,
+template <template <template <typename, typename> class DiracOpT,
+                    typename,
                     typename> class _Derived,
           template <typename, typename> class DiracOpT,
-          typename DSpinorFieldType, typename DGaugeFieldType>
+          typename DSpinorFieldType,
+          typename DGaugeFieldType>
 class Solver {
   // using DSpinorFieldType =
   //     typename DiracOpFieldTypeTraits<DiracOperator>::DSpinorFieldType;
@@ -45,7 +48,9 @@ class Solver {
       DeviceFermionFieldTypeTraits<DSpinorFieldType>::RepDim;
   static_assert((rank == DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank) &&
                 (Nc == DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc));
-  using DiracOp = DiracOperator<DiracOpT, DSpinorFieldType, DGaugeFieldType>;
+  using GeneralDiracOperator =
+      DiracOperator<DiracOpT, DSpinorFieldType, DGaugeFieldType>;
+  using DiracOp = DiracOpT<DSpinorFieldType, DGaugeFieldType>;
   using Derived = _Derived<DiracOpT, DSpinorFieldType, DGaugeFieldType>;
 
   // using DiracOperator =
@@ -53,17 +58,53 @@ class Solver {
   // using ConcreteSolver =
   //     _ConcreteSolver<DiracOperator, DSpinorFieldType, DGaugeFieldType>;
 
-public:
+ public:
   using SpinorFieldType = typename DSpinorFieldType::type;
   using GaugeFieldType = typename DGaugeFieldType::type;
-  const SpinorFieldType b;
-  SpinorFieldType x; // Solution to DiracOP*x=b
+  SpinorFieldType b;
+  SpinorFieldType x;  // Solution to DiracOP*x=b
   DiracOp dirac_op;
-  Solver(const SpinorFieldType &b, SpinorFieldType &x, const DiracOp &dirac_op)
+  Solver(const SpinorFieldType& b, SpinorFieldType& x, const DiracOp& dirac_op)
       : b(b), x(x), dirac_op(dirac_op) {}
+
   template <typename Tag>
-  void solve(const SpinorFieldType &x0, const real_t &tol) {
-    static_cast<Derived *>(this)->template solve_int<Tag>(x0, tol);
+  void solve(const SpinorFieldType& x0, const real_t& tol) {
+    Kokkos::Profiling::pushRegion("Solver");
+    static_cast<Derived*>(this)->template solve_int<Tag>(x0, tol);
+    Kokkos::Profiling::popRegion();
+  }
+
+  /// @brief Constructs the b vector when using an Even/Odd Precondition Field,
+  /// assumes that the field saved in b is the even part of the Vector b
+  /// @param odd_b
+  void construct_problem(const SpinorFieldType& odd_b) {
+    auto out_even_from_odd_b = dirac_op.template apply<Tags::TagHeo>(odd_b);
+    axpy<DSpinorFieldType>(this->dirac_op.params.kappa, out_even_from_odd_b,
+                           this->b, this->b);
+  }
+
+  /// @brief Reconstructs the Odd part of the solution
+  /// with zero odd part
+  void reconstruct_solution_0(SpinorFieldType& out) {
+    dirac_op.template apply<Tags::TagHoe>(this->x, out);
+    ax<DSpinorFieldType>(this->dirac_op.params.kappa, out, out);
+  }
+  SpinorFieldType reconstruct_solution_0() {
+    auto out = SpinorFieldType(x.dimensions, complex_t(0.0, 0.0));
+    reconstruct_solution_0(out);
+    return out;
+  }
+  /// @brief Reconstructs the Odd part of the solution
+  /// @param out
+  void reconstruct_solution(const SpinorFieldType& odd_b,
+                            SpinorFieldType& out) {
+    dirac_op.template apply<Tags::TagHoe>(this->x, out);
+    axpy<DSpinorFieldType>(this->dirac_op.params.kappa, out, odd_b, out);
+  }
+  SpinorFieldType reconstruct_solution(const SpinorFieldType& odd_b) {
+    auto out = SpinorFieldType(x.dimensions, complex_t(0.0, 0.0));
+    reconstruct_solution(odd_b, out);
+    return out;
   }
 };
 // // Deduction guide for Solver
@@ -75,7 +116,8 @@ public:
 //               SpinorType::RepDim>;
 
 template <template <typename, typename> class DiracOpT,
-          typename DSpinorFieldType, typename DGaugeFieldType>
+          typename DSpinorFieldType,
+          typename DGaugeFieldType>
 class CGSolver
     : public Solver<CGSolver, DiracOpT, DSpinorFieldType, DGaugeFieldType> {
   // using DSpinorFieldType =
@@ -83,7 +125,7 @@ class CGSolver
   // using DGaugeFieldType =
   //     typename DiracOpFieldTypeTraits<DiracOperator>::DGaugeFieldType;
 
-public:
+ public:
   using SpinorFieldType = typename DSpinorFieldType::type;
   using GaugeFieldType = typename DGaugeFieldType::type;
   constexpr static size_t rank =
@@ -99,49 +141,70 @@ public:
   using Base::Base;
 
   template <typename Tag>
-  void solve_int(const SpinorFieldType &x0, const real_t &tol) {
-    SpinorFieldType xk(this->dirac_op.params.dimensions, complex_t(0.0, 0.0));
-    Kokkos::deep_copy(xk.field, x0.field); // x_0
+  void solve_int(const SpinorFieldType& x0, const real_t& tol) {
+    auto dims = this->x.dimensions;
+    SpinorFieldType xk(dims, complex_t(0.0, 0.0));
+    SpinorFieldType rk{dims, complex_t(0.0, 0.0)};
+    SpinorFieldType apk{dims, complex_t(0.0, 0.0)};
+    SpinorFieldType temp_D{dims, complex_t(0.0, 0.0)};
+    typename DeviceScalarFieldType<rank>::type norm_per_site(dims, 0.0);
+    typename DeviceFieldType<rank>::type dot_product_per_site(
+        dims, complex_t(0.0, 0.0));
+    Kokkos::deep_copy(xk.field, x0.field);  // x_0
 
-    SpinorFieldType rk = spinor_sub_mul<rank, Nc, RepDim>(
-        this->b, this->dirac_op.template apply<Tag>(xk), 1.0);
+    axpy<DSpinorFieldType>(-1, this->dirac_op.template apply<Tag>(xk), this->b,
+                           rk);
 
-    SpinorFieldType pk(this->dirac_op.params.dimensions, complex_t(0.0, 0.0));
-    Kokkos::deep_copy(pk.field, rk.field); // p_0                        // d_0
-    real_t rk_norm = spinor_norm<rank, Nc, RepDim>(rk); //\delta_0
+    SpinorFieldType pk(dims, complex_t(0.0, 0.0));
+    Kokkos::deep_copy(pk.field, rk.field);  // p_0                        // d_0
+    real_t rk_norm =
+        spinor_norm<rank, Nc, RepDim>(rk, norm_per_site);  //\delta_0
     int num_iter = 0;
     while (rk_norm > tol) {
-      const SpinorFieldType apk =
-          this->dirac_op.template apply<Tag>(pk); // z = Ad_k
-      const complex_t rkrk = spinor_dot_product<rank, Nc, RepDim>(rk, rk);
+      this->dirac_op.template apply<Tag>(pk, temp_D, apk);
+      // z = Ad_k
+      const complex_t rkrk =
+          spinor_dot_product<rank, Nc, RepDim>(rk, rk, dot_product_per_site);
       const complex_t alpha =
-          (rkrk / spinor_dot_product<rank, Nc, RepDim>(pk, apk)); // Always real
-      xk = spinor_add_mul<rank, Nc, RepDim>(xk, pk, alpha);
-      rk = spinor_sub_mul<rank, Nc, RepDim>(rk, apk, alpha);
+          (rkrk / spinor_dot_product<rank, Nc, RepDim>(
+                      pk, apk, dot_product_per_site));  // Always real
+      axpy<DSpinorFieldType>(alpha, pk, xk, xk);
+      // xk = spinor_add_mul<rank, Nc, RepDim>(xk, pk, alpha);
+      // xk = axpy<DSpinorFieldType>(alpha, pk, xk);
+      axpy<DSpinorFieldType>(-alpha, apk, rk, rk);
+      // rk = axpy<DSpinorFieldType>(-alpha, apk, rk);
+      // rk = spinor_sub_mul<rank, Nc, RepDim>(rk, apk, alpha);
       const complex_t beta =
-          (spinor_dot_product<rank, Nc, RepDim>(rk, rk) / rkrk);
-      pk = spinor_add_mul<rank, Nc, RepDim>(rk, pk, beta);
+          (spinor_dot_product<rank, Nc, RepDim>(rk, rk, dot_product_per_site) /
+           rkrk);
+      axpy<DSpinorFieldType>(beta, pk, rk, pk);
+      // pk = axpy<DSpinorFieldType>(beta, pk, rk);
+      // pk = spinor_add_mul<rank, Nc, RepDim>(rk, pk, beta);
       // Check if swapping is needed of pk and rk, should be correct
 
-      rk_norm = spinor_norm<rank, Nc, RepDim>(rk);
+      rk_norm = spinor_norm<rank, Nc, RepDim>(rk, norm_per_site);
       num_iter++;
       if (KLFT_VERBOSITY > 2) {
         printf("CG Iteration %d: rk_norm = %.15f\n", num_iter, rk_norm);
         if (KLFT_VERBOSITY > 3) {
           printf("Norm of (b - A*x) %.15f\n",
-                 spinor_norm<rank, Nc, RepDim>(spinor_sub_mul<rank, Nc, RepDim>(
-                     this->b, this->dirac_op.template apply<Tag>(xk), 1.0)));
+                 spinor_norm<rank, Nc, RepDim>(
+                     axpy<DSpinorFieldType>(
+                         -1.0, this->dirac_op.template apply<Tag>(xk), this->b),
+                     norm_per_site));
         }
       }
     }
-    const real_t ex_res =
-        spinor_norm<rank, Nc, RepDim>(spinor_sub_mul<rank, Nc, RepDim>(
-            this->b, this->dirac_op.template apply<Tag>(xk), 1.0));
+    this->dirac_op.template apply<Tag>(xk, apk, temp_D);
+    axpy<DSpinorFieldType>(-1, temp_D, this->b, temp_D);
+    const real_t ex_res = spinor_norm<rank, Nc, RepDim>(temp_D, norm_per_site);
 
-    if (Kokkos::abs(ex_res / spinor_norm<rank, Nc, RepDim>(xk)) > tol) {
-      printf("EX_res: %.20f, Roundoff Error, relaunching CG solver with new "
-             "initial guess\n",
-             ex_res);
+    if (Kokkos::abs(ex_res / spinor_norm<rank, Nc, RepDim>(xk, norm_per_site)) >
+        tol) {
+      printf(
+          "EX_res: %.20f, Roundoff Error, relaunching CG solver with new "
+          "initial guess\n",
+          ex_res);
       this->template solve<Tag>(xk, tol);
     } else {
       if (KLFT_VERBOSITY > 1) {
@@ -151,7 +214,109 @@ public:
     }
   }
 };
+
+template <template <typename, typename> class DiracOpT,
+          typename DSpinorFieldType,
+          typename DGaugeFieldType>
+class BiCGStab
+    : public Solver<BiCGStab, DiracOpT, DSpinorFieldType, DGaugeFieldType> {
+  // using DSpinorFieldType =
+  //     typename DiracOpFieldTypeTraits<DiracOperator>::DSpinorFieldType;
+  // using DGaugeFieldType =
+  //     typename DiracOpFieldTypeTraits<DiracOperator>::DGaugeFieldType;
+
+ public:
+  using SpinorFieldType = typename DSpinorFieldType::type;
+  using GaugeFieldType = typename DGaugeFieldType::type;
+  constexpr static size_t rank =
+      DeviceFermionFieldTypeTraits<DSpinorFieldType>::Rank;
+  constexpr static size_t Nc =
+      DeviceFermionFieldTypeTraits<DSpinorFieldType>::Nc;
+  constexpr static size_t RepDim =
+      DeviceFermionFieldTypeTraits<DSpinorFieldType>::RepDim;
+  static_assert((rank == DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank) &&
+                (Nc == DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc));
+
+  using Base = Solver<BiCGStab, DiracOpT, DSpinorFieldType, DGaugeFieldType>;
+  using Base::Base;
+
+  template <typename Tag>
+  void solve_int(const SpinorFieldType& x0, const real_t& tol) {
+    auto dims = x0.dimensions;
+    SpinorFieldType xk(dims, complex_t(0.0, 0.0));
+    SpinorFieldType rk{dims, complex_t(0.0, 0.0)};
+    SpinorFieldType r0{dims, complex_t(0.0, 0.0)};
+    SpinorFieldType apk{dims, complex_t(0.0, 0.0)};
+    SpinorFieldType temp_D{dims, complex_t(0.0, 0.0)};
+    SpinorFieldType pk(dims, complex_t(0.0, 0.0));
+    SpinorFieldType s(dims, complex_t(0.0, 0.0));
+    SpinorFieldType t(dims, complex_t(0.0, 0.0));
+    Kokkos::deep_copy(xk.field, x0.field);  // x_0
+    axpy<DSpinorFieldType>(-1, this->dirac_op.template apply<Tag>(xk), this->b,
+                           r0);
+    Kokkos::deep_copy(rk.field, r0.field);
+
+    Kokkos::deep_copy(pk.field, r0.field);  // p_0                        // d_0
+    real_t rk_norm = spinor_norm<rank, Nc, RepDim>(r0);  //\delta_0
+    int num_iter = 0;
+    while (rk_norm > tol) {
+      this->dirac_op.template apply<Tag>(pk, temp_D, apk);
+      // z = Ad_k
+      const complex_t r0rk = spinor_dot_product<rank, Nc, RepDim>(r0, rk);
+      const complex_t alpha = (r0rk / spinor_dot_product<rank, Nc, RepDim>(
+                                          r0, apk));     // Always real
+      axpy<DSpinorFieldType>(-alpha, apk, rk, s);        // s = rk -alpha*apk
+      this->dirac_op.template apply<Tag>(s, temp_D, t);  // t = xk
+      // axpy<DSpinorFieldType>(alpha, pk, xk, xk);
+      const complex_t omega = (spinor_dot_product<rank, Nc, RepDim>(t, s) /
+                               spinor_dot_product<rank, Nc, RepDim>(t, t));
+      axpy<DSpinorFieldType>(-omega, t, s, rk);  // rk= s-omega A*s
+      axpy<DSpinorFieldType>(omega, s, xk, xk);  // xk = xk+omega s
+      axpy<DSpinorFieldType>(
+          alpha, pk, xk,
+          xk);  // xk = xk+alpha pk , so intotal xk = xk +alpha pk +omega s
+
+      const auto beta = (spinor_dot_product<rank, Nc, RepDim>(r0, rk) / r0rk) *
+                        (alpha / omega);
+      axpy<DSpinorFieldType>(beta, pk, rk, pk);  // pk = rk + beta * pk
+      axpy<DSpinorFieldType>(-beta * omega, apk, pk,
+                             pk);  // pk = pk - beta * omega * apk; so in total
+                                   // pk = rk + beta * pk - beta * omega * apk;
+
+      // pk = axpy<DSpinorFieldType>(beta, pk, rk);
+      // pk = spinor_add_mul<rank, Nc, RepDim>(rk, pk, beta);
+      // Check if swapping is needed of pk and rk, should be correct
+
+      rk_norm = spinor_norm<rank, Nc, RepDim>(rk);
+      num_iter++;
+      if (KLFT_VERBOSITY > 2) {
+        printf("BiCGstab Iteration %d: rk_norm = %.15f\n", num_iter, rk_norm);
+        if (KLFT_VERBOSITY > 3) {
+          printf("Norm of (b - A*x) %.15f\n",
+                 spinor_norm<rank, Nc, RepDim>(axpy<DSpinorFieldType>(
+                     -1.0, this->dirac_op.template apply<Tag>(xk), this->b)));
+        }
+      }
+    }
+    this->dirac_op.template apply<Tag>(xk, apk, temp_D);
+    axpy<DSpinorFieldType>(-1, temp_D, this->b, temp_D);
+    const real_t ex_res = spinor_norm<rank, Nc, RepDim>(temp_D);
+
+    if (Kokkos::abs(ex_res / spinor_norm<rank, Nc, RepDim>(xk)) > tol) {
+      printf(
+          "EX_res: %.20f, Roundoff Error, relaunching CG solver with new "
+          "initial guess\n",
+          ex_res);
+      this->template solve<Tag>(xk, tol);
+    } else {
+      if (KLFT_VERBOSITY > 1) {
+        printf("BiCGstab solver converged in %d iterations\n", num_iter);
+      }
+      this->x = xk;
+    }
+  }
+};
 // After CGSolver class definition
 // template <typename D, typename S>
 // CGSolver(S, S, D) -> CGSolver<D, S, typename D::DGaugeFieldType::type>;
-} // namespace klft
+}  // namespace klft

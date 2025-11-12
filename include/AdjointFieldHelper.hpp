@@ -1,10 +1,28 @@
+//******************************************************************************/
+//
+// This file is part of the Kokkos Lattice Field Theory (KLFT) library.
+//
+// KLFT is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// KLFT is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with KLFT.  If not, see <http://www.gnu.org/licenses/>.
+//
+//******************************************************************************/
 #pragma once
 #include "AdjointField.hpp"
 #include "FieldTypeHelper.hpp"
 #include "GLOBAL.hpp"
 namespace klft {
 template <typename DAdjFieldType, class RNG>
-void randomize_field(typename DAdjFieldType::type &field, RNG &rng) {
+void randomize_field(typename DAdjFieldType::type& field, RNG& rng) {
   size_t constexpr Nd = DeviceAdjFieldTypeTraits<DAdjFieldType>::Rank;
   size_t constexpr Nc = DeviceAdjFieldTypeTraits<DAdjFieldType>::Nc;
   if constexpr (Nd == 4) {
@@ -46,7 +64,7 @@ void randomize_field(typename DAdjFieldType::type &field, RNG &rng) {
 }
 
 template <typename DAdjFieldType>
-void flip_sign(typename DAdjFieldType::type &field) {
+void flip_sign(typename DAdjFieldType::type& field) {
   size_t constexpr Nd = DeviceAdjFieldTypeTraits<DAdjFieldType>::Rank;
   size_t constexpr Nc = DeviceAdjFieldTypeTraits<DAdjFieldType>::Nc;
   if constexpr (Nd == 4) {
@@ -80,4 +98,4 @@ void flip_sign(typename DAdjFieldType::type &field) {
 
   Kokkos::fence();
 }
-} // namespace klft
+}  // namespace klft

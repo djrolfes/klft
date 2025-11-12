@@ -1,3 +1,21 @@
+//******************************************************************************/
+//
+// This file is part of the Kokkos Lattice Field Theory (KLFT) library.
+//
+// KLFT is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// KLFT is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with KLFT.  If not, see <http://www.gnu.org/licenses/>.
+//
+//******************************************************************************/
 #pragma once
 #include "GLOBAL.hpp"
 #include "HamiltonianField.hpp"
@@ -10,8 +28,9 @@ typedef enum MonomialType_s {
   KLFT_MONOMIAL_KINETIC
 } MonomialType;
 
-template <typename DGaugeFieldType, typename DAdjFieldType> class Monomial {
-public:
+template <typename DGaugeFieldType, typename DAdjFieldType>
+class Monomial {
+ public:
   // template argument deduction and safety
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
   static_assert(isDeviceAdjFieldType<DAdjFieldType>::value);
@@ -44,7 +63,7 @@ public:
     H_new = 0.0;
   }
 
-  void set_time_scale(const unsigned int &_time_scale) {
+  void set_time_scale(const unsigned int& _time_scale) {
     time_scale = _time_scale;
   }
 
@@ -55,7 +74,7 @@ public:
 
 template <typename DGaugeFieldType, typename DAdjFieldType>
 class KineticMonomial : public Monomial<DGaugeFieldType, DAdjFieldType> {
-public:
+ public:
   KineticMonomial(unsigned int _time_scale)
       : Monomial<DGaugeFieldType, DAdjFieldType>(_time_scale) {
     Monomial<DGaugeFieldType, DAdjFieldType>::monomial_type =
@@ -76,4 +95,4 @@ public:
   }
 };
 
-} // namespace klft
+}  // namespace klft

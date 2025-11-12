@@ -6,13 +6,13 @@
 namespace klft {
 // define a struct to hold parameters related to the simulation logging
 struct SimulationLoggingParams {
-  size_t log_interval;      // interval between logs
-  std::string log_filename; // filename for the log
-  bool write_to_file;       // whether to write logs to file
-  size_t flush; // interval to flush logs to file ,0 to flush at the end of the
-                // simulation
-  bool flushed; // check if the logs were flushed at least once -> used to
-                // add the header line to the file
+  size_t log_interval;       // interval between logs
+  std::string log_filename;  // filename for the log
+  bool write_to_file;        // whether to write logs to file
+  size_t flush;  // interval to flush logs to file ,0 to flush at the end of the
+                 // simulation
+  bool flushed;  // check if the logs were flushed at least once -> used to
+                 // add the header line to the file
   // define flags for the different types of logs
   bool log_delta_H;
   bool log_acceptance;
@@ -30,18 +30,27 @@ struct SimulationLoggingParams {
 
   // constructor to initialize the parameters
   SimulationLoggingParams()
-      : log_interval(0), flush(25), flushed(false), write_to_file(false),
-        log_delta_H(false), log_acceptance(false), log_accept(false),
-        log_time(false), log_observable_time(false) {}
+      : log_interval(0),
+        flush(25),
+        flushed(false),
+        write_to_file(false),
+        log_delta_H(false),
+        log_acceptance(false),
+        log_accept(false),
+        log_time(false),
+        log_observable_time(false) {}
 };
 
 // define a function to log simulation information
-inline void
-addLogData(SimulationLoggingParams &params, const size_t step,
-           const real_t _delta_H = 0.0, const real_t _acceptance = 0.0,
-           const bool _accept = false, const real_t _time = 0.0,
-           const real_t _observable_time =
-               0.0) { // TODO: add overloads for different passed parameters
+inline void addLogData(
+    SimulationLoggingParams& params,
+    const size_t step,
+    const real_t _delta_H = 0.0,
+    const real_t _acceptance = 0.0,
+    const bool _accept = false,
+    const real_t _time = 0.0,
+    const real_t _observable_time =
+        0.0) {  // TODO: add overloads for different passed parameters
   if (params.log_interval == 0 || step % params.log_interval != 0 ||
       step == 0) {
     return;
@@ -90,7 +99,7 @@ addLogData(SimulationLoggingParams &params, const size_t step,
   params.log_steps.push_back(step);
 }
 
-inline void clearSimulationLogs(SimulationLoggingParams &params) {
+inline void clearSimulationLogs(SimulationLoggingParams& params) {
   // clear the logs
   params.log_steps.clear();
   params.delta_H.clear();
@@ -100,7 +109,7 @@ inline void clearSimulationLogs(SimulationLoggingParams &params) {
   params.observable_time.clear();
 }
 
-inline void forceflushSimulationLogs(SimulationLoggingParams &params,
+inline void forceflushSimulationLogs(SimulationLoggingParams& params,
                                      const bool clear_after_flush = false) {
   // check if write_to_file is enabled
   if (!params.write_to_file) {
@@ -116,7 +125,7 @@ inline void forceflushSimulationLogs(SimulationLoggingParams &params,
     return;
   }
 
-  bool HEADER = !params.flushed; // write header only once
+  bool HEADER = !params.flushed;  // write header only once
   // write header if required
   if (HEADER) {
     file << "# step";
@@ -162,12 +171,12 @@ inline void forceflushSimulationLogs(SimulationLoggingParams &params,
   // close the file
   file.close();
   if (clear_after_flush) {
-    clearSimulationLogs(params); // clear the logs after flushing
+    clearSimulationLogs(params);  // clear the logs after flushing
   }
-  params.flushed = true; // set flushed to true after writing
+  params.flushed = true;  // set flushed to true after writing
 }
 
-inline void flushSimulationLogs(SimulationLoggingParams &params,
+inline void flushSimulationLogs(SimulationLoggingParams& params,
                                 const size_t step,
                                 const bool clear_after_flush = false) {
   if (params.flush != 0 && step % params.flush == 0) {
@@ -176,13 +185,13 @@ inline void flushSimulationLogs(SimulationLoggingParams &params,
 }
 
 struct PTBCSimulationLoggingParams {
-  size_t log_interval;      // interval between logs
-  std::string log_filename; // filename for the log
-  bool write_to_file;       // whether to write logs to file
-  size_t flush; // interval to flush logs to file ,0 to flush at the end of the
-                // simulation
-  bool flushed; // check if the logs were flushed at least once -> used to
-                // add the header line to the file
+  size_t log_interval;       // interval between logs
+  std::string log_filename;  // filename for the log
+  bool write_to_file;        // whether to write logs to file
+  size_t flush;  // interval to flush logs to file ,0 to flush at the end of the
+                 // simulation
+  bool flushed;  // check if the logs were flushed at least once -> used to
+                 // add the header line to the file
 
   // define flags for the different types of logs
   bool log_swap_start;
@@ -199,18 +208,24 @@ struct PTBCSimulationLoggingParams {
 
   // constructor to initialize the parameters
   PTBCSimulationLoggingParams()
-      : log_interval(0), flush(25), flushed(false), write_to_file(false),
-        log_delta_H_swap(false), log_swap_start(true), log_swap_accepts(true),
+      : log_interval(0),
+        flush(25),
+        flushed(false),
+        write_to_file(false),
+        log_delta_H_swap(false),
+        log_swap_start(true),
+        log_swap_accepts(true),
         log_defects(true) {}
 };
 
 // ---------- PTBC logging: add / flush / clear ----------
 
-inline void addPTBCLogData(PTBCSimulationLoggingParams &p, const size_t step,
+inline void addPTBCLogData(PTBCSimulationLoggingParams& p,
+                           const size_t step,
                            const size_t _swap_start = 0,
-                           const std::vector<bool> *_accepts = nullptr,
-                           const std::vector<real_t> *_delta_H_swap = nullptr,
-                           const std::vector<real_t> *_defects = nullptr) {
+                           const std::vector<bool>* _accepts = nullptr,
+                           const std::vector<real_t>* _delta_H_swap = nullptr,
+                           const std::vector<real_t>* _defects = nullptr) {
   // obey interval (skip step 0, like your other logger)
   if (p.log_interval == 0 || step % p.log_interval != 0 || step == 0)
     return;
@@ -233,7 +248,7 @@ inline void addPTBCLogData(PTBCSimulationLoggingParams &p, const size_t step,
     if (_accepts)
       p.accepts.push_back(*_accepts);
     else
-      p.accepts.emplace_back(); // empty vector keeps indices aligned
+      p.accepts.emplace_back();  // empty vector keeps indices aligned
     if (KLFT_VERBOSITY > 1 && _accepts) {
       printf("accepts: ");
       for (bool b : *_accepts)
@@ -263,7 +278,7 @@ inline void addPTBCLogData(PTBCSimulationLoggingParams &p, const size_t step,
   }
 }
 
-inline void clearPTBCSimulationLogs(PTBCSimulationLoggingParams &p) {
+inline void clearPTBCSimulationLogs(PTBCSimulationLoggingParams& p) {
   p.log_steps.clear();
   p.swap_start.clear();
   p.delta_H_swap.clear();
@@ -273,7 +288,7 @@ inline void clearPTBCSimulationLogs(PTBCSimulationLoggingParams &p) {
 
 // helper: join vectors for writing
 template <class T>
-static inline void _write_vec(std::ostream &os, const std::vector<T> &v) {
+static inline void _write_vec(std::ostream& os, const std::vector<T>& v) {
   os << "[";
   for (size_t i = 0; i < v.size(); ++i) {
     if (i)
@@ -284,8 +299,8 @@ static inline void _write_vec(std::ostream &os, const std::vector<T> &v) {
 }
 
 // bool specialization (std::vector<bool> is bit-packed)
-static inline void _write_vec_bool(std::ostream &os,
-                                   const std::vector<bool> &v) {
+static inline void _write_vec_bool(std::ostream& os,
+                                   const std::vector<bool>& v) {
   os << "[";
   for (size_t i = 0; i < v.size(); ++i) {
     if (i)
@@ -295,7 +310,7 @@ static inline void _write_vec_bool(std::ostream &os,
   os << "]";
 }
 
-inline void forceflushPTBCSimulationLogs(PTBCSimulationLoggingParams &p,
+inline void forceflushPTBCSimulationLogs(PTBCSimulationLoggingParams& p,
                                          const bool clear_after_flush = false) {
   if (!p.write_to_file) {
     if (KLFT_VERBOSITY > 0)
@@ -366,7 +381,7 @@ inline void forceflushPTBCSimulationLogs(PTBCSimulationLoggingParams &p,
   p.flushed = true;
 }
 
-inline void flushPTBCSimulationLogs(PTBCSimulationLoggingParams &p,
+inline void flushPTBCSimulationLogs(PTBCSimulationLoggingParams& p,
                                     const size_t step,
                                     const bool clear_after_flush = false) {
   if (p.flush != 0 && step % p.flush == 0) {
@@ -375,12 +390,12 @@ inline void flushPTBCSimulationLogs(PTBCSimulationLoggingParams &p,
 }
 
 struct JTBCSimulationLoggingParams {
-  std::string log_filename; // filename for the log
-  bool write_to_file;       // whether to write logs to file
-  size_t flush; // interval to flush logs to file ,0 to flush at the end of the
-                // simulation
-  bool flushed; // check if the logs were flushed at least once -> used to
-                // add the header line to the file
+  std::string log_filename;  // filename for the log
+  bool write_to_file;        // whether to write logs to file
+  size_t flush;  // interval to flush logs to file ,0 to flush at the end of the
+                 // simulation
+  bool flushed;  // check if the logs were flushed at least once -> used to
+                 // add the header line to the file
 
   // define flags for the different types of logs
   bool log_defects;
@@ -395,8 +410,10 @@ struct JTBCSimulationLoggingParams {
       : flush(25), flushed(false), write_to_file(false), log_defects(true) {}
 };
 
-inline void addJTBCLogData(JTBCSimulationLoggingParams &p, const size_t step,
-                           const real_t defect, const int accept) {
+inline void addJTBCLogData(JTBCSimulationLoggingParams& p,
+                           const size_t step,
+                           const real_t defect,
+                           const int accept) {
   if (step == 0)
     return;
 
@@ -409,13 +426,13 @@ inline void addJTBCLogData(JTBCSimulationLoggingParams &p, const size_t step,
   p.accepts.push_back(accept);
 }
 
-inline void clearJTBCSimulationLogs(JTBCSimulationLoggingParams &p) {
+inline void clearJTBCSimulationLogs(JTBCSimulationLoggingParams& p) {
   p.hmc_steps.clear();
   p.defects.clear();
   p.accepts.clear();
 }
 
-inline void forceflushJTBCSimulationLogs(JTBCSimulationLoggingParams &p,
+inline void forceflushJTBCSimulationLogs(JTBCSimulationLoggingParams& p,
                                          const bool clear_after_flush = false) {
   if (!p.write_to_file) {
     if (KLFT_VERBOSITY > 0)
@@ -446,7 +463,7 @@ inline void forceflushJTBCSimulationLogs(JTBCSimulationLoggingParams &p,
   p.flushed = true;
 }
 
-inline void flushJTBCSimulationLogs(JTBCSimulationLoggingParams &p,
+inline void flushJTBCSimulationLogs(JTBCSimulationLoggingParams& p,
                                     const size_t step,
                                     const bool clear_after_flush = false) {
   if (p.flush != 0 && p.hmc_steps.size() % p.flush == 0) {
@@ -454,4 +471,4 @@ inline void flushJTBCSimulationLogs(JTBCSimulationLoggingParams &p,
   }
 }
 
-} // namespace klft
+}  // namespace klft

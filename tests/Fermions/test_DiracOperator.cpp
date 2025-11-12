@@ -3,10 +3,11 @@
 
 #include "GLOBAL.hpp"
 // #include "FieldTypeHelper.hpp"
-#include "../../include/GDiracOperator.hpp"
+#include "../../include/DiracOperator.hpp"
 #include "../../include/GammaMatrix.hpp"
 #include "../../include/SpinorField.hpp"
 #include "../../include/SpinorFieldLinAlg.hpp"
+#include "../../include/WilsonDiracOperator.hpp"
 #include "../../include/klft.hpp"
 #define HLINE "=========================================================\n"
 
@@ -28,69 +29,71 @@ int main(int argc, char* argv[]) {
   Kokkos::initialize(argc, argv);
   int RETURNVALUE = 0;
   {
-    setVerbosity(5);
+    constexpr int count = 500;
+    setVerbosity(1);
+    setTuning(1);
+    printf("%i", KLFT_TUNING);
     printf("%i", KLFT_VERBOSITY);
     printf("\n=== Testing DiracOperator SU(3)  ===\n");
     printf("\n= Testing hermiticity =\n");
     index_t L0 = 32, L1 = 32, L2 = 32, L3 = 32;
     auto gammas = get_gammas<4>();
     GammaMat<4> gamma5 = get_gamma5();
-    diracParams<4, 4> params(IndexArray<4>{L0, L1, L2, L3}, gammas, gamma5,
-                             -0.5);
+    diracParams params(0.156);
     printf("Lattice Dimension %ix%ix%ix%i \n", L0, L1, L2, L3);
     printf("Generate SpinorFields...\n");
 
     Kokkos::Random_XorShift64_Pool<> random_pool(/*seed=*/1234);
-    deviceSpinorField<3, 4> u(L0, L1, L2, L3, random_pool, 0, 1.0 / 1.41);
-    deviceSpinorField<3, 4> v(L0, L1, L2, L3, random_pool, 0, 1.0 / 1.41);
-    real_t norm = spinor_norm_sq<4, 3, 4>(u);
-    norm *= spinor_norm_sq<4, 3, 4>(v);
-    norm = Kokkos::sqrt(norm);
+    deviceSpinorField<2, 4> u(L0 / 2, L1, L2, L3, random_pool, 0, 1.0 / 1.41);
+    deviceSpinorField<2, 4> Mu(L0, L1, L2, L3, 0);
+    deviceSpinorField<2, 4> temp(L0, L1, L2, L3, 0);
 
     printf("Generating Random Gauge Config\n");
-    deviceGaugeField<4, 3> gauge(L0, L1, L2, L3, random_pool, 1);
+    deviceGaugeField<4, 2> gauge(L0, L1, L2, L3, random_pool, 1);
     printf("Instantiate DiracOperator...\n");
-    HWilsonDiracOperator<DeviceSpinorFieldType<4, 3, 4>,
-                         DeviceGaugeFieldType<4, 3>>
+    EOWilsonDiracOperator<
+        DeviceSpinorFieldType<4, 2, 4, SpinorFieldKind::Standard,
+                              SpinorFieldLayout::Checkerboard>,
+        DeviceGaugeFieldType<4, 2>>
         D(gauge, params);
+    D.s_in_same_parity = u;
+
     printf("Apply DiracOperator...\n");
-
-    deviceSpinorField Mu = D.template apply<Tags::TagD>(u);
-    deviceGaugeField<4, 3> gaugeTrafo(L0, L1, L2, L3, random_pool, 1);
-    tune_and_launch_for<4>(
-        "Gauge Trafo", IndexArray<4>{0, 0, 0, 0}, IndexArray<4>{L0, L1, L2, L3},
-        KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2,
-                      const index_t i3) {
-#pragma unroll
-          for (size_t mu = 0; mu < 4; mu++) {
-            // gauge(i0, i1, i2, i3, mu) = gaugeTrafo(i0, i1, i2, i3, mu);
-            auto temp = gauge(i0, i1, i2, i3, mu);
-            gauge(i0, i1, i2, i3, mu) -= temp;
-            gauge(i0, i1, i2, i3, mu) -= temp;
-          }
-          // Transform spinor u, and Mu
-        });
-
-    deviceSpinorField Mv1 = D.template apply<Tags::TagD>(u);
-    // deviceSpinorField<3, 4> Mu = apply_D<4, 3, 4>(u, gauge, gammas, -0.5);
-    // deviceSpinorField<3, 4> Mv = apply_D<4, 3, 4>(v, gauge, gammas, -0.5);
-    print_spinor(Mv1(0, 0, 0, 0), "Mv1");
-    print_spinor(Mu(0, 0, 0, 0), "Mu");
-    printf("Calculate Scalarproducts...\n");
-    // auto r1 = spinor_dot_product<4, 3, 4>(u, Mv1);
-    // auto r2 = spinor_dot_product<4, 3, 4>(Mu, v);
-
-    // auto r = r1 - r2;
-
-    // real_t r3 = Kokkos::sqrt(r.real() * r.real() + r.imag() * r.imag());
-    // r3 /= norm;
-
-    // if (r3 < 1e-14) {
-    //   printf("Passed hermiticity test with %.21f \n", r3);
-    // } else {
-    //   printf("Error: didn't pass hermiticity test with %.21f \n", r3);
-    //   RETURNVALUE++;
-    // }
+    DeviceSpinorFieldType<4, 2, 4, SpinorFieldKind::Standard,
+                          SpinorFieldLayout::Checkerboard>::type
+        u_norm_out(L0 / 2, L1, L2, L3, 0);
+    DeviceSpinorFieldType<4, 2, 4, SpinorFieldKind::Standard,
+                          SpinorFieldLayout::Checkerboard>::type
+        u_axpy_out(L0 / 2, L1, L2, L3, 0);
+    DeviceSpinorFieldType<4, 2, 4, SpinorFieldKind::Standard,
+                          SpinorFieldLayout::Checkerboard>::type
+        u_axpy_out2(L0 / 2, L1, L2, L3, 0);
+    printf("Launching Kernels for tuning...\n");
+    D.template apply<Tags::TagSe>(u, u_norm_out);
+    axpy<DeviceSpinorFieldType<4, 2, 4>>(1, u_norm_out, u, u_norm_out);
+    printf("Tuning done, now timing...\n");
+    Kokkos::Timer timer;
+    real_t diracTime = std::numeric_limits<real_t>::max();
+    for (size_t i = 0; i < count; i++) {
+      D.template apply<Tags::TagDdaggerD>(u, u_norm_out);
+    }
+    auto diracTime1 = std::min(diracTime, timer.seconds());
+    printf("Se Kernel Time:     %11.4e s\n", diracTime1 / count);
+    printf("Se_normal total time: %11.4e s\n", diracTime1);
+    timer.reset();
+    for (size_t i = 0; i < count; i++) {
+      D.template apply<Tags::TagHoe>(u, u_axpy_out);
+      D.template apply<Tags::TagHeo>(u_axpy_out, u_axpy_out2);
+      axpyG5<DeviceSpinorFieldType<4, 2, 4>>(-params.kappa * params.kappa,
+                                             u_axpy_out2, u, u_axpy_out);
+      D.template apply<Tags::TagHoe>(u, u_axpy_out);
+      D.template apply<Tags::TagHeo>(u_axpy_out, u_axpy_out2);
+      axpyG5<DeviceSpinorFieldType<4, 2, 4>>(-params.kappa * params.kappa,
+                                             u_axpy_out2, u, u_axpy_out);
+    }
+    auto diracTime2 = std::min(diracTime, timer.seconds());
+    printf("Se axpy Kernel Time:     %11.4e s\n", diracTime2 / count);
+    printf("Se_ axpy total time: %11.4e s\n", diracTime2);
   }
   Kokkos::finalize();
   return RETURNVALUE;

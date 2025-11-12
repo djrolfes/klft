@@ -23,7 +23,7 @@
 namespace klft {
 
 class UpdatePosition : public std::enable_shared_from_this<UpdatePosition> {
-public:
+ public:
   UpdatePosition() = delete;
   virtual ~UpdatePosition() = default;
 
@@ -31,13 +31,13 @@ public:
   // using the given step size
   virtual void update(const real_t step_size) = 0;
 
-protected:
+ protected:
   explicit UpdatePosition(int tag) {}
 };
 
 template <size_t rank, size_t Nc>
 class UpdatePositionGauge : public UpdatePosition {
-public:
+ public:
   using GaugeFieldType = typename DeviceGaugeFieldType<rank, Nc>::type;
   using AdjFieldType = typename DeviceAdjFieldType<rank, Nc>::type;
   GaugeFieldType gauge_field;
@@ -47,17 +47,20 @@ public:
   UpdatePositionGauge() = delete;
   ~UpdatePositionGauge() = default;
 
-  UpdatePositionGauge(const GaugeFieldType &gauge_field_,
-                      AdjFieldType &adjoint_field_)
-      : UpdatePosition(0), gauge_field(gauge_field_),
-        adjoint_field(adjoint_field_), eps(0.0) {}
+  UpdatePositionGauge(const GaugeFieldType& gauge_field_,
+                      AdjFieldType& adjoint_field_)
+      : UpdatePosition(0),
+        gauge_field(gauge_field_),
+        adjoint_field(adjoint_field_),
+        eps(0.0) {}
 
   template <typename... Indices>
   KOKKOS_FORCEINLINE_FUNCTION void operator()(const Indices... Idcs) const {
 #pragma unroll
     for (index_t mu = 0; mu < rank; ++mu) {
-      gauge_field(Idcs..., mu) =
-          expoSUN(eps * adjoint_field(Idcs..., mu)) * gauge_field(Idcs..., mu);
+      gauge_field.field(Idcs..., mu) =
+          expoSUN(eps * adjoint_field(Idcs..., mu)) *
+          gauge_field.field(Idcs..., mu);
     }
   }
 
@@ -73,4 +76,4 @@ public:
     Kokkos::fence();
   }
 };
-} // namespace klft
+}  // namespace klft

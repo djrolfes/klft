@@ -24,19 +24,20 @@
 // programming.
 
 #pragma once
+#include <mpi.h>
+
 #include <Kokkos_Core.hpp>
 #include <Kokkos_Random.hpp>
-#include <mpi.h>
 #include <type_traits>
 #ifdef ENABLE_DEBUG
 #include <iostream>
-#define DEBUG_LOG(msg)                                                         \
-  do {                                                                         \
-    std::cout << msg << std::endl;                                             \
+#define DEBUG_LOG(msg)             \
+  do {                             \
+    std::cout << msg << std::endl; \
   } while (0)
 #else
-#define DEBUG_LOG(msg)                                                         \
-  do {                                                                         \
+#define DEBUG_LOG(msg) \
+  do {                 \
   } while (0)
 #endif
 
@@ -44,19 +45,19 @@
 #include <mpi.h>
 #include <stdio.h>
 
-#define DEBUG_MPI_PRINT(...)                                                   \
-  do {                                                                         \
-    int _rank;                                                                 \
-    MPI_Comm_rank(MPI_COMM_WORLD, &_rank);                                     \
-    fprintf(stderr, "[Rank %d] %s:%d (%s): ", _rank, __FILE__, __LINE__,       \
-            __func__);                                                         \
-    fprintf(stderr, __VA_ARGS__);                                              \
-    fprintf(stderr, "\n");                                                     \
-    fflush(stderr);                                                            \
+#define DEBUG_MPI_PRINT(...)                                             \
+  do {                                                                   \
+    int _rank;                                                           \
+    MPI_Comm_rank(MPI_COMM_WORLD, &_rank);                               \
+    fprintf(stderr, "[Rank %d] %s:%d (%s): ", _rank, __FILE__, __LINE__, \
+            __func__);                                                   \
+    fprintf(stderr, __VA_ARGS__);                                        \
+    fprintf(stderr, "\n");                                               \
+    fflush(stderr);                                                      \
   } while (0)
 #else
-#define DEBUG_MPI_PRINT(...)                                                   \
-  do {                                                                         \
+#define DEBUG_MPI_PRINT(...) \
+  do {                       \
   } while (0)
 #endif
 
@@ -78,13 +79,14 @@ using index_t = int;
 using complex_t = Kokkos::complex<real_t>;
 
 // define index_arrays
-template <size_t rank> using IndexArray = Kokkos::Array<index_t, rank>;
+template <size_t rank>
+using IndexArray = Kokkos::Array<index_t, rank>;
 
 // maybe these should be somewhere else
 //  element‐wise addition
 template <size_t rank>
-KOKKOS_INLINE_FUNCTION IndexArray<rank> operator+(IndexArray<rank> const &a,
-                                                  IndexArray<rank> const &b) {
+KOKKOS_INLINE_FUNCTION IndexArray<rank> operator+(IndexArray<rank> const& a,
+                                                  IndexArray<rank> const& b) {
   IndexArray<rank> c;
   for (size_t i = 0; i < rank; ++i)
     c[i] = a[i] + b[i];
@@ -93,8 +95,8 @@ KOKKOS_INLINE_FUNCTION IndexArray<rank> operator+(IndexArray<rank> const &a,
 
 // element‐wise subtraction
 template <size_t rank>
-KOKKOS_INLINE_FUNCTION IndexArray<rank> operator-(IndexArray<rank> const &a,
-                                                  IndexArray<rank> const &b) {
+KOKKOS_INLINE_FUNCTION IndexArray<rank> operator-(IndexArray<rank> const& a,
+                                                  IndexArray<rank> const& b) {
   IndexArray<rank> c;
   for (size_t i = 0; i < rank; ++i)
     c[i] = a[i] - b[i];
@@ -103,8 +105,8 @@ KOKKOS_INLINE_FUNCTION IndexArray<rank> operator-(IndexArray<rank> const &a,
 
 // element‐wise modulo (array % array)
 template <size_t rank>
-KOKKOS_INLINE_FUNCTION IndexArray<rank> operator%(IndexArray<rank> const &a,
-                                                  IndexArray<rank> const &b) {
+KOKKOS_INLINE_FUNCTION IndexArray<rank> operator%(IndexArray<rank> const& a,
+                                                  IndexArray<rank> const& b) {
   IndexArray<rank> c;
   for (size_t i = 0; i < rank; ++i)
     c[i] = a[i] % b[i];
@@ -113,7 +115,7 @@ KOKKOS_INLINE_FUNCTION IndexArray<rank> operator%(IndexArray<rank> const &a,
 
 // optionally: array % scalar
 template <size_t rank>
-KOKKOS_INLINE_FUNCTION IndexArray<rank> operator%(IndexArray<rank> const &a,
+KOKKOS_INLINE_FUNCTION IndexArray<rank> operator%(IndexArray<rank> const& a,
                                                   index_t m) {
   IndexArray<rank> c;
   for (size_t i = 0; i < rank; ++i)
@@ -124,7 +126,7 @@ KOKKOS_INLINE_FUNCTION IndexArray<rank> operator%(IndexArray<rank> const &a,
 // and scalar % array
 template <size_t rank>
 KOKKOS_INLINE_FUNCTION IndexArray<rank> operator%(index_t m,
-                                                  IndexArray<rank> const &a) {
+                                                  IndexArray<rank> const& a) {
   IndexArray<rank> c;
   for (size_t i = 0; i < rank; ++i)
     c[i] = m % a[i];
@@ -132,15 +134,16 @@ KOKKOS_INLINE_FUNCTION IndexArray<rank> operator%(index_t m,
 }
 
 // define groups for gauge fields
-template <typename T> struct Wrapper {
+template <typename T>
+struct Wrapper {
   T data;
 
   // Implicit conversion to T&
   KOKKOS_INLINE_FUNCTION
-  operator T &() { return data; }
+  operator T&() { return data; }
 
   KOKKOS_INLINE_FUNCTION
-  operator const T &() const { return data; }
+  operator const T&() const { return data; }
 
   // Optional: pointer-style access (if T is a View or Array)
   KOKKOS_INLINE_FUNCTION
@@ -159,12 +162,12 @@ template <typename T> struct Wrapper {
 
   // operator[] forwarding
   template <typename Index>
-  constexpr KOKKOS_INLINE_FUNCTION auto &operator[](Index i) {
+  constexpr KOKKOS_INLINE_FUNCTION auto& operator[](Index i) {
     return data[i];
   }
 
   template <typename Index>
-  KOKKOS_INLINE_FUNCTION constexpr const auto &operator[](Index i) const {
+  KOKKOS_INLINE_FUNCTION constexpr const auto& operator[](Index i) const {
     return data[i];
   }
 
@@ -188,17 +191,18 @@ template <size_t Nc>
 using SUN = Wrapper<Kokkos::Array<Kokkos::Array<complex_t, Nc>, Nc>>;
 
 // define Spinor Type
-// info correct dispatch is only guaranteed for    Nd != Nc ! -> Conflicts with
-// SUN.hpp version Maybe via class to make it safe
-template <typename T> struct WrapperSpinor {
+// info correct dispatch is only guaranteed for    Nd != Nc ! -> Conflicts
+// with SUN.hpp version Maybe via class to make it safe
+template <typename T>
+struct WrapperSpinor {
   T data;
 
   // Implicit conversion to T&
   KOKKOS_INLINE_FUNCTION
-  operator T &() { return data; }
+  operator T&() { return data; }
 
   KOKKOS_INLINE_FUNCTION
-  operator const T &() const { return data; }
+  operator const T&() const { return data; }
 
   // Optional: pointer-style access (if T is a View or Array)
   KOKKOS_INLINE_FUNCTION
@@ -217,12 +221,12 @@ template <typename T> struct WrapperSpinor {
 
   // operator[] forwarding
   template <typename Index>
-  constexpr KOKKOS_INLINE_FUNCTION auto &operator[](Index i) {
+  constexpr KOKKOS_INLINE_FUNCTION auto& operator[](Index i) {
     return data[i];
   }
 
   template <typename Index>
-  KOKKOS_INLINE_FUNCTION constexpr const auto &operator[](Index i) const {
+  KOKKOS_INLINE_FUNCTION constexpr const auto& operator[](Index i) const {
     return data[i];
   }
 
@@ -241,7 +245,9 @@ template <typename T> struct WrapperSpinor {
 };
 template <size_t Nc, size_t Nd>
 using Spinor = WrapperSpinor<Kokkos::Array<Kokkos::Array<complex_t, Nc>, Nd>>;
-
+template <size_t Nc, size_t RepDim>
+using PropagatorMatrix =
+    Kokkos::Array<Kokkos::Array<complex_t, RepDim * Nc>, RepDim * Nc>;
 // define field view types
 // by default all views are 4D
 // some dimensions are set to 1 for lower dimensions
@@ -250,22 +256,21 @@ using Spinor = WrapperSpinor<Kokkos::Array<Kokkos::Array<complex_t, Nc>, Nd>>;
 // shouldn't Nd always be 4?
 // Nc is the number of colors
 template <size_t Nc, size_t RepDim>
-using SpinorField = Kokkos::View<Spinor<Nc, RepDim> ****,
+using SpinorField = Kokkos::View<Spinor<Nc, RepDim>****,
                                  Kokkos::MemoryTraits<Kokkos::Restrict>>;
 template <size_t Nc, size_t RepDim>
-using SpinorField3D = Kokkos::View<Spinor<Nc, RepDim> ***,
-                                   Kokkos::MemoryTraits<Kokkos::Restrict>>;
+using SpinorField3D =
+    Kokkos::View<Spinor<Nc, RepDim>***, Kokkos::MemoryTraits<Kokkos::Restrict>>;
 template <size_t Nc, size_t RepDim>
 using SpinorField2D =
-    Kokkos::View<Spinor<Nc, RepDim> **, Kokkos::MemoryTraits<Kokkos::Restrict>>;
-// define adjoint groups of gauge fields
-template <size_t Nc>
-using sun = Kokkos::Array<real_t, std::max<size_t>(Nc *Nc - 1, 1)>;
+    Kokkos::View<Spinor<Nc, RepDim>**, Kokkos::MemoryTraits<Kokkos::Restrict>>;
 
 // define adjoint groups
-template <size_t Nc> constexpr size_t NcAdj = (Nc * Nc > 1) ? Nc * Nc - 1 : 1;
+template <size_t Nc>
+constexpr size_t NcAdj = (Nc * Nc > 1) ? Nc * Nc - 1 : 1;
 
-template <size_t Nc> struct SUNAdj {
+template <size_t Nc>
+struct SUNAdj {
   Kokkos::Array<real_t, NcAdj<Nc>> data;
 
   KOKKOS_INLINE_FUNCTION
@@ -276,12 +281,12 @@ template <size_t Nc> struct SUNAdj {
 
   // operator[] forwarding
   template <typename Index>
-  KOKKOS_INLINE_FUNCTION constexpr auto &operator[](Index i) {
+  KOKKOS_INLINE_FUNCTION constexpr auto& operator[](Index i) {
     return data[i];
   }
 
   template <typename Index>
-  KOKKOS_INLINE_FUNCTION constexpr const auto &operator[](Index i) const {
+  KOKKOS_INLINE_FUNCTION constexpr const auto& operator[](Index i) const {
     return data[i];
   }
 };
@@ -297,254 +302,257 @@ template <size_t Nc> struct SUNAdj {
 // Nc is the number of colors
 template <size_t Nd, size_t Nc>
 using GaugeField =
-    Kokkos::View<SUN<Nc> ****[Nd], Kokkos::MemoryTraits<Kokkos::Restrict>>;
+    Kokkos::View<SUN<Nc>**** [Nd], Kokkos::MemoryTraits<Kokkos::Restrict>>;
+template <size_t Nc, size_t RepDim>
+using Propagator = Kokkos::View<PropagatorMatrix<Nc, RepDim>****,
+                                Kokkos::MemoryTraits<Kokkos::Restrict>>;
 
 template <size_t Nd, size_t Nc>
 using GaugeField3D =
-    Kokkos::View<SUN<Nc> ***[Nd], Kokkos::MemoryTraits<Kokkos::Restrict>>;
+    Kokkos::View<SUN<Nc>*** [Nd], Kokkos::MemoryTraits<Kokkos::Restrict>>;
 
 template <size_t Nd, size_t Nc>
 using GaugeField2D =
-    Kokkos::View<SUN<Nc> **[Nd], Kokkos::MemoryTraits<Kokkos::Restrict>>;
+    Kokkos::View<SUN<Nc>** [Nd], Kokkos::MemoryTraits<Kokkos::Restrict>>;
 
 template <size_t Nd, size_t Nc>
 using SUNAdjField =
-    Kokkos::View<SUNAdj<Nc> ****[Nd], Kokkos::MemoryTraits<Kokkos::Restrict>>;
+    Kokkos::View<SUNAdj<Nc>**** [Nd], Kokkos::MemoryTraits<Kokkos::Restrict>>;
 
 template <size_t Nd, size_t Nc>
 using SUNAdjField3D =
-    Kokkos::View<SUNAdj<Nc> ***[Nd], Kokkos::MemoryTraits<Kokkos::Restrict>>;
+    Kokkos::View<SUNAdj<Nc>*** [Nd], Kokkos::MemoryTraits<Kokkos::Restrict>>;
 
 template <size_t Nd, size_t Nc>
 using SUNAdjField2D =
-    Kokkos::View<SUNAdj<Nc> **[Nd], Kokkos::MemoryTraits<Kokkos::Restrict>>;
+    Kokkos::View<SUNAdj<Nc>** [Nd], Kokkos::MemoryTraits<Kokkos::Restrict>>;
 
 template <size_t Nc>
 using SUNField =
-    Kokkos::View<SUN<Nc> ****, Kokkos::MemoryTraits<Kokkos::Restrict>>;
+    Kokkos::View<SUN<Nc>****, Kokkos::MemoryTraits<Kokkos::Restrict>>;
 
 template <size_t Nc>
 using SUNField3D =
-    Kokkos::View<SUN<Nc> ***, Kokkos::MemoryTraits<Kokkos::Restrict>>;
+    Kokkos::View<SUN<Nc>***, Kokkos::MemoryTraits<Kokkos::Restrict>>;
 
 template <size_t Nc>
 using SUNField2D =
-    Kokkos::View<SUN<Nc> **, Kokkos::MemoryTraits<Kokkos::Restrict>>;
+    Kokkos::View<SUN<Nc>**, Kokkos::MemoryTraits<Kokkos::Restrict>>;
 
 using Field =
-    Kokkos::View<complex_t ****, Kokkos::MemoryTraits<Kokkos::Restrict>>;
+    Kokkos::View<complex_t****, Kokkos::MemoryTraits<Kokkos::Restrict>>;
 
 using Field3D =
-    Kokkos::View<complex_t ***, Kokkos::MemoryTraits<Kokkos::Restrict>>;
+    Kokkos::View<complex_t***, Kokkos::MemoryTraits<Kokkos::Restrict>>;
 
 using Field2D =
-    Kokkos::View<complex_t **, Kokkos::MemoryTraits<Kokkos::Restrict>>;
+    Kokkos::View<complex_t**, Kokkos::MemoryTraits<Kokkos::Restrict>>;
 
 using Field1D =
-    Kokkos::View<complex_t *, Kokkos::MemoryTraits<Kokkos::Restrict>>;
+    Kokkos::View<complex_t*, Kokkos::MemoryTraits<Kokkos::Restrict>>;
 
 using ScalarField =
-    Kokkos::View<real_t ****, Kokkos::MemoryTraits<Kokkos::Restrict>>;
+    Kokkos::View<real_t****, Kokkos::MemoryTraits<Kokkos::Restrict>>;
 
 using ScalarField3D =
-    Kokkos::View<real_t ***, Kokkos::MemoryTraits<Kokkos::Restrict>>;
+    Kokkos::View<real_t***, Kokkos::MemoryTraits<Kokkos::Restrict>>;
 
 using ScalarField2D =
-    Kokkos::View<real_t **, Kokkos::MemoryTraits<Kokkos::Restrict>>;
+    Kokkos::View<real_t**, Kokkos::MemoryTraits<Kokkos::Restrict>>;
 
 using ScalarField1D =
-    Kokkos::View<real_t *, Kokkos::MemoryTraits<Kokkos::Restrict>>;
+    Kokkos::View<real_t*, Kokkos::MemoryTraits<Kokkos::Restrict>>;
 
 template <size_t Nd>
 using LinkScalarField =
-    Kokkos::View<real_t ****[Nd], Kokkos::MemoryTraits<Kokkos::Restrict>>;
+    Kokkos::View<real_t**** [Nd], Kokkos::MemoryTraits<Kokkos::Restrict>>;
 
 template <size_t Nd>
 using LinkScalarField3D =
-    Kokkos::View<real_t ***[Nd], Kokkos::MemoryTraits<Kokkos::Restrict>>;
+    Kokkos::View<real_t*** [Nd], Kokkos::MemoryTraits<Kokkos::Restrict>>;
 
 template <size_t Nd>
 using LinkScalarField2D =
-    Kokkos::View<real_t **[Nd], Kokkos::MemoryTraits<Kokkos::Restrict>>;
+    Kokkos::View<real_t** [Nd], Kokkos::MemoryTraits<Kokkos::Restrict>>;
 
 // define corresponding constant fields
 #if defined(KOKKOS_ENABLE_CUDA)
 template <size_t Nc, size_t RepDim>
 using constSpinorField =
-    Kokkos::View<const Spinor<Nc, RepDim> ****,
+    Kokkos::View<const Spinor<Nc, RepDim>****,
                  Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
 template <size_t Nc, size_t RepDim>
 using constSpinorField3D =
-    Kokkos::View<const Spinor<Nc, RepDim> ***,
+    Kokkos::View<const Spinor<Nc, RepDim>***,
                  Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
 template <size_t Nc, size_t RepDim>
 using constSpinorField2D =
-    Kokkos::View<const Spinor<Nc, RepDim> **,
+    Kokkos::View<const Spinor<Nc, RepDim>**,
                  Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
 
 template <size_t Nd, size_t Nc>
 using constGaugeField =
-    Kokkos::View<const SUN<Nc> ****[Nd],
+    Kokkos::View<const SUN<Nc>**** [Nd],
                  Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
 
 template <size_t Nd, size_t Nc>
 using constGaugeField3D =
-    Kokkos::View<const SUN<Nc> ***[Nd],
+    Kokkos::View<const SUN<Nc>*** [Nd],
                  Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
 
 template <size_t Nd, size_t Nc>
 using constGaugeField2D =
-    Kokkos::View<const SUN<Nc> **[Nd],
+    Kokkos::View<const SUN<Nc>** [Nd],
                  Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
 
 template <size_t Nd, size_t Nc>
 using constSUNAdjField =
-    Kokkos::View<const SUNAdj<Nc> ****[Nd],
+    Kokkos::View<const SUNAdj<Nc>**** [Nd],
                  Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
 
 template <size_t Nd, size_t Nc>
 using constSUNAdjField3D =
-    Kokkos::View<const SUNAdj<Nc> ****[Nd],
+    Kokkos::View<const SUNAdj<Nc>**** [Nd],
                  Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
 
 template <size_t Nd, size_t Nc>
 using constSUNAdjField2D =
-    Kokkos::View<const SUNAdj<Nc> ****[Nd],
+    Kokkos::View<const SUNAdj<Nc>**** [Nd],
                  Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
 
 template <size_t Nc>
-using constSUNField = Kokkos::View<const SUN<Nc> ****,
-                                   Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
+using constSUNField =
+    Kokkos::View<const SUN<Nc>****, Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
 
 template <size_t Nc>
 using constSUNField3D =
-    Kokkos::View<const SUN<Nc> ***, Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
+    Kokkos::View<const SUN<Nc>***, Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
 
 template <size_t Nc>
 using constSUNField2D =
-    Kokkos::View<const SUN<Nc> **, Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
+    Kokkos::View<const SUN<Nc>**, Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
 
-using constField = Kokkos::View<const complex_t ****,
+using constField = Kokkos::View<const complex_t****,
                                 Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
 
-using constField3D = Kokkos::View<const complex_t ***,
+using constField3D = Kokkos::View<const complex_t***,
                                   Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
 
-using constField2D = Kokkos::View<const complex_t **,
-                                  Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
+using constField2D =
+    Kokkos::View<const complex_t**, Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
 
 using constField1D =
-    Kokkos::View<const complex_t *, Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
+    Kokkos::View<const complex_t*, Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
 
 using constScalarField =
-    Kokkos::View<const real_t ****, Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
+    Kokkos::View<const real_t****, Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
 
 using constScalarField3D =
-    Kokkos::View<const real_t ***, Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
+    Kokkos::View<const real_t***, Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
 
 using constScalarField2D =
-    Kokkos::View<const real_t **, Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
+    Kokkos::View<const real_t**, Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
 
 using constScalarField1D =
-    Kokkos::View<const real_t *, Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
+    Kokkos::View<const real_t*, Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
 
 template <size_t Nd>
 using constLinkScalarField =
-    Kokkos::View<const real_t ****[Nd],
+    Kokkos::View<const real_t**** [Nd],
                  Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
 
 template <size_t Nd>
 using constLinkScalarField3D =
-    Kokkos::View<const real_t ***[Nd],
+    Kokkos::View<const real_t*** [Nd],
                  Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
 
 template <size_t Nd>
 using constLinkScalarField2D =
-    Kokkos::View<const real_t **[Nd],
+    Kokkos::View<const real_t** [Nd],
                  Kokkos::MemoryTraits<Kokkos::RandomAccess>>;
 
 #else
 template <size_t Nc, size_t RepDim>
-using constSpinorField = Kokkos::View<const Spinor<Nc, RepDim> ****,
+using constSpinorField = Kokkos::View<const Spinor<Nc, RepDim>****,
                                       Kokkos::MemoryTraits<Kokkos::Restrict>>;
 template <size_t Nc, size_t RepDim>
-using constSpinorField3D = Kokkos::View<const Spinor<Nc, RepDim> ***,
+using constSpinorField3D = Kokkos::View<const Spinor<Nc, RepDim>***,
                                         Kokkos::MemoryTraits<Kokkos::Restrict>>;
 template <size_t Nc, size_t RepDim>
-using constSpinorField2D = Kokkos::View<const Spinor<Nc, RepDim> **,
+using constSpinorField2D = Kokkos::View<const Spinor<Nc, RepDim>**,
                                         Kokkos::MemoryTraits<Kokkos::Restrict>>;
 
 template <size_t Nd, size_t Nc>
-using constGaugeField = Kokkos::View<const SUN<Nc> ****[Nd],
+using constGaugeField = Kokkos::View<const SUN<Nc>**** [Nd],
                                      Kokkos::MemoryTraits<Kokkos::Restrict>>;
 
 template <size_t Nd, size_t Nc>
 using constGaugeField3D =
-    Kokkos::View<const SUN<Nc> ***[Nd], Kokkos::MemoryTraits<Kokkos::Restrict>>;
+    Kokkos::View<const SUN<Nc>*** [Nd], Kokkos::MemoryTraits<Kokkos::Restrict>>;
 
 template <size_t Nd, size_t Nc>
 using constGaugeField2D =
-    Kokkos::View<const SUN<Nc> **[Nd], Kokkos::MemoryTraits<Kokkos::Restrict>>;
+    Kokkos::View<const SUN<Nc>** [Nd], Kokkos::MemoryTraits<Kokkos::Restrict>>;
 
 template <size_t Nd, size_t Nc>
-using constSUNAdjField = Kokkos::View<const SUNAdj<Nc> ****[Nd],
+using constSUNAdjField = Kokkos::View<const SUNAdj<Nc>**** [Nd],
                                       Kokkos::MemoryTraits<Kokkos::Restrict>>;
 
 template <size_t Nd, size_t Nc>
-using constSUNAdjField3D = Kokkos::View<const SUNAdj<Nc> ****[Nd],
+using constSUNAdjField3D = Kokkos::View<const SUNAdj<Nc>**** [Nd],
                                         Kokkos::MemoryTraits<Kokkos::Restrict>>;
 
 template <size_t Nd, size_t Nc>
-using constSUNAdjField2D = Kokkos::View<const SUNAdj<Nc> ****[Nd],
+using constSUNAdjField2D = Kokkos::View<const SUNAdj<Nc>**** [Nd],
                                         Kokkos::MemoryTraits<Kokkos::Restrict>>;
 
 template <size_t Nc>
 using constSUNField =
-    Kokkos::View<const SUN<Nc> ****, Kokkos::MemoryTraits<Kokkos::Restrict>>;
+    Kokkos::View<const SUN<Nc>****, Kokkos::MemoryTraits<Kokkos::Restrict>>;
 
 template <size_t Nc>
 using constSUNField3D =
-    Kokkos::View<const SUN<Nc> ***, Kokkos::MemoryTraits<Kokkos::Restrict>>;
+    Kokkos::View<const SUN<Nc>***, Kokkos::MemoryTraits<Kokkos::Restrict>>;
 
 template <size_t Nc>
 using constSUNField2D =
-    Kokkos::View<const SUN<Nc> **, Kokkos::MemoryTraits<Kokkos::Restrict>>;
+    Kokkos::View<const SUN<Nc>**, Kokkos::MemoryTraits<Kokkos::Restrict>>;
 
 using constField =
-    Kokkos::View<const complex_t ****, Kokkos::MemoryTraits<Kokkos::Restrict>>;
+    Kokkos::View<const complex_t****, Kokkos::MemoryTraits<Kokkos::Restrict>>;
 
 using constField3D =
-    Kokkos::View<const complex_t ***, Kokkos::MemoryTraits<Kokkos::Restrict>>;
+    Kokkos::View<const complex_t***, Kokkos::MemoryTraits<Kokkos::Restrict>>;
 
 using constField2D =
-    Kokkos::View<const complex_t **, Kokkos::MemoryTraits<Kokkos::Restrict>>;
+    Kokkos::View<const complex_t**, Kokkos::MemoryTraits<Kokkos::Restrict>>;
 
 using constField1D =
-    Kokkos::View<const complex_t *, Kokkos::MemoryTraits<Kokkos::Restrict>>;
+    Kokkos::View<const complex_t*, Kokkos::MemoryTraits<Kokkos::Restrict>>;
 
 using constScalarField =
-    Kokkos::View<const real_t ****, Kokkos::MemoryTraits<Kokkos::Restrict>>;
+    Kokkos::View<const real_t****, Kokkos::MemoryTraits<Kokkos::Restrict>>;
 
 using constScalarField3D =
-    Kokkos::View<const real_t ***, Kokkos::MemoryTraits<Kokkos::Restrict>>;
+    Kokkos::View<const real_t***, Kokkos::MemoryTraits<Kokkos::Restrict>>;
 
 using constScalarField2D =
-    Kokkos::View<const real_t **, Kokkos::MemoryTraits<Kokkos::Restrict>>;
+    Kokkos::View<const real_t**, Kokkos::MemoryTraits<Kokkos::Restrict>>;
 
 using constScalarField1D =
-    Kokkos::View<const real_t *, Kokkos::MemoryTraits<Kokkos::Restrict>>;
+    Kokkos::View<const real_t*, Kokkos::MemoryTraits<Kokkos::Restrict>>;
 
 template <size_t Nd>
 using constLinkScalarField =
-    Kokkos::View<const real_t ****[Nd], Kokkos::MemoryTraits<Kokkos::Restrict>>;
+    Kokkos::View<const real_t**** [Nd], Kokkos::MemoryTraits<Kokkos::Restrict>>;
 
 template <size_t Nd>
 using constLinkScalarField3D =
-    Kokkos::View<const real_t ***[Nd], Kokkos::MemoryTraits<Kokkos::Restrict>>;
+    Kokkos::View<const real_t*** [Nd], Kokkos::MemoryTraits<Kokkos::Restrict>>;
 
 template <size_t Nd>
 using constLinkScalarField2D =
-    Kokkos::View<const real_t **[Nd], Kokkos::MemoryTraits<Kokkos::Restrict>>;
+    Kokkos::View<const real_t** [Nd], Kokkos::MemoryTraits<Kokkos::Restrict>>;
 
 #endif
 
@@ -553,11 +561,13 @@ template <size_t rank, class WorkTag = void>
 using Policy = Kokkos::MDRangePolicy<WorkTag, Kokkos::Rank<rank>>;
 
 // special case for 1D
-template <class WorkTag = void> using Policy1D = Kokkos::RangePolicy<WorkTag>;
+template <class WorkTag = void>
+using Policy1D = Kokkos::RangePolicy<WorkTag>;
 
 // define a global zero field generator
 // for the color x color matrix
-template <size_t Nc> constexpr KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> zeroSUN() {
+template <size_t Nc>
+constexpr KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> zeroSUN() {
   SUN<Nc> zero;
 #pragma unroll
   for (index_t c1 = 0; c1 < Nc; ++c1) {
@@ -568,7 +578,20 @@ template <size_t Nc> constexpr KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> zeroSUN() {
   }
   return zero;
 }
-
+// define a global zero generator
+// for spinor
+template <size_t Nc, size_t Nd>
+constexpr KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, Nd> zeroSpinor() {
+  Spinor<Nc, Nd> zero;
+#pragma unroll
+  for (size_t i = 0; i < Nd; ++i) {
+#pragma unroll
+    for (size_t j = 0; j < Nc; ++j) {
+      zero[i][j] = complex_t(0.0, 0.0);
+    }
+  }
+  return zero;
+}
 // define a global identity field generator
 // for the color x color matrix
 template <size_t Nc>
@@ -582,9 +605,9 @@ constexpr KOKKOS_FORCEINLINE_FUNCTION SUN<Nc> identitySUN() {
 }
 
 template <typename T, size_t N>
-KOKKOS_FORCEINLINE_FUNCTION Kokkos::Array<Kokkos::Array<T, N>, N>
-operator*(const Kokkos::Array<Kokkos::Array<T, N>, N> &a,
-          const Kokkos::Array<Kokkos::Array<T, N>, N> &b) {
+KOKKOS_FORCEINLINE_FUNCTION Kokkos::Array<Kokkos::Array<T, N>, N> operator*(
+    const Kokkos::Array<Kokkos::Array<T, N>, N>& a,
+    const Kokkos::Array<Kokkos::Array<T, N>, N>& b) {
   Kokkos::Array<Kokkos::Array<T, N>, N> c;
 #pragma unroll
   for (size_t i = 0; i < N; ++i) {
@@ -601,8 +624,9 @@ operator*(const Kokkos::Array<Kokkos::Array<T, N>, N> &a,
 }
 
 template <typename T, typename U, size_t N>
-KOKKOS_FORCEINLINE_FUNCTION Kokkos::Array<Kokkos::Array<T, N>, N>
-operator*(const Kokkos::Array<Kokkos::Array<T, N>, N> &a, const U &b) {
+KOKKOS_FORCEINLINE_FUNCTION Kokkos::Array<Kokkos::Array<T, N>, N> operator*(
+    const Kokkos::Array<Kokkos::Array<T, N>, N>& a,
+    const U& b) {
   Kokkos::Array<Kokkos::Array<T, N>, N> c;
 #pragma unroll
   for (size_t i = 0; i < N; ++i) {
@@ -614,8 +638,23 @@ operator*(const Kokkos::Array<Kokkos::Array<T, N>, N> &a, const U &b) {
   return c;
 }
 
+// define a global one generator
+// for spinor
+template <size_t Nc, size_t Nd>
+constexpr KOKKOS_FORCEINLINE_FUNCTION Spinor<Nc, Nd> oneSpinor() {
+  Spinor<Nc, Nd> id = zeroSpinor<Nc, Nd>();
+#pragma unroll
+  for (size_t i = 0; i < Nd; ++i) {
+#pragma unroll
+    for (size_t j = 0; j < Nc; ++j) {
+      id[i][j] = complex_t(1.0, 0.0);
+    }
+  }
+  return id;
+}
 // --- real_t ---
-template <typename T> inline MPI_Datatype mpi_real_type() {
+template <typename T>
+inline MPI_Datatype mpi_real_type() {
   using base_t = std::remove_cv_t<std::remove_reference_t<T>>;
   if constexpr (std::is_same_v<base_t, double>)
     return MPI_DOUBLE;
@@ -630,7 +669,8 @@ template <typename T> inline MPI_Datatype mpi_real_type() {
 }
 
 // --- index_t ---
-template <typename T> inline MPI_Datatype mpi_index_type() {
+template <typename T>
+inline MPI_Datatype mpi_index_type() {
   using base_t = std::remove_cv_t<std::remove_reference_t<T>>;
   if constexpr (std::is_same_v<base_t, int>)
     return MPI_INT;
@@ -647,7 +687,8 @@ template <typename T> inline MPI_Datatype mpi_index_type() {
 }
 
 // --- size_t ---
-template <typename T> inline MPI_Datatype mpi_size_type() {
+template <typename T>
+inline MPI_Datatype mpi_size_type() {
   using base_t = std::remove_cv_t<std::remove_reference_t<T>>;
   if constexpr (std::is_same_v<base_t, unsigned int>)
     return MPI_UNSIGNED;
@@ -662,7 +703,8 @@ template <typename T> inline MPI_Datatype mpi_size_type() {
 }
 
 // --- complex_t ---
-template <typename T> inline MPI_Datatype mpi_complex_type() {
+template <typename T>
+inline MPI_Datatype mpi_complex_type() {
   using base_t = std::remove_cv_t<std::remove_reference_t<T>>;
   if constexpr (std::is_same_v<base_t, std::complex<float>> ||
                 std::is_same_v<base_t, Kokkos::complex<float>>) {
@@ -680,10 +722,18 @@ template <typename T> inline MPI_Datatype mpi_complex_type() {
 }
 
 // Concrete instantiations for your typedefs:
-inline MPI_Datatype mpi_real_t() { return mpi_real_type<real_t>(); }
-inline MPI_Datatype mpi_index_t() { return mpi_index_type<index_t>(); }
-inline MPI_Datatype mpi_size_t() { return mpi_size_type<size_t>(); }
-inline MPI_Datatype mpi_complex_t() { return mpi_complex_type<complex_t>(); }
+inline MPI_Datatype mpi_real_t() {
+  return mpi_real_type<real_t>();
+}
+inline MPI_Datatype mpi_index_t() {
+  return mpi_index_type<index_t>();
+}
+inline MPI_Datatype mpi_size_t() {
+  return mpi_size_type<size_t>();
+}
+inline MPI_Datatype mpi_complex_t() {
+  return mpi_complex_type<complex_t>();
+}
 
 // global verbosity level
 // 0 = silent
@@ -694,13 +744,17 @@ inline MPI_Datatype mpi_complex_t() { return mpi_complex_type<complex_t>(); }
 // 5 = trace
 inline int KLFT_VERBOSITY = 0;
 
-inline void setVerbosity(int v) { KLFT_VERBOSITY = v; }
+inline void setVerbosity(int v) {
+  KLFT_VERBOSITY = v;
+}
 
 // variable that enables tuning
 // 0 = no tuning
 // 1 = tuning enabled
 inline int KLFT_TUNING = 0;
 
-inline void setTuning(int t) { KLFT_TUNING = t; }
+inline void setTuning(int t) {
+  KLFT_TUNING = t;
+}
 
-} // namespace klft
+}  // namespace klft

@@ -18,17 +18,18 @@
 //******************************************************************************/
 
 #pragma once
+#include <unistd.h>
+
 #include "FieldTypeHelper.hpp"
 #include "GLOBAL.hpp"
-#include <unistd.h>
 
 namespace klft {
 
 // TODO: move these operators somewhere more appropriate
 
 template <typename T, size_t N>
-KOKKOS_FORCEINLINE_FUNCTION Kokkos::Array<Kokkos::Array<T, N>, N>
-operator-(const Kokkos::Array<Kokkos::Array<T, N>, N> &a) {
+KOKKOS_FORCEINLINE_FUNCTION Kokkos::Array<Kokkos::Array<T, N>, N> operator-(
+    const Kokkos::Array<Kokkos::Array<T, N>, N>& a) {
   Kokkos::Array<Kokkos::Array<T, N>, N> c;
 #pragma unroll
   for (size_t i = 0; i < N; ++i) {
@@ -42,8 +43,8 @@ operator-(const Kokkos::Array<Kokkos::Array<T, N>, N> &a) {
 
 // get the imaginary parts of an SUN matrix
 template <size_t N>
-KOKKOS_FORCEINLINE_FUNCTION Kokkos::Array<Kokkos::Array<real_t, N>, N>
-imag(const SUN<N> &in) {
+KOKKOS_FORCEINLINE_FUNCTION Kokkos::Array<Kokkos::Array<real_t, N>, N> imag(
+    const SUN<N>& in) {
   Kokkos::Array<Kokkos::Array<real_t, N>, N> out{0};
 #pragma unroll
   for (int i = 0; i < N; ++i) {
@@ -57,8 +58,8 @@ imag(const SUN<N> &in) {
 
 // get the real parts of an SUN matrix
 template <size_t N>
-KOKKOS_FORCEINLINE_FUNCTION Kokkos::Array<Kokkos::Array<real_t, N>, N>
-real(const SUN<N> &in) {
+KOKKOS_FORCEINLINE_FUNCTION Kokkos::Array<Kokkos::Array<real_t, N>, N> real(
+    const SUN<N>& in) {
   Kokkos::Array<Kokkos::Array<real_t, N>, N> out{0};
 #pragma unroll
   for (int i = 0; i < N; ++i) {
@@ -71,8 +72,8 @@ real(const SUN<N> &in) {
 }
 
 template <size_t N>
-KOKKOS_FORCEINLINE_FUNCTION Kokkos::Array<Kokkos::Array<real_t, N>, N>
-imag(const Kokkos::Array<Kokkos::Array<complex_t, N>, N> &in) {
+KOKKOS_FORCEINLINE_FUNCTION Kokkos::Array<Kokkos::Array<real_t, N>, N> imag(
+    const Kokkos::Array<Kokkos::Array<complex_t, N>, N>& in) {
   Kokkos::Array<Kokkos::Array<real_t, N>, N> out{0};
 #pragma unroll
   for (int i = 0; i < N; ++i) {
@@ -86,8 +87,8 @@ imag(const Kokkos::Array<Kokkos::Array<complex_t, N>, N> &in) {
 
 // get the real parts of an SUN matrix
 template <size_t N>
-KOKKOS_FORCEINLINE_FUNCTION Kokkos::Array<Kokkos::Array<real_t, N>, N>
-real(const Kokkos::Array<Kokkos::Array<complex_t, N>, N> &in) {
+KOKKOS_FORCEINLINE_FUNCTION Kokkos::Array<Kokkos::Array<real_t, N>, N> real(
+    const Kokkos::Array<Kokkos::Array<complex_t, N>, N>& in) {
   Kokkos::Array<Kokkos::Array<real_t, N>, N> out{0};
 #pragma unroll
   for (int i = 0; i < N; ++i) {
@@ -102,7 +103,7 @@ real(const Kokkos::Array<Kokkos::Array<complex_t, N>, N> &in) {
 // return the trace of a RealMatrix
 template <size_t N>
 KOKKOS_FORCEINLINE_FUNCTION real_t
-trace(const Kokkos::Array<Kokkos::Array<real_t, N>, N> &in) {
+trace(const Kokkos::Array<Kokkos::Array<real_t, N>, N>& in) {
   real_t out{0};
 #pragma unroll
   for (int i = 0; i < N; ++i) {
@@ -113,7 +114,7 @@ trace(const Kokkos::Array<Kokkos::Array<real_t, N>, N> &in) {
 
 template <size_t N>
 KOKKOS_FORCEINLINE_FUNCTION complex_t
-trace(const Kokkos::Array<Kokkos::Array<complex_t, N>, N> &in) {
+trace(const Kokkos::Array<Kokkos::Array<complex_t, N>, N>& in) {
   complex_t out{0};
 #pragma unroll
   for (int i = 0; i < N; ++i) {
@@ -124,7 +125,7 @@ trace(const Kokkos::Array<Kokkos::Array<complex_t, N>, N> &in) {
 
 template <size_t N>
 KOKKOS_FORCEINLINE_FUNCTION real_t
-retrace(const Kokkos::Array<Kokkos::Array<complex_t, N>, N> &in) {
+retrace(const Kokkos::Array<Kokkos::Array<complex_t, N>, N>& in) {
   complex_t out{0};
 #pragma unroll
   for (int i = 0; i < N; ++i) {
@@ -135,7 +136,7 @@ retrace(const Kokkos::Array<Kokkos::Array<complex_t, N>, N> &in) {
 
 template <size_t N>
 KOKKOS_FORCEINLINE_FUNCTION real_t
-imtrace(const Kokkos::Array<Kokkos::Array<complex_t, N>, N> &in) {
+imtrace(const Kokkos::Array<Kokkos::Array<complex_t, N>, N>& in) {
   complex_t out{0};
 #pragma unroll
   for (int i = 0; i < N; ++i) {
@@ -144,7 +145,8 @@ imtrace(const Kokkos::Array<Kokkos::Array<complex_t, N>, N> &in) {
   return out.imag();
 }
 
-template <typename DGaugeFieldType> struct FieldStrengthTensor {
+template <typename DGaugeFieldType>
+struct FieldStrengthTensor {
   // this kernel is defined for rank = Nd
   constexpr static const size_t Nd =
       DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank;
@@ -174,12 +176,15 @@ template <typename DGaugeFieldType> struct FieldStrengthTensor {
       : g_in(g_in), dimensions(g_in.dimensions) {}
 
   template <typename indexType>
-  KOKKOS_FORCEINLINE_FUNCTION SUNAdj<Nc>
-  operator()(CloverDef, const indexType i0, const indexType i1,
-             const indexType i2, const indexType i3, index_t mu,
-             index_t nu) const {
-    // implemented according to https://doi.org/10.1140/epjc/s10052-020-7984-9
-    // (21)
+  KOKKOS_FORCEINLINE_FUNCTION SUNAdj<Nc> operator()(CloverDef,
+                                                    const indexType i0,
+                                                    const indexType i1,
+                                                    const indexType i2,
+                                                    const indexType i3,
+                                                    index_t mu,
+                                                    index_t nu) const {
+    // implemented according to
+    // https://doi.org/10.1140/epjc/s10052-020-7984-9 (21)
 
     SUN<Nc> P_munu = zeroSUN<Nc>();
     const IndexArray<Nd> x{static_cast<index_t>(i0), static_cast<index_t>(i1),
@@ -224,10 +229,13 @@ template <typename DGaugeFieldType> struct FieldStrengthTensor {
   }
 
   template <typename indexType>
-  KOKKOS_FORCEINLINE_FUNCTION SUNAdj<Nc>
-  operator()(RectangleDef, const indexType i0, const indexType i1,
-             const indexType i2, const indexType i3, index_t mu,
-             index_t nu) const {
+  KOKKOS_FORCEINLINE_FUNCTION SUNAdj<Nc> operator()(RectangleDef,
+                                                    const indexType i0,
+                                                    const indexType i1,
+                                                    const indexType i2,
+                                                    const indexType i3,
+                                                    index_t mu,
+                                                    index_t nu) const {
     // implemented according to https://doi.org/10.1140/epjc/s10052-020-7984-9
     // (24)
 
@@ -323,4 +331,4 @@ template <typename DGaugeFieldType> struct FieldStrengthTensor {
   }
 };
 
-} // namespace klft
+}  // namespace klft

@@ -40,7 +40,8 @@ namespace klft {
 // by default, the function must return the number of
 // accepted updates
 
-template <size_t rank, size_t Nc, class RNG> struct MetropolisGaugeField {
+template <size_t rank, size_t Nc, class RNG>
+struct MetropolisGaugeField {
   // we strictly work with Nd = rank
   constexpr static const size_t Nd = rank;
   // define the gauge field type
@@ -58,13 +59,18 @@ template <size_t rank, size_t Nc, class RNG> struct MetropolisGaugeField {
   // sublattice definitions
   const Kokkos::Array<bool, rank> oddeven;
   // constructor
-  MetropolisGaugeField(const GaugeFieldType &g_in,
-                       const MetropolisParams &params,
-                       const IndexArray<rank> &dimensions,
-                       const ScalarFieldType &nAccepted,
-                       const Kokkos::Array<bool, rank> &oddeven, const RNG &rng)
-      : g_in(g_in), params(params), oddeven(oddeven), rng(rng),
-        dimensions(dimensions), nAccepted(nAccepted) {}
+  MetropolisGaugeField(const GaugeFieldType& g_in,
+                       const MetropolisParams& params,
+                       const IndexArray<rank>& dimensions,
+                       const ScalarFieldType& nAccepted,
+                       const Kokkos::Array<bool, rank>& oddeven,
+                       const RNG& rng)
+      : g_in(g_in),
+        params(params),
+        oddeven(oddeven),
+        rng(rng),
+        dimensions(dimensions),
+        nAccepted(nAccepted) {}
 
   template <typename... Indices>
   KOKKOS_FORCEINLINE_FUNCTION void operator()(const Indices... Idcs) const {
@@ -114,12 +120,13 @@ template <size_t rank, size_t Nc, class RNG> struct MetropolisGaugeField {
 // metropolis sweep for SUN gauge fields
 // returns acceptance rate
 template <size_t rank, size_t Nc, class RNG>
-real_t sweep_Metropolis(typename DeviceGaugeFieldType<rank, Nc>::type &g_in,
-                        const MetropolisParams &params, const RNG &rng) {
+real_t sweep_Metropolis(typename DeviceGaugeFieldType<rank, Nc>::type& g_in,
+                        const MetropolisParams& params,
+                        const RNG& rng) {
   // this works strictly for Nd = rank
   constexpr static const size_t Nd = rank;
   // get start and end indices
-  const auto &dimensions = g_in.field.layout().dimension;
+  const auto& dimensions = g_in.field.layout().dimension;
   IndexArray<rank> start;
   IndexArray<rank> end;
   for (index_t i = 0; i < Nd; ++i) {
@@ -156,9 +163,9 @@ real_t sweep_Metropolis(typename DeviceGaugeFieldType<rank, Nc>::type &g_in,
       printf("Current number of accepted steps: %11.6f\n", nAccepted.sum());
     }
     // launch the kernel
-    tune_and_launch_for<rank>("sweep_Metropolis_GaugeField_sublat_" +
-                                  std::to_string(i),
-                              start, end, metropolis);
+    tune_and_launch_for<rank>(
+        "sweep_Metropolis_GaugeField_sublat_" + std::to_string(i), start, end,
+        metropolis);
     Kokkos::fence();
   }
   // reduce the number of accepted updates
@@ -177,13 +184,14 @@ real_t sweep_Metropolis(typename DeviceGaugeFieldType<rank, Nc>::type &g_in,
 }
 
 template <size_t rank, size_t Nc, class RNG, class GaugeFieldType>
-int run_metropolis(GaugeFieldType &g_in,
-                   const MetropolisParams &metropolisParams,
-                   GaugeObservableParams &gaugeObsParams, const RNG &rng) {
+int run_metropolis(GaugeFieldType& g_in,
+                   const MetropolisParams& metropolisParams,
+                   GaugeObservableParams& gaugeObsParams,
+                   const RNG& rng) {
   // this algorithm is strictly for Nd = rank
   constexpr const size_t Nd = rank;
   // get the dimensions
-  const auto &dimensions = g_in.dimensions;
+  const auto& dimensions = g_in.dimensions;
   // first we check that all the parameters are correct
   assert(metropolisParams.Ndims == Nd);
   assert(metropolisParams.Nd == Nd);
@@ -224,49 +232,49 @@ int run_metropolis(GaugeFieldType &g_in,
 // define run_metropolis for all dimensionalities
 // and gauge groups
 // 2D U(1)
-template int run_metropolis<2, 1>(deviceGaugeField2D<2, 1> &g_in,
-                                  const MetropolisParams &metropolisParams,
-                                  GaugeObservableParams &gaugeObsParams,
-                                  const RNGType &rng);
+template int run_metropolis<2, 1>(deviceGaugeField2D<2, 1>& g_in,
+                                  const MetropolisParams& metropolisParams,
+                                  GaugeObservableParams& gaugeObsParams,
+                                  const RNGType& rng);
 // 2D SU(2)
-template int run_metropolis<2, 2>(deviceGaugeField2D<2, 2> &g_in,
-                                  const MetropolisParams &metropolisParams,
-                                  GaugeObservableParams &gaugeObsParams,
-                                  const RNGType &rng);
+template int run_metropolis<2, 2>(deviceGaugeField2D<2, 2>& g_in,
+                                  const MetropolisParams& metropolisParams,
+                                  GaugeObservableParams& gaugeObsParams,
+                                  const RNGType& rng);
 // 2D SU(3)
-template int run_metropolis<2, 3>(deviceGaugeField2D<2, 3> &g_in,
-                                  const MetropolisParams &metropolisParams,
-                                  GaugeObservableParams &gaugeObsParams,
-                                  const RNGType &rng);
+template int run_metropolis<2, 3>(deviceGaugeField2D<2, 3>& g_in,
+                                  const MetropolisParams& metropolisParams,
+                                  GaugeObservableParams& gaugeObsParams,
+                                  const RNGType& rng);
 // 3D U(1)
-template int run_metropolis<3, 1>(deviceGaugeField3D<3, 1> &g_in,
-                                  const MetropolisParams &metropolisParams,
-                                  GaugeObservableParams &gaugeObsParams,
-                                  const RNGType &rng);
+template int run_metropolis<3, 1>(deviceGaugeField3D<3, 1>& g_in,
+                                  const MetropolisParams& metropolisParams,
+                                  GaugeObservableParams& gaugeObsParams,
+                                  const RNGType& rng);
 // 3D SU(2)
-template int run_metropolis<3, 2>(deviceGaugeField3D<3, 2> &g_in,
-                                  const MetropolisParams &metropolisParams,
-                                  GaugeObservableParams &gaugeObsParams,
-                                  const RNGType &rng);
+template int run_metropolis<3, 2>(deviceGaugeField3D<3, 2>& g_in,
+                                  const MetropolisParams& metropolisParams,
+                                  GaugeObservableParams& gaugeObsParams,
+                                  const RNGType& rng);
 // 3D SU(3)
-template int run_metropolis<3, 3>(deviceGaugeField3D<3, 3> &g_in,
-                                  const MetropolisParams &metropolisParams,
-                                  GaugeObservableParams &gaugeObsParams,
-                                  const RNGType &rng);
+template int run_metropolis<3, 3>(deviceGaugeField3D<3, 3>& g_in,
+                                  const MetropolisParams& metropolisParams,
+                                  GaugeObservableParams& gaugeObsParams,
+                                  const RNGType& rng);
 // 4D U(1)
-template int run_metropolis<4, 1>(deviceGaugeField<4, 1> &g_in,
-                                  const MetropolisParams &metropolisParams,
-                                  GaugeObservableParams &gaugeObsParams,
-                                  const RNGType &rng);
+template int run_metropolis<4, 1>(deviceGaugeField<4, 1>& g_in,
+                                  const MetropolisParams& metropolisParams,
+                                  GaugeObservableParams& gaugeObsParams,
+                                  const RNGType& rng);
 // 4D SU(2)
-template int run_metropolis<4, 2>(deviceGaugeField<4, 2> &g_in,
-                                  const MetropolisParams &metropolisParams,
-                                  GaugeObservableParams &gaugeObsParams,
-                                  const RNGType &rng);
+template int run_metropolis<4, 2>(deviceGaugeField<4, 2>& g_in,
+                                  const MetropolisParams& metropolisParams,
+                                  GaugeObservableParams& gaugeObsParams,
+                                  const RNGType& rng);
 // 4D SU(3)
-template int run_metropolis<4, 3>(deviceGaugeField<4, 3> &g_in,
-                                  const MetropolisParams &metropolisParams,
-                                  GaugeObservableParams &gaugeObsParams,
-                                  const RNGType &rng);
+template int run_metropolis<4, 3>(deviceGaugeField<4, 3>& g_in,
+                                  const MetropolisParams& metropolisParams,
+                                  GaugeObservableParams& gaugeObsParams,
+                                  const RNGType& rng);
 
-} // namespace klft
+}  // namespace klft

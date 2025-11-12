@@ -1,8 +1,8 @@
 
 
+#include <getopt.h>
 #include <cassert>
 #include <cmath>
-#include <getopt.h>
 
 #include "FieldTypeHelper.hpp"
 #include "GLOBAL.hpp"
@@ -15,7 +15,7 @@ using RNGType = Kokkos::Random_XorShift64_Pool<Kokkos::DefaultExecutionSpace>;
 
 using namespace klft;
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
   Kokkos::initialize(argc, argv);
   {
     RNGType rng(1234238120379846981);

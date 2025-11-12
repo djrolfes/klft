@@ -28,25 +28,27 @@
 
 namespace klft {
 
-template <typename DGaugeFieldType> struct GaugeInv {
+template <typename DGaugeFieldType>
+struct GaugeInv {
   constexpr static const size_t rank =
       DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank;
   constexpr static const size_t Nc =
       DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc;
   constexpr static const GaugeFieldKind Kind =
       DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Kind;
-  static_assert(rank == 4); // The wilson flow is only defined for 4D Fields
+  static_assert(rank == 4);  // The wilson flow is only defined for 4D Fields
 
   using GaugeFieldT = typename DGaugeFieldType::type;
   GaugeFieldT source_field;
-  GaugeFieldT field;   // the transformed field
-  GaugeFieldT t_field; // the randomzed field
+  GaugeFieldT field;    // the transformed field
+  GaugeFieldT t_field;  // the randomzed field
 
   GaugeInv() = delete;
 
   template <class RNG>
-  GaugeInv(const GaugeFieldT &_field, RNG &rng, const real_t delta = 1.0)
-      : source_field(_field), field(_field.field),
+  GaugeInv(const GaugeFieldT& _field, RNG& rng, const real_t delta = 1.0)
+      : source_field(_field),
+        field(_field.field),
         t_field(_field.dimensions, rng, delta) {
     Kokkos::fence();
   }
@@ -59,7 +61,8 @@ template <typename DGaugeFieldType> struct GaugeInv {
   }
 
   template <typename indexType>
-  KOKKOS_INLINE_FUNCTION void operator()(const indexType i0, const indexType i1,
+  KOKKOS_INLINE_FUNCTION void operator()(const indexType i0,
+                                         const indexType i1,
                                          const indexType i2,
                                          const indexType i3) const {
 #pragma unroll
@@ -77,4 +80,4 @@ template <typename DGaugeFieldType> struct GaugeInv {
   }
 };
 
-} // namespace klft
+}  // namespace klft

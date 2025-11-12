@@ -40,18 +40,19 @@ namespace klft {
 // to store tuned tiling so that tuning is not repeated
 // over multiple kernel calls
 template <class FunctorType>
-size_t get_Functor_hash(const FunctorType &functor) {
+size_t get_Functor_hash(const FunctorType& functor) {
   // this is a very naive hash function
   // should be replaced with a better one
-  return std::hash<const void *>{}(&functor);
+  return std::hash<const void*>{}(&functor);
 }
 
 // define a hash table to look up the tuned tiling
 // this is a very naive hash table
 // should be replaced with a better one
-template <size_t rank> struct TuningHashTable {
+template <size_t rank>
+struct TuningHashTable {
   std::unordered_map<std::string, IndexArray<rank>> table;
-  void insert(const std::string key, const IndexArray<rank> &value) {
+  void insert(const std::string key, const IndexArray<rank>& value) {
     table[key] = value;
   }
   IndexArray<rank> get(const std::string key) { return table[key]; }
@@ -66,23 +67,11 @@ inline TuningHashTable<4> tuning_hash_table_4D;
 inline TuningHashTable<3> tuning_hash_table_3D;
 inline TuningHashTable<2> tuning_hash_table_2D;
 
-// Only for debugging purposes
-// template <typename T>
-// void WhatEver(void) {
-//   if constexpr (std::is_void_v<T> == false) {
-//     T t;
-//     std::cout << "Worktag used in tune and launch" << __PRETTY_FUNCTION__
-//               << std::endl;
-
-//     return;
-//   }
-//   std::cout << "No worktag used in tune and launch" << std::endl;
-// }
-
 template <size_t rank, class WorkTag = void, class FunctorType>
-void tune_and_launch_for(std::string functor_id, const IndexArray<rank> &start,
-                         const IndexArray<rank> &end,
-                         const FunctorType &functor) {
+void tune_and_launch_for(std::string functor_id,
+                         const IndexArray<rank>& start,
+                         const IndexArray<rank>& end,
+                         const FunctorType& functor) {
   // WhatEver<WorkTag>();
   if constexpr (rank == 1) {
     // unsupported rank
@@ -181,7 +170,7 @@ void tune_and_launch_for(std::string functor_id, const IndexArray<rank> &start,
       fast_ind = fast_ind / 2;
       fast_ind_tiles.push_back(fast_ind);
     }
-    for (auto &tile : fast_ind_tiles) {
+    for (auto& tile : fast_ind_tiles) {
       current_tiling = tile_one;
       current_tiling[0] = tile;
       index_t second_tile = max_tile / tile;
@@ -298,23 +287,23 @@ inline void writeTuneCache(std::string cache_file_name) {
     return;
   }
   // write the hash tables to the file
-  for (const auto &entry : tuning_hash_table_4D.table) {
+  for (const auto& entry : tuning_hash_table_4D.table) {
     cache_file << 4 << " " << entry.first << " ";
-    for (const auto &value : entry.second) {
+    for (const auto& value : entry.second) {
       cache_file << value << " ";
     }
     cache_file << "\n";
   }
-  for (const auto &entry : tuning_hash_table_3D.table) {
+  for (const auto& entry : tuning_hash_table_3D.table) {
     cache_file << 3 << " " << entry.first << " ";
-    for (const auto &value : entry.second) {
+    for (const auto& value : entry.second) {
       cache_file << value << " ";
     }
     cache_file << "\n";
   }
-  for (const auto &entry : tuning_hash_table_2D.table) {
+  for (const auto& entry : tuning_hash_table_2D.table) {
     cache_file << 2 << " " << entry.first << " ";
-    for (const auto &value : entry.second) {
+    for (const auto& value : entry.second) {
       cache_file << value << " ";
     }
     cache_file << "\n";
@@ -385,4 +374,4 @@ inline void readTuneCache(std::string cache_file_name) {
   }
 }
 
-} // namespace klft
+}  // namespace klft
