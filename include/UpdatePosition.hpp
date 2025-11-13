@@ -76,4 +76,5 @@ class UpdatePositionGauge : public UpdatePosition {
     Kokkos::fence();
   }
 };
+
 }  // namespace klft

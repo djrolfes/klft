@@ -17,7 +17,7 @@ Integrator:
   Monomials:
     - Type: "Leapfrog"
       level: 0
-      steps: 110
+      steps: 410
     # - Type: "Leapfrog"
     #   level: 1
     #   steps: 30
