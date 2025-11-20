@@ -1,10 +1,10 @@
 
 HMCParams:
   Ndims: 4
-  L0: 12
-  L1: 12
-  L2: 12
-  L3: 12
+  L0: 24
+  L1: 24
+  L2: 24
+  L3: 24
   seed: 1234
   Nd: 4
   Nc: 2
@@ -13,39 +13,56 @@ HMCParams:
 # Level 0 is the innermost level of the Integrator, i.e that is executed most frequently.
 Integrator:
   tau: 1
-  nSteps: 11
+  nSteps: 400
   Monomials:
     - Type: "Leapfrog"
       level: 0
-      steps: 20
-    - Type: "Leapfrog"
-      level: 1
-      steps: 30
+      steps: 110
+    # - Type: "Leapfrog"
+    #   level: 1
+    #   steps: 30
 Gauge Monomial:
   level: 0
-  beta: 2.12
+  beta: 2.82
 
-Fermion Monomial:
-  level: 1
-  fermion: "Wilson"
-  solver: "CG"
-  RepDim: 4
-  kappa: 0.15
-  tol: 1e-10
-  preconditioning: true
+# Fermion Monomial:
+#   level: 1
+#   fermion: "Wilson"
+#   solver: "CG"
+#   RepDim: 4
+#   kappa: 0.15
+#   tol: 1e-10
+#   preconditioning: true
 
 GaugeObservableParams:
-  thermalization_steps: 500
-  measurement_interval: 2
+  thermalization_steps: 5
+  measurement_interval: 1
   measure_plaquette: true
   measure_wilson_loop_temporal: false
   measure_wilson_loop_mu_nu: false
+  measure_topological_charge: true
+  measure_action_density: true
   measure_sp_max: true
   flush: 2
   do_wilson_flow: true
   WilsonFlowParams:
-    tau: 8.0
-    eps: 0.01
+    style: "Adaptive"
+    tau: 10.0
+    eps: 0.02
+    Adaptive:
+      rho: 0.95
+      abs_tol: 1e-3
+      rel_tol: 1e-1
+      max_increase: 1.1
+      max_decrease: 0.6
+    Dynamic:
+      min_flow_time: 0.5
+      max_flow_time: 10.0
+      sp_max_target: 0.067
+      t_sqd_E_target: 0.1
+      first_tE_measure_step: 10
+      log_details: false
+      wilson_flow_filename: "dyn_wf_data.txt"
 
   W_temp_L_T_pairs:
     - [2, 3]
@@ -62,6 +79,7 @@ GaugeObservableParams:
   plaquette_filename: "plaquette_output.txt"
   W_temp_filename: "wilson_temp_output.txt"
   W_mu_nu_filename: "wilson_mu_nu_output.txt"
+  topological_charge_filename: "topological_charge.txt"
   action_density_filename: "action_density.txt"
   sp_max_filename: "sp_max.txt"
   write_to_file: true
@@ -77,6 +95,7 @@ FermionObservableParams:
   flush: 5
   preconditioning: true
   n_sources: 12
+
 PTBCParams:
   defect_length: 2
   defect_values: [0.714, 0.857, 1.0]
@@ -87,11 +106,9 @@ PTBCSimulationLoggingParams:
   log_swap_start: true
   log_swap_accepts: true
   log_defects: true
-  flush: 25
+  flush: 2
   log_filename: "ptbcsimulation_log.txt"
   write_to_file: true
-
-
 
 SimulationLoggingParams:
   log_interval: 1
@@ -103,19 +120,4 @@ SimulationLoggingParams:
   flush: 2
   log_filename: "simulation_log.txt"
   write_to_file: true
-
-PTBCParams:
-  defect_length: 2
-  defect_values: [0.0, 0.143, 0.286, 0.429, 0.571, 0.714, 0.857, 1.0]
-
-PTBCSimulationLoggingParams:
-  log_interval: 1
-  log_delta_H_swap: true
-  log_swap_start: true
-  log_swap_accepts: true
-  log_defects: true
-  flush: 1
-  log_filename: "ptbcsimulation_log.txt"
-  write_to_file: true
-
 
