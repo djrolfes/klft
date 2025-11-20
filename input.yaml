@@ -1,15 +1,21 @@
-
 HMCParams:
   Ndims: 4
-  L0: 24
-  L1: 24
-  L2: 24
-  L3: 24
+  L0: 8
+  L1: 8
+  L2: 8
+  L3: 8
   seed: 1234
   Nd: 4
   Nc: 2
   coldStart: false
   rngDelta: 1
+  # loadfile: "gaugeconfig/ptbc/step11/gaugeconfig.txt" #the first underscore is allowed in the file name
+IOParams:
+  save: true
+  interval: 10
+  # filename: "gaugeconfig/ptbc1/gaugeconfig.txt" 
+  overwrite: true
+  save_after_trajectory: true
 # Level 0 is the innermost level of the Integrator, i.e that is executed most frequently.
 Integrator:
   tau: 1
@@ -35,8 +41,8 @@ Gauge Monomial:
 #   preconditioning: true
 
 GaugeObservableParams:
-  thermalization_steps: 5
-  measurement_interval: 1
+  thermalization_steps: 0
+  measurement_interval: 2
   measure_plaquette: true
   measure_wilson_loop_temporal: false
   measure_wilson_loop_mu_nu: false
@@ -44,7 +50,7 @@ GaugeObservableParams:
   measure_action_density: true
   measure_sp_max: true
   flush: 2
-  do_wilson_flow: true
+  do_wilson_flow: false
   WilsonFlowParams:
     style: "Adaptive"
     tau: 10.0
@@ -87,7 +93,7 @@ GaugeObservableParams:
 FermionObservableParams:
   pion_correlator_filename: "pion_correlator_output.txt"
   measurement_interval: 2
-  measure_pion_correlator: true
+  measure_pion_correlator: false
   tol: 1e-10
   kappa: 0.15
   RepDim: 4

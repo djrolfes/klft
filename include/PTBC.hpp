@@ -1,6 +1,7 @@
 #pragma once
 #include <mpi.h>
 
+#include <filesystem>
 #include <random>
 #include <sstream>
 
@@ -20,9 +21,15 @@ namespace klft {
 struct PTBCParams {
   // Define parameters for the PTBC algorithm
   index_t n_sims;
+  std::vector<real_t> defects;  // a vector that hold the different defect
+                                // values #this is kept fixed
   std::vector<real_t>
-      defects;            // a vector that hold the different defect values
+      defect_positions;   // a vector that hold the different defect positions
+                          // (before first swap from rank 0 to n_sims-1) this is
+                          // dynamic, holds rank with cval[i] at i //TODO
+                          // std::fill where ever this is inititalized
   index_t defect_length;  // size of the defect on the lattice
+
   GaugeMonomial_Params gauge_params;  // HMC parameters´
   PTBCSimulationLoggingParams ptbcSimLogParams;
   GaugeObservableParams gaugeObsParams;
@@ -32,8 +39,9 @@ struct PTBCParams {
     std::ostringstream oss;
     oss << "PTBCParams: n_sims = " << n_sims
         << ", defect_length = " << defect_length << ", defects = [";
-    for (const auto& defect : defects) {
-      oss << defect << " ";
+    for (const auto& defect : defect_positions) {
+      oss << defect << " ";  // This will now save the rank correponding to each
+                             // defect value, so opposite as before
     }
     oss << "]";
     return oss.str();
@@ -47,6 +55,8 @@ class PTBC {  // do I need the AdjFieldType here?
                 GaugeFieldKind::PTBC);
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
   static_assert(isDeviceAdjFieldType<DAdjFieldType>::value);
+
+ public:
   constexpr static size_t Nd =
       DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank;
   constexpr static size_t Nc = DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Nc;
@@ -58,7 +68,6 @@ class PTBC {  // do I need the AdjFieldType here?
   using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
   using HMCType = HMC<DGaugeFieldType, DAdjFieldType, RNG>;
 
- public:
   PTBCParams& params;  // parameters for the PTBC algorithm
   HMCType& hmc;
   // std::shared_ptr<LeapFrog> integrator; // TODO: make integrator agnostic
@@ -111,6 +120,49 @@ class PTBC {  // do I need the AdjFieldType here?
           (device_id + 1) % Kokkos::num_devices();  // default partner device id
     }
   }
+  void load(const std::string path_to_file) {
+    size_t pos = path_to_file.find_last_of("/");
+    std::string folder;
+
+    if (pos != std::string::npos) {
+      folder = path_to_file.substr(0, pos);
+    } else {
+      folder = "";
+    }
+    std::cout << "Folder found:" << folder << " . \n";
+    int rank, size;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+    std::string substr = "rank" + std::to_string(rank);
+    for (const auto& entry : std::filesystem::directory_iterator(folder)) {
+      if (entry.path().string().find(substr) != std::string::npos) {
+        // s contains substr
+        hmc.hamiltonian_field.gauge_field.load(entry.path());
+        MPI_Allgather(&hmc.hamiltonian_field.gauge_field.dParams.defect_value,
+                      1, mpi_real_t(), params.defects.data(), 1, mpi_real_t(),
+                      MPI_COMM_WORLD);
+        params.defect_length =
+            hmc.hamiltonian_field.gauge_field.dParams.defect_length;
+        if (KLFT_VERBOSITY > 1) {
+          /* code */
+
+          std::cout << "Rank " << rank << " loaded from path:" << entry.path()
+                    << "with the following paramets:\n";
+          std::cout << "Rank " << rank << " Pares: "
+                    << hmc.hamiltonian_field.gauge_field.dParams.format()
+                    << "\n";
+          std::cout << "Rank " << rank << " PTBCParams:" << params.to_string()
+                    << "\n";
+        }
+
+        MPI_Barrier(MPI_COMM_WORLD);
+        return;
+      }
+    }
+    std::string err = "FATAL ERROR: Rank " + std::to_string(rank) +
+                      "could't load, it's gauge config!";
+    throw std::runtime_error(err);
+  }
 
   real_t getDefectValue() const {
     // return the defect value for the current index
@@ -123,6 +175,7 @@ class PTBC {  // do I need the AdjFieldType here?
     int rank, size;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
+
     if (rank == 0) {
       addPTBCLogData(ptbcSimLogParams, step, _swap_start, &swap_accepts,
                      &swap_deltas, &params.defects);  // add the data to the log
@@ -217,6 +270,7 @@ class PTBC {  // do I need the AdjFieldType here?
     return rtn;
   }
 
+  // TODO ist that correct?
   real_t swap_partner(index_t partner_rank) {
     // swaps the Defect with the partner rank and returns the partial Delta_S
 
@@ -279,7 +333,6 @@ class PTBC {  // do I need the AdjFieldType here?
       shift[1] = (dist(mt) > 0.5) ? 1 : -1;
     }
     MPI_Bcast(shift, 2, MPI_INT, 0, MPI_COMM_WORLD);
-
     if (getDefectValue() == 1) {
       auto old_position =
           hmc.hamiltonian_field.gauge_field.dParams.defect_position;
@@ -292,27 +345,35 @@ class PTBC {  // do I need the AdjFieldType here?
       hmc.hamiltonian_field.gauge_field.shift_defect(new_position);
     }
   }
+
   int swap() {
     int rank, size;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
-    int partner_rank;
+    int partner_rank_c;
     bool accept = false;
     real_t Delta_S{0};
-    int swap_start{0};
-    int swap_rank{0};
+    int swap_start_c{0};
+    int swap_rank_c{0};
 
     // Rank 0 determines swap_start and broadcasts
     if (rank == 0) {
-      swap_start = int(dist(mt) * (size));
+      IndexArray<2> swap_start_choices{0, size - 1};
+      swap_start_c = swap_start_choices[int(dist(mt) * 2)];
     }
 
     MPI_Bcast(&swap_start, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
-    for (index_t i = 0; i < size; ++i) {
-      swap_rank = (swap_start + i) % size;
-      partner_rank = (swap_rank + 1) % size;
+    for (index_t i = 0; i < size - 1; ++i) {  // interpret as loop over c values
+      swap_start_c = (swap_start - i);
+      partner_rank_c = (swap_start_c - 1);
+      swap_start_c = abs(swap_start_c);
+      partner_rank_c = abs(partner_rank);
+      // Here these are c values need to be translated to ranks by using
+
+      auto swap_rank = params.defect_positions[swap_start_c];
+      auto partner_rank = params.defect_positions[partner_rank_c];
 
       // SWAP RANK sends its Delta_S
       if (rank == swap_rank) {
@@ -371,7 +432,11 @@ class PTBC {  // do I need the AdjFieldType here?
 
       // Rank 0 performs the swap if accepted
       if (rank == 0 && accept) {
-        std::swap(params.defects[swap_rank], params.defects[partner_rank]);
+        std::swap(
+            params.defect_positions[swap_rank],
+            params.defect_positions[partner_rank]);  // Todo: this has to be
+                                                     // changes s.t
+                                                     // params.defect_position
       }
 
       MPI_Barrier(MPI_COMM_WORLD);  // synchronize all ranks after each swap
@@ -381,9 +446,11 @@ class PTBC {  // do I need the AdjFieldType here?
       if (rank == 0) {
         std::ostringstream oss;
         oss << "Defects after broadcast: [";
-        for (size_t i = 0; i < params.defects.size(); ++i) {
-          oss << params.defects[i];
-          if (i + 1 < params.defects.size())
+        for (size_t i = 0; i < params.defect_positions.size(); ++i) {
+          oss << defect_positions[i];  // This will now save the rank
+                                       // correponding to each defect value, so
+                                       // opposite as before
+          if (i + 1 < params.defect_positions.size())
             oss << ", ";
         }
         oss << "]";
@@ -446,6 +513,10 @@ int run_PTBC(PTBCType& ptbc, Integrator_Params& int_params) {
     const real_t time = timer.seconds();
     timer.reset();
     // Gauge observables
+    // TODO:only measure on rank 0 and rank with cval = 1.0 , find via
+    // defect_positions[std::find(params.defect_positions.begin(),params.defect_positions.end(),1.0)-params.defect_positions.begin()],
+    // alt define one ore do it once at the beginning because cval will be
+    // always the same index, since params.defect will not change
     ptbc.measure(ptbc.params.gaugeObsParams, step);
 
     const real_t obs_time = timer.seconds();
@@ -468,6 +539,9 @@ int run_PTBC(PTBCType& ptbc, Integrator_Params& int_params) {
                      step, accept, acc_rate, time);
     }
     flushSimulationLogs(ptbc.params.simLogParams, step, true);
+    flushIOPTBC<
+        DeviceGaugeFieldType<PTBCType::Nd, PTBCType::Nc, GaugeFieldKind::PTBC>>(
+        ptbc.hmc.ioParams, rank, step, ptbc.hmc.hamiltonian_field.gauge_field);
   }
 
   MPI_Barrier(MPI_COMM_WORLD);  // synchronize all ranks after the loop
@@ -477,7 +551,10 @@ int run_PTBC(PTBCType& ptbc, Integrator_Params& int_params) {
     forceflushAllFermionObservables(ptbc.params.fermionObsParams, true);
   }
   forceflushSimulationLogs(ptbc.params.simLogParams, true);
-
+  flushIOPTBC<
+      DeviceGaugeFieldType<PTBCType::Nd, PTBCType::Nc, GaugeFieldKind::PTBC>>(
+      ptbc.hmc.ioParams, rank, int_params.nsteps,
+      ptbc.hmc.hamiltonian_field.gauge_field, true);
   return 0;
 }
 

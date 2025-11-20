@@ -128,6 +128,11 @@ int build_and_run_HMC(const std::string& input_file,
     printf("Error in sanity checks\n");
     return -1;
   }
+  IOParams ioParams;
+  if (!parseInputFile(input_file, output_directory, ioParams)) {
+    printf("Error parsing input file\n");
+    return -1;
+  }
 
   // print the parameters
   hmcParams.print();
@@ -139,6 +144,7 @@ int build_and_run_HMC(const std::string& input_file,
   }
 
   gaugeMonomialParams.print();
+  ioParams.print();
   RNGType rng(hmcParams.seed);
   std::mt19937 mt(hmcParams.seed);
   std::uniform_real_distribution<real_t> dist(0.0, 1.0);
@@ -169,12 +175,14 @@ int build_and_run_HMC(const std::string& input_file,
               fermionParams, resParsef);
           using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
           HField hamiltonian_field = HField(g_4_U1, a_4_U1);
-
+          if (hmcParams.loadfile != "") {
+            hamiltonian_field.gauge_field.load(hmcParams.loadfile);
+          }
           const auto& dimensions = g_4_U1.dimensions;
 
           using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
-          HMC hmc(integratorParams, hamiltonian_field, integrator, rng, dist,
-                  mt);
+          HMC hmc(integratorParams, ioParams, hamiltonian_field, integrator,
+                  rng, dist, mt);
           hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
           hmc.add_kinetic_monomial(0);
           if (resParsef > 0) {
@@ -203,12 +211,14 @@ int build_and_run_HMC(const std::string& input_file,
               fermionParams, resParsef);
           using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
           HField hamiltonian_field = HField(g_4_U1, a_4_U1);
-
+          if (hmcParams.loadfile != "") {
+            hamiltonian_field.gauge_field.load(hmcParams.loadfile);
+          }
           const auto& dimensions = g_4_U1.dimensions;
 
           using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
-          HMC hmc(integratorParams, hamiltonian_field, integrator, rng, dist,
-                  mt);
+          HMC hmc(integratorParams, ioParams, hamiltonian_field, integrator,
+                  rng, dist, mt);
           hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
           hmc.add_kinetic_monomial(0);
           if (resParsef > 0) {
@@ -241,12 +251,17 @@ int build_and_run_HMC(const std::string& input_file,
               fermionParams, resParsef);
           using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
           HField hamiltonian_field = HField(g_4_SU2, a_4_SU2);
-
+          if (hmcParams.loadfile != "") {
+            hamiltonian_field.gauge_field.load(hmcParams.loadfile);
+          }
+          if (hmcParams.loadfile != "") {
+            hamiltonian_field.gauge_field.load(hmcParams.loadfile);
+          }
           const auto& dimensions = g_4_SU2.dimensions;
 
           using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
-          HMC hmc(integratorParams, hamiltonian_field, integrator, rng, dist,
-                  mt);
+          HMC hmc(integratorParams, ioParams, hamiltonian_field, integrator,
+                  rng, dist, mt);
           hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
           hmc.add_kinetic_monomial(0);
           if (resParsef > 0) {
@@ -275,12 +290,14 @@ int build_and_run_HMC(const std::string& input_file,
               fermionParams, resParsef);
           using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
           HField hamiltonian_field = HField(g_4_SU2, a_4_SU2);
-
+          if (hmcParams.loadfile != "") {
+            hamiltonian_field.gauge_field.load(hmcParams.loadfile);
+          }
           const auto& dimensions = g_4_SU2.dimensions;
 
           using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
-          HMC hmc(integratorParams, hamiltonian_field, integrator, rng, dist,
-                  mt);
+          HMC hmc(integratorParams, ioParams, hamiltonian_field, integrator,
+                  rng, dist, mt);
           hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
           hmc.add_kinetic_monomial(0);
           if (resParsef > 0) {
@@ -315,12 +332,15 @@ int build_and_run_HMC(const std::string& input_file,
               fermionParams, resParsef);
           using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
           HField hamiltonian_field = HField(g_4_SU3, a_4_SU3);
+          if (hmcParams.loadfile != "") {
+            hamiltonian_field.gauge_field.load(hmcParams.loadfile);
+          }
 
           const auto& dimensions = g_4_SU3.dimensions;
 
           using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
-          HMC hmc(integratorParams, hamiltonian_field, integrator, rng, dist,
-                  mt);
+          HMC hmc(integratorParams, ioParams, hamiltonian_field, integrator,
+                  rng, dist, mt);
           hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
           hmc.add_kinetic_monomial(0);
           if (resParsef > 0) {
@@ -349,12 +369,14 @@ int build_and_run_HMC(const std::string& input_file,
               fermionParams, resParsef);
           using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
           HField hamiltonian_field = HField(g_4_SU3, a_4_SU3);
-
+          if (hmcParams.loadfile != "") {
+            hamiltonian_field.gauge_field.load(hmcParams.loadfile);
+          }
           const auto& dimensions = g_4_SU3.dimensions;
 
           using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
-          HMC hmc(integratorParams, hamiltonian_field, integrator, rng, dist,
-                  mt);
+          HMC hmc(integratorParams, ioParams, hamiltonian_field, integrator,
+                  rng, dist, mt);
           hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
           hmc.add_kinetic_monomial(0);
           if (resParsef > 0) {
@@ -391,11 +413,14 @@ int build_and_run_HMC(const std::string& input_file,
                 fermionParams, resParsef);
         using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
         HField hamiltonian_field = HField(g_3_U1, a_3_U1);
-
+        if (hmcParams.loadfile != "") {
+          hamiltonian_field.gauge_field.load(hmcParams.loadfile);
+        }
         const auto& dimensions = g_3_U1.dimensions;
 
         using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
-        HMC hmc(integratorParams, hamiltonian_field, integrator, rng, dist, mt);
+        HMC hmc(integratorParams, ioParams, hamiltonian_field, integrator, rng,
+                dist, mt);
         hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
         hmc.add_kinetic_monomial(0);
 
@@ -420,11 +445,14 @@ int build_and_run_HMC(const std::string& input_file,
                 gaugeMonomialParams, fermionParams, resParsef);
         using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
         HField hamiltonian_field = HField(g_3_SU2, a_3_SU2);
-
+        if (hmcParams.loadfile != "") {
+          hamiltonian_field.gauge_field.load(hmcParams.loadfile);
+        }
         const auto& dimensions = g_3_SU2.dimensions;
 
         using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
-        HMC hmc(integratorParams, hamiltonian_field, integrator, rng, dist, mt);
+        HMC hmc(integratorParams, ioParams, hamiltonian_field, integrator, rng,
+                dist, mt);
         hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
         hmc.add_kinetic_monomial(0);
 
@@ -460,11 +488,13 @@ int build_and_run_HMC(const std::string& input_file,
         // using HField = HamiltonianField<DGaugeFieldType,
         // DAdjFieldType>; HField hamiltonian_field = HField(g_3_SU3,
         // a_3_SU3);
-
+        // if(hmcParams.loadfile!=""){
+        //   hamiltonian_field.gauge_field.load(hmcParams.loadfile);
+        // }
         // const auto& dimensions = g_3_SU3.dimensions;
 
         // using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
-        // HMC hmc(integratorParams, hamiltonian_field, integrator,
+        // HMC hmc(integratorParams,ioParams, hamiltonian_field, integrator,
         // rng, dist, mt);
         // hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
         // hmc.add_kinetic_monomial(0);
@@ -496,11 +526,14 @@ int build_and_run_HMC(const std::string& input_file,
                 fermionParams, resParsef);
         using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
         HField hamiltonian_field = HField(g_2_U1, a_2_U1);
-
+        if (hmcParams.loadfile != "") {
+          hamiltonian_field.gauge_field.load(hmcParams.loadfile);
+        }
         const auto& dimensions = g_2_U1.dimensions;
 
         using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
-        HMC hmc(integratorParams, hamiltonian_field, integrator, rng, dist, mt);
+        HMC hmc(integratorParams, ioParams, hamiltonian_field, integrator, rng,
+                dist, mt);
         hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
         hmc.add_kinetic_monomial(0);
 
@@ -525,11 +558,14 @@ int build_and_run_HMC(const std::string& input_file,
                 gaugeMonomialParams, fermionParams, resParsef);
         using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
         HField hamiltonian_field = HField(g_2_SU2, a_2_SU2);
-
+        if (hmcParams.loadfile != "") {
+          hamiltonian_field.gauge_field.load(hmcParams.loadfile);
+        }
         const auto& dimensions = g_2_SU2.dimensions;
 
         using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
-        HMC hmc(integratorParams, hamiltonian_field, integrator, rng, dist, mt);
+        HMC hmc(integratorParams, ioParams, hamiltonian_field, integrator, rng,
+                dist, mt);
         hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
         hmc.add_kinetic_monomial(0);
 
@@ -562,11 +598,13 @@ int build_and_run_HMC(const std::string& input_file,
         // using HField = HamiltonianField<DGaugeFieldType,
         // DAdjFieldType>; HField hamiltonian_field = HField(g_2_SU3,
         // a_2_SU3);
-
+        // if(hmcParams.loadfile!=""){
+        //   hamiltonian_field.gauge_field.load(hmcParams.loadfile);
+        // }
         // const auto& dimensions = g_2_SU3.dimensions;
 
         // using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
-        // HMC hmc(integratorParams, hamiltonian_field, integrator,
+        // HMC hmc(integratorParams,ioParams, hamiltonian_field, integrator,
         // rng, dist, mt);
         // hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
         // hmc.add_kinetic_monomial(0);
@@ -598,12 +636,14 @@ int build_and_run_HMC(const std::string& input_file,
               fermionParams, resParsef);
           using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
           HField hamiltonian_field = HField(g_4_U1, a_4_U1);
-
+          if (hmcParams.loadfile != "") {
+            hamiltonian_field.gauge_field.load(hmcParams.loadfile);
+          }
           const auto& dimensions = g_4_U1.dimensions;
 
           using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
-          HMC hmc(integratorParams, hamiltonian_field, integrator, rng, dist,
-                  mt);
+          HMC hmc(integratorParams, ioParams, hamiltonian_field, integrator,
+                  rng, dist, mt);
           hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
           hmc.add_kinetic_monomial(0);
           if (resParsef > 0) {
@@ -634,12 +674,14 @@ int build_and_run_HMC(const std::string& input_file,
               fermionParams, resParsef);
           using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
           HField hamiltonian_field = HField(g_4_U1, a_4_U1);
-
+          if (hmcParams.loadfile != "") {
+            hamiltonian_field.gauge_field.load(hmcParams.loadfile);
+          }
           const auto& dimensions = g_4_U1.dimensions;
 
           using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
-          HMC hmc(integratorParams, hamiltonian_field, integrator, rng, dist,
-                  mt);
+          HMC hmc(integratorParams, ioParams, hamiltonian_field, integrator,
+                  rng, dist, mt);
           hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
           hmc.add_kinetic_monomial(0);
           if (resParsef > 0) {
@@ -672,12 +714,14 @@ int build_and_run_HMC(const std::string& input_file,
               fermionParams, resParsef);
           using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
           HField hamiltonian_field = HField(g_4_SU2, a_4_SU2);
-
+          if (hmcParams.loadfile != "") {
+            hamiltonian_field.gauge_field.load(hmcParams.loadfile);
+          }
           const auto& dimensions = g_4_SU2.dimensions;
 
           using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
-          HMC hmc(integratorParams, hamiltonian_field, integrator, rng, dist,
-                  mt);
+          HMC hmc(integratorParams, ioParams, hamiltonian_field, integrator,
+                  rng, dist, mt);
           hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
           hmc.add_kinetic_monomial(0);
           if (resParsef > 0) {
@@ -706,12 +750,14 @@ int build_and_run_HMC(const std::string& input_file,
               fermionParams, resParsef);
           using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
           HField hamiltonian_field = HField(g_4_SU2, a_4_SU2);
-
+          if (hmcParams.loadfile != "") {
+            hamiltonian_field.gauge_field.load(hmcParams.loadfile);
+          }
           const auto& dimensions = g_4_SU2.dimensions;
 
           using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
-          HMC hmc(integratorParams, hamiltonian_field, integrator, rng, dist,
-                  mt);
+          HMC hmc(integratorParams, ioParams, hamiltonian_field, integrator,
+                  rng, dist, mt);
           hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
           hmc.add_kinetic_monomial(0);
           if (resParsef > 0) {
@@ -746,12 +792,14 @@ int build_and_run_HMC(const std::string& input_file,
               fermionParams, resParsef);
           using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
           HField hamiltonian_field = HField(g_4_SU3, a_4_SU3);
-
+          if (hmcParams.loadfile != "") {
+            hamiltonian_field.gauge_field.load(hmcParams.loadfile);
+          }
           const auto& dimensions = g_4_SU3.dimensions;
 
           using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
-          HMC hmc(integratorParams, hamiltonian_field, integrator, rng, dist,
-                  mt);
+          HMC hmc(integratorParams, ioParams, hamiltonian_field, integrator,
+                  rng, dist, mt);
           hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
           hmc.add_kinetic_monomial(0);
           if (resParsef > 0) {
@@ -781,12 +829,14 @@ int build_and_run_HMC(const std::string& input_file,
               fermionParams, resParsef);
           using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
           HField hamiltonian_field = HField(g_4_SU3, a_4_SU3);
-
           const auto& dimensions = g_4_SU3.dimensions;
+          if (hmcParams.loadfile != "") {
+            hamiltonian_field.gauge_field.load(hmcParams.loadfile);
+          }
 
           using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
-          HMC hmc(integratorParams, hamiltonian_field, integrator, rng, dist,
-                  mt);
+          HMC hmc(integratorParams, ioParams, hamiltonian_field, integrator,
+                  rng, dist, mt);
           hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
           hmc.add_kinetic_monomial(0);
           if (resParsef > 0) {
@@ -824,11 +874,14 @@ int build_and_run_HMC(const std::string& input_file,
                 fermionParams, resParsef);
         using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
         HField hamiltonian_field = HField(g_3_U1, a_3_U1);
-
+        if (hmcParams.loadfile != "") {
+          hamiltonian_field.gauge_field.load(hmcParams.loadfile);
+        }
         const auto& dimensions = g_3_U1.dimensions;
 
         using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
-        HMC hmc(integratorParams, hamiltonian_field, integrator, rng, dist, mt);
+        HMC hmc(integratorParams, ioParams, hamiltonian_field, integrator, rng,
+                dist, mt);
         hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
         hmc.add_kinetic_monomial(0);
 
@@ -853,11 +906,14 @@ int build_and_run_HMC(const std::string& input_file,
                 gaugeMonomialParams, fermionParams, resParsef);
         using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
         HField hamiltonian_field = HField(g_3_SU2, a_3_SU2);
-
+        if (hmcParams.loadfile != "") {
+          hamiltonian_field.gauge_field.load(hmcParams.loadfile);
+        }
         const auto& dimensions = g_3_SU2.dimensions;
 
         using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
-        HMC hmc(integratorParams, hamiltonian_field, integrator, rng, dist, mt);
+        HMC hmc(integratorParams, ioParams, hamiltonian_field, integrator, rng,
+                dist, mt);
         hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
         hmc.add_kinetic_monomial(0);
 
@@ -891,11 +947,13 @@ int build_and_run_HMC(const std::string& input_file,
         // using HField = HamiltonianField<DGaugeFieldType,
         // DAdjFieldType>; HField hamiltonian_field = HField(g_3_SU3,
         // a_3_SU3);
-
+        // if(hmcParams.loadfile!=""){
+        //   hamiltonian_field.gauge_field.load(hmcParams.loadfile);
+        // }
         // const auto& dimensions = g_3_SU3.dimensions;
 
         // using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
-        // HMC hmc(integratorParams, hamiltonian_field, integrator,
+        // HMC hmc(integratorParams,ioParams, hamiltonian_field, integrator,
         // rng, dist, mt);
         // hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
         // hmc.add_kinetic_monomial(0);
@@ -927,11 +985,14 @@ int build_and_run_HMC(const std::string& input_file,
                 fermionParams, resParsef);
         using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
         HField hamiltonian_field = HField(g_2_U1, a_2_U1);
-
+        if (hmcParams.loadfile != "") {
+          hamiltonian_field.gauge_field.load(hmcParams.loadfile);
+        }
         const auto& dimensions = g_2_U1.dimensions;
 
         using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
-        HMC hmc(integratorParams, hamiltonian_field, integrator, rng, dist, mt);
+        HMC hmc(integratorParams, ioParams, hamiltonian_field, integrator, rng,
+                dist, mt);
         hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
         hmc.add_kinetic_monomial(0);
 
@@ -955,11 +1016,14 @@ int build_and_run_HMC(const std::string& input_file,
                 gaugeMonomialParams, fermionParams, resParsef);
         using HField = HamiltonianField<DGaugeFieldType, DAdjFieldType>;
         HField hamiltonian_field = HField(g_2_SU2, a_2_SU2);
-
+        if (hmcParams.loadfile != "") {
+          hamiltonian_field.gauge_field.load(hmcParams.loadfile);
+        }
         const auto& dimensions = g_2_SU2.dimensions;
 
         using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
-        HMC hmc(integratorParams, hamiltonian_field, integrator, rng, dist, mt);
+        HMC hmc(integratorParams, ioParams, hamiltonian_field, integrator, rng,
+                dist, mt);
         hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
         hmc.add_kinetic_monomial(0);
 
@@ -992,11 +1056,13 @@ int build_and_run_HMC(const std::string& input_file,
         // using HField = HamiltonianField<DGaugeFieldType,
         // DAdjFieldType>; HField hamiltonian_field = HField(g_2_SU3,
         // a_2_SU3);
-
+        // if(hmcParams.loadfile!=""){
+        //   hamiltonian_field.gauge_field.load(hmcParams.loadfile);
+        // }
         // const auto& dimensions = g_2_SU3.dimensions;
 
         // using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
-        // HMC hmc(integratorParams, hamiltonian_field, integrator,
+        // HMC hmc(integratorParams,ioParams, hamiltonian_field, integrator,
         // rng, dist, mt);
         // hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
         // hmc.add_kinetic_monomial(0);

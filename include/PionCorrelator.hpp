@@ -14,13 +14,18 @@
 
 namespace klft {
 
-template <typename RNG, typename DSpinorFieldType, typename DGaugeFieldType,
-          template <template <typename, typename> class DiracOpT, typename,
+template <typename RNG,
+          typename DSpinorFieldType,
+          typename DGaugeFieldType,
+          template <template <typename, typename> class DiracOpT,
+                    typename,
                     typename> class _Solver,
           template <typename, typename> class DiracOpT>
 std::vector<real_t> PionCorrelator(const typename DGaugeFieldType::type& g_in,
-                                   const diracParams& params, const real_t& tol,
-                                   RNG& rng, const index_t& n_sources) {
+                                   const diracParams& params,
+                                   const real_t& tol,
+                                   RNG& rng,
+                                   const index_t& n_sources) {
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
   constexpr static size_t rank =
       DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank;
@@ -77,14 +82,20 @@ std::vector<real_t> PionCorrelator(const typename DGaugeFieldType::type& g_in,
   return result_vec;
 }
 
-template <typename RNG, typename DSpinorFieldType, typename DGaugeFieldType,
-          template <template <typename, typename> class DiracOpT, typename,
+template <typename RNG,
+          typename DSpinorFieldType,
+          typename DGaugeFieldType,
+          template <template <typename, typename> class DiracOpT,
+                    typename,
                     typename> class _Solver,
           template <typename, typename> class DiracOpT>
 std::vector<real_t> PionCorrelatorEO(
-    const typename DGaugeFieldType::type& g_in, const diracParams& params,
+    const typename DGaugeFieldType::type& g_in,
+    const diracParams& params,
     const IndexArray<DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank>& f_dims,
-    const real_t& tol, RNG& rng, const index_t& n_sources) {
+    const real_t& tol,
+    RNG& rng,
+    const index_t& n_sources) {
   static_assert(isDeviceGaugeFieldType<DGaugeFieldType>::value);
   constexpr static size_t rank =
       DeviceGaugeFieldTypeTraits<DGaugeFieldType>::Rank;

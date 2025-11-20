@@ -14,7 +14,8 @@ struct ArrayType {
     }
   }
   KOKKOS_INLINE_FUNCTION  // add operator
-      ArrayType& operator+=(const ArrayType& src) {
+      ArrayType&
+      operator+=(const ArrayType& src) {
     for (int i = 0; i < N; i++) {
       array[i] += src.array[i];
     }

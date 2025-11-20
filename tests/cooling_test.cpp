@@ -100,6 +100,7 @@ int test_wilsonflow(const std::string& input_file,
   FermionMonomial_Params fermionParams;
   auto resParsef = parseInputFile(input_file, output_directory, fermionParams);
   GaugeMonomial_Params gaugeMonomialParams;
+  IOParams ioParams;
   bool inputFileParsedCorrectly =
       (parseInputFile(input_file, output_directory, gaugeObsParams) &&
        parseInputFile(input_file, output_directory, hmcParams) &&
@@ -108,7 +109,8 @@ int test_wilsonflow(const std::string& input_file,
        parseInputFile(input_file, output_directory, integratorParams) &&
        abs(resParsef) &&
        parseInputFile(input_file, output_directory, gaugeMonomialParams) &&
-       parseInputFile(input_file, output_directory, ptbcSimLogParams));
+       parseInputFile(input_file, output_directory, ptbcSimLogParams) &&
+       parseInputFile(input_file, output_directory, ioParams));
   if (!inputFileParsedCorrectly) {
     printf("Error parsing input file\n");
     return -1;
@@ -144,7 +146,8 @@ int test_wilsonflow(const std::string& input_file,
   HField hamiltonian_field = HField(g_4_SU2, a_4_SU2);
 
   using HMC = HMC<DGaugeFieldType, DAdjFieldType, RNGType>;
-  HMC hmc(integratorParams, hamiltonian_field, integrator, rng, dist, mt);
+  HMC hmc(integratorParams, ioParams, hamiltonian_field, integrator, rng, dist,
+          mt);
   hmc.add_gauge_monomial(gaugeMonomialParams.beta, 0);
   hmc.add_kinetic_monomial(0);
   if (resParsef > 0) {

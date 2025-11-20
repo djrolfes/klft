@@ -29,6 +29,7 @@
 #include "Gauge_Util.hpp"
 #include "HMC_Params.hpp"
 #include "HamiltonianField.hpp"
+#include "IOParams.hpp"
 #include "Integrator.hpp"
 #include "Monomial.hpp"
 namespace klft {
@@ -60,10 +61,12 @@ class HMC {
   std::mt19937 mt;
   std::uniform_real_distribution<real_t> dist;
   real_t delta_H;
+  IOParams ioParams;
 
   HMC() = default;
 
   HMC(const Integrator_Params params_,
+      const IOParams ioParams_,
       HamiltonianField<DGaugeFieldType, DAdjFieldType>& hamiltonian_field_,
       std::shared_ptr<Integrator> integrator_,
       RNG rng_,
@@ -74,7 +77,8 @@ class HMC {
         dist(dist_),
         mt(mt_),
         hamiltonian_field(hamiltonian_field_),
-        integrator(std::move(integrator_)) {}
+        integrator(std::move(integrator_)),
+        ioParams(ioParams_) {}
 
   void add_gauge_monomial(const real_t _beta, const unsigned int _time_scale) {
     monomials.emplace_back(
@@ -126,7 +130,8 @@ class HMC {
     //              "Randomized Momentum");
 
     Kokkos::fence();
-    GaugeFieldType gauge_old(hamiltonian_field.gauge_field.dimensions, 0);
+    GaugeFieldType gauge_old(hamiltonian_field.gauge_field.dimensions,
+                             complex_t(0));
     Kokkos::deep_copy(gauge_old.field, hamiltonian_field.gauge_field.field);
     Kokkos::fence();
     for (int i = 0; i < monomials.size(); ++i) {
@@ -154,7 +159,8 @@ class HMC {
       }
     }
     if (check_Reversibility) {
-      GaugeFieldType gauge_save(hamiltonian_field.gauge_field.dimensions, 0);
+      GaugeFieldType gauge_save(hamiltonian_field.gauge_field.dimensions,
+                                complex_t(0));
       Kokkos::deep_copy(gauge_save.field, hamiltonian_field.gauge_field.field);
       Kokkos::fence();
       // for (int i = 0; i < monomials.size(); ++i) {

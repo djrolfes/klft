@@ -26,7 +26,7 @@
 namespace klft {
 
 struct deviceScalarField {
-  deviceScalarField() = delete;
+  deviceScalarField() = default;
 
   // initialize all sites to a given value
   deviceScalarField(const index_t L0,
@@ -60,7 +60,7 @@ struct deviceScalarField {
   }
 
   ScalarField field;
-  const IndexArray<4> dimensions;
+  IndexArray<4> dimensions;
 
   // define accessors
   template <typename indexType>
@@ -105,7 +105,7 @@ struct deviceScalarField {
 };
 
 struct deviceScalarField3D {
-  deviceScalarField3D() = delete;
+  deviceScalarField3D() = default;
 
   // initialize all sites to a given value
   deviceScalarField3D(const index_t L0,
@@ -137,7 +137,7 @@ struct deviceScalarField3D {
   }
 
   ScalarField3D field;
-  const IndexArray<3> dimensions;
+  IndexArray<3> dimensions;
 
   // define accessors
   template <typename indexType>
@@ -180,7 +180,7 @@ struct deviceScalarField3D {
 };
 
 struct deviceScalarField2D {
-  deviceScalarField2D() = delete;
+  deviceScalarField2D() = default;
 
   // initialize all sites to a given value
   deviceScalarField2D(const index_t L0, const index_t L1, const real_t init)
@@ -207,7 +207,7 @@ struct deviceScalarField2D {
   }
 
   ScalarField2D field;
-  const IndexArray<2> dimensions;
+  IndexArray<2> dimensions;
 
   // define accessors
   template <typename indexType>
