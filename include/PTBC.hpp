@@ -88,7 +88,8 @@ class PTBC {  // do I need the AdjFieldType here?
     TAG_ACCEPT = 1,
     TAG_INDEX = 2,
     TAG_SWAPSTART = 3,
-    TAG_SHIFTDEFECT = 4
+    TAG_SHIFTDEFECT = 4,
+    TAG_SWAPASCENDING = 5
   } MPI_Tags;
 
   PTBC() = delete;  // default constructor is not allowed
@@ -346,47 +347,63 @@ class PTBC {  // do I need the AdjFieldType here?
     }
   }
 
+  std::vector<index_t> argsort(const std::vector<real_t>& vec,
+                               bool ascending = true) {
+    // Create a vector of indices
+    std::vector<index_t> indices(vec.size());
+    for (index_t i = 0; i < vec.size(); ++i) {
+      indices[i] = i;
+    }
+
+    if (ascending) {
+      // Sort the indices based on the values in vec
+      std::sort(indices.begin(), indices.end(),
+                [&vec](real_t a, real_t b) { return vec[a] < vec[b]; });
+    } else {
+      // Sort the indices based on the values in vec in descending order
+      std::sort(indices.begin(), indices.end(),
+                [&vec](real_t a, real_t b) { return vec[a] > vec[b]; });
+    }
+    return indices;
+  }
+
   int swap() {
     int rank, size;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
-    int partner_rank_c;
     bool accept = false;
     real_t Delta_S{0};
-    int swap_start_c{0};
-    int swap_rank_c{0};
+    bool ascending = true;
 
     // Rank 0 determines swap_start and broadcasts
     if (rank == 0) {
-      IndexArray<2> swap_start_choices{0, size - 1};
-      swap_start_c = swap_start_choices[int(dist(mt) * 2)];
+      ascending = bool(int(dist(mt) * 2));
     }
-
-    MPI_Bcast(&swap_start, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    // TAG_SWAPASCENDING
+    MPI_Bcast(&ascending, 1, MPI_C_BOOL, 0, MPI_COMM_WORLD);
 
     for (index_t i = 0; i < size - 1; ++i) {  // interpret as loop over c values
-      swap_start_c = (swap_start - i);
-      partner_rank_c = (swap_start_c - 1);
-      swap_start_c = abs(swap_start_c);
-      partner_rank_c = abs(partner_rank);
-      // Here these are c values need to be translated to ranks by using
+      // assumption: the defects vector is up to  date and synchronized across
+      // ranks
+      std::vector<index_t> sorted_indices =
+          argsort(params.defects, ascending);  // get the sorted indices
 
-      auto swap_rank = params.defect_positions[swap_start_c];
-      auto partner_rank = params.defect_positions[partner_rank_c];
+      auto swap_rank = sorted_indices[i];
+      auto partner_rank = sorted_indices[i + 1];
 
       // SWAP RANK sends its Delta_S
       if (rank == swap_rank) {
         // DEBUG_MPI_PRINT(
         //     "%s, DefectLength(Field): %d", params.to_string().c_str(),
         //     hmc.hamiltonian_field.gauge_field.dParams.defect_length);
-        // DEBUG_MPI_PRINT("Iteration %d: swap_rank=%d, defect(PTBC)=%f , "
-        //                 "defect(Field)=%f \n\t "
-        //                 "partner_rank = % d defect(PTBC) = % f ",
-        //                 i, swap_rank, params.defects[swap_rank],
-        //                 hmc.hamiltonian_field.gauge_field.get_defect(),
-        //                 partner_rank, params.defects[partner_rank]);
-
+        DEBUG_MPI_PRINT(
+            "Iteration %d: swap_rank=%d, defect(PTBC)=%f , "
+            "defect(Field)=%f \n\t "
+            "partner_rank = % d defect(PTBC) = %f , ascending: %d ",
+            i, swap_rank, params.defects[swap_rank],
+            hmc.hamiltonian_field.gauge_field.get_defect(), partner_rank,
+            params.defects[partner_rank], int(ascending));
         real_t temp = swap_partner(partner_rank);
 
         MPI_Send(&temp, 1, mpi_real_t(), 0, TAG_DELTAS, MPI_COMM_WORLD);
@@ -432,11 +449,7 @@ class PTBC {  // do I need the AdjFieldType here?
 
       // Rank 0 performs the swap if accepted
       if (rank == 0 && accept) {
-        std::swap(
-            params.defect_positions[swap_rank],
-            params.defect_positions[partner_rank]);  // Todo: this has to be
-                                                     // changes s.t
-                                                     // params.defect_position
+        std::swap(params.defects[swap_rank], params.defects[partner_rank]);
       }
 
       MPI_Barrier(MPI_COMM_WORLD);  // synchronize all ranks after each swap
@@ -446,11 +459,9 @@ class PTBC {  // do I need the AdjFieldType here?
       if (rank == 0) {
         std::ostringstream oss;
         oss << "Defects after broadcast: [";
-        for (size_t i = 0; i < params.defect_positions.size(); ++i) {
-          oss << defect_positions[i];  // This will now save the rank
-                                       // correponding to each defect value, so
-                                       // opposite as before
-          if (i + 1 < params.defect_positions.size())
+        for (size_t i = 0; i < params.defects.size(); ++i) {
+          oss << params.defects[i];
+          if (i + 1 < params.defects.size())
             oss << ", ";
         }
         oss << "]";
@@ -460,7 +471,6 @@ class PTBC {  // do I need the AdjFieldType here?
       if (rank == 0) {              // add the swap data to the logs
         swap_accepts[swap_rank] = accept;
         swap_deltas[swap_rank] = Delta_S;
-        _swap_start = swap_start;  // store the swap start rank
       }
     }
     // TODO: shift the defect by one lattice spacing in a random direction
