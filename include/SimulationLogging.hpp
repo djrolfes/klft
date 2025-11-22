@@ -264,14 +264,16 @@ inline void addPTBCLogData(PTBCSimulationLoggingParams& p,
 
   if (p.log_defects) {
     p.ascending.push_back(ascending);
-    if (_defects)
+    if (_defects) {
       p.defects.push_back(*_defects);
-    else
+    } else {
       p.defects.emplace_back();
-    if (_prev_defects)
+    }
+    if (_prev_defects) {
       p.defects.push_back(*_prev_defects);
-    else
+    } else {
       p.defects.emplace_back();
+    }
   }
 }
 

@@ -175,8 +175,8 @@ class PTBC {  // do I need the AdjFieldType here?
 
     if (rank == 0) {
       addPTBCLogData(ptbcSimLogParams, step, ascending, &swap_accepts,
-                     &swap_deltas,
-                     &params.defects);  // add the data to the log
+                     &swap_deltas, &params.defects,
+                     &params.prev_defects);  // add the data to the log
     }
   }
 
