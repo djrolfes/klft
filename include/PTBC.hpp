@@ -21,14 +21,10 @@ namespace klft {
 struct PTBCParams {
   // Define parameters for the PTBC algorithm
   index_t n_sims;
-  std::vector<real_t> defects;  // a vector that hold the different defect
-                                // values #this is kept fixed
   std::vector<real_t>
-      defect_positions;   // a vector that hold the different defect positions
-                          // (before first swap from rank 0 to n_sims-1) this is
-                          // dynamic, holds rank with cval[i] at i //TODO
-                          // std::fill where ever this is inititalized
-  index_t defect_length;  // size of the defect on the lattice
+      defects;  // a vector that hold the different defect values
+  std::vector<real_t> prev_defects;  // used for logging purposes
+  index_t defect_length;             // size of the defect on the lattice
 
   GaugeMonomial_Params gauge_params;  // HMC parameters´
   PTBCSimulationLoggingParams ptbcSimLogParams;
@@ -39,7 +35,7 @@ struct PTBCParams {
     std::ostringstream oss;
     oss << "PTBCParams: n_sims = " << n_sims
         << ", defect_length = " << defect_length << ", defects = [";
-    for (const auto& defect : defect_positions) {
+    for (const auto& defect : defects) {
       oss << defect << " ";  // This will now save the rank correponding to each
                              // defect value, so opposite as before
     }
@@ -81,7 +77,7 @@ class PTBC {  // do I need the AdjFieldType here?
                                     // if a given swap was accepted
   std::vector<real_t> swap_deltas;  // a vector that holds the partial Delta_S
                                     // values for each swap
-  int _swap_start;                  // holds the rank of the last swap start
+  bool ascending;
 
   typedef enum {
     TAG_DELTAS = 0,
@@ -178,8 +174,9 @@ class PTBC {  // do I need the AdjFieldType here?
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
     if (rank == 0) {
-      addPTBCLogData(ptbcSimLogParams, step, _swap_start, &swap_accepts,
-                     &swap_deltas, &params.defects);  // add the data to the log
+      addPTBCLogData(ptbcSimLogParams, step, ascending, &swap_accepts,
+                     &swap_deltas,
+                     &params.defects);  // add the data to the log
     }
   }
 
@@ -372,9 +369,11 @@ class PTBC {  // do I need the AdjFieldType here?
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
+    params.prev_defects = params.defects;  // store previous defects for logging
+
     bool accept = false;
     real_t Delta_S{0};
-    bool ascending = true;
+    ascending = true;
 
     // Rank 0 determines swap_start and broadcasts
     if (rank == 0) {
