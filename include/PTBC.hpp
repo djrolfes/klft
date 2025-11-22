@@ -436,6 +436,9 @@ class PTBC {  // do I need the AdjFieldType here?
         MPI_Send(&accept, 1, MPI_C_BOOL, swap_rank, TAG_ACCEPT, MPI_COMM_WORLD);
         MPI_Send(&accept, 1, MPI_C_BOOL, partner_rank, TAG_ACCEPT,
                  MPI_COMM_WORLD);
+
+        swap_accepts[i] = accept;
+        swap_deltas[i] = Delta_S;
       }
 
       // Swap ranks receive accept flag
@@ -467,10 +470,6 @@ class PTBC {  // do I need the AdjFieldType here?
         // DEBUG_MPI_PRINT("%s", oss.str().c_str());
       }
       MPI_Barrier(MPI_COMM_WORLD);  // synchronize all ranks after each swap
-      if (rank == 0) {              // add the swap data to the logs
-        swap_accepts[swap_rank] = accept;
-        swap_deltas[swap_rank] = Delta_S;
-      }
     }
     // TODO: shift the defect by one lattice spacing in a random direction
     shift_defect();
