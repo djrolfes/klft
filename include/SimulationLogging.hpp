@@ -270,9 +270,9 @@ inline void addPTBCLogData(PTBCSimulationLoggingParams& p,
       p.defects.emplace_back();
     }
     if (_prev_defects) {
-      p.defects.push_back(*_prev_defects);
+      p.prev_defects.push_back(*_prev_defects);
     } else {
-      p.defects.emplace_back();
+      p.prev_defects.emplace_back();
     }
   }
 }
