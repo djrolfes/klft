@@ -1,6 +1,7 @@
 #pragma once
 #include <mpi.h>
 
+#include <algorithm>
 #include <filesystem>
 #include <random>
 #include <sstream>
@@ -101,8 +102,8 @@ class PTBC {  // do I need the AdjFieldType here?
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     current_index = rank;
 
-    swap_accepts.resize(params.defects.size());
-    swap_deltas.resize(params.defects.size());
+    swap_accepts.resize(std::max<size_t>(params.defects.size() - 1, 1));
+    swap_deltas.resize(std::max<size_t>(params.defects.size() - 1, 1));
 
     hmc.hamiltonian_field.gauge_field.template set_defect<index_t>(
         params.defects[current_index]);
