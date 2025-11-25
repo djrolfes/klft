@@ -200,7 +200,7 @@ struct PTBCSimulationLoggingParams {
 
   // define vectors to hold the logs
   std::vector<size_t> log_steps;
-  std::vector<bool> ascending;
+  std::vector<bool> starting_defect_value;
   std::vector<std::vector<real_t>> delta_H_swap;
   std::vector<std::vector<real_t>> defects;
   std::vector<std::vector<real_t>> prev_defects;
@@ -221,7 +221,7 @@ struct PTBCSimulationLoggingParams {
 
 inline void addPTBCLogData(PTBCSimulationLoggingParams& p,
                            const size_t step,
-                           const bool ascending,
+                           const bool starting_defect_value,
                            const std::vector<bool>* _accepts = nullptr,
                            const std::vector<real_t>* _delta_H_swap = nullptr,
                            const std::vector<real_t>* _defects = nullptr,
@@ -263,7 +263,7 @@ inline void addPTBCLogData(PTBCSimulationLoggingParams& p,
   }
 
   if (p.log_defects) {
-    p.ascending.push_back(ascending);
+    p.starting_defect_value.push_back(starting_defect_value);
     if (_defects) {
       p.defects.push_back(*_defects);
     } else {
@@ -279,7 +279,7 @@ inline void addPTBCLogData(PTBCSimulationLoggingParams& p,
 
 inline void clearPTBCSimulationLogs(PTBCSimulationLoggingParams& p) {
   p.log_steps.clear();
-  p.ascending.clear();
+  p.starting_defect_value.clear();
   p.delta_H_swap.clear();
   p.defects.clear();
   p.prev_defects.clear();
@@ -332,7 +332,7 @@ inline void forceflushPTBCSimulationLogs(PTBCSimulationLoggingParams& p,
     if (p.log_delta_H_swap)
       file << ", delta_H_swap";
     if (p.log_defects) {
-      file << ", ascending";
+      file << ", starting_defect_value";
       file << ", prev_defects";
       file << ", defects";
     }
@@ -361,9 +361,9 @@ inline void forceflushPTBCSimulationLogs(PTBCSimulationLoggingParams& p,
       }
     }
     if (p.log_defects) {
-      if (i < p.ascending.size()) {
+      if (i < p.starting_defect_value.size()) {
         file << ", ";
-        file << (p.ascending[i] ? "1" : "0");
+        file << (p.starting_defect_value[i] ? "1" : "0");
       }
       if (i < p.prev_defects.size()) {
         file << ", ";

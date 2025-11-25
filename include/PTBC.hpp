@@ -78,15 +78,14 @@ class PTBC {  // do I need the AdjFieldType here?
                                     // if a given swap was accepted
   std::vector<real_t> swap_deltas;  // a vector that holds the partial Delta_S
                                     // values for each swap
-  bool ascending;
+  bool starting_defect_value;
 
   typedef enum {
     TAG_DELTAS = 0,
     TAG_ACCEPT = 1,
     TAG_INDEX = 2,
     TAG_SWAPSTART = 3,
-    TAG_SHIFTDEFECT = 4,
-    TAG_SWAPASCENDING = 5
+    TAG_SHIFTDEFECT = 4
   } MPI_Tags;
 
   PTBC() = delete;  // default constructor is not allowed
@@ -175,8 +174,8 @@ class PTBC {  // do I need the AdjFieldType here?
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
     if (rank == 0) {
-      addPTBCLogData(ptbcSimLogParams, step, ascending, &swap_accepts,
-                     &swap_deltas, &params.defects,
+      addPTBCLogData(ptbcSimLogParams, step, starting_defect_value,
+                     &swap_accepts, &swap_deltas, &params.defects,
                      &params.prev_defects);  // add the data to the log
     }
   }
@@ -346,14 +345,14 @@ class PTBC {  // do I need the AdjFieldType here?
   }
 
   std::vector<index_t> argsort(const std::vector<real_t>& vec,
-                               bool ascending = true) {
+                               bool descending = true) {
     // Create a vector of indices
     std::vector<index_t> indices(vec.size());
     for (index_t i = 0; i < vec.size(); ++i) {
       indices[i] = i;
     }
 
-    if (ascending) {
+    if (!descending) {
       // Sort the indices based on the values in vec
       std::sort(indices.begin(), indices.end(),
                 [&vec](real_t a, real_t b) { return vec[a] < vec[b]; });
@@ -374,20 +373,19 @@ class PTBC {  // do I need the AdjFieldType here?
 
     bool accept = false;
     real_t Delta_S{0};
-    ascending = true;
+    starting_defect_value = true;
 
     // Rank 0 determines swap_start and broadcasts
     if (rank == 0) {
-      ascending = bool(int(dist(mt) * 2));
+      starting_defect_value = bool(int(dist(mt) * 2));
     }
-    // TAG_SWAPASCENDING
-    MPI_Bcast(&ascending, 1, MPI_C_BOOL, 0, MPI_COMM_WORLD);
+    MPI_Bcast(&starting_defect_value, 1, MPI_C_BOOL, 0, MPI_COMM_WORLD);
 
     for (index_t i = 0; i < size - 1; ++i) {  // interpret as loop over c values
       // assumption: the defects vector is up to  date and synchronized across
       // ranks
-      std::vector<index_t> sorted_indices =
-          argsort(params.defects, ascending);  // get the sorted indices
+      std::vector<index_t> sorted_indices = argsort(
+          params.defects, starting_defect_value);  // get the sorted indices
 
       auto swap_rank = sorted_indices[i];
       auto partner_rank = sorted_indices[i + 1];
@@ -400,10 +398,10 @@ class PTBC {  // do I need the AdjFieldType here?
         DEBUG_MPI_PRINT(
             "Iteration %d: swap_rank=%d, defect(PTBC)=%f , "
             "defect(Field)=%f \n\t "
-            "partner_rank = % d defect(PTBC) = %f , ascending: %d ",
+            "partner_rank = % d defect(PTBC) = %f , starting_defect_value: %d ",
             i, swap_rank, params.defects[swap_rank],
             hmc.hamiltonian_field.gauge_field.get_defect(), partner_rank,
-            params.defects[partner_rank], int(ascending));
+            params.defects[partner_rank], int(starting_defect_value));
         real_t temp = swap_partner(partner_rank);
 
         MPI_Send(&temp, 1, mpi_real_t(), 0, TAG_DELTAS, MPI_COMM_WORLD);
