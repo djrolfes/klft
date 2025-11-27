@@ -2,6 +2,8 @@
 #include <mpi.h>
 
 #include <algorithm>
+#include <chrono>
+#include <ctime>
 #include <filesystem>
 #include <random>
 #include <sstream>
@@ -542,8 +544,13 @@ int run_PTBC(PTBCType& ptbc, Integrator_Params& int_params) {
     ptbc.measure(ptbc.params.simLogParams, step, acc_rate, accept, time,
                  obs_time);
     if (rank == 0) {
-      Kokkos::printf("Step: %zu, accepted: %d, Acceptance rate: %f, Time: %f\n",
-                     step, accept, acc_rate, time);
+      time_t now = std::time(nullptr);
+      char time_str[26];
+      std::strftime(time_str, sizeof(time_str), "%Y %b %d %H:%M:%S",
+                    std::localtime(&now));
+      Kokkos::printf(
+          "%s - Step: %zu, accepted: %d, Acceptance rate: %f, Time: %f\n",
+          time_str, step, accept, acc_rate, time);
     }
     flushSimulationLogs(ptbc.params.simLogParams, step, true);
     flushIOPTBC<
