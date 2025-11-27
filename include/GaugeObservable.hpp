@@ -265,16 +265,20 @@ void measureGaugeObservablesPTBC(const typename DGaugeFieldType::type& g_in,
     }
     if (params.measure_wilson_loop_temporal) {
       // measure the Wilson loop in the temporal direction
-      if (KLFT_VERBOSITY > 1) {
-        printf("temporal Wilson loop:\n");
-        printf("L, T, W_temp\n");
-      }
       WilsonLoop_temporal<Nd, Nc, GaugeFieldKind::PTBC>(
           g_in, params.W_temp_L_T_pairs, WilsonTemp_measurements);
       size_t WilsonTemp_measurements_size = WilsonTemp_measurements.size();
       if (KLFT_VERBOSITY > 1) {
+        printf(
+            "Rank %d: Sending temporal Wilson loop measurements of size %zu\n",
+            static_cast<index_t>(rank), WilsonTemp_measurements_size);
+      }
+      if (KLFT_VERBOSITY > 2) {
+        printf("temporal Wilson loop:\n");
+        printf("Rank, L, T, W_temp\n");
         for (const auto& measure : WilsonTemp_measurements) {
-          printf("%d, %d, %11.6f\n", static_cast<index_t>(measure[0]),
+          printf("Rank: %d , %d, %d, %11.6f\n", static_cast<index_t>(rank),
+                 static_cast<index_t>(measure[0]),
                  static_cast<index_t>(measure[1]), measure[2]);
         }
       }
@@ -286,6 +290,11 @@ void measureGaugeObservablesPTBC(const typename DGaugeFieldType::type& g_in,
             WilsonTemp_measurements_size * sizeof(Kokkos::Array<real_t, 3>),
             MPI_BYTE, 0, MPI_GAUGE_OBSERVABLES_WILSON_LOOP_TEMPORAL,
             MPI_COMM_WORLD);
+      }
+
+      if (KLFT_VERBOSITY > 1) {
+        printf("Rank %d: Send temporal Wilson loop measurements\n",
+               static_cast<index_t>(rank));
       }
     }
   }
@@ -361,14 +370,25 @@ void measureGaugeObservablesPTBC(const typename DGaugeFieldType::type& g_in,
 
     if (params.measure_wilson_loop_temporal) {
       // measure the Wilson loop in the temporal direction
-      if (KLFT_VERBOSITY > 1) {
-        printf("temporal Wilson loop:\n");
-        printf("L, T, W_temp\n");
-      }
       size_t WilsonTemp_measurements_size;
       MPI_Recv(&WilsonTemp_measurements_size, 1, mpi_size_t(), compute_rank,
                MPI_GAUGE_OBSERVABLES_WILSON_LOOP_TEMPORAL_SIZE, MPI_COMM_WORLD,
                MPI_STATUS_IGNORE);
+
+      if (KLFT_VERBOSITY > 1) {
+        printf(
+            "Rank 0: Receiving temporal Wilson loop measurements of size %zu\n",
+            WilsonTemp_measurements_size);
+      }
+      if (KLFT_VERBOSITY > 2) {
+        printf("temporal Wilson loop:\n");
+        printf("Rank, L, T, W_temp\n");
+        for (const auto& measure : WilsonTemp_measurements) {
+          printf("Rank: %d , %d, %d, %11.6f\n", static_cast<index_t>(rank),
+                 static_cast<index_t>(measure[0]),
+                 static_cast<index_t>(measure[1]), measure[2]);
+        }
+      }
       if (WilsonTemp_measurements_size > 0) {
         WilsonTemp_measurements.resize(WilsonTemp_measurements_size);
         MPI_Recv(
@@ -379,11 +399,9 @@ void measureGaugeObservablesPTBC(const typename DGaugeFieldType::type& g_in,
       }
 
       if (KLFT_VERBOSITY > 1) {
-        for (const auto& measure : WilsonTemp_measurements) {
-          printf("%d, %d, %11.6f\n", static_cast<index_t>(measure[0]),
-                 static_cast<index_t>(measure[1]), measure[2]);
-        }
+        printf("Rank 0: Received temporal Wilson loop measurements\n");
       }
+
       params.W_temp_measurements.push_back(WilsonTemp_measurements);
     }
 
