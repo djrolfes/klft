@@ -212,96 +212,250 @@ struct WilsonFlow {
   }
 
   void flow_adaptive() {
-    real_t eps_init = eps;
-    real_t flow_time{0.0};
+    real_t flow_time = 0.0;
+
+    // Allocate temporary Views for the Lie Algebra stages (K1, K2, K3)
+    // We can reuse tmp_Z for Z calculations and tmp_Z_err for one of the K's if
+    // needed, but explicit allocation is clearer and safer for the
+    // accumulators.
+    SUNAdjField<rank, Nc> K1("K1", field.dimensions[0], field.dimensions[1],
+                             field.dimensions[2], field.dimensions[3]);
+    SUNAdjField<rank, Nc> K2("K2", field.dimensions[0], field.dimensions[1],
+                             field.dimensions[2], field.dimensions[3]);
+    SUNAdjField<rank, Nc> K3("K3", field.dimensions[0], field.dimensions[1],
+                             field.dimensions[2], field.dimensions[3]);
 
     if (KLFT_VERBOSITY > 2) {
-      Kokkos::printf("Starting adaptive Wilson flow\n");
+      Kokkos::printf("Starting faithful RK-MK (2)3 adaptive Wilson flow\n");
     }
 
+    // Parameters from paper/struct
+    auto aparams = params.adaptiveParams;
+
+    // Loop until target flow time is reached
     while (flow_time < params.tau) {
-      // Save current field state
+      // 0. Backup current field (V0)
       Kokkos::deep_copy(field_bak.field, field.field);
+
+      // --- Stage 1 ---
+      // Y1 = 0, so V = V0.
+      // Calculate Z(V0).
+      stapleField<DGaugeFieldType>(this->field, this->tmp_staple);
       Kokkos::fence();
 
-      flow_step();
-      // Perform RK3 step - result will be in tmp_Z_err
+      // K1 = f_0(0, Z) + B_1[0, Z] = Z. (Since Y1=0)
+      auto Z = this->tmp_Z;  // Re-use tmp_Z member as a handle for Z
+      calc_Z_LieAlgebra(this->field, this->tmp_staple,
+                        Z);  // Helper to compute Z from staple*U
+      Kokkos::deep_copy(K1, Z);
+
+      // --- Stage 2 ---
+      // Y2 = h * (1/2) * K1 [cite: 137]
+      // V2 = exp(Y2) * V0
+      update_field_RKMK(field_bak, field, K1, 0.5 * eps);
+      stapleField<DGaugeFieldType>(this->field, this->tmp_staple);
       Kokkos::fence();
 
-      // Restore field and perform RK4 step - result will be in tmp_Z
-      Kokkos::deep_copy(field.field, field_bak.field);
+      calc_Z_LieAlgebra(this->field, this->tmp_staple, Z);
+      // K2 = Z - 0.5 * [Y2, Z]
+      // Note: We need to reconstruct Y2 inside the kernel or pass the
+      // coefficient.
+      compute_stage_K(K2, Z, K1, 0.5 * eps);
+
+      // --- Stage 3 ---
+      // Y3 = h * (3/4) * K2 [cite: 138]
+      // V3 = exp(Y3) * V0
+      update_field_RKMK(field_bak, field, K2, 0.75 * eps);
+      stapleField<DGaugeFieldType>(this->field, this->tmp_staple);
       Kokkos::fence();
 
-      flow_step_RK4();
+      calc_Z_LieAlgebra(this->field, this->tmp_staple, Z);
+      // K3 = Z - 0.5 * [Y3, Z]
+      compute_stage_K(K3, Z, K2, 0.75 * eps);
+
+      // --- Stage 4 (Final Solution V1) ---
+      // Omega_3 = h * (2/9 K1 + 1/3 K2 + 4/9 K3) [cite: 139]
+      // V1 = exp(Omega_3) * V0
+      // We perform the weighted sum and exp map in one go.
+      update_field_RKMK_final(field_bak, field, K1, K2, K3, eps);
+      stapleField<DGaugeFieldType>(this->field, this->tmp_staple);
       Kokkos::fence();
 
-      // Now tmp_Z_err contains RK4 result and tmp_Z contains RK3 result
-      // Calculate error between the two methods
-      real_t eps_opt = params.eps;
-      auto aparams = params.adaptiveParams;
+      // Calculate Z(V1) for the error estimate (FSAL property / Embedded
+      // method) This corresponds to \hat{K}_4 in the paper (order 2 approx).
+      // [cite: 129]
+      calc_Z_LieAlgebra(this->field, this->tmp_staple, Z);
+
+      // --- Error Estimate ---
+      // Err = || Omega_2 - Omega_3 ||
+      // Omega_2 uses weights: 7/24, 1/4, 1/3, 1/8 [cite: 141]
+      // Omega_3 uses weights: 2/9, 1/3, 4/9, 0
+      // Diff weights: (7/24 - 2/9), (1/4 - 1/3), (1/3 - 4/9), 1/8
+      // Diff = h * ( 5/72 K1 - 1/12 K2 - 1/9 K3 + 1/8 Z )
+
       real_t err = 0.0;
-
-      const auto rp = Kokkos::MDRangePolicy<Kokkos::Rank<rank>>(
-          IndexArray<rank>{0}, field.dimensions);
-
-      // Capture the views explicitly to avoid issues with 'this' in CUDA lambda
-      auto Z_rk3 = this->tmp_Z_err;
-      auto Z_rk4 = this->tmp_Z;
+      real_t total_volume =
+          this->field.dimensions[0] * this->field.dimensions[1] *
+          this->field.dimensions[2] * this->field.dimensions[3] * 4.0;
 
       Kokkos::parallel_reduce(
-          "WilsonFlow_Error", rp,
+          "WilsonFlow_Error_Calc",
+          Kokkos::MDRangePolicy<Kokkos::Rank<rank>>(IndexArray<rank>{0},
+                                                    field.dimensions),
           KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2,
                         const index_t i3, real_t& local_err) {
             for (index_t mu = 0; mu < 4; ++mu) {
-              SUNAdj<Nc> diff =
-                  Z_rk4(i0, i1, i2, i3, mu) - Z_rk3(i0, i1, i2, i3, mu);
-              real_t rk3_norm =
-                  Kokkos::sqrt(norm2<Nc>(Z_rk3(i0, i1, i2, i3, mu)));
-              local_err += Kokkos::pow(
-                  Kokkos::sqrt(norm2<Nc>(diff)) /
-                      (aparams.abs_tol + aparams.rel_tol * rk3_norm),
-                  2);
+              SUNAdj<Nc> k1_loc = K1(i0, i1, i2, i3, mu);
+              SUNAdj<Nc> k2_loc = K2(i0, i1, i2, i3, mu);
+              SUNAdj<Nc> k3_loc = K3(i0, i1, i2, i3, mu);
+              SUNAdj<Nc> z_loc = Z(i0, i1, i2, i3, mu);
+
+              // Calculate Omega_3 (Accumulator) for normalization if using
+              // Relative Tol
+              SUNAdj<Nc> omega_3 =
+                  (k1_loc * (2.0 / 9.0) + k2_loc * (1.0 / 3.0) +
+                   k3_loc * (4.0 / 9.0)) *
+                  eps;
+
+              // Calculate Difference
+              SUNAdj<Nc> diff = (k1_loc * (5.0 / 72.0) - k2_loc * (1.0 / 12.0) -
+                                 k3_loc * (1.0 / 9.0) + z_loc * (1.0 / 8.0)) *
+                                eps;
+
+              // Paper  error metric
+              // Frobenius norm squared of diff
+              real_t diff_norm = Kokkos::sqrt(norm2<Nc>(diff));
+              real_t omega_norm = Kokkos::sqrt(norm2<Nc>(omega_3));
+
+              real_t scale = aparams.abs_tol + aparams.rel_tol * omega_norm;
+              local_err += Kokkos::pow(diff_norm / scale, 2);
             }
           },
           err);
       Kokkos::fence();
 
-      // Normalize error
-      err /= (this->field.dimensions[0] * this->field.dimensions[1] *
-              this->field.dimensions[2] * this->field.dimensions[3] * 4.0);
-      err = Kokkos::sqrt(err);
+      err = Kokkos::sqrt(err / total_volume);
 
-      // Calculate optimal step size (RK4 is 4th order, RK3 is 3rd order)
-      eps_opt = eps * Kokkos::pow(1.0 / (err + 1e-10), 1.0 / 4.0) * aparams.rho;
-
+      // --- Step Size Control [cite: 104, 106] ---
+      // Order p=2 used for prediction, so exponent is 1/(p+1) = 1/3
+      real_t eps_opt =
+          eps * Kokkos::pow(1.0 / (err + 1e-10), 1.0 / 3.0) * aparams.rho;
       eps_opt = Kokkos::min(aparams.max_increase * eps,
                             Kokkos::max(aparams.max_decrease * eps, eps_opt));
 
       if (KLFT_VERBOSITY > 2) {
-        Kokkos::printf(
-            "Adaptive Flow: err=%e, eps=%e, eps_opt=%e, flow_time=%e\n", err,
-            eps, eps_opt, flow_time);
+        Kokkos::printf("Adaptive Step: t=%1.4f, h=%e, err=%e, new_h=%e\n",
+                       flow_time, eps, err, eps_opt);
       }
 
-      // Check if error is acceptable
-      if (err < 1.0) {
-        // Accept step
+      if (err <= 1.0) {
+        // Accept
         flow_time += eps;
       } else {
-        // Reject step and restore field
+        // Reject: Restore field
         Kokkos::deep_copy(field.field, field_bak.field);
         Kokkos::fence();
       }
 
-      // Update step size for next iteration
+      // Update step size
       eps = eps_opt;
-      // Ensure we don't overshoot the target flow time
-      if ((flow_time + eps) > params.tau) {
+      if (flow_time + eps > params.tau) {
         eps = params.tau - flow_time + REAL_T_EPSILON;
       }
     }
+  }
 
-    eps = eps_init;
+  // --- Helper Kernels for RK-MK ---
+
+  // Calculates Z (Lie Algebra force) from the Field and Staple
+  // Z = P_Alg ( U * Staple )
+  void calc_Z_LieAlgebra(GaugeFieldT& f,
+                         GaugeFieldT& st,
+                         SUNAdjField<rank, Nc>& out_Z) {
+    Kokkos::parallel_for(
+        "Calc_Z",
+        Kokkos::MDRangePolicy<Kokkos::Rank<rank>>(IndexArray<rank>{0},
+                                                  f.dimensions),
+        KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2,
+                      const index_t i3) {
+          for (int mu = 0; mu < 4; ++mu) {
+            SUN<Nc> prod =
+                f.field(i0, i1, i2, i3, mu) * st.field(i0, i1, i2, i3, mu);
+            // Project to algebra (traceless anti-hermitian part)
+            // Corresponds to [cite: 118] Z mapping
+            out_Z(i0, i1, i2, i3, mu) = 2.0 * traceT(prod);
+          }
+        });
+  }
+
+  // Updates field for internal stages: V = exp( coeff * K_prev ) * V0
+  void update_field_RKMK(GaugeFieldT& v0,
+                         GaugeFieldT& v_target,
+                         SUNAdjField<rank, Nc>& K_prev,
+                         real_t coeff) {
+    Kokkos::parallel_for(
+        "Update_Field_RKMK",
+        Kokkos::MDRangePolicy<Kokkos::Rank<rank>>(IndexArray<rank>{0},
+                                                  v0.dimensions),
+        KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2,
+                      const index_t i3) {
+          for (int mu = 0; mu < 4; ++mu) {
+            SUNAdj<Nc> Y = K_prev(i0, i1, i2, i3, mu) * coeff;
+            // V = exp(Y) * V0 [cite: 95]
+            v_target.field(i0, i1, i2, i3, mu) =
+                expoSUN(Y * -1.0) * v0.field(i0, i1, i2, i3, mu);
+          }
+        });
+  }
+
+  // Calculates K for stages: K = Z - 0.5 * [Y, Z]
+  // Uses field.dimensions for the iteration policy since Z is a raw View
+  void compute_stage_K(SUNAdjField<rank, Nc>& K_target,
+                       SUNAdjField<rank, Nc>& Z,
+                       SUNAdjField<rank, Nc>& K_prev,
+                       real_t coeff) {
+    Kokkos::parallel_for(
+        "Compute_Stage_K",
+        Kokkos::MDRangePolicy<Kokkos::Rank<rank>>(IndexArray<rank>{0},
+                                                  this->field.dimensions),
+        KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2,
+                      const index_t i3) {
+          for (int mu = 0; mu < 4; ++mu) {
+            SUNAdj<Nc> z_val = Z(i0, i1, i2, i3, mu);
+            SUNAdj<Nc> y_val = K_prev(i0, i1, i2, i3, mu) * coeff;
+
+            // Commutator [Y, Z] = YZ - ZY
+            SUNAdj<Nc> comm = y_val * z_val - z_val * y_val;
+
+            // K = Z + B1 * [Y, Z], B1 = -0.5
+            K_target(i0, i1, i2, i3, mu) = z_val - comm * 0.5;
+          }
+        });
+  }
+
+  // Final update: V1 = exp( h * (b1 K1 + b2 K2 + b3 K3) ) * V0
+  void update_field_RKMK_final(GaugeFieldT& v0,
+                               GaugeFieldT& v_target,
+                               SUNAdjField<rank, Nc>& k1,
+                               SUNAdjField<rank, Nc>& k2,
+                               SUNAdjField<rank, Nc>& k3,
+                               real_t h) {
+    Kokkos::parallel_for(
+        "Update_Final",
+        Kokkos::MDRangePolicy<Kokkos::Rank<rank>>(IndexArray<rank>{0},
+                                                  v0.dimensions),
+        KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2,
+                      const index_t i3) {
+          for (int mu = 0; mu < 4; ++mu) {
+            // Weights b from Table 1, row 4 [cite: 139]
+            SUNAdj<Nc> Omega = k1(i0, i1, i2, i3, mu) * (2.0 / 9.0) +
+                               k2(i0, i1, i2, i3, mu) * (1.0 / 3.0) +
+                               k3(i0, i1, i2, i3, mu) * (4.0 / 9.0);
+            Omega = Omega * h;
+            v_target.field(i0, i1, i2, i3, mu) =
+                expoSUN(Omega * -1.0) * v0.field(i0, i1, i2, i3, mu);
+          }
+        });
   }
 
   void flow_dynamical() {
