@@ -1,0 +1,1968 @@
+
+[Rank 2] /home/rolfes/klft/include/PTBCGaugeField.hpp:306 (set_defect): set defect value to 1.000000
+[Rank 2] /home/rolfes/klft/include/PTBCGaugeField.hpp:378 (check_defect_application): ----- Checking defect application at defect position -----
+Defect value: 1.000000, Defect position: (0,0,0), Defect length: 2
+Defect Scan:
+Site (0,7,7,7), Defect value: 1.000000
+Site (0,7,7,0), Defect value: 1.000000
+Site (0,7,7,1), Defect value: 1.000000
+Site (0,7,7,2), Defect value: 1.000000
+Site (0,7,0,7), Defect value: 1.000000
+Site (0,7,0,0), Defect value: 1.000000
+Site (0,7,0,1), Defect value: 1.000000
+Site (0,7,0,2), Defect value: 1.000000
+Site (0,7,1,7), Defect value: 1.000000
+Site (0,7,1,0), Defect value: 1.000000
+Site (0,7,1,1), Defect value: 1.000000
+Site (0,7,1,2), Defect value: 1.000000
+Site (0,7,2,7), Defect value: 1.000000
+Site (0,7,2,0), Defect value: 1.000000
+Site (0,7,2,1), Defect value: 1.000000
+Site (0,7,2,2), Defect value: 1.000000
+Site (0,0,7,7), Defect value: 1.000000
+Site (0,0,7,0), Defect value: 1.000000
+Site (0,0,7,1), Defect value: 1.000000
+Site (0,0,7,2), Defect value: 1.000000
+Site (0,0,0,7), Defect value: 1.000000
+Site (0,0,0,0), Defect value: 1.000000
+Site (0,0,0,1), Defect value: 1.000000
+Site (0,0,0,2), Defect value: 1.000000
+Site (0,0,1,7), Defect value: 1.000000
+Site (0,0,1,0), Defect value: 1.000000
+Site (0,0,1,1), Defect value: 1.000000
+Site (0,0,1,2), Defect value: 1.000000
+Site (0,0,2,7), Defect value: 1.000000
+Site (0,0,2,0), Defect value: 1.000000
+Site (0,0,2,1), Defect value: 1.000000
+Site (0,0,2,2), Defect value: 1.000000
+Site (0,1,7,7), Defect value: 1.000000
+Site (0,1,7,0), Defect value: 1.000000
+Site (0,1,7,1), Defect value: 1.000000
+Site (0,1,7,2), Defect value: 1.000000
+Site (0,1,0,7), Defect value: 1.000000
+Site (0,1,0,0), Defect value: 1.000000
+Site (0,1,0,1), Defect value: 1.000000
+Site (0,1,0,2), Defect value: 1.000000
+Site (0,1,1,7), Defect value: 1.000000
+Site (0,1,1,0), Defect value: 1.000000
+Site (0,1,1,1), Defect value: 1.000000
+Site (0,1,1,2), Defect value: 1.000000
+Site (0,1,2,7), Defect value: 1.000000
+Site (0,1,2,0), Defect value: 1.000000
+Site (0,1,2,1), Defect value: 1.000000
+Site (0,1,2,2), Defect value: 1.000000
+Site (0,2,7,7), Defect value: 1.000000
+Site (0,2,7,0), Defect value: 1.000000
+Site (0,2,7,1), Defect value: 1.000000
+Site (0,2,7,2), Defect value: 1.000000
+Site (0,2,0,7), Defect value: 1.000000
+Site (0,2,0,0), Defect value: 1.000000
+Site (0,2,0,1), Defect value: 1.000000
+Site (0,2,0,2), Defect value: 1.000000
+Site (0,2,1,7), Defect value: 1.000000
+Site (0,2,1,0), Defect value: 1.000000
+Site (0,2,1,1), Defect value: 1.000000
+Site (0,2,1,2), Defect value: 1.000000
+Site (0,2,2,7), Defect value: 1.000000
+Site (0,2,2,0), Defect value: 1.000000
+Site (0,2,2,1), Defect value: 1.000000
+Site (0,2,2,2), Defect value: 1.000000
+Total sites in defect region: 0\8.000000
+Raw field entry at defect position: SUN Matrix:
+[0,0] = (+0.49282334494744445275, -0.53532176722908575428 i)
+[0,1] = (+0.33717177545691118246, -0.59738676754743602615 i)
+[1,0] = (-0.33717177545691118246, -0.59738676754743602615 i)
+[1,1] = (+0.49282334494744445275, +0.53532176722908575428 i)
+
+defect field entry at defect position: SUN Matrix:
+[0,0] = (+0.49282334494744445275, -0.53532176722908575428 i)
+[0,1] = (+0.33717177545691118246, -0.59738676754743602615 i)
+[1,0] = (-0.33717177545691118246, -0.59738676754743602615 i)
+[1,1] = (+0.49282334494744445275, +0.53532176722908575428 i)
+
+manually computed defect-applied entry at defect position: SUN Matrix:
+[0,0] = (+0.49282334494744445275, -0.53532176722908575428 i)
+[0,1] = (+0.33717177545691118246, -0.59738676754743602615 i)
+[1,0] = (-0.33717177545691118246, -0.59738676754743602615 i)
+[1,1] = (+0.49282334494744445275, +0.53532176722908575428 i)
+
+--------------------------------------------------------
+
+[Rank 2] /home/rolfes/klft/include/PTBCGaugeField.hpp:306 (set_defect): set defect value to 1.000000
+[Rank 2] /home/rolfes/klft/include/PTBCGaugeField.hpp:378 (check_defect_application): ----- Checking defect application at defect position -----
+Defect value: 1.000000, Defect position: (0,0,7), Defect length: 2
+Defect Scan:
+Site (0,7,7,6), Defect value: 1.000000
+Site (0,7,7,7), Defect value: 1.000000
+Site (0,7,7,0), Defect value: 1.000000
+Site (0,7,7,1), Defect value: 1.000000
+Site (0,7,0,6), Defect value: 1.000000
+Site (0,7,0,7), Defect value: 1.000000
+Site (0,7,0,0), Defect value: 1.000000
+Site (0,7,0,1), Defect value: 1.000000
+Site (0,7,1,6), Defect value: 1.000000
+Site (0,7,1,7), Defect value: 1.000000
+Site (0,7,1,0), Defect value: 1.000000
+Site (0,7,1,1), Defect value: 1.000000
+Site (0,7,2,6), Defect value: 1.000000
+Site (0,7,2,7), Defect value: 1.000000
+Site (0,7,2,0), Defect value: 1.000000
+Site (0,7,2,1), Defect value: 1.000000
+Site (0,0,7,6), Defect value: 1.000000
+Site (0,0,7,7), Defect value: 1.000000
+Site (0,0,7,0), Defect value: 1.000000
+Site (0,0,7,1), Defect value: 1.000000
+Site (0,0,0,6), Defect value: 1.000000
+Site (0,0,0,7), Defect value: 1.000000
+Site (0,0,0,0), Defect value: 1.000000
+Site (0,0,0,1), Defect value: 1.000000
+Site (0,0,1,6), Defect value: 1.000000
+Site (0,0,1,7), Defect value: 1.000000
+Site (0,0,1,0), Defect value: 1.000000
+Site (0,0,1,1), Defect value: 1.000000
+Site (0,0,2,6), Defect value: 1.000000
+Site (0,0,2,7), Defect value: 1.000000
+Site (0,0,2,0), Defect value: 1.000000
+Site (0,0,2,1), Defect value: 1.000000
+Site (0,1,7,6), Defect value: 1.000000
+Site (0,1,7,7), Defect value: 1.000000
+Site (0,1,7,0), Defect value: 1.000000
+Site (0,1,7,1), Defect value: 1.000000
+Site (0,1,0,6), Defect value: 1.000000
+Site (0,1,0,7), Defect value: 1.000000
+Site (0,1,0,0), Defect value: 1.000000
+Site (0,1,0,1), Defect value: 1.000000
+Site (0,1,1,6), Defect value: 1.000000
+Site (0,1,1,7), Defect value: 1.000000
+Site (0,1,1,0), Defect value: 1.000000
+Site (0,1,1,1), Defect value: 1.000000
+Site (0,1,2,6), Defect value: 1.000000
+Site (0,1,2,7), Defect value: 1.000000
+Site (0,1,2,0), Defect value: 1.000000
+Site (0,1,2,1), Defect value: 1.000000
+Site (0,2,7,6), Defect value: 1.000000
+Site (0,2,7,7), Defect value: 1.000000
+Site (0,2,7,0), Defect value: 1.000000
+Site (0,2,7,1), Defect value: 1.000000
+Site (0,2,0,6), Defect value: 1.000000
+Site (0,2,0,7), Defect value: 1.000000
+Site (0,2,0,0), Defect value: 1.000000
+Site (0,2,0,1), Defect value: 1.000000
+Site (0,2,1,6), Defect value: 1.000000
+Site (0,2,1,7), Defect value: 1.000000
+Site (0,2,1,0), Defect value: 1.000000
+Site (0,2,1,1), Defect value: 1.000000
+Site (0,2,2,6), Defect value: 1.000000
+Site (0,2,2,7), Defect value: 1.000000
+Site (0,2,2,0), Defect value: 1.000000
+Site (0,2,2,1), Defect value: 1.000000
+Total sites in defect region: 0\8.000000
+Raw field entry at defect position: SUN Matrix:
+[0,0] = (-0.095616588755428777446, -0.49173013102835755328 i)
+[0,1] = (-0.39959363025162736305, +0.76771340802146781357 i)
+[1,0] = (+0.39959363025162736305, +0.76771340802146781357 i)
+[1,1] = (-0.095616588755428777446, +0.49173013102835755328 i)
+
+defect field entry at defect position: SUN Matrix:
+[0,0] = (-0.095616588755428777446, -0.49173013102835755328 i)
+[0,1] = (-0.39959363025162736305, +0.76771340802146781357 i)
+[1,0] = (+0.39959363025162736305, +0.76771340802146781357 i)
+[1,1] = (-0.095616588755428777446, +0.49173013102835755328 i)
+
+manually computed defect-applied entry at defect position: SUN Matrix:
+[0,0] = (-0.095616588755428777446, -0.49173013102835755328 i)
+[0,1] = (-0.39959363025162736305, +0.76771340802146781357 i)
+[1,0] = (+0.39959363025162736305, +0.76771340802146781357 i)
+[1,1] = (-0.095616588755428777446, +0.49173013102835755328 i)
+
+--------------------------------------------------------
+
+Step: 0, accepted: 1, Acceptance rate: 1.000000, Time: 11.524470
+
+[Rank 0] /home/rolfes/klft/include/PTBCGaugeField.hpp:306 (set_defect): set defect value to 0.714000
+[Rank 1] /home/rolfes/klft/include/PTBCGaugeField.hpp:306 (set_defect): set defect value to 0.857000
+[Rank 0] /home/rolfes/klft/include/PTBCGaugeField.hpp:378 (check_defect_application): ----- Checking defect application at defect position -----
+Defect value: 0.714000, Defect position: (0,0,0), Defect length: 2
+Defect Scan:
+Site (0,7,7,7), Defect value: 1.000000
+Site (0,7,7,0), Defect value: 1.000000
+Site (0,7,7,1), Defect value: 1.000000
+Site (0,7,7,2), Defect value: 1.000000
+Site (0,7,0,7), Defect value: 1.000000
+Site (0,7,0,0), Defect value: 1.000000
+Site (0,7,0,1), Defect value: 1.000000
+Site (0,7,0,2), Defect value: 1.000000
+Site (0,7,1,7), Defect value: 1.000000
+Site (0,7,1,0), Defect value: 1.000000
+Site (0,7,1,1), Defect value: 1.000000
+Site (0,7,1,2), Defect value: 1.000000
+Site (0,7,2,7), Defect value: 1.000000
+Site (0,7,2,0), Defect value: 1.000000
+Site (0,7,2,1), Defect value: 1.000000
+Site (0,7,2,2), Defect value: 1.000000
+Site (0,0,7,7), Defect value: 1.000000
+Site (0,0,7,0), Defect value: 1.000000
+Site (0,0,7,1), Defect value: 1.000000
+Site (0,0,7,2), Defect value: 1.000000
+Site (0,0,0,7), Defect value: 1.000000
+Site (0,0,0,0), Defect value: 0.714000
+Site (0,0,0,1), Defect value: 0.714000
+Site (0,0,0,2), Defect value: 1.000000
+Site (0,0,1,7), Defect value: 1.000000
+Site (0,0,1,0), Defect value: 0.714000
+Site (0,0,1,1), Defect value: 0.714000
+Site (0,0,1,2), Defect value: 1.000000
+Site (0,0,2,7), Defect value: 1.000000
+Site (0,0,2,0), Defect value: 1.000000
+Site (0,0,2,1), Defect value: 1.000000
+Site (0,0,2,2), Defect value: 1.000000
+Site (0,1,7,7), Defect value: 1.000000
+Site (0,1,7,0), Defect value: 1.000000
+Site (0,1,7,1), Defect value: 1.000000
+Site (0,1,7,2), Defect value: 1.000000
+Site (0,1,0,7), Defect value: 1.000000
+Site (0,1,0,0), Defect value: 0.714000
+Site (0,1,0,1), Defect value: 0.714000
+Site (0,1,0,2), Defect value: 1.000000
+Site (0,1,1,7), Defect value: 1.000000
+Site (0,1,1,0), Defect value: 0.714000
+Site (0,1,1,1), Defect value: 0.714000
+Site (0,1,1,2), Defect value: 1.000000
+Site (0,1,2,7), Defect value: 1.000000
+Site (0,1,2,0), Defect value: 1.000000
+Site (0,1,2,1), Defect value: 1.000000
+Site (0,1,2,2), Defect value: 1.000000
+Site (0,2,7,7), Defect value: 1.000000
+Site (0,2,7,0), Defect value: 1.000000
+Site (0,2,7,1), Defect value: 1.000000
+Site (0,2,7,2), Defect value: 1.000000
+Site (0,2,0,7), Defect value: 1.000000
+Site (0,2,0,0), Defect value: 1.000000
+Site (0,2,0,1), Defect value: 1.000000
+Site (0,2,0,2), Defect value: 1.000000
+Site (0,2,1,7), Defect value: 1.000000
+Site (0,2,1,0), Defect value: 1.000000
+Site (0,2,1,1), Defect value: 1.000000
+Site (0,2,1,2), Defect value: 1.000000
+Site (0,2,2,7), Defect value: 1.000000
+Site (0,2,2,0), Defect value: 1.000000
+Site (0,2,2,1), Defect value: 1.000000
+Site (0,2,2,2), Defect value: 1.000000
+Total sites in defect region: 0\8.000000
+Raw field entry at defect position: SUN Matrix:
+[0,0] = (-0.11253459550228171737, +0.53464067844289553388 i)
+[0,1] = (+0.82828156503139982458, +0.1242777486052585173 i)
+[1,0] = (-0.82828156503139982458, +0.1242777486052585173 i)
+[1,1] = (-0.11253459550228171737, -0.53464067844289553388 i)
+
+defect field entry at defect position: SUN Matrix:
+[0,0] = (-0.080349701188629135684, +0.38173344440822737367 i)
+[0,1] = (+0.59139303743241944389, +0.088734312504154574941 i)
+[1,0] = (-0.59139303743241944389, +0.088734312504154574941 i)
+[1,1] = (-0.080349701188629135684, -0.38173344440822737367 i)
+
+manually computed defect-applied entry at defect position: SUN Matrix:
+[0,0] = (-0.080349701188629135684, +0.38173344440822737367 i)
+[0,1] = (+0.59139303743241944389, +0.088734312504154574941 i)
+[1,0] = (-0.59139303743241944389, +0.088734312504154574941 i)
+[1,1] = (-0.080349701188629135684, -0.38173344440822737367 i)
+
+--------------------------------------------------------
+
+[Rank 1] /home/rolfes/klft/include/PTBCGaugeField.hpp:378 (check_defect_application): ----- Checking defect application at defect position -----
+Defect value: 0.857000, Defect position: (0,0,0), Defect length: 2
+Defect Scan:
+Site (0,7,7,7), Defect value: 1.000000
+Site (0,7,7,0), Defect value: 1.000000
+Site (0,7,7,1), Defect value: 1.000000
+Site (0,7,7,2), Defect value: 1.000000
+Site (0,7,0,7), Defect value: 1.000000
+Site (0,7,0,0), Defect value: 1.000000
+Site (0,7,0,1), Defect value: 1.000000
+Site (0,7,0,2), Defect value: 1.000000
+Site (0,7,1,7), Defect value: 1.000000
+Site (0,7,1,0), Defect value: 1.000000
+Site (0,7,1,1), Defect value: 1.000000
+Site (0,7,1,2), Defect value: 1.000000
+Site (0,7,2,7), Defect value: 1.000000
+Site (0,7,2,0), Defect value: 1.000000
+Site (0,7,2,1), Defect value: 1.000000
+Site (0,7,2,2), Defect value: 1.000000
+Site (0,0,7,7), Defect value: 1.000000
+Site (0,0,7,0), Defect value: 1.000000
+Site (0,0,7,1), Defect value: 1.000000
+Site (0,0,7,2), Defect value: 1.000000
+Site (0,0,0,7), Defect value: 1.000000
+Site (0,0,0,0), Defect value: 0.857000
+Site (0,0,0,1), Defect value: 0.857000
+Site (0,0,0,2), Defect value: 1.000000
+Site (0,0,1,7), Defect value: 1.000000
+Site (0,0,1,0), Defect value: 0.857000
+Site (0,0,1,1), Defect value: 0.857000
+Site (0,0,1,2), Defect value: 1.000000
+Site (0,0,2,7), Defect value: 1.000000
+Site (0,0,2,0), Defect value: 1.000000
+Site (0,0,2,1), Defect value: 1.000000
+Site (0,0,2,2), Defect value: 1.000000
+Site (0,1,7,7), Defect value: 1.000000
+Site (0,1,7,0), Defect value: 1.000000
+Site (0,1,7,1), Defect value: 1.000000
+Site (0,1,7,2), Defect value: 1.000000
+Site (0,1,0,7), Defect value: 1.000000
+Site (0,1,0,0), Defect value: 0.857000
+Site (0,1,0,1), Defect value: 0.857000
+Site (0,1,0,2), Defect value: 1.000000
+Site (0,1,1,7), Defect value: 1.000000
+Site (0,1,1,0), Defect value: 0.857000
+Site (0,1,1,1), Defect value: 0.857000
+Site (0,1,1,2), Defect value: 1.000000
+Site (0,1,2,7), Defect value: 1.000000
+Site (0,1,2,0), Defect value: 1.000000
+Site (0,1,2,1), Defect value: 1.000000
+Site (0,1,2,2), Defect value: 1.000000
+Site (0,2,7,7), Defect value: 1.000000
+Site (0,2,7,0), Defect value: 1.000000
+Site (0,2,7,1), Defect value: 1.000000
+Site (0,2,7,2), Defect value: 1.000000
+Site (0,2,0,7), Defect value: 1.000000
+Site (0,2,0,0), Defect value: 1.000000
+Site (0,2,0,1), Defect value: 1.000000
+Site (0,2,0,2), Defect value: 1.000000
+Site (0,2,1,7), Defect value: 1.000000
+Site (0,2,1,0), Defect value: 1.000000
+Site (0,2,1,1), Defect value: 1.000000
+Site (0,2,1,2), Defect value: 1.000000
+Site (0,2,2,7), Defect value: 1.000000
+Site (0,2,2,0), Defect value: 1.000000
+Site (0,2,2,1), Defect value: 1.000000
+Site (0,2,2,2), Defect value: 1.000000
+Total sites in defect region: 0\8.000000
+Raw field entry at defect position: SUN Matrix:
+[0,0] = (-0.14088229944305813435, -0.22814216105972373594 i)
+[0,1] = (+0.15328467867591835661, -0.95110837412665849566 i)
+[1,0] = (-0.15328467867591835661, -0.95110837412665849566 i)
+[1,1] = (-0.14088229944305813435, +0.22814216105972373594 i)
+
+defect field entry at defect position: SUN Matrix:
+[0,0] = (-0.12073613062270081853, -0.19551783202818323604 i)
+[0,1] = (+0.13136496962526203469, -0.81509987662654626028 i)
+[1,0] = (-0.13136496962526203469, -0.81509987662654626028 i)
+[1,1] = (-0.12073613062270081853, +0.19551783202818323604 i)
+
+manually computed defect-applied entry at defect position: SUN Matrix:
+[0,0] = (-0.12073613062270081853, -0.19551783202818323604 i)
+[0,1] = (+0.13136496962526203469, -0.81509987662654626028 i)
+[1,0] = (-0.13136496962526203469, -0.81509987662654626028 i)
+[1,1] = (-0.12073613062270081853, +0.19551783202818323604 i)
+
+--------------------------------------------------------
+
+[Rank 1] /home/rolfes/klft/include/PTBCGaugeField.hpp:306 (set_defect): set defect value to 1.000000
+[Rank 1] /home/rolfes/klft/include/PTBCGaugeField.hpp:378 (check_defect_application): ----- Checking defect application at defect position -----
+Defect value: 1.000000, Defect position: (0,0,0), Defect length: 2
+Defect Scan:
+Site (0,7,7,7), Defect value: 1.000000
+Site (0,7,7,0), Defect value: 1.000000
+Site (0,7,7,1), Defect value: 1.000000
+Site (0,7,7,2), Defect value: 1.000000
+Site (0,7,0,7), Defect value: 1.000000
+Site (0,7,0,0), Defect value: 1.000000
+Site (0,7,0,1), Defect value: 1.000000
+Site (0,7,0,2), Defect value: 1.000000
+Site (0,7,1,7), Defect value: 1.000000
+Site (0,7,1,0), Defect value: 1.000000
+Site (0,7,1,1), Defect value: 1.000000
+Site (0,7,1,2), Defect value: 1.000000
+Site (0,7,2,7), Defect value: 1.000000
+Site (0,7,2,0), Defect value: 1.000000
+Site (0,7,2,1), Defect value: 1.000000
+Site (0,7,2,2), Defect value: 1.000000
+Site (0,0,7,7), Defect value: 1.000000
+Site (0,0,7,0), Defect value: 1.000000
+Site (0,0,7,1), Defect value: 1.000000
+Site (0,0,7,2), Defect value: 1.000000
+Site (0,0,0,7), Defect value: 1.000000
+Site (0,0,0,0), Defect value: 1.000000
+Site (0,0,0,1), Defect value: 1.000000
+Site (0,0,0,2), Defect value: 1.000000
+Site (0,0,1,7), Defect value: 1.000000
+Site (0,0,1,0), Defect value: 1.000000
+Site (0,0,1,1), Defect value: 1.000000
+Site (0,0,1,2), Defect value: 1.000000
+Site (0,0,2,7), Defect value: 1.000000
+Site (0,0,2,0), Defect value: 1.000000
+Site (0,0,2,1), Defect value: 1.000000
+Site (0,0,2,2), Defect value: 1.000000
+Site (0,1,7,7), Defect value: 1.000000
+Site (0,1,7,0), Defect value: 1.000000
+Site (0,1,7,1), Defect value: 1.000000
+Site (0,1,7,2), Defect value: 1.000000
+Site (0,1,0,7), Defect value: 1.000000
+Site (0,1,0,0), Defect value: 1.000000
+Site (0,1,0,1), Defect value: 1.000000
+Site (0,1,0,2), Defect value: 1.000000
+Site (0,1,1,7), Defect value: 1.000000
+Site (0,1,1,0), Defect value: 1.000000
+Site (0,1,1,1), Defect value: 1.000000
+Site (0,1,1,2), Defect value: 1.000000
+Site (0,1,2,7), Defect value: 1.000000
+Site (0,1,2,0), Defect value: 1.000000
+Site (0,1,2,1), Defect value: 1.000000
+Site (0,1,2,2), Defect value: 1.000000
+Site (0,2,7,7), Defect value: 1.000000
+Site (0,2,7,0), Defect value: 1.000000
+Site (0,2,7,1), Defect value: 1.000000
+Site (0,2,7,2), Defect value: 1.000000
+Site (0,2,0,7), Defect value: 1.000000
+Site (0,2,0,0), Defect value: 1.000000
+Site (0,2,0,1), Defect value: 1.000000
+Site (0,2,0,2), Defect value: 1.000000
+Site (0,2,1,7), Defect value: 1.000000
+Site (0,2,1,0), Defect value: 1.000000
+Site (0,2,1,1), Defect value: 1.000000
+Site (0,2,1,2), Defect value: 1.000000
+Site (0,2,2,7), Defect value: 1.000000
+Site (0,2,2,0), Defect value: 1.000000
+Site (0,2,2,1), Defect value: 1.000000
+Site (0,2,2,2), Defect value: 1.000000
+Total sites in defect region: 0\8.000000
+Raw field entry at defect position: SUN Matrix:
+[0,0] = (-0.14088229944305813435, -0.22814216105972373594 i)
+[0,1] = (+0.15328467867591835661, -0.95110837412665849566 i)
+[1,0] = (-0.15328467867591835661, -0.95110837412665849566 i)
+[1,1] = (-0.14088229944305813435, +0.22814216105972373594 i)
+
+defect field entry at defect position: SUN Matrix:
+[0,0] = (-0.14088229944305813435, -0.22814216105972373594 i)
+[0,1] = (+0.15328467867591835661, -0.95110837412665849566 i)
+[1,0] = (-0.15328467867591835661, -0.95110837412665849566 i)
+[1,1] = (-0.14088229944305813435, +0.22814216105972373594 i)
+
+manually computed defect-applied entry at defect position: SUN Matrix:
+[0,0] = (-0.14088229944305813435, -0.22814216105972373594 i)
+[0,1] = (+0.15328467867591835661, -0.95110837412665849566 i)
+[1,0] = (-0.15328467867591835661, -0.95110837412665849566 i)
+[1,1] = (-0.14088229944305813435, +0.22814216105972373594 i)
+
+--------------------------------------------------------
+
+[Rank 2] /home/rolfes/klft/include/PTBCGaugeField.hpp:306 (set_defect): set defect value to 0.857000
+[Rank 2] /home/rolfes/klft/include/PTBCGaugeField.hpp:378 (check_defect_application): ----- Checking defect application at defect position -----
+Defect value: 0.857000, Defect position: (0,0,7), Defect length: 2
+Defect Scan:
+Site (0,7,7,6), Defect value: 1.000000
+Site (0,7,7,7), Defect value: 1.000000
+Site (0,7,7,0), Defect value: 1.000000
+Site (0,7,7,1), Defect value: 1.000000
+Site (0,7,0,6), Defect value: 1.000000
+Site (0,7,0,7), Defect value: 1.000000
+Site (0,7,0,0), Defect value: 1.000000
+Site (0,7,0,1), Defect value: 1.000000
+Site (0,7,1,6), Defect value: 1.000000
+Site (0,7,1,7), Defect value: 1.000000
+Site (0,7,1,0), Defect value: 1.000000
+Site (0,7,1,1), Defect value: 1.000000
+Site (0,7,2,6), Defect value: 1.000000
+Site (0,7,2,7), Defect value: 1.000000
+Site (0,7,2,0), Defect value: 1.000000
+Site (0,7,2,1), Defect value: 1.000000
+Site (0,0,7,6), Defect value: 1.000000
+Site (0,0,7,7), Defect value: 1.000000
+Site (0,0,7,0), Defect value: 1.000000
+Site (0,0,7,1), Defect value: 1.000000
+Site (0,0,0,6), Defect value: 1.000000
+Site (0,0,0,7), Defect value: 0.857000
+Site (0,0,0,0), Defect value: 0.857000
+Site (0,0,0,1), Defect value: 1.000000
+Site (0,0,1,6), Defect value: 1.000000
+Site (0,0,1,7), Defect value: 0.857000
+Site (0,0,1,0), Defect value: 0.857000
+Site (0,0,1,1), Defect value: 1.000000
+Site (0,0,2,6), Defect value: 1.000000
+Site (0,0,2,7), Defect value: 1.000000
+Site (0,0,2,0), Defect value: 1.000000
+Site (0,0,2,1), Defect value: 1.000000
+Site (0,1,7,6), Defect value: 1.000000
+Site (0,1,7,7), Defect value: 1.000000
+Site (0,1,7,0), Defect value: 1.000000
+Site (0,1,7,1), Defect value: 1.000000
+Site (0,1,0,6), Defect value: 1.000000
+Site (0,1,0,7), Defect value: 0.857000
+Site (0,1,0,0), Defect value: 0.857000
+Site (0,1,0,1), Defect value: 1.000000
+Site (0,1,1,6), Defect value: 1.000000
+Site (0,1,1,7), Defect value: 0.857000
+Site (0,1,1,0), Defect value: 0.857000
+Site (0,1,1,1), Defect value: 1.000000
+Site (0,1,2,6), Defect value: 1.000000
+Site (0,1,2,7), Defect value: 1.000000
+Site (0,1,2,0), Defect value: 1.000000
+Site (0,1,2,1), Defect value: 1.000000
+Site (0,2,7,6), Defect value: 1.000000
+Site (0,2,7,7), Defect value: 1.000000
+Site (0,2,7,0), Defect value: 1.000000
+Site (0,2,7,1), Defect value: 1.000000
+Site (0,2,0,6), Defect value: 1.000000
+Site (0,2,0,7), Defect value: 1.000000
+Site (0,2,0,0), Defect value: 1.000000
+Site (0,2,0,1), Defect value: 1.000000
+Site (0,2,1,6), Defect value: 1.000000
+Site (0,2,1,7), Defect value: 1.000000
+Site (0,2,1,0), Defect value: 1.000000
+Site (0,2,1,1), Defect value: 1.000000
+Site (0,2,2,6), Defect value: 1.000000
+Site (0,2,2,7), Defect value: 1.000000
+Site (0,2,2,0), Defect value: 1.000000
+Site (0,2,2,1), Defect value: 1.000000
+Total sites in defect region: 0\8.000000
+Raw field entry at defect position: SUN Matrix:
+[0,0] = (-0.55357984353520317544, -0.37616522478718489308 i)
+[0,1] = (-0.49587178580736313016, +0.55331749704176669269 i)
+[1,0] = (+0.49587178580736313016, +0.55331749704176669269 i)
+[1,1] = (-0.55357984353520317544, +0.37616522478718489308 i)
+
+defect field entry at defect position: SUN Matrix:
+[0,0] = (-0.4744179259096691359, -0.32237359764261747097 i)
+[0,1] = (-0.42496212043691017346, +0.47419309496479405963 i)
+[1,0] = (+0.42496212043691017346, +0.47419309496479405963 i)
+[1,1] = (-0.4744179259096691359, +0.32237359764261747097 i)
+
+manually computed defect-applied entry at defect position: SUN Matrix:
+[0,0] = (-0.4744179259096691359, -0.32237359764261747097 i)
+[0,1] = (-0.42496212043691017346, +0.47419309496479405963 i)
+[1,0] = (+0.42496212043691017346, +0.47419309496479405963 i)
+[1,1] = (-0.4744179259096691359, +0.32237359764261747097 i)
+
+--------------------------------------------------------
+
+[Rank 0] /home/rolfes/klft/include/PTBCGaugeField.hpp:306 (set_defect): set defect value to 0.857000
+[Rank 0] /home/rolfes/klft/include/PTBCGaugeField.hpp:378 (check_defect_application): ----- Checking defect application at defect position -----
+Defect value: 0.857000, Defect position: (0,0,0), Defect length: 2
+Defect Scan:
+Site (0,7,7,7), Defect value: 1.000000
+Site (0,7,7,0), Defect value: 1.000000
+Site (0,7,7,1), Defect value: 1.000000
+Site (0,7,7,2), Defect value: 1.000000
+Site (0,7,0,7), Defect value: 1.000000
+Site (0,7,0,0), Defect value: 1.000000
+Site (0,7,0,1), Defect value: 1.000000
+Site (0,7,0,2), Defect value: 1.000000
+Site (0,7,1,7), Defect value: 1.000000
+Site (0,7,1,0), Defect value: 1.000000
+Site (0,7,1,1), Defect value: 1.000000
+Site (0,7,1,2), Defect value: 1.000000
+Site (0,7,2,7), Defect value: 1.000000
+Site (0,7,2,0), Defect value: 1.000000
+Site (0,7,2,1), Defect value: 1.000000
+Site (0,7,2,2), Defect value: 1.000000
+Site (0,0,7,7), Defect value: 1.000000
+Site (0,0,7,0), Defect value: 1.000000
+Site (0,0,7,1), Defect value: 1.000000
+Site (0,0,7,2), Defect value: 1.000000
+Site (0,0,0,7), Defect value: 1.000000
+Site (0,0,0,0), Defect value: 0.857000
+Site (0,0,0,1), Defect value: 0.857000
+Site (0,0,0,2), Defect value: 1.000000
+Site (0,0,1,7), Defect value: 1.000000
+Site (0,0,1,0), Defect value: 0.857000
+Site (0,0,1,1), Defect value: 0.857000
+Site (0,0,1,2), Defect value: 1.000000
+Site (0,0,2,7), Defect value: 1.000000
+Site (0,0,2,0), Defect value: 1.000000
+Site (0,0,2,1), Defect value: 1.000000
+Site (0,0,2,2), Defect value: 1.000000
+Site (0,1,7,7), Defect value: 1.000000
+Site (0,1,7,0), Defect value: 1.000000
+Site (0,1,7,1), Defect value: 1.000000
+Site (0,1,7,2), Defect value: 1.000000
+Site (0,1,0,7), Defect value: 1.000000
+Site (0,1,0,0), Defect value: 0.857000
+Site (0,1,0,1), Defect value: 0.857000
+Site (0,1,0,2), Defect value: 1.000000
+Site (0,1,1,7), Defect value: 1.000000
+Site (0,1,1,0), Defect value: 0.857000
+Site (0,1,1,1), Defect value: 0.857000
+Site (0,1,1,2), Defect value: 1.000000
+Site (0,1,2,7), Defect value: 1.000000
+Site (0,1,2,0), Defect value: 1.000000
+Site (0,1,2,1), Defect value: 1.000000
+Site (0,1,2,2), Defect value: 1.000000
+Site (0,2,7,7), Defect value: 1.000000
+Site (0,2,7,0), Defect value: 1.000000
+Site (0,2,7,1), Defect value: 1.000000
+Site (0,2,7,2), Defect value: 1.000000
+Site (0,2,0,7), Defect value: 1.000000
+Site (0,2,0,0), Defect value: 1.000000
+Site (0,2,0,1), Defect value: 1.000000
+Site (0,2,0,2), Defect value: 1.000000
+Site (0,2,1,7), Defect value: 1.000000
+Site (0,2,1,0), Defect value: 1.000000
+Site (0,2,1,1), Defect value: 1.000000
+Site (0,2,1,2), Defect value: 1.000000
+Site (0,2,2,7), Defect value: 1.000000
+Site (0,2,2,0), Defect value: 1.000000
+Site (0,2,2,1), Defect value: 1.000000
+Site (0,2,2,2), Defect value: 1.000000
+Total sites in defect region: 0\8.000000
+Raw field entry at defect position: SUN Matrix:
+[0,0] = (-0.11253459550228171737, +0.53464067844289553388 i)
+[0,1] = (+0.82828156503139982458, +0.1242777486052585173 i)
+[1,0] = (-0.82828156503139982458, +0.1242777486052585173 i)
+[1,1] = (-0.11253459550228171737, -0.53464067844289553388 i)
+
+defect field entry at defect position: SUN Matrix:
+[0,0] = (-0.096442148345455433467, +0.45818706142556148153 i)
+[0,1] = (+0.70983730123190968975, +0.10650603055470654612 i)
+[1,0] = (-0.70983730123190968975, +0.10650603055470654612 i)
+[1,1] = (-0.096442148345455433467, -0.45818706142556148153 i)
+
+manually computed defect-applied entry at defect position: SUN Matrix:
+[0,0] = (-0.096442148345455433467, +0.45818706142556148153 i)
+[0,1] = (+0.70983730123190968975, +0.10650603055470654612 i)
+[1,0] = (-0.70983730123190968975, +0.10650603055470654612 i)
+[1,1] = (-0.096442148345455433467, -0.45818706142556148153 i)
+
+--------------------------------------------------------
+
+[Rank 2] /home/rolfes/klft/include/PTBCGaugeField.hpp:306 (set_defect): set defect value to 0.714000
+[Rank 2] /home/rolfes/klft/include/PTBCGaugeField.hpp:378 (check_defect_application): ----- Checking defect application at defect position -----
+Defect value: 0.714000, Defect position: (0,0,7), Defect length: 2
+Defect Scan:
+Site (0,7,7,6), Defect value: 1.000000
+Site (0,7,7,7), Defect value: 1.000000
+Site (0,7,7,0), Defect value: 1.000000
+Site (0,7,7,1), Defect value: 1.000000
+Site (0,7,0,6), Defect value: 1.000000
+Site (0,7,0,7), Defect value: 1.000000
+Site (0,7,0,0), Defect value: 1.000000
+Site (0,7,0,1), Defect value: 1.000000
+Site (0,7,1,6), Defect value: 1.000000
+Site (0,7,1,7), Defect value: 1.000000
+Site (0,7,1,0), Defect value: 1.000000
+Site (0,7,1,1), Defect value: 1.000000
+Site (0,7,2,6), Defect value: 1.000000
+Site (0,7,2,7), Defect value: 1.000000
+Site (0,7,2,0), Defect value: 1.000000
+Site (0,7,2,1), Defect value: 1.000000
+Site (0,0,7,6), Defect value: 1.000000
+Site (0,0,7,7), Defect value: 1.000000
+Site (0,0,7,0), Defect value: 1.000000
+Site (0,0,7,1), Defect value: 1.000000
+Site (0,0,0,6), Defect value: 1.000000
+Site (0,0,0,7), Defect value: 0.714000
+Site (0,0,0,0), Defect value: 0.714000
+Site (0,0,0,1), Defect value: 1.000000
+Site (0,0,1,6), Defect value: 1.000000
+Site (0,0,1,7), Defect value: 0.714000
+Site (0,0,1,0), Defect value: 0.714000
+Site (0,0,1,1), Defect value: 1.000000
+Site (0,0,2,6), Defect value: 1.000000
+Site (0,0,2,7), Defect value: 1.000000
+Site (0,0,2,0), Defect value: 1.000000
+Site (0,0,2,1), Defect value: 1.000000
+Site (0,1,7,6), Defect value: 1.000000
+Site (0,1,7,7), Defect value: 1.000000
+Site (0,1,7,0), Defect value: 1.000000
+Site (0,1,7,1), Defect value: 1.000000
+Site (0,1,0,6), Defect value: 1.000000
+Site (0,1,0,7), Defect value: 0.714000
+Site (0,1,0,0), Defect value: 0.714000
+Site (0,1,0,1), Defect value: 1.000000
+Site (0,1,1,6), Defect value: 1.000000
+Site (0,1,1,7), Defect value: 0.714000
+Site (0,1,1,0), Defect value: 0.714000
+Site (0,1,1,1), Defect value: 1.000000
+Site (0,1,2,6), Defect value: 1.000000
+Site (0,1,2,7), Defect value: 1.000000
+Site (0,1,2,0), Defect value: 1.000000
+Site (0,1,2,1), Defect value: 1.000000
+Site (0,2,7,6), Defect value: 1.000000
+Site (0,2,7,7), Defect value: 1.000000
+Site (0,2,7,0), Defect value: 1.000000
+Site (0,2,7,1), Defect value: 1.000000
+Site (0,2,0,6), Defect value: 1.000000
+Site (0,2,0,7), Defect value: 1.000000
+Site (0,2,0,0), Defect value: 1.000000
+Site (0,2,0,1), Defect value: 1.000000
+Site (0,2,1,6), Defect value: 1.000000
+Site (0,2,1,7), Defect value: 1.000000
+Site (0,2,1,0), Defect value: 1.000000
+Site (0,2,1,1), Defect value: 1.000000
+Site (0,2,2,6), Defect value: 1.000000
+Site (0,2,2,7), Defect value: 1.000000
+Site (0,2,2,0), Defect value: 1.000000
+Site (0,2,2,1), Defect value: 1.000000
+Total sites in defect region: 0\8.000000
+Raw field entry at defect position: SUN Matrix:
+[0,0] = (-0.55357984353520317544, -0.37616522478718489308 i)
+[0,1] = (-0.49587178580736313016, +0.55331749704176669269 i)
+[1,0] = (+0.49587178580736313016, +0.55331749704176669269 i)
+[1,1] = (-0.55357984353520317544, +0.37616522478718489308 i)
+
+defect field entry at defect position: SUN Matrix:
+[0,0] = (-0.39525600828413504084, -0.26858197049804999335 i)
+[0,1] = (-0.35405245506645727227, +0.39506869288782142657 i)
+[1,0] = (+0.35405245506645727227, +0.39506869288782142657 i)
+[1,1] = (-0.39525600828413504084, +0.26858197049804999335 i)
+
+manually computed defect-applied entry at defect position: SUN Matrix:
+[0,0] = (-0.39525600828413504084, -0.26858197049804999335 i)
+[0,1] = (-0.35405245506645727227, +0.39506869288782142657 i)
+[1,0] = (+0.35405245506645727227, +0.39506869288782142657 i)
+[1,1] = (-0.39525600828413504084, +0.26858197049804999335 i)
+
+--------------------------------------------------------
+
+[Rank 1] /home/rolfes/klft/include/PTBCGaugeField.hpp:306 (set_defect): set defect value to 1.000000
+[Rank 1] /home/rolfes/klft/include/PTBCGaugeField.hpp:378 (check_defect_application): ----- Checking defect application at defect position -----
+Defect value: 1.000000, Defect position: (0,0,0), Defect length: 2
+Defect Scan:
+Site (0,7,7,7), Defect value: 1.000000
+Site (0,7,7,0), Defect value: 1.000000
+Site (0,7,7,1), Defect value: 1.000000
+Site (0,7,7,2), Defect value: 1.000000
+Site (0,7,0,7), Defect value: 1.000000
+Site (0,7,0,0), Defect value: 1.000000
+Site (0,7,0,1), Defect value: 1.000000
+Site (0,7,0,2), Defect value: 1.000000
+Site (0,7,1,7), Defect value: 1.000000
+Site (0,7,1,0), Defect value: 1.000000
+Site (0,7,1,1), Defect value: 1.000000
+Site (0,7,1,2), Defect value: 1.000000
+Site (0,7,2,7), Defect value: 1.000000
+Site (0,7,2,0), Defect value: 1.000000
+Site (0,7,2,1), Defect value: 1.000000
+Site (0,7,2,2), Defect value: 1.000000
+Site (0,0,7,7), Defect value: 1.000000
+Site (0,0,7,0), Defect value: 1.000000
+Site (0,0,7,1), Defect value: 1.000000
+Site (0,0,7,2), Defect value: 1.000000
+Site (0,0,0,7), Defect value: 1.000000
+Site (0,0,0,0), Defect value: 1.000000
+Site (0,0,0,1), Defect value: 1.000000
+Site (0,0,0,2), Defect value: 1.000000
+Site (0,0,1,7), Defect value: 1.000000
+Site (0,0,1,0), Defect value: 1.000000
+Site (0,0,1,1), Defect value: 1.000000
+Site (0,0,1,2), Defect value: 1.000000
+Site (0,0,2,7), Defect value: 1.000000
+Site (0,0,2,0), Defect value: 1.000000
+Site (0,0,2,1), Defect value: 1.000000
+Site (0,0,2,2), Defect value: 1.000000
+Site (0,1,7,7), Defect value: 1.000000
+Site (0,1,7,0), Defect value: 1.000000
+Site (0,1,7,1), Defect value: 1.000000
+Site (0,1,7,2), Defect value: 1.000000
+Site (0,1,0,7), Defect value: 1.000000
+Site (0,1,0,0), Defect value: 1.000000
+Site (0,1,0,1), Defect value: 1.000000
+Site (0,1,0,2), Defect value: 1.000000
+Site (0,1,1,7), Defect value: 1.000000
+Site (0,1,1,0), Defect value: 1.000000
+Site (0,1,1,1), Defect value: 1.000000
+Site (0,1,1,2), Defect value: 1.000000
+Site (0,1,2,7), Defect value: 1.000000
+Site (0,1,2,0), Defect value: 1.000000
+Site (0,1,2,1), Defect value: 1.000000
+Site (0,1,2,2), Defect value: 1.000000
+Site (0,2,7,7), Defect value: 1.000000
+Site (0,2,7,0), Defect value: 1.000000
+Site (0,2,7,1), Defect value: 1.000000
+Site (0,2,7,2), Defect value: 1.000000
+Site (0,2,0,7), Defect value: 1.000000
+Site (0,2,0,0), Defect value: 1.000000
+Site (0,2,0,1), Defect value: 1.000000
+Site (0,2,0,2), Defect value: 1.000000
+Site (0,2,1,7), Defect value: 1.000000
+Site (0,2,1,0), Defect value: 1.000000
+Site (0,2,1,1), Defect value: 1.000000
+Site (0,2,1,2), Defect value: 1.000000233240
+Site (0,2,2,7), Defect value: 1.000000
+Site (0,2,2,0), Defect value: 1.000000
+Site (0,2,2,1), Defect value: 1.000000
+Site (0,2,2,2), Defect value: 1.000000
+Total sites in defect region: 0\8.000000
+Raw field entry at defect position: SUN Matrix:
+[0,0] = (-0.14088229944305813435, -0.22814216105972373594 i)
+[0,1] = (+0.15328467867591835661, -0.95110837412665849566 i)
+[1,0] = (-0.15328467867591835661, -0.95110837412665849566 i)
+[1,1] = (-0.14088229944305813435, +0.22814216105972373594 i)
+
+defect field entry at defect position: SUN Matrix:
+[0,0] = (-0.14088229944305813435, -0.22814216105972373594 i)
+[0,1] = (+0.15328467867591835661, -0.95110837412665849566 i)
+[1,0] = (-0.15328467867591835661, -0.95110837412665849566 i)
+[1,1] = (-0.14088229944305813435, +0.22814216105972373594 i)
+
+manually computed defect-applied entry at defect position: SUN Matrix:
+[0,0] = (-0.14088229944305813435, -0.22814216105972373594 i)
+[0,1] = (+0.15328467867591835661, -0.95110837412665849566 i)
+[1,0] = (-0.15328467867591835661, -0.95110837412665849566 i)
+[1,1] = (-0.14088229944305813435, +0.22814216105972373594 i)
+
+--------------------------------------------------------
+
+[Rank 1] /home/rolfes/klft/include/PTBCGaugeField.hpp:306 (set_defect): set defect value to 1.000000
+[Rank 1] /home/rolfes/klft/include/PTBCGaugeField.hpp:378 (check_defect_application): ----- Checking defect application at defect position -----
+Defect value: 1.000000, Defect position: (7,0,0), Defect length: 2
+Defect Scan:
+Site (0,6,7,7), Defect value: 1.000000
+Site (0,6,7,0), Defect value: 1.000000
+Site (0,6,7,1), Defect value: 1.000000
+Site (0,6,7,2), Defect value: 1.000000
+Site (0,6,0,7), Defect value: 1.000000
+Site (0,6,0,0), Defect value: 1.000000
+Site (0,6,0,1), Defect value: 1.000000
+Site (0,6,0,2), Defect value: 1.000000
+Site (0,6,1,7), Defect value: 1.000000
+Site (0,6,1,0), Defect value: 1.000000
+Site (0,6,1,1), Defect value: 1.000000
+Site (0,6,1,2), Defect value: 1.000000
+Site (0,6,2,7), Defect value: 1.000000
+Site (0,6,2,0), Defect value: 1.000000
+Site (0,6,2,1), Defect value: 1.000000
+Site (0,6,2,2), Defect value: 1.000000
+Site (0,7,7,7), Defect value: 1.000000
+Site (0,7,7,0), Defect value: 1.000000
+Site (0,7,7,1), Defect value: 1.000000
+Site (0,7,7,2), Defect value: 1.000000
+Site (0,7,0,7), Defect value: 1.000000
+Site (0,7,0,0), Defect value: 1.000000
+Site (0,7,0,1), Defect value: 1.000000
+Site (0,7,0,2), Defect value: 1.000000
+Site (0,7,1,7), Defect value: 1.000000
+Site (0,7,1,0), Defect value: 1.000000
+Site (0,7,1,1), Defect value: 1.000000
+Site (0,7,1,2), Defect value: 1.000000
+Site (0,7,2,7), Defect value: 1.000000
+Site (0,7,2,0), Defect value: 1.000000
+Site (0,7,2,1), Defect value: 1.000000
+Site (0,7,2,2), Defect value: 1.000000
+Site (0,0,7,7), Defect value: 1.000000
+Site (0,0,7,0), Defect value: 1.000000
+Site (0,0,7,1), Defect value: 1.000000
+Site (0,0,7,2), Defect value: 1.000000
+Site (0,0,0,7), Defect value: 1.000000
+Site (0,0,0,0), Defect value: 1.000000
+Site (0,0,0,1), Defect value: 1.000000
+Site (0,0,0,2), Defect value: 1.000000
+Site (0,0,1,7), Defect value: 1.000000
+Site (0,0,1,0), Defect value: 1.000000
+Site (0,0,1,1), Defect value: 1.000000
+Site (0,0,1,2), Defect value: 1.000000
+Site (0,0,2,7), Defect value: 1.000000
+Site (0,0,2,0), Defect value: 1.000000
+Site (0,0,2,1), Defect value: 1.000000
+Site (0,0,2,2), Defect value: 1.000000
+Site (0,1,7,7), Defect value: 1.000000
+Site (0,1,7,0), Defect value: 1.000000
+Site (0,1,7,1), Defect value: 1.000000
+Site (0,1,7,2), Defect value: 1.000000
+Site (0,1,0,7), Defect value: 1.000000
+Site (0,1,0,0), Defect value: 1.000000
+Site (0,1,0,1), Defect value: 1.000000
+Site (0,1,0,2), Defect value: 1.000000
+Site (0,1,1,7), Defect value: 1.000000
+Site (0,1,1,0), Defect value: 1.000000
+Site (0,1,1,1), Defect value: 1.000000
+Site (0,1,1,2), Defect value: 1.000000
+Site (0,1,2,7), Defect value: 1.000000
+Site (0,1,2,0), Defect value: 1.000000
+Site (0,1,2,1), Defect value: 1.000000
+Site (0,1,2,2), Defect value: 1.000000
+Total sites in defect region: 0\8.000000
+Raw field entry at defect position: SUN Matrix:
+[0,0] = (+0.68071554417398216774, +0.68425762304319903695 i)
+[0,1] = (+0.057568893011019667272, -0.25515421960978035276 i)
+[1,0] = (-0.057568893011019667272, -0.25515421960978035276 i)
+[1,1] = (+0.68071554417398216774, -0.68425762304319903695 i)
+
+defect field entry at defect position: SUN Matrix:
+[0,0] = (+0.68071554417398216774, +0.68425762304319903695 i)
+[0,1] = (+0.057568893011019667272, -0.25515421960978035276 i)
+[1,0] = (-0.057568893011019667272, -0.25515421960978035276 i)
+[1,1] = (+0.68071554417398216774, -0.68425762304319903695 i)
+
+manually computed defect-applied entry at defect position: SUN Matrix:
+[0,0] = (+0.68071554417398216774, +0.68425762304319903695 i)
+[0,1] = (+0.057568893011019667272, -0.25515421960978035276 i)
+[1,0] = (-0.057568893011019667272, -0.25515421960978035276 i)
+[1,1] = (+0.68071554417398216774, -0.68425762304319903695 i)
+
+--------------------------------------------------------
+
+Step: 1, accepted: 1, Acceptance rate: 1.000000, Time: 12.375914
+[Rank 0] /home/rolfes/klft/include/PTBCGaugeField.hpp:306 (set_defect): set defect value to 1.000000
+[Rank 0] /home/rolfes/klft/include/PTBCGaugeField.hpp:378 (check_defect_application): ----- Checking defect application at defect position -----
+Defect value: 1.000000, Defect position: (0,0,0), Defect length: 2
+Defect Scan:
+Site (0,7,7,7), Defect value: 1.000000
+Site (0,7,7,0), Defect value: 1.000000
+Site (0,7,7,1), Defect value: 1.000000
+Site (0,7,7,2), Defect value: 1.000000
+Site (0,7,0,7), Defect value: 1.000000
+Site (0,7,0,0), Defect value: 1.000000
+Site (0,7,0,1), Defect value: 1.000000
+Site (0,7,0,2), Defect value: 1.000000
+Site (0,7,1,7), Defect value: 1.000000
+Site (0,7,1,0), Defect value: 1.000000
+Site (0,7,1,1), Defect value: 1.000000
+Site (0,7,1,2), Defect value: 1.000000
+Site (0,7,2,7), Defect value: 1.000000
+Site (0,7,2,0), Defect value: 1.000000
+Site (0,7,2,1), Defect value: 1.000000
+Site (0,7,2,2), Defect value: 1.000000
+Site (0,0,7,7), Defect value: 1.000000
+Site (0,0,7,0), Defect value: 1.000000
+Site (0,0,7,1), Defect value: 1.000000
+Site (0,0,7,2), Defect value: 1.000000
+Site (0,0,0,7), Defect value: 1.000000
+Site (0,0,0,0), Defect value: 1.000000
+Site (0,0,0,1), Defect value: 1.000000
+Site (0,0,0,2), Defect value: 1.000000
+Site (0,0,1,7), Defect value: 1.000000
+Site (0,0,1,0), Defect value: 1.000000
+Site (0,0,1,1), Defect value: 1.000000
+Site (0,0,1,2), Defect value: 1.000000
+Site (0,0,2,7), Defect value: 1.000000
+Site (0,0,2,0), Defect value: 1.000000
+Site (0,0,2,1), Defect value: 1.000000
+Site (0,0,2,2), Defect value: 1.000000
+Site (0,1,7,7), Defect value: 1.000000
+Site (0,1,7,0), Defect value: 1.000000
+Site (0,1,7,1), Defect value: 1.000000
+Site (0,1,7,2), Defect value: 1.000000
+Site (0,1,0,7), Defect value: 1.000000
+Site (0,1,0,0), Defect value: 1.000000
+Site (0,1,0,1), Defect value: 1.000000
+Site (0,1,0,2), Defect value: 1.000000
+Site (0,1,1,7), Defect value: 1.000000
+Site (0,1,1,0), Defect value: 1.000000
+Site (0,1,1,1), Defect value: 1.000000
+Site (0,1,1,2), Defect value: 1.000000
+Site (0,1,2,7), Defect value: 1.000000
+Site (0,1,2,0), Defect value: 1.000000
+Site (0,1,2,1), Defect value: 1.000000
+Site (0,1,2,2), Defect value: 1.000000
+Site (0,2,7,7), Defect value: 1.000000
+Site (0,2,7,0), Defect value: 1.000000
+Site (0,2,7,1), Defect value: 1.000000
+Site (0,2,7,2), Defect value: 1.000000
+Site (0,2,0,7), Defect value: 1.000000
+Site (0,2,0,0), Defect value: 1.000000
+Site (0,2,0,1), Defect value: 1.000000
+Site (0,2,0,2), Defect value: 1.000000
+Site (0,2,1,7), Defect value: 1.000000
+Site (0,2,1,0), Defect value: 1.000000
+Site (0,2,1,1), Defect value: 1.000000
+Site (0,2,1,2), Defect value: 1.000000
+Site (0,2,2,7), Defect value: 1.000000
+Site (0,2,2,0), Defect value: 1.000000
+Site (0,2,2,1), Defect value: 1.000000
+Site (0,2,2,2), Defect value: 1.000000
+Total sites in defect region: 0\8.000000
+Raw field entry at defect position: SUN Matrix:
+[0,0] = (+0.1611747632187877366, -0.13564074348077284626 i)
+[0,1] = (+0.34842171927204407256, +0.91336005493390304277 i)
+[1,0] = (-0.34842171927204407256, +0.91336005493390304277 i)
+[1,1] = (+0.1611747632187877366, +0.13564074348077284626 i)
+
+defect field entry at defect position: SUN Matrix:
+[0,0] = (+0.1611747632187877366, -0.13564074348077284626 i)
+[0,1] = (+0.34842171927204407256, +0.91336005493390304277 i)
+[1,0] = (-0.34842171927204407256, +0.91336005493390304277 i)
+[1,1] = (+0.1611747632187877366, +0.13564074348077284626 i)
+
+manually computed defect-applied entry at defect position: SUN Matrix:
+[0,0] = (+0.1611747632187877366, -0.13564074348077284626 i)
+[0,1] = (+0.34842171927204407256, +0.91336005493390304277 i)
+[1,0] = (-0.34842171927204407256, +0.91336005493390304277 i)
+[1,1] = (+0.1611747632187877366, +0.13564074348077284626 i)
+
+--------------------------------------------------------
+
+[Rank 1] /home/rolfes/klft/include/PTBCGaugeField.hpp:306 (set_defect): set defect value to 0.857000
+[Rank 1] /home/rolfes/klft/include/PTBCGaugeField.hpp:378 (check_defect_application): ----- Checking defect application at defect position -----
+Defect value: 0.857000, Defect position: (7,0,0), Defect length: 2
+Defect Scan:
+Site (0,6,7,7), Defect value: 1.000000
+Site (0,6,7,0), Defect value: 1.000000
+Site (0,6,7,1), Defect value: 1.000000
+Site (0,6,7,2), Defect value: 1.000000
+Site (0,6,0,7), Defect value: 1.000000
+Site (0,6,0,0), Defect value: 1.000000
+Site (0,6,0,1), Defect value: 1.000000
+Site (0,6,0,2), Defect value: 1.000000
+Site (0,6,1,7), Defect value: 1.000000
+Site (0,6,1,0), Defect value: 1.000000
+Site (0,6,1,1), Defect value: 1.000000
+Site (0,6,1,2), Defect value: 1.000000
+Site (0,6,2,7), Defect value: 1.000000
+Site (0,6,2,0), Defect value: 1.000000
+Site (0,6,2,1), Defect value: 1.000000
+Site (0,6,2,2), Defect value: 1.000000
+Site (0,7,7,7), Defect value: 1.000000
+Site (0,7,7,0), Defect value: 1.000000
+Site (0,7,7,1), Defect value: 1.000000
+Site (0,7,7,2), Defect value: 1.000000
+Site (0,7,0,7), Defect value: 1.000000
+Site (0,7,0,0), Defect value: 0.857000
+Site (0,7,0,1), Defect value: 0.857000
+Site (0,7,0,2), Defect value: 1.000000
+Site (0,7,1,7), Defect value: 1.000000
+Site (0,7,1,0), Defect value: 0.857000
+Site (0,7,1,1), Defect value: 0.857000
+Site (0,7,1,2), Defect value: 1.000000
+Site (0,7,2,7), Defect value: 1.000000
+Site (0,7,2,0), Defect value: 1.000000
+Site (0,7,2,1), Defect value: 1.000000
+Site (0,7,2,2), Defect value: 1.000000
+Site (0,0,7,7), Defect value: 1.000000
+Site (0,0,7,0), Defect value: 1.000000
+Site (0,0,7,1), Defect value: 1.000000
+Site (0,0,7,2), Defect value: 1.000000
+Site (0,0,0,7), Defect value: 1.000000
+Site (0,0,0,0), Defect value: 0.857000
+Site (0,0,0,1), Defect value: 0.857000
+Site (0,0,0,2), Defect value: 1.000000
+Site (0,0,1,7), Defect value: 1.000000
+Site (0,0,1,0), Defect value: 0.857000
+Site (0,0,1,1), Defect value: 0.857000
+Site (0,0,1,2), Defect value: 1.000000
+Site (0,0,2,7), Defect value: 1.000000
+Site (0,0,2,0), Defect value: 1.000000
+Site (0,0,2,1), Defect value: 1.000000
+Site (0,0,2,2), Defect value: 1.000000
+Site (0,1,7,7), Defect value: 1.000000
+Site (0,1,7,0), Defect value: 1.000000
+Site (0,1,7,1), Defect value: 1.000000
+Site (0,1,7,2), Defect value: 1.000000
+Site (0,1,0,7), Defect value: 1.000000
+Site (0,1,0,0), Defect value: 1.000000
+Site (0,1,0,1), Defect value: 1.000000
+Site (0,1,0,2), Defect value: 1.000000
+Site (0,1,1,7), Defect value: 1.000000
+Site (0,1,1,0), Defect value: 1.000000
+Site (0,1,1,1), Defect value: 1.000000
+Site (0,1,1,2), Defect value: 1.000000
+Site (0,1,2,7), Defect value: 1.000000
+Site (0,1,2,0), Defect value: 1.000000
+Site (0,1,2,1), Defect value: 1.000000
+Site (0,1,2,2), Defect value: 1.000000
+Total sites in defect region: 0\8.000000
+Raw field entry at defect position: SUN Matrix:
+[0,0] = (+0.015661948209521665831, +0.63728422507862469981 i)
+[0,1] = (+0.76875363569578569756, -0.051394235559352442755 i)
+[1,0] = (-0.76875363569578569756, -0.051394235559352442755 i)
+[1,1] = (+0.015661948209521665831, -0.63728422507862469981 i)
+
+defect field entry at defect position: SUN Matrix:
+[0,0] = (+0.013422289615560066903, +0.54615258089238138961 i)
+[0,1] = (+0.65882186579128831916, -0.04404485987436504435 i)
+[1,0] = (-0.65882186579128831916, -0.04404485987436504435 i)
+[1,1] = (+0.013422289615560066903, -0.54615258089238138961 i)
+
+manually computed defect-applied entry at defect position: SUN Matrix:
+[0,0] = (+0.013422289615560066903, +0.54615258089238138961 i)
+[0,1] = (+0.65882186579128831916, -0.04404485987436504435 i)
+[1,0] = (-0.65882186579128831916, -0.04404485987436504435 i)
+[1,1] = (+0.013422289615560066903, -0.54615258089238138961 i)
+
+--------------------------------------------------------
+
+[Rank 0] /home/rolfes/klft/include/PTBCGaugeField.hpp:306 (set_defect): set defect value to 0.857000
+[Rank 1] /home/rolfes/klft/include/PTBCGaugeField.hpp:306 (set_defect): set defect value to 1.000000
+[Rank 0] /home/rolfes/klft/include/PTBCGaugeField.hpp:378 (check_defect_application): ----- Checking defect application at defect position -----
+Defect value: 0.857000, Defect position: (0,0,0), Defect length: 2
+Defect Scan:
+Site (0,7,7,7), Defect value: 1.000000
+Site (0,7,7,0), Defect value: 1.000000
+Site (0,7,7,1), Defect value: 1.000000
+Site (0,7,7,2), Defect value: 1.000000
+Site (0,7,0,7), Defect value: 1.000000
+Site (0,7,0,0), Defect value: 1.000000
+Site (0,7,0,1), Defect value: 1.000000
+Site (0,7,0,2), Defect value: 1.000000
+Site (0,7,1,7), Defect value: 1.000000
+Site (0,7,1,0), Defect value: 1.000000
+Site (0,7,1,1), Defect value: 1.000000
+Site (0,7,1,2), Defect value: 1.000000
+Site (0,7,2,7), Defect value: 1.000000
+Site (0,7,2,0), Defect value: 1.000000
+Site (0,7,2,1), Defect value: 1.000000
+Site (0,7,2,2), Defect value: 1.000000
+Site (0,0,7,7), Defect value: 1.000000
+Site (0,0,7,0), Defect value: 1.000000
+Site (0,0,7,1), Defect value: 1.000000
+Site (0,0,7,2), Defect value: 1.000000
+Site (0,0,0,7), Defect value: 1.000000
+Site (0,0,0,0), Defect value: 0.857000
+Site (0,0,0,1), Defect value: 0.857000
+Site (0,0,0,2), Defect value: 1.000000
+Site (0,0,1,7), Defect value: 1.000000
+Site (0,0,1,0), Defect value: 0.857000
+Site (0,0,1,1), Defect value: 0.857000
+Site (0,0,1,2), Defect value: 1.000000
+Site (0,0,2,7), Defect value: 1.000000
+Site (0,0,2,0), Defect value: 1.000000
+Site (0,0,2,1), Defect value: 1.000000
+Site (0,0,2,2), Defect value: 1.000000
+Site (0,1,7,7), Defect value: 1.000000
+Site (0,1,7,0), Defect value: 1.000000
+Site (0,1,7,1), Defect value: 1.000000
+Site (0,1,7,2), Defect value: 1.000000
+Site (0,1,0,7), Defect value: 1.000000
+Site (0,1,0,0), Defect value: 0.857000
+Site (0,1,0,1), Defect value: 0.857000
+Site (0,1,0,2), Defect value: 1.000000
+Site (0,1,1,7), Defect value: 1.000000
+Site (0,1,1,0), Defect value: 0.857000
+Site (0,1,1,1), Defect value: 0.857000
+Site (0,1,1,2), Defect value: 1.000000
+Site (0,1,2,7), Defect value: 1.000000
+Site (0,1,2,0), Defect value: 1.000000
+Site (0,1,2,1), Defect value: 1.000000
+Site (0,1,2,2), Defect value: 1.000000
+Site (0,2,7,7), Defect value: 1.000000
+Site (0,2,7,0), Defect value: 1.000000
+Site (0,2,7,1), Defect value: 1.000000
+Site (0,2,7,2), Defect value: 1.000000
+Site (0,2,0,7), Defect value: 1.000000
+Site (0,2,0,0), Defect value: 1.000000
+Site (0,2,0,1), Defect value: 1.000000
+Site (0,2,0,2), Defect value: 1.000000
+Site (0,2,1,7), Defect value: 1.000000
+Site (0,2,1,0), Defect value: 1.000000
+Site (0,2,1,1), Defect value: 1.000000
+Site (0,2,1,2), Defect value: 1.000000
+Site (0,2,2,7), Defect value: 1.000000
+Site (0,2,2,0), Defect value: 1.000000
+Site (0,2,2,1), Defect value: 1.000000
+Site (0,2,2,2), Defect value: 1.000000
+Total sites in defect region: 0\8.000000
+Raw field entry at defect position: SUN Matrix:
+[0,0] = (+0.1611747632187877366, -0.13564074348077284626 i)
+[0,1] = (+0.34842171927204407256, +0.91336005493390304277 i)
+[1,0] = (-0.34842171927204407256, +0.91336005493390304277 i)
+[1,1] = (+0.1611747632187877366, +0.13564074348077284626 i)
+
+defect field entry at defect position: SUN Matrix:
+[0,0] = (+0.13812677207850107552, -0.11624411716302232578 i)
+[0,1] = (+0.29859741341614176591, +0.78274956707835485759 i)
+[1,0] = (-0.29859741341614176591, +0.78274956707835485759 i)
+[1,1] = (+0.13812677207850107552, +0.11624411716302232578 i)
+
+manually computed defect-applied entry at defect position: SUN Matrix:
+[0,0] = (+0.13812677207850107552, -0.11624411716302232578 i)
+[0,1] = (+0.29859741341614176591, +0.78274956707835485759 i)
+[1,0] = (-0.29859741341614176591, +0.78274956707835485759 i)
+[1,1] = (+0.13812677207850107552, +0.11624411716302232578 i)
+
+--------------------------------------------------------
+
+[Rank 1] /home/rolfes/klft/include/PTBCGaugeField.hpp:378 (check_defect_application): ----- Checking defect application at defect position -----
+Defect value: 1.000000, Defect position: (7,0,0), Defect length: 2
+Defect Scan:
+Site (0,6,7,7), Defect value: 1.000000
+Site (0,6,7,0), Defect value: 1.000000
+Site (0,6,7,1), Defect value: 1.000000
+Site (0,6,7,2), Defect value: 1.000000
+Site (0,6,0,7), Defect value: 1.000000
+Site (0,6,0,0), Defect value: 1.000000
+Site (0,6,0,1), Defect value: 1.000000
+Site (0,6,0,2), Defect value: 1.000000
+Site (0,6,1,7), Defect value: 1.000000
+Site (0,6,1,0), Defect value: 1.000000
+Site (0,6,1,1), Defect value: 1.000000
+Site (0,6,1,2), Defect value: 1.000000
+Site (0,6,2,7), Defect value: 1.000000
+Site (0,6,2,0), Defect value: 1.000000
+Site (0,6,2,1), Defect value: 1.000000
+Site (0,6,2,2), Defect value: 1.000000
+Site (0,7,7,7), Defect value: 1.000000
+Site (0,7,7,0), Defect value: 1.000000
+Site (0,7,7,1), Defect value: 1.000000
+Site (0,7,7,2), Defect value: 1.000000
+Site (0,7,0,7), Defect value: 1.000000
+Site (0,7,0,0), Defect value: 1.000000
+Site (0,7,0,1), Defect value: 1.000000
+Site (0,7,0,2), Defect value: 1.000000
+Site (0,7,1,7), Defect value: 1.000000
+Site (0,7,1,0), Defect value: 1.000000
+Site (0,7,1,1), Defect value: 1.000000
+Site (0,7,1,2), Defect value: 1.000000
+Site (0,7,2,7), Defect value: 1.000000
+Site (0,7,2,0), Defect value: 1.000000
+Site (0,7,2,1), Defect value: 1.000000
+Site (0,7,2,2), Defect value: 1.000000
+Site (0,0,7,7), Defect value: 1.000000
+Site (0,0,7,0), Defect value: 1.000000
+Site (0,0,7,1), Defect value: 1.000000
+Site (0,0,7,2), Defect value: 1.000000
+Site (0,0,0,7), Defect value: 1.000000
+Site (0,0,0,0), Defect value: 1.000000
+Site (0,0,0,1), Defect value: 1.000000
+Site (0,0,0,2), Defect value: 1.000000
+Site (0,0,1,7), Defect value: 1.000000
+Site (0,0,1,0), Defect value: 1.000000
+Site (0,0,1,1), Defect value: 1.000000
+Site (0,0,1,2), Defect value: 1.000000
+Site (0,0,2,7), Defect value: 1.000000
+Site (0,0,2,0), Defect value: 1.000000
+Site (0,0,2,1), Defect value: 1.000000
+Site (0,0,2,2), Defect value: 1.000000
+Site (0,1,7,7), Defect value: 1.000000
+Site (0,1,7,0), Defect value: 1.000000
+Site (0,1,7,1), Defect value: 1.000000
+Site (0,1,7,2), Defect value: 1.000000
+Site (0,1,0,7), Defect value: 1.000000
+Site (0,1,0,0), Defect value: 1.000000
+Site (0,1,0,1), Defect value: 1.000000
+Site (0,1,0,2), Defect value: 1.000000
+Site (0,1,1,7), Defect value: 1.000000
+Site (0,1,1,0), Defect value: 1.000000
+Site (0,1,1,1), Defect value: 1.000000
+Site (0,1,1,2), Defect value: 1.000000
+Site (0,1,2,7), Defect value: 1.000000
+Site (0,1,2,0), Defect value: 1.000000
+Site (0,1,2,1), Defect value: 1.000000
+Site (0,1,2,2), Defect value: 1.000000
+Total sites in defect region: 0\8.000000
+Raw field entry at defect position: SUN Matrix:
+[0,0] = (+0.015661948209521665831, +0.63728422507862469981 i)
+[0,1] = (+0.76875363569578569756, -0.051394235559352442755 i)
+[1,0] = (-0.76875363569578569756, -0.051394235559352442755 i)
+[1,1] = (+0.015661948209521665831, -0.63728422507862469981 i)
+
+defect field entry at defect position: SUN Matrix:
+[0,0] = (+0.015661948209521665831, +0.63728422507862469981 i)
+[0,1] = (+0.76875363569578569756, -0.051394235559352442755 i)
+[1,0] = (-0.76875363569578569756, -0.051394235559352442755 i)
+[1,1] = (+0.015661948209521665831, -0.63728422507862469981 i)
+
+manually computed defect-applied entry at defect position: SUN Matrix:
+[0,0] = (+0.015661948209521665831, +0.63728422507862469981 i)
+[0,1] = (+0.76875363569578569756, -0.051394235559352442755 i)
+[1,0] = (-0.76875363569578569756, -0.051394235559352442755 i)
+[1,1] = (+0.015661948209521665831, -0.63728422507862469981 i)
+
+--------------------------------------------------------
+
+[Rank 2] /home/rolfes/klft/include/PTBCGaugeField.hpp:306 (set_defect): set defect value to 1.000000
+[Rank 2] /home/rolfes/klft/include/PTBCGaugeField.hpp:378 (check_defect_application): ----- Checking defect application at defect position -----
+Defect value: 1.000000, Defect position: (0,0,7), Defect length: 2
+Defect Scan:
+Site (0,7,7,6), Defect value: 1.000000
+Site (0,7,7,7), Defect value: 1.000000
+Site (0,7,7,0), Defect value: 1.000000
+Site (0,7,7,1), Defect value: 1.000000
+Site (0,7,0,6), Defect value: 1.000000
+Site (0,7,0,7), Defect value: 1.000000
+Site (0,7,0,0), Defect value: 1.000000
+Site (0,7,0,1), Defect value: 1.000000
+Site (0,7,1,6), Defect value: 1.000000
+Site (0,7,1,7), Defect value: 1.000000
+Site (0,7,1,0), Defect value: 1.000000
+Site (0,7,1,1), Defect value: 1.000000
+Site (0,7,2,6), Defect value: 1.000000
+Site (0,7,2,7), Defect value: 1.000000
+Site (0,7,2,0), Defect value: 1.000000
+Site (0,7,2,1), Defect value: 1.000000
+Site (0,0,7,6), Defect value: 1.000000
+Site (0,0,7,7), Defect value: 1.000000
+Site (0,0,7,0), Defect value: 1.000000
+Site (0,0,7,1), Defect value: 1.000000
+Site (0,0,0,6), Defect value: 1.000000
+Site (0,0,0,7), Defect value: 1.000000
+Site (0,0,0,0), Defect value: 1.000000
+Site (0,0,0,1), Defect value: 1.000000
+Site (0,0,1,6), Defect value: 1.000000
+Site (0,0,1,7), Defect value: 1.000000
+Site (0,0,1,0), Defect value: 1.000000
+Site (0,0,1,1), Defect value: 1.000000
+Site (0,0,2,6), Defect value: 1.000000
+Site (0,0,2,7), Defect value: 1.000000
+Site (0,0,2,0), Defect value: 1.000000
+Site (0,0,2,1), Defect value: 1.000000
+Site (0,1,7,6), Defect value: 1.000000
+Site (0,1,7,7), Defect value: 1.000000
+Site (0,1,7,0), Defect value: 1.000000
+Site (0,1,7,1), Defect value: 1.000000
+Site (0,1,0,6), Defect value: 1.000000
+Site (0,1,0,7), Defect value: 1.000000
+Site (0,1,0,0), Defect value: 1.000000
+Site (0,1,0,1), Defect value: 1.000000
+Site (0,1,1,6), Defect value: 1.000000
+Site (0,1,1,7), Defect value: 1.000000
+Site (0,1,1,0), Defect value: 1.000000
+Site (0,1,1,1), Defect value: 1.000000
+Site (0,1,2,6), Defect value: 1.000000
+Site (0,1,2,7), Defect value: 1.000000
+Site (0,1,2,0), Defect value: 1.000000
+Site (0,1,2,1), Defect value: 1.000000
+Site (0,2,7,6), Defect value: 1.000000
+Site (0,2,7,7), Defect value: 1.000000
+Site (0,2,7,0), Defect value: 1.000000
+Site (0,2,7,1), Defect value: 1.000000
+Site (0,2,0,6), Defect value: 1.000000
+Site (0,2,0,7), Defect value: 1.000000
+Site (0,2,0,0), Defect value: 1.000000
+Site (0,2,0,1), Defect value: 1.000000
+Site (0,2,1,6), Defect value: 1.000000
+Site (0,2,1,7), Defect value: 1.000000
+Site (0,2,1,0), Defect value: 1.000000
+Site (0,2,1,1), Defect value: 1.000000
+Site (0,2,2,6), Defect value: 1.000000
+Site (0,2,2,7), Defect value: 1.000000
+Site (0,2,2,0), Defect value: 1.000000
+Site (0,2,2,1), Defect value: 1.000000
+Total sites in defect region: 0\8.000000
+Raw field entry at defect position: SUN Matrix:
+[0,0] = (-0.88162651802601599282, -0.13522799090165821267 i)
+[0,1] = (-0.4486291837432777041, +0.056390856385307448762 i)
+[1,0] = (+0.4486291837432777041, +0.056390856385307448762 i)
+[1,1] = (-0.88162651802601599282, +0.13522799090165821267 i)
+
+defect field entry at defect position: SUN Matrix:
+[0,0] = (-0.88162651802601599282, -0.13522799090165821267 i)
+[0,1] = (-0.4486291837432777041, +0.056390856385307448762 i)
+[1,0] = (+0.4486291837432777041, +0.056390856385307448762 i)
+[1,1] = (-0.88162651802601599282, +0.13522799090165821267 i)
+
+manually computed defect-applied entry at defect position: SUN Matrix:
+[0,0] = (-0.88162651802601599282, -0.13522799090165821267 i)
+[0,1] = (-0.4486291837432777041, +0.056390856385307448762 i)
+[1,0] = (+0.4486291837432777041, +0.056390856385307448762 i)
+[1,1] = (-0.88162651802601599282, +0.13522799090165821267 i)
+
+--------------------------------------------------------
+
+[Rank 1] /home/rolfes/klft/include/PTBCGaugeField.hpp:306 (set_defect): set defect value to 0.714000
+[Rank 1] /home/rolfes/klft/include/PTBCGaugeField.hpp:378 (check_defect_application): ----- Checking defect application at defect position -----
+Defect value: 0.714000, Defect position: (7,0,0), Defect length: 2
+Defect Scan:
+Site (0,6,7,7), Defect value: 1.000000
+Site (0,6,7,0), Defect value: 1.000000
+Site (0,6,7,1), Defect value: 1.000000
+Site (0,6,7,2), Defect value: 1.000000
+Site (0,6,0,7), Defect value: 1.000000
+Site (0,6,0,0), Defect value: 1.000000
+Site (0,6,0,1), Defect value: 1.000000
+Site (0,6,0,2), Defect value: 1.000000
+Site (0,6,1,7), Defect value: 1.000000
+Site (0,6,1,0), Defect value: 1.000000
+Site (0,6,1,1), Defect value: 1.000000
+Site (0,6,1,2), Defect value: 1.000000
+Site (0,6,2,7), Defect value: 1.000000
+Site (0,6,2,0), Defect value: 1.000000
+Site (0,6,2,1), Defect value: 1.000000
+Site (0,6,2,2), Defect value: 1.000000
+Site (0,7,7,7), Defect value: 1.000000
+Site (0,7,7,0), Defect value: 1.000000
+Site (0,7,7,1), Defect value: 1.000000
+Site (0,7,7,2), Defect value: 1.000000
+Site (0,7,0,7), Defect value: 1.000000
+Site (0,7,0,0), Defect value: 0.714000
+Site (0,7,0,1), Defect value: 0.714000
+Site (0,7,0,2), Defect value: 1.000000
+Site (0,7,1,7), Defect value: 1.000000
+Site (0,7,1,0), Defect value: 0.714000
+Site (0,7,1,1), Defect value: 0.714000
+Site (0,7,1,2), Defect value: 1.000000
+Site (0,7,2,7), Defect value: 1.000000
+Site (0,7,2,0), Defect value: 1.000000
+Site (0,7,2,1), Defect value: 1.000000
+Site (0,7,2,2), Defect value: 1.000000
+Site (0,0,7,7), Defect value: 1.000000
+Site (0,0,7,0), Defect value: 1.000000
+Site (0,0,7,1), Defect value: 1.000000
+Site (0,0,7,2), Defect value: 1.000000
+Site (0,0,0,7), Defect value: 1.000000
+Site (0,0,0,0), Defect value: 0.714000
+Site (0,0,0,1), Defect value: 0.714000
+Site (0,0,0,2), Defect value: 1.000000
+Site (0,0,1,7), Defect value: 1.000000
+Site (0,0,1,0), Defect value: 0.714000
+Site (0,0,1,1), Defect value: 0.714000
+Site (0,0,1,2), Defect value: 1.000000
+Site (0,0,2,7), Defect value: 1.000000
+Site (0,0,2,0), Defect value: 1.000000
+Site (0,0,2,1), Defect value: 1.000000
+Site (0,0,2,2), Defect value: 1.000000
+Site (0,1,7,7), Defect value: 1.000000
+Site (0,1,7,0), Defect value: 1.000000
+Site (0,1,7,1), Defect value: 1.000000
+Site (0,1,7,2), Defect value: 1.000000
+Site (0,1,0,7), Defect value: 1.000000
+Site (0,1,0,0), Defect value: 1.000000
+Site (0,1,0,1), Defect value: 1.000000
+Site (0,1,0,2), Defect value: 1.000000
+Site (0,1,1,7), Defect value: 1.000000
+Site (0,1,1,0), Defect value: 1.000000
+Site (0,1,1,1), Defect value: 1.000000
+Site (0,1,1,2), Defect value: 1.000000
+Site (0,1,2,7), Defect value: 1.000000
+Site (0,1,2,0), Defect value: 1.000000
+Site (0,1,2,1), Defect value: 1.000000
+Site (0,1,2,2), Defect value: 1.000000
+Total sites in defect region: 0\8.000000
+Raw field entry at defect position: SUN Matrix:
+[0,0] = (+0.015661948209521665831, +0.63728422507862469981 i)
+[0,1] = (+0.76875363569578569756, -0.051394235559352442755 i)
+[1,0] = (-0.76875363569578569756, -0.051394235559352442755 i)
+[1,1] = (+0.015661948209521665831, -0.63728422507862469981 i)
+
+defect field entry at defect position: SUN Matrix:
+[0,0] = (+0.011182631021598469709, +0.4550209367061380239 i)
+[0,1] = (+0.54889009588679094076, -0.036695484189377645945 i)
+[1,0] = (-0.54889009588679094076, -0.036695484189377645945 i)
+[1,1] = (+0.011182631021598469709, -0.4550209367061380239 i)
+
+manually computed defect-applied entry at defect position: SUN Matrix:
+[0,0] = (+0.011182631021598469709, +0.4550209367061380239 i)
+[0,1] = (+0.54889009588679094076, -0.036695484189377645945 i)
+[1,0] = (-0.54889009588679094076, -0.036695484189377645945 i)
+[1,1] = (+0.011182631021598469709, -0.4550209367061380239 i)
+
+--------------------------------------------------------
+
+[Rank 0] /home/rolfes/klft/include/PTBCGaugeField.hpp:306 (set_defect): set defect value to 1.000000
+[Rank 0] /home/rolfes/klft/include/PTBCGaugeField.hpp:378 (check_defect_application): ----- Checking defect application at defect position -----
+Defect value: 1.000000, Defect position: (0,0,0), Defect length: 2
+Defect Scan:
+Site (0,7,7,7), Defect value: 1.000000
+Site (0,7,7,0), Defect value: 1.000000
+Site (0,7,7,1), Defect value: 1.000000
+Site (0,7,7,2), Defect value: 1.000000
+Site (0,7,0,7), Defect value: 1.000000
+Site (0,7,0,0), Defect value: 1.000000
+Site (0,7,0,1), Defect value: 1.000000
+Site (0,7,0,2), Defect value: 1.000000
+Site (0,7,1,7), Defect value: 1.000000
+Site (0,7,1,0), Defect value: 1.000000
+Site (0,7,1,1), Defect value: 1.000000
+Site (0,7,1,2), Defect value: 1.000000
+Site (0,7,2,7), Defect value: 1.000000
+Site (0,7,2,0), Defect value: 1.000000
+Site (0,7,2,1), Defect value: 1.000000
+Site (0,7,2,2), Defect value: 1.000000
+Site (0,0,7,7), Defect value: 1.000000
+Site (0,0,7,0), Defect value: 1.000000
+Site (0,0,7,1), Defect value: 1.000000
+Site (0,0,7,2), Defect value: 1.000000
+Site (0,0,0,7), Defect value: 1.000000
+Site (0,0,0,0), Defect value: 1.000000
+Site (0,0,0,1), Defect value: 1.000000
+Site (0,0,0,2), Defect value: 1.000000
+Site (0,0,1,7), Defect value: 1.000000
+Site (0,0,1,0), Defect value: 1.000000
+Site (0,0,1,1), Defect value: 1.000000
+Site (0,0,1,2), Defect value: 1.000000
+Site (0,0,2,7), Defect value: 1.000000
+Site (0,0,2,0), Defect value: 1.000000
+Site (0,0,2,1), Defect value: 1.000000
+Site (0,0,2,2), Defect value: 1.000000
+Site (0,1,7,7), Defect value: 1.000000
+Site (0,1,7,0), Defect value: 1.000000
+Site (0,1,7,1), Defect value: 1.000000
+Site (0,1,7,2), Defect value: 1.000000
+Site (0,1,0,7), Defect value: 1.000000
+Site (0,1,0,0), Defect value: 1.000000
+Site (0,1,0,1), Defect value: 1.000000
+Site (0,1,0,2), Defect value: 1.000000
+Site (0,1,1,7), Defect value: 1.000000
+Site (0,1,1,0), Defect value: 1.000000
+Site (0,1,1,1), Defect value: 1.000000
+Site (0,1,1,2), Defect value: 1.000000
+Site (0,1,2,7), Defect value: 1.000000
+Site (0,1,2,0), Defect value: 1.000000
+Site (0,1,2,1), Defect value: 1.000000
+Site (0,1,2,2), Defect value: 1.000000
+Site (0,2,7,7), Defect value: 1.000000
+Site (0,2,7,0), Defect value: 1.000000
+Site (0,2,7,1), Defect value: 1.000000
+Site (0,2,7,2), Defect value: 1.000000
+Site (0,2,0,7), Defect value: 1.000000
+Site (0,2,0,0), Defect value: 1.000000
+Site (0,2,0,1), Defect value: 1.000000
+Site (0,2,0,2), Defect value: 1.000000
+Site (0,2,1,7), Defect value: 1.000000
+Site (0,2,1,0), Defect value: 1.000000
+Site (0,2,1,1), Defect value: 1.000000
+Site (0,2,1,2), Defect value: 1.000000
+Site (0,2,2,7), Defect value: 1.000000
+Site (0,2,2,0), Defect value: 1.000000
+Site (0,2,2,1), Defect value: 1.000000
+Site (0,2,2,2), Defect value: 1.000000
+Total sites in defect region: 0\8.000000
+Raw field entry at defect position: SUN Matrix:
+[0,0] = (+0.1611747632187877366, -0.13564074348077284626 i)
+[0,1] = (+0.34842171927204407256, +0.91336005493390304277 i)
+[1,0] = (-0.34842171927204407256, +0.91336005493390304277 i)
+[1,1] = (+0.1611747632187877366, +0.13564074348077284626 i)
+
+defect field entry at defect position: SUN Matrix:
+[0,0] = (+0.1611747632187877366, -0.13564074348077284626 i)
+[0,1] = (+0.34842171927204407256, +0.91336005493390304277 i)
+[1,0] = (-0.34842171927204407256, +0.91336005493390304277 i)
+[1,1] = (+0.1611747632187877366, +0.13564074348077284626 i)
+
+manually computed defect-applied entry at defect position: SUN Matrix:
+[0,0] = (+0.1611747632187877366, -0.13564074348077284626 i)
+[0,1] = (+0.34842171927204407256, +0.91336005493390304277 i)
+[1,0] = (-0.34842171927204407256, +0.91336005493390304277 i)
+[1,1] = (+0.1611747632187877366, +0.13564074348077284626 i)
+
+--------------------------------------------------------
+
+[Rank 2] /home/rolfes/klft/include/PTBCGaugeField.hpp:306 (set_defect): set defect value to 0.857000
+[Rank 2] /home/rolfes/klft/include/PTBCGaugeField.hpp:378 (check_defect_application): ----- Checking defect application at defect position -----
+Defect value: 0.857000, Defect position: (0,0,7), Defect length: 2
+Defect Scan:
+Site (0,7,7,6), Defect value: 1.000000
+Site (0,7,7,7), Defect value: 1.000000
+Site (0,7,7,0), Defect value: 1.000000
+Site (0,7,7,1), Defect value: 1.000000
+Site (0,7,0,6), Defect value: 1.000000
+Site (0,7,0,7), Defect value: 1.000000
+Site (0,7,0,0), Defect value: 1.000000
+Site (0,7,0,1), Defect value: 1.000000
+Site (0,7,1,6), Defect value: 1.000000
+Site (0,7,1,7), Defect value: 1.000000
+Site (0,7,1,0), Defect value: 1.000000
+Site (0,7,1,1), Defect value: 1.000000
+Site (0,7,2,6), Defect value: 1.000000
+Site (0,7,2,7), Defect value: 1.000000
+Site (0,7,2,0), Defect value: 1.000000
+Site (0,7,2,1), Defect value: 1.000000
+Site (0,0,7,6), Defect value: 1.000000
+Site (0,0,7,7), Defect value: 1.000000
+Site (0,0,7,0), Defect value: 1.000000
+Site (0,0,7,1), Defect value: 1.000000
+Site (0,0,0,6), Defect value: 1.000000
+Site (0,0,0,7), Defect value: 0.857000
+Site (0,0,0,0), Defect value: 0.857000
+Site (0,0,0,1), Defect value: 1.000000
+Site (0,0,1,6), Defect value: 1.000000
+Site (0,0,1,7), Defect value: 0.857000
+Site (0,0,1,0), Defect value: 0.857000
+Site (0,0,1,1), Defect value: 1.000000
+Site (0,0,2,6), Defect value: 1.000000
+Site (0,0,2,7), Defect value: 1.000000
+Site (0,0,2,0), Defect value: 1.000000
+Site (0,0,2,1), Defect value: 1.000000
+Site (0,1,7,6), Defect value: 1.000000
+Site (0,1,7,7), Defect value: 1.000000
+Site (0,1,7,0), Defect value: 1.000000
+Site (0,1,7,1), Defect value: 1.000000
+Site (0,1,0,6), Defect value: 1.000000
+Site (0,1,0,7), Defect value: 0.857000
+Site (0,1,0,0), Defect value: 0.857000
+Site (0,1,0,1), Defect value: 1.000000
+Site (0,1,1,6), Defect value: 1.000000
+Site (0,1,1,7), Defect value: 0.857000
+Site (0,1,1,0), Defect value: 0.857000
+Site (0,1,1,1), Defect value: 1.000000
+Site (0,1,2,6), Defect value: 1.000000
+Site (0,1,2,7), Defect value: 1.000000
+Site (0,1,2,0), Defect value: 1.000000
+Site (0,1,2,1), Defect value: 1.000000
+Site (0,2,7,6), Defect value: 1.000000
+Site (0,2,7,7), Defect value: 1.000000
+Site (0,2,7,0), Defect value: 1.000000
+Site (0,2,7,1), Defect value: 1.000000
+Site (0,2,0,6), Defect value: 1.000000
+Site (0,2,0,7), Defect value: 1.000000
+Site (0,2,0,0), Defect value: 1.000000
+Site (0,2,0,1), Defect value: 1.000000
+Site (0,2,1,6), Defect value: 1.000000
+Site (0,2,1,7), Defect value: 1.000000
+Site (0,2,1,0), Defect value: 1.000000
+Site (0,2,1,1), Defect value: 1.000000
+Site (0,2,2,6), Defect value: 1.000000
+Site (0,2,2,7), Defect value: 1.000000
+Site (0,2,2,0), Defect value: 1.000000
+Site (0,2,2,1), Defect value: 1.000000
+Total sites in defect region: 0\8.000000
+Raw field entry at defect position: SUN Matrix:
+[0,0] = (-0.88162651802601599282, -0.13522799090165821267 i)
+[0,1] = (-0.4486291837432777041, +0.056390856385307448762 i)
+[1,0] = (+0.4486291837432777041, +0.056390856385307448762 i)
+[1,1] = (-0.88162651802601599282, +0.13522799090165821267 i)
+
+defect field entry at defect position: SUN Matrix:
+[0,0] = (-0.75555392594829573483, -0.11589038820272108687 i)
+[0,1] = (-0.38447521046798899258, +0.048326963922208483748 i)
+[1,0] = (+0.38447521046798899258, +0.048326963922208483748 i)
+[1,1] = (-0.75555392594829573483, +0.11589038820272108687 i)
+
+manually computed defect-applied entry at defect position: SUN Matrix:
+[0,0] = (-0.75555392594829573483, -0.11589038820272108687 i)
+[0,1] = (-0.38447521046798899258, +0.048326963922208483748 i)
+[1,0] = (+0.38447521046798899258, +0.048326963922208483748 i)
+[1,1] = (-0.75555392594829573483, +0.11589038820272108687 i)
+
+--------------------------------------------------------
+
+[Rank 0] /home/rolfes/klft/include/PTBCGaugeField.hpp:306 (set_defect): set defect value to 0.857000
+[Rank 2] /home/rolfes/klft/include/PTBCGaugeField.hpp:306 (set_defect): set defect value to 1.000000
+[Rank 0] /home/rolfes/klft/include/PTBCGaugeField.hpp:378 (check_defect_application): ----- Checking defect application at defect position -----
+Defect value: 0.857000, Defect position: (0,0,0), Defect length: 2
+Defect Scan:
+Site (0,7,7,7), Defect value: 1.000000
+Site (0,7,7,0), Defect value: 1.000000
+Site (0,7,7,1), Defect value: 1.000000
+Site (0,7,7,2), Defect value: 1.000000
+Site (0,7,0,7), Defect value: 1.000000
+Site (0,7,0,0), Defect value: 1.000000
+Site (0,7,0,1), Defect value: 1.000000
+Site (0,7,0,2), Defect value: 1.000000
+Site (0,7,1,7), Defect value: 1.000000
+Site (0,7,1,0), Defect value: 1.000000
+Site (0,7,1,1), Defect value: 1.000000
+Site (0,7,1,2), Defect value: 1.000000
+Site (0,7,2,7), Defect value: 1.000000
+Site (0,7,2,0), Defect value: 1.000000
+Site (0,7,2,1), Defect value: 1.000000
+Site (0,7,2,2), Defect value: 1.000000
+Site (0,0,7,7), Defect value: 1.000000
+Site (0,0,7,0), Defect value: 1.000000
+Site (0,0,7,1), Defect value: 1.000000
+Site (0,0,7,2), Defect value: 1.000000
+Site (0,0,0,7), Defect value: 1.000000
+Site (0,0,0,0), Defect value: 0.857000
+Site (0,0,0,1), Defect value: 0.857000
+Site (0,0,0,2), Defect value: 1.000000
+Site (0,0,1,7), Defect value: 1.000000
+Site (0,0,1,0), Defect value: 0.857000
+Site (0,0,1,1), Defect value: 0.857000
+Site (0,0,1,2), Defect value: 1.000000
+Site (0,0,2,7), Defect value: 1.000000
+Site (0,0,2,0), Defect value: 1.000000
+Site (0,0,2,1), Defect value: 1.000000
+Site (0,0,2,2), Defect value: 1.000000
+Site (0,1,7,7), Defect value: 1.000000
+Site (0,1,7,0), Defect value: 1.000000
+Site (0,1,7,1), Defect value: 1.000000
+Site (0,1,7,2), Defect value: 1.000000
+Site (0,1,0,7), Defect value: 1.000000
+Site (0,1,0,0), Defect value: 0.857000
+Site (0,1,0,1), Defect value: 0.857000
+Site (0,1,0,2), Defect value: 1.000000
+Site (0,1,1,7), Defect value: 1.000000
+Site (0,1,1,0), Defect value: 0.857000
+Site (0,1,1,1), Defect value: 0.857000
+Site (0,1,1,2), Defect value: 1.000000
+Site (0,1,2,7), Defect value: 1.000000
+Site (0,1,2,0), Defect value: 1.000000
+Site (0,1,2,1), Defect value: 1.000000
+Site (0,1,2,2), Defect value: 1.000000
+Site (0,2,7,7), Defect value: 1.000000
+Site (0,2,7,0), Defect value: 1.000000
+Site (0,2,7,1), Defect value: 1.000000
+Site (0,2,7,2), Defect value: 1.000000
+Site (0,2,0,7), Defect value: 1.000000
+Site (0,2,0,0), Defect value: 1.000000
+Site (0,2,0,1), Defect value: 1.000000
+Site (0,2,0,2), Defect value: 1.000000
+Site (0,2,1,7), Defect value: 1.000000
+Site (0,2,1,0), Defect value: 1.000000
+Site (0,2,1,1), Defect value: 1.000000
+Site (0,2,1,2), Defect value: 1.000000
+Site (0,2,2,7), Defect value: 1.000000
+Site (0,2,2,0), Defect value: 1.000000
+Site (0,2,2,1), Defect value: 1.000000
+Site (0,2,2,2), Defect value: 1.000000
+Total sites in defect region: 0\8.000000
+Raw field entry at defect position: SUN Matrix:
+[0,0] = (+0.1611747632187877366, -0.13564074348077284626 i)
+[0,1] = (+0.34842171927204407256, +0.91336005493390304277 i)
+[1,0] = (-0.34842171927204407256, +0.91336005493390304277 i)
+[1,1] = (+0.1611747632187877366, +0.13564074348077284626 i)
+
+defect field entry at defect position: SUN Matrix:
+[0,0] = (+0.13812677207850107552, -0.11624411716302232578 i)
+[0,1] = (+0.29859741341614176591, +0.78274956707835485759 i)
+[1,0] = (-0.29859741341614176591, +0.78274956707835485759 i)
+[1,1] = (+0.13812677207850107552, +0.11624411716302232578 i)
+
+manually computed defect-applied entry at defect position: SUN Matrix:
+[0,0] = (+0.13812677207850107552, -0.11624411716302232578 i)
+[0,1] = (+0.29859741341614176591, +0.78274956707835485759 i)
+[1,0] = (-0.29859741341614176591, +0.78274956707835485759 i)
+[1,1] = (+0.13812677207850107552, +0.11624411716302232578 i)
+
+--------------------------------------------------------
+
+[Rank 2] /home/rolfes/klft/include/PTBCGaugeField.hpp:378 (check_defect_application): ----- Checking defect application at defect position -----
+Defect value: 1.000000, Defect position: (0,0,7), Defect length: 2
+Defect Scan:
+Site (0,7,7,6), Defect value: 1.000000
+Site (0,7,7,7), Defect value: 1.000000
+Site (0,7,7,0), Defect value: 1.000000
+Site (0,7,7,1), Defect value: 1.000000
+Site (0,7,0,6), Defect value: 1.000000
+Site (0,7,0,7), Defect value: 1.000000
+Site (0,7,0,0), Defect value: 1.000000
+Site (0,7,0,1), Defect value: 1.000000
+Site (0,7,1,6), Defect value: 1.000000
+Site (0,7,1,7), Defect value: 1.000000
+Site (0,7,1,0), Defect value: 1.000000
+Site (0,7,1,1), Defect value: 1.000000
+Site (0,7,2,6), Defect value: 1.000000
+Site (0,7,2,7), Defect value: 1.000000
+Site (0,7,2,0), Defect value: 1.000000
+Site (0,7,2,1), Defect value: 1.000000
+Site (0,0,7,6), Defect value: 1.000000
+Site (0,0,7,7), Defect value: 1.000000
+Site (0,0,7,0), Defect value: 1.000000
+Site (0,0,7,1), Defect value: 1.000000
+Site (0,0,0,6), Defect value: 1.000000
+Site (0,0,0,7), Defect value: 1.000000
+Site (0,0,0,0), Defect value: 1.000000
+Site (0,0,0,1), Defect value: 1.000000
+Site (0,0,1,6), Defect value: 1.000000
+Site (0,0,1,7), Defect value: 1.000000
+Site (0,0,1,0), Defect value: 1.000000
+Site (0,0,1,1), Defect value: 1.000000
+Site (0,0,2,6), Defect value: 1.000000
+Site (0,0,2,7), Defect value: 1.000000
+Site (0,0,2,0), Defect value: 1.000000
+Site (0,0,2,1), Defect value: 1.000000
+Site (0,1,7,6), Defect value: 1.000000
+Site (0,1,7,7), Defect value: 1.000000
+Site (0,1,7,0), Defect value: 1.000000
+Site (0,1,7,1), Defect value: 1.000000
+Site (0,1,0,6), Defect value: 1.000000
+Site (0,1,0,7), Defect value: 1.000000
+Site (0,1,0,0), Defect value: 1.000000
+Site (0,1,0,1), Defect value: 1.000000
+Site (0,1,1,6), Defect value: 1.000000
+Site (0,1,1,7), Defect value: 1.000000
+Site (0,1,1,0), Defect value: 1.000000
+Site (0,1,1,1), Defect value: 1.000000
+Site (0,1,2,6), Defect value: 1.000000
+Site (0,1,2,7), Defect value: 1.000000
+Site (0,1,2,0), Defect value: 1.000000
+Site (0,1,2,1), Defect value: 1.000000
+Site (0,2,7,6), Defect value: 1.000000
+Site (0,2,7,7), Defect value: 1.000000
+Site (0,2,7,0), Defect value: 1.000000
+Site (0,2,7,1), Defect value: 1.000000
+Site (0,2,0,6), Defect value: 1.000000
+Site (0,2,0,7), Defect value: 1.000000
+Site (0,2,0,0), Defect value: 1.000000
+Site (0,2,0,1), Defect value: 1.000000
+Site (0,2,1,6), Defect value: 1.000000
+Site (0,2,1,7), Defect value: 1.000000
+Site (0,2,1,0), Defect value: 1.000000
+Site (0,2,1,1), Defect value: 1.000000
+Site (0,2,2,6), Defect value: 1.000000
+Site (0,2,2,7), Defect value: 1.000000
+Site (0,2,2,0), Defect value: 1.000000
+Site (0,2,2,1), Defect value: 1.000000
+Total sites in defect region: 0\8.000000
+Raw field entry at defect position: SUN Matrix:
+[0,0] = (-0.88162651802601599282, -0.13522799090165821267 i)
+[0,1] = (-0.4486291837432777041, +0.056390856385307448762 i)
+[1,0] = (+0.4486291837432777041, +0.056390856385307448762 i)
+[1,1] = (-0.88162651802601599282, +0.13522799090165821267 i)
+
+defect field entry at defect position: SUN Matrix:
+[0,0] = (-0.88162651802601599282, -0.13522799090165821267 i)
+[0,1] = (-0.4486291837432777041, +0.056390856385307448762 i)
+[1,0] = (+0.4486291837432777041, +0.056390856385307448762 i)
+[1,1] = (-0.88162651802601599282, +0.13522799090165821267 i)
+
+manually computed defect-applied entry at defect position: SUN Matrix:
+[0,0] = (-0.88162651802601599282, -0.13522799090165821267 i)
+[0,1] = (-0.4486291837432777041, +0.056390856385307448762 i)
+[1,0] = (+0.4486291837432777041, +0.056390856385307448762 i)
+[1,1] = (-0.88162651802601599282, +0.13522799090165821267 i)
+
+--------------------------------------------------------
+
+[Rank 2] /home/rolfes/klft/include/PTBCGaugeField.hpp:306 (set_defect): set defect value to 1.000000
+[Rank 2] /home/rolfes/klft/include/PTBCGaugeField.hpp:378 (check_defect_application): ----- Checking defect application at defect position -----
+Defect value: 1.000000, Defect position: (0,0,7), Defect length: 2
+Defect Scan:
+Site (0,7,7,6), Defect value: 1.000000
+Site (0,7,7,7), Defect value: 1.000000
+Site (0,7,7,0), Defect value: 1.000000
+Site (0,7,7,1), Defect value: 1.000000
+Site (0,7,0,6), Defect value: 1.000000
+Site (0,7,0,7), Defect value: 1.000000
+Site (0,7,0,0), Defect value: 1.000000
+Site (0,7,0,1), Defect value: 1.000000
+Site (0,7,1,6), Defect value: 1.000000
+Site (0,7,1,7), Defect value: 1.000000
+Site (0,7,1,0), Defect value: 1.000000
+Site (0,7,1,1), Defect value: 1.000000
+Site (0,7,2,6), Defect value: 1.000000
+Site (0,7,2,7), Defect value: 1.000000
+Site (0,7,2,0), Defect value: 1.000000
+Site (0,7,2,1), Defect value: 1.000000
+Site (0,0,7,6), Defect value: 1.000000
+Site (0,0,7,7), Defect value: 1.000000
+Site (0,0,7,0), Defect value: 1.000000
+Site (0,0,7,1), Defect value: 1.000000
+Site (0,0,0,6), Defect value: 1.000000
+Site (0,0,0,7), Defect value: 1.000000
+Site (0,0,0,0), Defect value: 1.000000
+Site (0,0,0,1), Defect value: 1.000000
+Site (0,0,1,6), Defect value: 1.000000
+Site (0,0,1,7), Defect value: 1.000000
+Site (0,0,1,0), Defect value: 1.000000
+Site (0,0,1,1), Defect value: 1.000000
+Site (0,0,2,6), Defect value: 1.000000
+Site (0,0,2,7), Defect value: 1.000000
+Site (0,0,2,0), Defect value: 1.000000
+Site (0,0,2,1), Defect value: 1.000000
+Site (0,1,7,6), Defect value: 1.000000
+Site (0,1,7,7), Defect value: 1.000000
+Site (0,1,7,0), Defect value: 1.000000
+Site (0,1,7,1), Defect value: 1.000000
+Site (0,1,0,6), Defect value: 1.000000
+Site (0,1,0,7), Defect value: 1.000000
+Site (0,1,0,0), Defect value: 1.000000
+Site (0,1,0,1), Defect value: 1.000000
+Site (0,1,1,6), Defect value: 1.000000
+Site (0,1,1,7), Defect value: 1.000000
+Site (0,1,1,0), Defect value: 1.000000
+Site (0,1,1,1), Defect value: 1.000000
+Site (0,1,2,6), Defect value: 1.000000
+Site (0,1,2,7), Defect value: 1.000000
+Site (0,1,2,0), Defect value: 1.000000
+Site (0,1,2,1), Defect value: 1.000000
+Site (0,2,7,6), Defect value: 1.000000
+Site (0,2,7,7), Defect value: 1.000000
+Site (0,2,7,0), Defect value: 1.000000
+Site (0,2,7,1), Defect value: 1.000000
+Site (0,2,0,6), Defect value: 1.000000
+Site (0,2,0,7), Defect value: 1.000000
+Site (0,2,0,0), Defect value: 1.000000
+Site (0,2,0,1), Defect value: 1.000000
+Site (0,2,1,6), Defect value: 1.000000
+Site (0,2,1,7), Defect value: 1.000000
+Site (0,2,1,0), Defect value: 1.000000
+Site (0,2,1,1), Defect value: 1.000000
+Site (0,2,2,6), Defect value: 1.000000
+Site (0,2,2,7), Defect value: 1.000000
+Site (0,2,2,0), Defect value: 1.000000
+Site (0,2,2,1), Defect value: 1.000000
+Total sites in defect region: 0\8.000000
+Raw field entry at defect position: SUN Matrix:
+[0,0] = (-0.88162651802601599282, -0.13522799090165821267 i)
+[0,1] = (-0.4486291837432777041, +0.056390856385307448762 i)
+[1,0] = (+0.4486291837432777041, +0.056390856385307448762 i)
+[1,1] = (-0.88162651802601599282, +0.13522799090165821267 i)
+
+defect field entry at defect position: SUN Matrix:
+[0,0] = (-0.88162651802601599282, -0.13522799090165821267 i)
+[0,1] = (-0.4486291837432777041, +0.056390856385307448762 i)
+[1,0] = (+0.4486291837432777041, +0.056390856385307448762 i)
+[1,1] = (-0.88162651802601599282, +0.13522799090165821267 i)
+
+manually computed defect-applied entry at defect position: SUN Matrix:
+[0,0] = (-0.88162651802601599282, -0.13522799090165821267 i)
+[0,1] = (-0.4486291837432777041, +0.056390856385307448762 i)
+[1,0] = (+0.4486291837432777041, +0.056390856385307448762 i)
+[1,1] = (-0.88162651802601599282, +0.13522799090165821267 i)
+
+--------------------------------------------------------
+
+[Rank 2] /home/rolfes/klft/include/PTBCGaugeField.hpp:306 (set_defect): set defect value to 1.000000
+[Rank 2] /home/rolfes/klft/include/PTBCGaugeField.hpp:378 (check_defect_application): ----- Checking defect application at defect position -----
+Defect value: 1.000000, Defect position: (7,0,7), Defect length: 2
+Defect Scan:
+Site (0,6,7,6), Defect value: 1.000000
+Site (0,6,7,7), Defect value: 1.000000
+Site (0,6,7,0), Defect value: 1.000000
+Site (0,6,7,1), Defect value: 1.000000
+Site (0,6,0,6), Defect value: 1.000000
+Site (0,6,0,7), Defect value: 1.000000
+Site (0,6,0,0), Defect value: 1.000000
+Site (0,6,0,1), Defect value: 1.000000
+Site (0,6,1,6), Defect value: 1.000000
+Site (0,6,1,7), Defect value: 1.000000
+Site (0,6,1,0), Defect value: 1.000000
+Site (0,6,1,1), Defect value: 1.000000
+Site (0,6,2,6), Defect value: 1.000000
+Site (0,6,2,7), Defect value: 1.000000
+Site (0,6,2,0), Defect value: 1.000000
+Site (0,6,2,1), Defect value: 1.000000
+Site (0,7,7,6), Defect value: 1.000000
+Site (0,7,7,7), Defect value: 1.000000
+Site (0,7,7,0), Defect value: 1.000000
+Site (0,7,7,1), Defect value: 1.000000
+Site (0,7,0,6), Defect value: 1.000000
+Site (0,7,0,7), Defect value: 1.000000
+Site (0,7,0,0), Defect value: 1.000000
+Site (0,7,0,1), Defect value: 1.000000
+Site (0,7,1,6), Defect value: 1.000000
+Site (0,7,1,7), Defect value: 1.000000
+Site (0,7,1,0), Defect value: 1.000000
+Site (0,7,1,1), Defect value: 1.000000
+Site (0,7,2,6), Defect value: 1.000000
+Site (0,7,2,7), Defect value: 1.000000
+Site (0,7,2,0), Defect value: 1.000000
+Site (0,7,2,1), Defect value: 1.000000
+Site (0,0,7,6), Defect value: 1.000000
+Site (0,0,7,7), Defect value: 1.000000
+Site (0,0,7,0), Defect value: 1.000000
+Site (0,0,7,1), Defect value: 1.000000
+Site (0,0,0,6), Defect value: 1.000000
+Site (0,0,0,7), Defect value: 1.000000
+Site (0,0,0,0), Defect value: 1.000000
+Site (0,0,0,1), Defect value: 1.000000
+Site (0,0,1,6), Defect value: 1.000000
+Site (0,0,1,7), Defect value: 1.000000
+Site (0,0,1,0), Defect value: 1.000000
+Site (0,0,1,1), Defect value: 1.000000
+Site (0,0,2,6), Defect value: 1.000000
+Site (0,0,2,7), Defect value: 1.000000
+Site (0,0,2,0), Defect value: 1.000000
+Site (0,0,2,1), Defect value: 1.000000
+Site (0,1,7,6), Defect value: 1.000000
+Site (0,1,7,7), Defect value: 1.000000
+Site (0,1,7,0), Defect value: 1.000000
+Site (0,1,7,1), Defect value: 1.000000
+Site (0,1,0,6), Defect value: 1.000000
+Site (0,1,0,7), Defect value: 1.000000
+Site (0,1,0,0), Defect value: 1.000000
+Site (0,1,0,1), Defect value: 1.000000
+Site (0,1,1,6), Defect value: 1.000000
+Site (0,1,1,7), Defect value: 1.000000
+Site (0,1,1,0), Defect value: 1.000000
+Site (0,1,1,1), Defect value: 1.000000
+Site (0,1,2,6), Defect value: 1.000000
+Site (0,1,2,7), Defect value: 1.000000
+Site (0,1,2,0), Defect value: 1.000000
+Site (0,1,2,1), Defect value: 1.000000
+Total sites in defect region: 0\8.000000
+Site (0,1,2,6), Defect value: 1.000000
+Site (0,1,2,7), Defect value: 1.000000
+Site (0,1,2,0), Defect value: 1.000000
+Site (0,1,2,1), Defect value: 1.000000
+Total sites in defect region: 0\8.000000
+Raw field entry at defect position: SUN Matrix:
+[0,0] = (+0.19880353788529006587, -0.26794095202025869362 i)
+[0,1] = (-0.88216368279743084813, -0.33237333874431534975 i)
+[1,0] = (+0.88216368279743084813, -0.33237333874431534975 i)
+[1,1] = (+0.19880353788529006587, +0.26794095202025869362 i)
+
+defect field entry at defect position: SUN Matrix:
+[0,0] = (+0.19880353788529006587, -0.26794095202025869362 i)
+[0,1] = (-0.88216368279743084813, -0.33237333874431534975 i)
+[1,0] = (+0.88216368279743084813, -0.33237333874431534975 i)
+[1,1] = (+0.19880353788529006587, +0.26794095202025869362 i)
+
+manually computed defect-applied entry at defect position: SUN Matrix:
+[0,0] = (+0.19880353788529006587, -0.26794095202025869362 i)
+[0,1] = (-0.88216368279743084813, -0.33237333874431534975 i)
+[1,0] = (+0.88216368279743084813, -0.33237333874431534975 i)
+[1,1] = (+0.19880353788529006587, +0.26794095202025869362 i)
+
+--------------------------------------------------------
+
+Step: 2, accepted: 1, Acceptance rate: 1.000000, Time: 12.094255

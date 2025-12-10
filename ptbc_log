@@ -1,0 +1,1700 @@
+
+[Rank 0] /home/rolfes/klft/include/PTBCGaugeField.hpp:289 (set_defect): set defect value to 0.857000
+[Rank 0] /home/rolfes/klft/include/PTBCGaugeField.hpp:369 (check_defect_application): ----- Checking defect application at defect position -----
+Defect value: 0.857000, Defect position: (0,0,0), Defect length: 2
+Defect Scan:
+Site (0,7,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,7,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,0,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,0,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,0,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,0,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,1,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,1,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,1,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,1,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,0,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,0,0), In defect: true, Defect value: 0.857000, Expected defect value: 0.857000
+Site (0,0,0,1), In defect: true, Defect value: 0.857000, Expected defect value: 0.857000
+Site (0,0,0,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,1,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,1,0), In defect: true, Defect value: 0.857000, Expected defect value: 0.857000
+Site (0,0,1,1), In defect: true, Defect value: 0.857000, Expected defect value: 0.857000
+Site (0,0,1,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,0,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,0,0), In defect: true, Defect value: 0.857000, Expected defect value: 0.857000
+Site (0,1,0,1), In defect: true, Defect value: 0.857000, Expected defect value: 0.857000
+Site (0,1,0,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,1,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,1,0), In defect: true, Defect value: 0.857000, Expected defect value: 0.857000
+Site (0,1,1,1), In defect: true, Defect value: 0.857000, Expected defect value: 0.857000
+Site (0,1,1,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,7,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,0,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,0,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,0,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,0,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,1,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,1,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,1,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,1,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,2,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Total sites in defect region: 8\8.000000
+Raw field entry at defect position: SUN Matrix:
+[0,0] = (-0.25915025465281577022, -0.7812409938922241226 i)
+[0,1] = (-0.46341969990341125296, -0.32824660960488549755 i)
+[1,0] = (+0.46341969990341125296, -0.32824660960488549755 i)
+[1,1] = (-0.25915025465281577022, +0.7812409938922241226 i)
+
+defect field entry at defect position: SUN Matrix:
+[0,0] = (-0.2220917682374630997, -0.66952353176563605963 i)
+[0,1] = (-0.39715068281722343269, -0.28130734443138688539 i)
+[1,0] = (+0.39715068281722343269, -0.28130734443138688539 i)
+[1,1] = (-0.2220917682374630997, +0.66952353176563605963 i)
+
+manually computed defect-applied entry at defect position: SUN Matrix:
+[0,0] = (-0.2220917682374630997, -0.66952353176563605963 i)
+[0,1] = (-0.39715068281722343269, -0.28130734443138688539 i)
+[1,0] = (+0.39715068281722343269, -0.28130734443138688539 i)
+[1,1] = (-0.2220917682374630997, +0.66952353176563605963 i)
+
+--------------------------------------------------------
+
+[Rank 0] /home/rolfes/klft/include/PTBCGaugeField.hpp:289 (set_defect): set defect value to 0.714000
+[Rank 1] /home/rolfes/klft/include/PTBCGaugeField.hpp:289 (set_defect): set defect value to 0.857000
+[Rank 0] /home/rolfes/klft/include/PTBCGaugeField.hpp:369 (check_defect_application): ----- Checking defect application at defect position -----
+Defect value: 0.714000, Defect position: (0,0,0), Defect length: 2
+Defect Scan:
+Site (0,7,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,7,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,0,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,0,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,0,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,0,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,1,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,1,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,1,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,1,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,0,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,0,0), In defect: true, Defect value: 0.714000, Expected defect value: 0.714000
+Site (0,0,0,1), In defect: true, Defect value: 0.714000, Expected defect value: 0.714000
+Site (0,0,0,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,1,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,1,0), In defect: true, Defect value: 0.714000, Expected defect value: 0.714000
+Site (0,0,1,1), In defect: true, Defect value: 0.714000, Expected defect value: 0.714000
+Site (0,0,1,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,0,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,0,0), In defect: true, Defect value: 0.714000, Expected defect value: 0.714000
+Site (0,1,0,1), In defect: true, Defect value: 0.714000, Expected defect value: 0.714000
+Site (0,1,0,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,1,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,1,0), In defect: true, Defect value: 0.714000, Expected defect value: 0.714000
+Site (0,1,1,1), In defect: true, Defect value: 0.714000, Expected defect value: 0.714000
+Site (0,1[Rank 1] /home/rolfes/klft/include/PTBCGaugeField.hpp:369 (check_defect_application): ----- Checking defect application at defect position -----
+Defect value: 0.857000, Defect position: (0,0,0), Defect length: 2
+Defect Scan:
+Site (0,7,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,7,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,0,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,0,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,0,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,0,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,1,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,1,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,1,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,1,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,0,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,0,0), In defect: true, Defect value: 0.857000, Expected defect value: 0.857000
+Site (0,0,0,1), In defect: true, Defect value: 0.857000, Expected defect value: 0.857000
+Site (0,0,0,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,1,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,1,0), In defect: true, Defect value: 0.857000, Expected defect value: 0.857000
+Site (0,0,1,1), In defect: true, Defect value: 0.857000, Expected defect value: 0.857000
+Site (0,0,1,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,0,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,0,0), In defect: true, Defect value: 0.857000, Expected defect value: 0.857000
+Site (0,1,0,1), In defect: true, Defect value: 0.857000, Expected defect value: 0.857000
+Site (0,1,0,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,1,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,1,0), In defect: true, Defect value: 0.857000, Expected defect value: 0.857000
+Site (0,1,1,1), In defect: true, Defect value: 0.857000, Expected defect value: 0.857000
+Site (0,1,1,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,7,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,0,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,0,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,0,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,0,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,1,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,1,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,1,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,1,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,2,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Total sites in defect region: 8\8.000000
+Raw field entry at defect position: SUN Matrix:
+[0,0] = (+0.29280179668414746397, -0.30571954394886979856 i)
+[0,1] = (-0.16780044183529263524, +0.89030650903276620234 i)
+[1,0] = (+0.16780044183529263524, +0.89030650903276620234 i)
+[1,1] = (+0.29280179668414746397, +0.30571954394886979856 i)
+
+defect field entry at defect position: SUN Matrix:
+[0,0] = (+0.25093113975831438101, -0.26200164916418139383 i)
+[0,1] = (-0.14380497865284577741, +0.76299267824108063518 i)
+[1,0] = (+0.14380497865284577741, +0.76299267824108063518 i)
+[1,1] = (+0.25093113975831438101, +0.26200164916418139383 i)
+
+manually computed defect-applied entry at defect position: SUN Matrix:
+[0,0] = (+0.25093113975831438101, -0.26200164916418139383 i)
+[0,1] = (-0.14380497865284577741, +0.76299267824108063518 i)
+[1,0] = (+0.14380497865284577741, +0.76299267824108063518 i)
+[1,1] = (+0.25093113975831438101, +0.26200164916418139383 i)
+
+--------------------------------------------------------
+
+,1,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,7,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,0,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,0,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,0,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,0,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,1,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,1,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,1,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,1,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,2,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Total sites in defect region: 8\8.000000
+Raw field entry at defect position: SUN Matrix:
+[0,0] = (-0.25915025465281577022, -0.7812409938922241226 i)
+[0,1] = (-0.46341969990341125296, -0.32824660960488549755 i)
+[1,0] = (+0.46341969990341125296, -0.32824660960488549755 i)
+[1,1] = (-0.25915025465281577022, +0.7812409938922241226 i)
+
+defect field entry at defect position: SUN Matrix:
+[0,0] = (-0.18503328182211045694, -0.55780606963904799667 i)
+[0,1] = (-0.33088166573103561241, -0.23436807925788824547 i)
+[1,0] = (+0.33088166573103561241, -0.23436807925788824547 i)
+[1,1] = (-0.18503328182211045694, +0.55780606963904799667 i)
+
+manually computed defect-applied entry at defect position: SUN Matrix:
+[0,0] = (-0.18503328182211045694, -0.55780606963904799667 i)
+[0,1] = (-0.33088166573103561241, -0.23436807925788824547 i)
+[1,0] = (+0.33088166573103561241, -0.23436807925788824547 i)
+[1,1] = (-0.18503328182211045694, +0.55780606963904799667 i)
+
+--------------------------------------------------------
+
+Step: 0, accepted: 1, Acceptance rate: 1.000000, Time: 12.006221
+[Rank 1] /home/rolfes/klft/include/PTBCGaugeField.hpp:289 (set_defect): set defect value to 0.714000
+[Rank 1] /home/rolfes/klft/include/PTBCGaugeField.hpp:369 (check_defect_application): ----- Checking defect application at defect position -----
+Defect value: 0.714000, Defect position: (0,0,0), Defect length: 2
+Defect Scan:
+Site (0,7,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,7,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,0,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,0,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,0,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,0,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,1,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,1,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,1,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,1,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,0,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,0,0), In defect: true, Defect value: 0.714000, Expected defect value: 0.714000
+Site (0,0,0,1), In defect: true, Defect value: 0.714000, Expected defect value: 0.714000
+Site (0,0,0,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,1,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,1,0), In defect: true, Defect value: 0.714000, Expected defect value: 0.714000
+Site (0,0,1,1), In defect: true, Defect value: 0.714000, Expected defect value: 0.714000
+Site (0,0,1,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,0,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,0,0), In defect: true, Defect value: 0.714000, Expected defect value: 0.714000
+Site (0,1,0,1), In defect: true, Defect value: 0.714000, Expected defect value: 0.714000
+Site (0,1,0,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,1,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,1,0), In defect: true, Defect value: 0.714000, Expected defect value: 0.714000
+Site (0,1,1,1), In defect: true, Defect value: 0.714000, Expected defect value: 0.714000
+Site (0,1,1,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,7,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,0,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,0,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,0,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,0,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,1,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,1,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,1,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,1,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,2,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Total sites in defect region: 8\8.000000
+Raw field entry at defect position: SUN Matrix:
+[0,0] = (-0.14088229944305813435, -0.22814216105972373594 i)
+[0,1] = (+0.15328467867591835661, -0.95110837412665849566 i)
+[1,0] = (-0.15328467867591835661, -0.95110837412665849566 i)
+[1,1] = (-0.14088229944305813435, +0.22814216105972373594 i)
+
+defect field entry at defect position: SUN Matrix:
+[0,0] = (-0.10058996180234350271, -0.16289350299664273614 i)
+[0,1] = (+0.1094452605746056989, -0.67909137912643413593 i)
+[1,0] = (-0.1094452605746056989, -0.67909137912643413593 i)
+[1,1] = (-0.10058996180234350271, +0.16289350299664273614 i)
+
+manually computed defect-applied entry at defect position: SUN Matrix:
+[0,0] = (-0.10058996180234350271, -0.16289350299664273614 i)
+[0,1] = (+0.1094452605746056989, -0.67909137912643413593 i)
+[1,0] = (-0.1094452605746056989, -0.67909137912643413593 i)
+[1,1] = (-0.10058996180234350271, +0.16289350299664273614 i)
+
+--------------------------------------------------------
+
+[Rank 0] /home/rolfes/klft/include/PTBCGaugeField.hpp:289 (set_defect): set defect value to 0.857000
+[Rank 0] /home/rolfes/klft/include/PTBCGaugeField.hpp:369 (check_defect_application): ----- Checking defect application at defect position -----
+Defect value: 0.857000, Defect position: (0,0,0), Defect length: 2
+Defect Scan:
+Site (0,7,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,7,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,0,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,0,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,0,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,0,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,1,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,1,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,1,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,1,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,0,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,0,0), In defect: true, Defect value: 0.857000, Expected defect value: 0.857000
+Site (0,0,0,1), In defect: true, Defect value: 0.857000, Expected defect value: 0.857000
+Site (0,0,0,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,1,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,1,0), In defect: true, Defect value: 0.857000, Expected defect value: 0.857000
+Site (0,0,1,1), In defect: true, Defect value: 0.857000, Expected defect value: 0.857000
+Site (0,0,1,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,0,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,0,0), In defect: true, Defect value: 0.857000, Expected defect value: 0.857000
+Site (0,1,0,1), In defect: true, Defect value: 0.857000, Expected defect value: 0.857000
+Site (0,1,0,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,1,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,1,0), In defect: true, Defect value: 0.857000, Expected defect value: 0.857000
+Site (0,1,1,1), In defect: true, Defect value: 0.857000, Expected defect value: 0.857000
+Site (0,1,1,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,7,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,0,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,0,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,0,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,0,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,1,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,1,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,1,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,1,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,2,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Total sites in defect region: 8\8.000000
+Raw field entry at defect position: SUN Matrix:
+[0,0] = (-0.11253459550228171737, +0.53464067844289553388 i)
+[0,1] = (+0.82828156503139982458, +0.1242777486052585173 i)
+[1,0] = (-0.82828156503139982458, +0.1242777486052585173 i)
+[1,1] = (-0.11253459550228171737, -0.53464067844289553388 i)
+
+defect field entry at defect position: SUN Matrix:
+[0,0] = (-0.096442148345455433467, +0.45818706142556148153 i)
+[0,1] = (+0.70983730123190968975, +0.10650603055470654612 i)
+[1,0] = (-0.70983730123190968975, +0.10650603055470654612 i)
+[1,1] = (-0.096442148345455433467, -0.45818706142556148153 i)
+
+manually computed defect-applied entry at defect position: SUN Matrix:
+[0,0] = (-0.096442148345455433467, +0.45818706142556148153 i)
+[0,1] = (+0.70983730123190968975, +0.10650603055470654612 i)
+[1,0] = (-0.70983730123190968975, +0.10650603055470654612 i)
+[1,1] = (-0.096442148345455433467, -0.45818706142556148153 i)
+
+--------------------------------------------------------
+
+[Rank 0] /home/rolfes/klft/include/PTBCGaugeField.hpp:289 (set_defect): set defect value to 0.714000
+[Rank 1] /home/rolfes/klft/include/PTBCGaugeField.hpp:289 (set_defect): set defect value to 0.857000
+[Rank 0] /home/rolfes/klft/include/PTBCGaugeField.hpp:369 (check_defect_application): ----- Checking defect application at defect position -----
+Defect value: 0.714000, Defect position: (0,0,0), Defect length: 2
+Defect Scan:
+Site (0,7,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,7,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,0,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,0,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,0,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,0,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,1,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,1,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,1,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,1,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,0,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,0,0), In defect: true, Defect value: 0.714000, Expected defect value: 0.714000
+Site (0,0,0,1), In defect: true, Defect value: 0.714000, Expected defect value: 0.714000
+Site (0,0,0,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,1,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,1,0), In defect: true, Defect value: 0.714000, Expected defect value: 0.714000
+Site (0,0,1,1), In defect: true, Defect value: 0.714000, Expected defect value: 0.714000
+Site (0,0,1,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,0,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,0,0), In defect: true, Defect value: 0.714000, Expected defect value: 0.714000
+Site (0,1,0,1), In defect: true, Defect value: 0.714000, Expected defect value: 0.714000
+Site (0,1,0,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,1,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,1,0), In defect: true, Defect value: 0.714000, Expected defect value: 0.714000
+Site (0,1,1,1), In defect: true, Defect value: 0.714000, Expected defect value: 0.714000
+Site (0,1[Rank 1] /home/rolfes/klft/include/PTBCGaugeField.hpp:369 (check_defect_application): ----- Checking defect application at defect position -----
+Defect value: 0.857000, Defect position: (0,0,0), Defect length: 2
+Defect Scan:
+Site (0,7,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,7,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,0,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,0,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,0,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,0,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,1,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,1,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,1,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,1,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,0,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,0,0), In defect: true, Defect value: 0.857000, Expected defect value: 0.857000
+Site (0,0,0,1), In defect: true, Defect value: 0.857000, Expected defect value: 0.857000
+Site (0,0,0,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,1,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,1,0), In defect: true, Defect value: 0.857000, Expected defect value: 0.857000
+Site (0,0,1,1), In defect: true, Defect value: 0.857000, Expected defect value: 0.857000
+Site (0,0,1,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,0,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,0,0), In defect: true, Defect value: 0.857000, Expected defect value: 0.857000
+Site (0,1,0,1), In defect: true, Defect value: 0.857000, Expected defect value: 0.857000
+Site (0,1,0,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,1,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,1,0), In defect: true, Defect value: 0.857000, Expected defect value: 0.857000
+Site (0,1,1,1), In defect: true, Defect value: 0.857000, Expected defect value: 0.857000
+Site (0,1,1,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,7,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,0,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,0,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,0,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,0,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,1,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,1,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,1,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,1,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,2,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Total sites in defect region: 8\8.000000
+Raw field entry at defect position: SUN Matrix:
+[0,0] = (-0.11253459550228171737, +0.53464067844289553388 i)
+[0,1] = (+0.82828156503139982458, +0.1242777486052585173 i)
+[1,0] = (-0.82828156503139982458, +0.1242777486052585173 i)
+[1,1] = (-0.11253459550228171737, -0.53464067844289553388 i)
+
+defect field entry at defect position: SUN Matrix:
+[0,0] = (-0.080349701188629135684, +0.38173344440822737367 i)
+[0,1] = (+0.59139303743241944389, +0.088734312504154574941 i)
+[1,0] = (-0.59139303743241944389, +0.088734312504154574941 i)
+[1,1] = (-0.080349701188629135684, -0.38173344440822737367 i)
+
+manually computed defect-applied entry at defect position: SUN Matrix:
+[0,0] = (-0.080349701188629135684, +0.38173344440822737367 i)
+[0,1] = (+0.59139303743241944389, +0.088734312504154574941 i)
+[1,0] = (-0.59139303743241944389, +0.088734312504154574941 i)
+[1,1] = (-0.080349701188629135684, -0.38173344440822737367 i)
+
+--------------------------------------------------------
+
+,1,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,7,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,0,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,0,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,0,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,0,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,1,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,1,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,1,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,1,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,2,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Total sites in defect region: 8\8.000000
+Raw field entry at defect position: SUN Matrix:
+[0,0] = (-0.14088229944305813435, -0.22814216105972373594 i)
+[0,1] = (+0.15328467867591835661, -0.95110837412665849566 i)
+[1,0] = (-0.15328467867591835661, -0.95110837412665849566 i)
+[1,1] = (-0.14088229944305813435, +0.22814216105972373594 i)
+
+defect field entry at defect position: SUN Matrix:
+[0,0] = (-0.12073613062270081853, -0.19551783202818323604 i)
+[0,1] = (+0.13136496962526203469, -0.81509987662654626028 i)
+[1,0] = (-0.13136496962526203469, -0.81509987662654626028 i)
+[1,1] = (-0.12073613062270081853, +0.19551783202818323604 i)
+
+manually computed defect-applied entry at defect position: SUN Matrix:
+[0,0] = (-0.12073613062270081853, -0.19551783202818323604 i)
+[0,1] = (+0.13136496962526203469, -0.81509987662654626028 i)
+[1,0] = (-0.13136496962526203469, -0.81509987662654626028 i)
+[1,1] = (-0.12073613062270081853, +0.19551783202818323604 i)
+
+--------------------------------------------------------
+
+[Rank 2] /home/rolfes/klft/include/PTBCGaugeField.hpp:289 (set_defect): set defect value to 0.857000
+[Rank 2] /home/rolfes/klft/include/PTBCGaugeField.hpp:369 (check_defect_application): ----- Checking defect application at defect position -----
+Defect value: 0.857000, Defect position: (0,0,7), Defect length: 2
+Defect Scan:
+Site (0,7,7,6), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,0,6), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,0,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,0,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,0,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,1,6), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,1,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,1,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,1,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,6), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,6), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,0,6), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,0,7), In defect: true, Defect value: 0.857000, Expected defect value: 0.857000
+Site (0,0,0,0), In defect: true, Defect value: 0.857000, Expected defect value: 0.857000
+Site (0,0,0,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,1,6), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,1,7), In defect: true, Defect value: 0.857000, Expected defect value: 0.857000
+Site (0,0,1,0), In defect: true, Defect value: 0.857000, Expected defect value: 0.857000
+Site (0,0,1,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,6), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,6), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,0,6), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,0,7), In defect: true, Defect value: 0.857000, Expected defect value: 0.857000
+Site (0,1,0,0), In defect: true, Defect value: 0.857000, Expected defect value: 0.857000
+Site (0,1,0,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,1,6), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,1,7), In defect: true, Defect value: 0.857000, Expected defect value: 0.857000
+Site (0,1,1,0), In defect: true, Defect value: 0.857000, Expected defect value: 0.857000
+Site (0,1,1,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,6), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,7,6), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,0,6), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,0,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,0,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,0,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,1,6), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,1,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,1,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,1,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,2,6), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Total sites in defect region: 8\8.000000
+Raw field entry at defect position: SUN Matrix:
+[0,0] = (-0.55357984353520317544, -0.37616522478718489308 i)
+[0,1] = (-0.49587178580736313016, +0.55331749704176669269 i)
+[1,0] = (+0.49587178580736313016, +0.55331749704176669269 i)
+[1,1] = (-0.55357984353520317544, +0.37616522478718489308 i)
+
+defect field entry at defect position: SUN Matrix:
+[0,0] = (-0.4744179259096691359, -0.32237359764261747097 i)
+[0,1] = (-0.42496212043691017346, +0.47419309496479405963 i)
+[1,0] = (+0.42496212043691017346, +0.47419309496479405963 i)
+[1,1] = (-0.4744179259096691359, +0.32237359764261747097 i)
+
+manually computed defect-applied entry at defect position: SUN Matrix:
+[0,0] = (-0.4744179259096691359, -0.32237359764261747097 i)
+[0,1] = (-0.42496212043691017346, +0.47419309496479405963 i)
+[1,0] = (+0.42496212043691017346, +0.47419309496479405963 i)
+[1,1] = (-0.4744179259096691359, +0.32237359764261747097 i)
+
+--------------------------------------------------------
+
+[Rank 1] /home/rolfes/klft/include/PTBCGaugeField.hpp:289 (set_defect): set defect value to 1.000000
+[Rank 1] /home/rolfes/klft/include/PTBCGaugeField.hpp:369 (check_defect_application): ----- Checking defect application at defect position -----
+Defect value: 1.000000, Defect position: (0,0,0), Defect length: 2
+Defect Scan:
+Site (0,7,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,7,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,0,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,0,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,0,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,0,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,1,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,1,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,1,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,1,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,0,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,0,0), In defect: true, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,0,1), In defect: true, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,0,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,1,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,1,0), In defect: true, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,1,1), In defect: true, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,1,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,0,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,0,0), In defect: true, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,0,1), In defect: true, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,0,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,1,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,1,0), In defect: true, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,1,1), In defect: true, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,1,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,7,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,0,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,0,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,0,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,0,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,1,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,1,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,1,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,1,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,2,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Total sites in defect region: 8\8.000000
+Raw field entry at defect position: SUN Matrix:
+[0,0] = (-0.14088229944305813435, -0.22814216105972373594 i)
+[0,1] = (+0.15328467867591835661, -0.95110837412665849566 i)
+[1,0] = (-0.15328467867591835661, -0.95110837412665849566 i)
+[1,1] = (-0.14088229944305813435, +0.22814216105972373594 i)
+
+defect field entry at defect position: SUN Matrix:
+[0,0] = (-0.14088229944305813435, -0.22814216105972373594 i)
+[0,1] = (+0.15328467867591835661, -0.95110837412665849566 i)
+[1,0] = (-0.15328467867591835661, -0.95110837412665849566 i)
+[1,1] = (-0.14088229944305813435, +0.22814216105972373594 i)
+
+manually computed defect-applied entry at defect position: SUN Matrix:
+[0,0] = (-0.14088229944305813435, -0.22814216105972373594 i)
+[0,1] = (+0.15328467867591835661, -0.95110837412665849566 i)
+[1,0] = (-0.15328467867591835661, -0.95110837412665849566 i)
+[1,1] = (-0.14088229944305813435, +0.22814216105972373594 i)
+
+--------------------------------------------------------
+
+[Rank 0] /home/rolfes/klft/include/PTBCGaugeField.hpp:289 (set_defect): set defect value to 0.857000
+[Rank 0] /home/rolfes/klft/include/PTBCGaugeField.hpp:369 (check_defect_application): ----- Checking defect application at defect position -----
+Defect value: 0.857000, Defect position: (0,0,0), Defect length: 2
+Defect Scan:
+Site (0,7,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,7,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,0,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,0,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,0,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,0,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,1,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,1,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,1,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,1,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,0,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,0,0), In defect: true, Defect value: 0.857000, Expected defect value: 0.857000
+Site (0,0,0,1), In defect: true, Defect value: 0.857000, Expected defect value: 0.857000
+Site (0,0,0,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,1,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,1,0), In defect: true, Defect value: 0.857000, Expected defect value: 0.857000
+Site (0,0,1,1), In defect: true, Defect value: 0.857000, Expected defect value: 0.857000
+Site (0,0,1,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,0,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,0,0), In defect: true, Defect value: 0.857000, Expected defect value: 0.857000
+Site (0,1,0,1), In defect: true, Defect value: 0.857000, Expected defect value: 0.857000
+Site (0,1,0,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,1,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,1,0), In defect: true, Defect value: 0.857000, Expected defect value: 0.857000
+Site (0,1,1,1), In defect: true, Defect value: 0.857000, Expected defect value: 0.857000
+Site (0,1,1,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,7,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,0,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,0,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,0,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,0,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,1,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,1,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,1,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,1,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,2,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Total sites in defect region: 8\8.000000
+Raw field entry at defect position: SUN Matrix:
+[0,0] = (-0.11253459550228171737, +0.53464067844289553388 i)
+[0,1] = (+0.82828156503139982458, +0.1242777486052585173 i)
+[1,0] = (-0.82828156503139982458, +0.1242777486052585173 i)
+[1,1] = (-0.11253459550228171737, -0.53464067844289553388 i)
+
+defect field entry at defect position: SUN Matrix:
+[0,0] = (-0.096442148345455433467, +0.45818706142556148153 i)
+[0,1] = (+0.70983730123190968975, +0.10650603055470654612 i)
+[1,0] = (-0.70983730123190968975, +0.10650603055470654612 i)
+[1,1] = (-0.096442148345455433467, -0.45818706142556148153 i)
+
+manually computed defect-applied entry at defect position: SUN Matrix:
+[0,0] = (-0.096442148345455433467, +0.45818706142556148153 i)
+[0,1] = (+0.70983730123190968975, +0.10650603055470654612 i)
+[1,0] = (-0.70983730123190968975, +0.10650603055470654612 i)
+[1,1] = (-0.096442148345455433467, -0.45818706142556148153 i)
+
+--------------------------------------------------------
+
+[Rank 2] /home/rolfes/klft/include/PTBCGaugeField.hpp:289 (set_defect): set defect value to 0.714000
+[Rank 2] /home/rolfes/klft/include/PTBCGaugeField.hpp:369 (check_defect_application): ----- Checking defect application at defect position -----
+Defect value: 0.714000, Defect position: (0,0,7), Defect length: 2
+Defect Scan:
+Site (0,7,7,6), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,0,6), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,0,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,0,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,0,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,1,6), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,1,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,1,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,1,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,6), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,6), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,0,6), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,0,7), In defect: true, Defect value: 0.714000, Expected defect value: 0.714000
+Site (0,0,0,0), In defect: true, Defect value: 0.714000, Expected defect value: 0.714000
+Site (0,0,0,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,1,6), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,1,7), In defect: true, Defect value: 0.714000, Expected defect value: 0.714000
+Site (0,0,1,0), In defect: true, Defect value: 0.714000, Expected defect value: 0.714000
+Site (0,0,1,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,6), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,6), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,0,6), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,0,7), In defect: true, Defect value: 0.714000, Expected defect value: 0.714000
+Site (0,1,0,0), In defect: true, Defect value: 0.714000, Expected defect value: 0.714000
+Site (0,1,0,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,1,6), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,1,7), In defect: true, Defect value: 0.714000, Expected defect value: 0.714000
+Site (0,1,1,0), In defect: true, Defect value: 0.714000, Expected defect value: 0.714000
+Site (0,1,1,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,6), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,7,6), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,0,6), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,0,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,0,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,0,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,1,6), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,1,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,1,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,1,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,2,6), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Total sites in defect region: 8\8.000000
+Raw field entry at defect position: SUN Matrix:
+[0,0] = (-0.55357984353520317544, -0.37616522478718489308 i)
+[0,1] = (-0.49587178580736313016, +0.55331749704176669269 i)
+[1,0] = (+0.49587178580736313016, +0.55331749704176669269 i)
+[1,1] = (-0.55357984353520317544, +0.37616522478718489308 i)
+
+defect field entry at defect position: SUN Matrix:
+[0,0] = (-0.39525600828413504084, -0.26858197049804999335 i)
+[0,1] = (-0.35405245506645727227, +0.39506869288782142657 i)
+[1,0] = (+0.35405245506645727227, +0.39506869288782142657 i)
+[1,1] = (-0.39525600828413504084, +0.26858197049804999335 i)
+
+manually computed defect-applied entry at defect position: SUN Matrix:
+[0,0] = (-0.39525600828413504084, -0.26858197049804999335 i)
+[0,1] = (-0.35405245506645727227, +0.39506869288782142657 i)
+[1,0] = (+0.35405245506645727227, +0.39506869288782142657 i)
+[1,1] = (-0.39525600828413504084, +0.26858197049804999335 i)
+
+--------------------------------------------------------
+
+Step: 1, accepted: 1, Acceptance rate: 1.000000, Time: 12.818341
+[Rank 0] /home/rolfes/klft/include/PTBCGaugeField.hpp:289 (set_defect): set defect value to 1.000000
+[Rank 0] /home/rolfes/klft/include/PTBCGaugeField.hpp:369 (check_defect_application): ----- Checking defect application at defect position -----
+Defect value: 1.000000, Defect position: (0,0,0), Defect length: 2
+Defect Scan:
+Site (0,7,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,7,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,0,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,0,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,0,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,0,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,1,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,1,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,1,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,1,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,0,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,0,0), In defect: true, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,0,1), In defect: true, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,0,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,1,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,1,0), In defect: true, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,1,1), In defect: true, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,1,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,0,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,0,0), In defect: true, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,0,1), In defect: true, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,0,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,1,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,1,0), In defect: true, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,1,1), In defect: true, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,1,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,7,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,0,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,0,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,0,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,0,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,1,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,1,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,1,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,1,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,2,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Total sites in defect region: 8\8.000000
+Raw field entry at defect position: SUN Matrix:
+[0,0] = (+0.16440545925034341646, -0.1006639678460859999 i)
+[0,1] = (+0.38912865257316270329, +0.90078660197227566897 i)
+[1,0] = (-0.38912865257316270329, +0.90078660197227566897 i)
+[1,1] = (+0.16440545925034341646, +0.1006639678460859999 i)
+
+defect field entry at defect position: SUN Matrix:
+[0,0] = (+0.16440545925034341646, -0.1006639678460859999 i)
+[0,1] = (+0.38912865257316270329, +0.90078660197227566897 i)
+[1,0] = (-0.38912865257316270329, +0.90078660197227566897 i)
+[1,1] = (+0.16440545925034341646, +0.1006639678460859999 i)
+
+manually computed defect-applied entry at defect position: SUN Matrix:
+[0,0] = (+0.16440545925034341646, -0.1006639678460859999 i)
+[0,1] = (+0.38912865257316270329, +0.90078660197227566897 i)
+[1,0] = (-0.38912865257316270329, +0.90078660197227566897 i)
+[1,1] = (+0.16440545925034341646, +0.1006639678460859999 i)
+
+--------------------------------------------------------
+
+[Rank 1] /home/rolfes/klft/include/PTBCGaugeField.hpp:289 (set_defect): set defect value to 0.857000
+[Rank 1] /home/rolfes/klft/include/PTBCGaugeField.hpp:369 (check_defect_application): ----- Checking defect application at defect position -----
+Defect value: 0.857000, Defect position: (7,0,0), Defect length: 2
+Defect Scan:
+Site (0,6,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,6,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,6,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,6,7,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,6,0,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,6,0,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,6,0,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,6,0,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,6,1,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,6,1,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,6,1,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,6,1,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,6,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,6,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,6,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,6,2,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,7,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,0,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,0,0), In defect: true, Defect value: 0.857000, Expected defect value: 0.857000
+Site (0,7,0,1), In defect: true, Defect value: 0.857000, Expected defect value: 0.857000
+Site (0,7,0,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,1,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,1,0), In defect: true, Defect value: 0.857000, Expected defect value: 0.857000
+Site (0,7,1,1), In defect: true, Defect value: 0.857000, Expected defect value: 0.857000
+Site (0,7,1,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,0,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,0,0), In defect: true, Defect value: 0.857000, Expected defect value: 0.857000
+Site (0,0,0,1), In defect: true, Defect value: 0.857000, Expected defect value: 0.857000
+Site (0,0,0,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,1,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,1,0), In defect: true, Defect value: 0.857000, Expected defect value: 0.857000
+Site (0,0,1,1), In defect: true, Defect value: 0.857000, Expected defect value: 0.857000
+Site (0,0,1,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,0,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,0,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,0,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,0,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,1,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,1,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,1,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,1,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Total sites in defect region: 8\8.000000
+Raw field entry at defect position: SUN Matrix:
+[0,0] = (-0.023433337759391374699, +0.64577886258406680398 i)
+[0,1] = (+0.76185343541302941173, -0.044720043274224872965 i)
+[1,0] = (-0.76185343541302941173, -0.044720043274224872965 i)
+[1,1] = (-0.023433337759391374699, -0.64577886258406680398 i)
+
+defect field entry at defect position: SUN Matrix:
+[0,0] = (-0.020082370459798406376, +0.55343248523454524612 i)
+[0,1] = (+0.65290839414896617576, -0.038325077086010718441 i)
+[1,0] = (-0.65290839414896617576, -0.038325077086010718441 i)
+[1,1] = (-0.020082370459798406376, -0.55343248523454524612 i)
+
+manually computed defect-applied entry at defect position: SUN Matrix:
+[0,0] = (-0.020082370459798406376, +0.55343248523454524612 i)
+[0,1] = (+0.65290839414896617576, -0.038325077086010718441 i)
+[1,0] = (-0.65290839414896617576, -0.038325077086010718441 i)
+[1,1] = (-0.020082370459798406376, -0.55343248523454524612 i)
+
+--------------------------------------------------------
+
+[Rank 0] /home/rolfes/klft/include/PTBCGaugeField.hpp:289 (set_defect): set defect value to 0.857000
+[Rank 1] /home/rolfes/klft/include/PTBCGaugeField.hpp:289 (set_defect): set defect value to 1.000000
+[Rank 0] /home/rolfes/klft/include/PTBCGaugeField.hpp:369 (check_defect_application): ----- Checking defect application at defect position -----
+Defect value: 0.857000, Defect position: (0,0,0), Defect length: 2
+Defect Scan:
+Site (0,7,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,7,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,0,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,0,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,0,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,0,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,1,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,1,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,1,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,1,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,0,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,0,0), In defect: true, Defect value: 0.857000, Expected defect value: 0.857000
+Site (0,0,0,1), In defect: true, Defect value: 0.857000, Expected defect value: 0.857000
+Site (0,0,0,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,1,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,1,0), In defect: true, Defect value: 0.857000, Expected defect value: 0.857000
+Site (0,0,1,1), In defect: true, Defect value: 0.857000, Expected defect value: 0.857000
+Site (0,0,1,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,0,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,0,0), In defect: true, Defect value: 0.857000, Expected defect value: 0.857000
+Site (0,1,0,1), In defect: true, Defect value: 0.857000, Expected defect value: 0.857000
+Site (0,1,0,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,1,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,1,0), In defect: true, Defect value: 0.857000, Expected defect value: 0.857000
+Site (0,1,1,1), In defect: true, Defect value: 0.857000, Expected defect value: 0.857000
+Site (0,1[Rank 1] /home/rolfes/klft/include/PTBCGaugeField.hpp:369 (check_defect_application): ----- Checking defect application at defect position -----
+Defect value: 1.000000, Defect position: (7,0,0), Defect length: 2
+Defect Scan:
+Site (0,6,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,6,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,6,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,6,7,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,6,0,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,6,0,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,6,0,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,6,0,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,6,1,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,6,1,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,6,1,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,6,1,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,6,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,6,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,6,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,6,2,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,7,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,0,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,0,0), In defect: true, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,0,1), In defect: true, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,0,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,1,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,1,0), In defect: true, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,1,1), In defect: true, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,1,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,0,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,0,0), In defect: true, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,0,1), In defect: true, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,0,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,1,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,1,0), In defect: true, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,1,1), In defect: true, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,1,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,0,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,0,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,0,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,0,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,1,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,1,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,1,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,1,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Total sites in defect region: 8\8.000000
+Raw field entry at defect position: SUN Matrix:
+[0,0] = (-0.023433337759391374699, +0.64577886258406680398 i)
+[0,1] = (+0.76185343541302941173, -0.044720043274224872965 i)
+[1,0] = (-0.76185343541302941173, -0.044720043274224872965 i)
+[1,1] = (-0.023433337759391374699, -0.64577886258406680398 i)
+
+defect field entry at defect position: SUN Matrix:
+[0,0] = (-0.023433337759391374699, +0.64577886258406680398 i)
+[0,1] = (+0.76185343541302941173, -0.044720043274224872965 i)
+[1,0] = (-0.76185343541302941173, -0.044720043274224872965 i)
+[1,1] = (-0.023433337759391374699, -0.64577886258406680398 i)
+
+manually computed defect-applied entry at defect position: SUN Matrix:
+[0,0] = (-0.023433337759391374699, +0.64577886258406680398 i)
+[0,1] = (+0.76185343541302941173, -0.044720043274224872965 i)
+[1,0] = (-0.76185343541302941173, -0.044720043274224872965 i)
+[1,1] = (-0.023433337759391374699, -0.64577886258406680398 i)
+
+--------------------------------------------------------
+
+,1,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,7,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,0,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,0,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,0,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,0,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,1,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,1,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,1,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,1,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,2,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Total sites in defect region: 8\8.000000
+Raw field entry at defect position: SUN Matrix:
+[0,0] = (+0.16440545925034341646, -0.1006639678460859999 i)
+[0,1] = (+0.38912865257316270329, +0.90078660197227566897 i)
+[1,0] = (-0.38912865257316270329, +0.90078660197227566897 i)
+[1,1] = (+0.16440545925034341646, +0.1006639678460859999 i)
+
+defect field entry at defect position: SUN Matrix:
+[0,0] = (+0.1408954785775443086, -0.086269020444095706468 i)
+[0,1] = (+0.33348325525520045032, +0.77197411789024028561 i)
+[1,0] = (-0.33348325525520045032, +0.77197411789024028561 i)
+[1,1] = (+0.1408954785775443086, +0.086269020444095706468 i)
+
+manually computed defect-applied entry at defect position: SUN Matrix:
+[0,0] = (+0.1408954785775443086, -0.086269020444095706468 i)
+[0,1] = (+0.33348325525520045032, +0.77197411789024028561 i)
+[1,0] = (-0.33348325525520045032, +0.77197411789024028561 i)
+[1,1] = (+0.1408954785775443086, +0.086269020444095706468 i)
+
+--------------------------------------------------------
+
+[Rank 2] /home/rolfes/klft/include/PTBCGaugeField.hpp:289 (set_defect): set defect value to 1.000000
+[Rank 2] /home/rolfes/klft/include/PTBCGaugeField.hpp:369 (check_defect_application): ----- Checking defect application at defect position -----
+Defect value: 1.000000, Defect position: (0,0,7), Defect length: 2
+Defect Scan:
+Site (0,7,7,6), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,0,6), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,0,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,0,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,0,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,1,6), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,1,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,1,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,1,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,6), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,6), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,0,6), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,0,7), In defect: true, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,0,0), In defect: true, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,0,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,1,6), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,1,7), In defect: true, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,1,0), In defect: true, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,1,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,6), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,6), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,0,6), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,0,7), In defect: true, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,0,0), In defect: true, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,0,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,1,6), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,1,7), In defect: true, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,1,0), In defect: true, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,1,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,6), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,7,6), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,0,6), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,0,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,0,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,0,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,1,6), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,1,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,1,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,1,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,2,6), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Total sites in defect region: 8\8.000000
+Raw field entry at defect position: SUN Matrix:
+[0,0] = (-0.55357984353520317544, -0.37616522478718489308 i)
+[0,1] = (-0.49587178580736313016, +0.55331749704176669269 i)
+[1,0] = (+0.49587178580736313016, +0.55331749704176669269 i)
+[1,1] = (-0.55357984353520317544, +0.37616522478718489308 i)
+
+defect field entry at defect position: SUN Matrix:
+[0,0] = (-0.55357984353520317544, -0.37616522478718489308 i)
+[0,1] = (-0.49587178580736313016, +0.55331749704176669269 i)
+[1,0] = (+0.49587178580736313016, +0.55331749704176669269 i)
+[1,1] = (-0.55357984353520317544, +0.37616522478718489308 i)
+
+manually computed defect-applied entry at defect position: SUN Matrix:
+[0,0] = (-0.55357984353520317544, -0.37616522478718489308 i)
+[0,1] = (-0.49587178580736313016, +0.55331749704176669269 i)
+[1,0] = (+0.49587178580736313016, +0.55331749704176669269 i)
+[1,1] = (-0.55357984353520317544, +0.37616522478718489308 i)
+
+--------------------------------------------------------
+
+[Rank 1] /home/rolfes/klft/include/PTBCGaugeField.hpp:289 (set_defect): set defect value to 0.714000
+[Rank 1] /home/rolfes/klft/include/PTBCGaugeField.hpp:369 (check_defect_application): ----- Checking defect application at defect position -----
+Defect value: 0.714000, Defect position: (7,0,0), Defect length: 2
+Defect Scan:
+Site (0,6,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,6,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,6,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,6,7,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,6,0,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,6,0,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,6,0,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,6,0,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,6,1,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,6,1,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,6,1,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,6,1,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,6,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,6,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,6,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,6,2,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,7,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,0,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,0,0), In defect: true, Defect value: 0.714000, Expected defect value: 0.714000
+Site (0,7,0,1), In defect: true, Defect value: 0.714000, Expected defect value: 0.714000
+Site (0,7,0,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,1,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,1,0), In defect: true, Defect value: 0.714000, Expected defect value: 0.714000
+Site (0,7,1,1), In defect: true, Defect value: 0.714000, Expected defect value: 0.714000
+Site (0,7,1,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,0,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,0,0), In defect: true, Defect value: 0.714000, Expected defect value: 0.714000
+Site (0,0,0,1), In defect: true, Defect value: 0.714000, Expected defect value: 0.714000
+Site (0,0,0,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,1,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,1,0), In defect: true, Defect value: 0.714000, Expected defect value: 0.714000
+Site (0,0,1,1), In defect: true, Defect value: 0.714000, Expected defect value: 0.714000
+Site (0,0,1,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,0,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,0,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,0,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,0,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,1,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,1,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,1,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,1,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Total sites in defect region: 8\8.000000
+Raw field entry at defect position: SUN Matrix:
+[0,0] = (-0.023433337759391374699, +0.64577886258406680398 i)
+[0,1] = (+0.76185343541302941173, -0.044720043274224872965 i)
+[1,0] = (-0.76185343541302941173, -0.044720043274224872965 i)
+[1,1] = (-0.023433337759391374699, -0.64577886258406680398 i)
+
+defect field entry at defect position: SUN Matrix:
+[0,0] = (-0.016731403160205441522, +0.46108610788502368827 i)
+[0,1] = (+0.5439633528849029398, -0.031930110897796556979 i)
+[1,0] = (-0.5439633528849029398, -0.031930110897796556979 i)
+[1,1] = (-0.016731403160205441522, -0.46108610788502368827 i)
+
+manually computed defect-applied entry at defect position: SUN Matrix:
+[0,0] = (-0.016731403160205441522, +0.46108610788502368827 i)
+[0,1] = (+0.5439633528849029398, -0.031930110897796556979 i)
+[1,0] = (-0.5439633528849029398, -0.031930110897796556979 i)
+[1,1] = (-0.016731403160205441522, -0.46108610788502368827 i)
+
+--------------------------------------------------------
+
+[Rank 0] /home/rolfes/klft/include/PTBCGaugeField.hpp:289 (set_defect): set defect value to 1.000000
+[Rank 0] /home/rolfes/klft/include/PTBCGaugeField.hpp:369 (check_defect_application): ----- Checking defect application at defect position -----
+Defect value: 1.000000, Defect position: (0,0,0), Defect length: 2
+Defect Scan:
+Site (0,7,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,7,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,0,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,0,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,0,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,0,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,1,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,1,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,1,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,1,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,0,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,0,0), In defect: true, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,0,1), In defect: true, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,0,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,1,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,1,0), In defect: true, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,1,1), In defect: true, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,1,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,0,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,0,0), In defect: true, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,0,1), In defect: true, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,0,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,1,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,1,0), In defect: true, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,1,1), In defect: true, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,1,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,7,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,0,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,0,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,0,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,0,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,1,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,1,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,1,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,1,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,2,2), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Total sites in defect region: 8\8.000000
+Raw field entry at defect position: SUN Matrix:
+[0,0] = (+0.16440545925034341646, -0.1006639678460859999 i)
+[0,1] = (+0.38912865257316270329, +0.90078660197227566897 i)
+[1,0] = (-0.38912865257316270329, +0.90078660197227566897 i)
+[1,1] = (+0.16440545925034341646, +0.1006639678460859999 i)
+
+defect field entry at defect position: SUN Matrix:
+[0,0] = (+0.16440545925034341646, -0.1006639678460859999 i)
+[0,1] = (+0.38912865257316270329, +0.90078660197227566897 i)
+[1,0] = (-0.38912865257316270329, +0.90078660197227566897 i)
+[1,1] = (+0.16440545925034341646, +0.1006639678460859999 i)
+
+manually computed defect-applied entry at defect position: SUN Matrix:
+[0,0] = (+0.16440545925034341646, -0.1006639678460859999 i)
+[0,1] = (+0.38912865257316270329, +0.90078660197227566897 i)
+[1,0] = (-0.38912865257316270329, +0.90078660197227566897 i)
+[1,1] = (+0.16440545925034341646, +0.1006639678460859999 i)
+
+--------------------------------------------------------
+
+[Rank 2] /home/rolfes/klft/include/PTBCGaugeField.hpp:289 (set_defect): set defect value to 0.857000
+[Rank 2] /home/rolfes/klft/include/PTBCGaugeField.hpp:369 (check_defect_application): ----- Checking defect application at defect position -----
+Defect value: 0.857000, Defect position: (0,0,7), Defect length: 2
+Defect Scan:
+Site (0,7,7,6), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,0,6), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,0,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,0,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,0,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,1,6), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,1,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,1,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,1,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,6), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,7,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,6), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,0,6), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,0,7), In defect: true, Defect value: 0.857000, Expected defect value: 0.857000
+Site (0,0,0,0), In defect: true, Defect value: 0.857000, Expected defect value: 0.857000
+Site (0,0,0,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,1,6), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,1,7), In defect: true, Defect value: 0.857000, Expected defect value: 0.857000
+Site (0,0,1,0), In defect: true, Defect value: 0.857000, Expected defect value: 0.857000
+Site (0,0,1,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,6), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,0,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,6), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,0,6), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,0,7), In defect: true, Defect value: 0.857000, Expected defect value: 0.857000
+Site (0,1,0,0), In defect: true, Defect value: 0.857000, Expected defect value: 0.857000
+Site (0,1,0,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,1,6), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,1,7), In defect: true, Defect value: 0.857000, Expected defect value: 0.857000
+Site (0,1,1,0), In defect: true, Defect value: 0.857000, Expected defect value: 0.857000
+Site (0,1,1,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,6), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,1,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,7,6), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,7,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,7,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,7,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,0,6), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,0,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,0,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,0,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,1,6), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,1,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,1,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,1,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,2,6), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,2,7), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,2,0), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Site (0,2,2,1), In defect: false, Defect value: 1.000000, Expected defect value: 1.000000
+Total sites in defect region: 8\8.000000
+Raw field entry at defect position: SUN Matrix:
+[0,0] = (-0.55357984353520317544, -0.37616522478718489308 i)
+[0,1] = (-0.49587178580736313016, +0.55331749704176669269 i)
+[1,0] = (+0.49587178580736313016, +0.55331749704176669269 i)
+[1,1] = (-0.55357984353520317544, +0.37616522478718489308 i)
+
+defect field entry at defect position: SUN Matrix:
+[0,0] = (-0.4744179259096691359, -0.32237359764261747097 i)
+[0,1] = (-0.42496212043691017346, +0.47419309496479405963 i)
+[1,0] = (+0.42496212043691017346, +0.47419309496479405963 i)
+
+defect field entry at defect position: SUN Matrix:
+[0,0] = (-0.4744179259096691359, -0.32237359764261747097 i)
+[0,1] = (-0.42496212043691017346, +0.47419309496479405963 i)
+[1,0] = (+0.42496212043691017346, +0.47419309496479405963 i)
+[1,1] = (-0.4744179259096691359, +0.32237359764261747097 i)
+
+manually computed defect-applied entry at defect position: SUN Matrix:
+[0,0] = (-0.4744179259096691359, -0.32237359764261747097 i)
+[0,1] = (-0.42496212043691017346, +0.47419309496479405963 i)
+[1,0] = (+0.42496212043691017346, +0.47419309496479405963 i)
+[1,1] = (-0.4744179259096691359, +0.32237359764261747097 i)
+
+--------------------------------------------------------
+
+Step: 2, accepted: 1, Acceptance rate: 1.000000, Time: 12.606137
