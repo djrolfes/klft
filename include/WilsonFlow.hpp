@@ -255,11 +255,11 @@ struct WilsonFlow {
             for (index_t mu = 0; mu < 4; ++mu) {
               SUNAdj<Nc> diff =
                   Z_rk4(i0, i1, i2, i3, mu) - Z_rk3(i0, i1, i2, i3, mu);
-              real_t rk4_norm =
+              real_t rk3_norm =
                   Kokkos::sqrt(norm2<Nc>(Z_rk3(i0, i1, i2, i3, mu)));
               local_err += Kokkos::pow(
                   Kokkos::sqrt(norm2<Nc>(diff)) /
-                      (aparams.abs_tol + aparams.rel_tol * rk4_norm),
+                      (aparams.abs_tol + aparams.rel_tol * rk3_norm),
                   2);
             }
           },
