@@ -220,21 +220,32 @@ struct WilsonFlow {
     const index_t L2 = field.field.extent(2);
     const index_t L3 = field.field.extent(3);
 
+    if (KLFT_VERBOSITY > 2) {
+      Kokkos::printf(
+          "DEBUG: Starting flow_adaptive. Grid: %ld x %ld x %ld x %ld\n", L0,
+          L1, L2, L3);
+    }
+
     // Allocate temporary Views for the Lie Algebra stages
-    // Passed by value to helpers, acting as shared pointers to this memory
     SUNAdjField<rank, Nc> K1("K1", L0, L1, L2, L3);
     SUNAdjField<rank, Nc> K2("K2", L0, L1, L2, L3);
     SUNAdjField<rank, Nc> K3("K3", L0, L1, L2, L3);
 
-    if (KLFT_VERBOSITY > 2) {
-      Kokkos::printf("Starting faithful RK-MK (2)3 adaptive Wilson flow\n");
-    }
-
     auto aparams = params.adaptiveParams;
 
+    int step_count = 0;
+
     while (flow_time < params.tau) {
+      step_count++;
+
+      if (KLFT_VERBOSITY > 2) {
+        Kokkos::printf("DEBUG: [Step %d] Start. Time=%1.4f, h=%e\n", step_count,
+                       flow_time, eps);
+      }
+
       // 0. Backup current field (V0)
       Kokkos::deep_copy(field_bak.field, field.field);
+      Kokkos::fence();  // Ensure backup is done
 
       // --- Stage 1 ---
       // Y1 = 0, so V = V0.
@@ -245,43 +256,65 @@ struct WilsonFlow {
       // Z and K1 passed by value (copying the handle)
       calc_Z_LieAlgebra(this->field, this->tmp_staple, Z);
       Kokkos::deep_copy(K1, Z);
+      Kokkos::fence();
+
+      if (KLFT_VERBOSITY > 2)
+        Kokkos::printf("DEBUG: [Step %d] Stage 1 (K1) complete.\n", step_count);
 
       // --- Stage 2 ---
       // Y2 = h * (1/2) * K1
       // V2 = exp(Y2) * V0
       update_field_RKMK(field_bak, field, K1, 0.5 * eps);
+      Kokkos::fence();
+
       stapleField<DGaugeFieldType>(this->field, this->tmp_staple);
       Kokkos::fence();
 
       calc_Z_LieAlgebra(this->field, this->tmp_staple, Z);
       // K2 = Z - 0.5 * [Y2, Z]
       compute_stage_K(K2, Z, K1, 0.5 * eps);
+      Kokkos::fence();
+
+      if (KLFT_VERBOSITY > 2)
+        Kokkos::printf("DEBUG: [Step %d] Stage 2 (K2) complete.\n", step_count);
 
       // --- Stage 3 ---
       // Y3 = h * (3/4) * K2
       // V3 = exp(Y3) * V0
       update_field_RKMK(field_bak, field, K2, 0.75 * eps);
+      Kokkos::fence();
+
       stapleField<DGaugeFieldType>(this->field, this->tmp_staple);
       Kokkos::fence();
 
       calc_Z_LieAlgebra(this->field, this->tmp_staple, Z);
       // K3 = Z - 0.5 * [Y3, Z]
       compute_stage_K(K3, Z, K2, 0.75 * eps);
+      Kokkos::fence();
+
+      if (KLFT_VERBOSITY > 2)
+        Kokkos::printf("DEBUG: [Step %d] Stage 3 (K3) complete.\n", step_count);
 
       // --- Stage 4 (Final Solution V1) ---
       // V1 = exp(Omega_3) * V0
       update_field_RKMK_final(field_bak, field, K1, K2, K3, eps);
+      Kokkos::fence();
+
       stapleField<DGaugeFieldType>(this->field, this->tmp_staple);
       Kokkos::fence();
 
       // Calculate Z(V1) for error estimate
       calc_Z_LieAlgebra(this->field, this->tmp_staple, Z);
+      Kokkos::fence();
+
+      if (KLFT_VERBOSITY > 2)
+        Kokkos::printf("DEBUG: [Step %d] Stage 4 (Final Update) complete.\n",
+                       step_count);
 
       // --- Error Estimate ---
       real_t err = 0.0;
       real_t total_volume = L0 * L1 * L2 * L3 * 4.0;
 
-      // Note: Lambda captures Views by value implicitly via [=]
       Kokkos::parallel_reduce(
           "WilsonFlow_Error_Calc",
           Kokkos::MDRangePolicy<Kokkos::Rank<rank>>({0, 0, 0, 0},
@@ -312,21 +345,29 @@ struct WilsonFlow {
           err);
       Kokkos::fence();
 
-      err = Kokkos::sqrt(err / total_volume);
+      real_t err_normalized = Kokkos::sqrt(err / total_volume);
 
-      real_t eps_opt =
-          eps * Kokkos::pow(1.0 / (err + 1e-10), 1.0 / 3.0) * aparams.rho;
+      real_t eps_opt = eps *
+                       Kokkos::pow(1.0 / (err_normalized + 1e-10), 1.0 / 3.0) *
+                       aparams.rho;
       eps_opt = Kokkos::min(aparams.max_increase * eps,
                             Kokkos::max(aparams.max_decrease * eps, eps_opt));
 
       if (KLFT_VERBOSITY > 2) {
-        Kokkos::printf("Adaptive Step: t=%1.4f, h=%e, err=%e, new_h=%e\n",
-                       flow_time, eps, err, eps_opt);
+        Kokkos::printf(
+            "DEBUG: [Step %d] Check. err_raw=%e, err_norm=%e, eps_opt=%e\n",
+            step_count, err, err_normalized, eps_opt);
       }
 
-      if (err <= 1.0) {
+      if (err_normalized <= 1.0) {
+        if (KLFT_VERBOSITY > 2)
+          Kokkos::printf("DEBUG: [Step %d] ACCEPTED. Advancing time.\n",
+                         step_count);
         flow_time += eps;
       } else {
+        if (KLFT_VERBOSITY > 2)
+          Kokkos::printf("DEBUG: [Step %d] REJECTED. Restoring field.\n",
+                         step_count);
         Kokkos::deep_copy(field.field, field_bak.field);
         Kokkos::fence();
       }
@@ -335,6 +376,11 @@ struct WilsonFlow {
       if (flow_time + eps > params.tau) {
         eps = params.tau - flow_time + REAL_T_EPSILON;
       }
+    }
+
+    if (KLFT_VERBOSITY > 2) {
+      Kokkos::printf("DEBUG: flow_adaptive finished. Total time=%f\n",
+                     flow_time);
     }
   }
 
