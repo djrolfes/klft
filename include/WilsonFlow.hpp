@@ -227,9 +227,12 @@ struct WilsonFlow {
     }
 
     // Allocate temporary Views for the Lie Algebra stages
+    // We allocate Z locally to ensure dimensions match exactly, avoiding issues
+    // with tmp_Z
     SUNAdjField<rank, Nc> K1("K1", L0, L1, L2, L3);
     SUNAdjField<rank, Nc> K2("K2", L0, L1, L2, L3);
     SUNAdjField<rank, Nc> K3("K3", L0, L1, L2, L3);
+    SUNAdjField<rank, Nc> Z_local("Z_local", L0, L1, L2, L3);
 
     auto aparams = params.adaptiveParams;
 
@@ -245,17 +248,17 @@ struct WilsonFlow {
 
       // 0. Backup current field (V0)
       Kokkos::deep_copy(field_bak.field, field.field);
-      Kokkos::fence();  // Ensure backup is done
+      Kokkos::fence();
 
       // --- Stage 1 ---
       // Y1 = 0, so V = V0.
       stapleField<DGaugeFieldType>(this->field, this->tmp_staple);
       Kokkos::fence();
 
-      auto Z = this->tmp_Z;
-      // Z and K1 passed by value (copying the handle)
-      calc_Z_LieAlgebra(this->field, this->tmp_staple, Z);
-      Kokkos::deep_copy(K1, Z);
+      // Compute Z(V0) into Z_local
+      calc_Z_LieAlgebra(this->field, this->tmp_staple, Z_local);
+      // Initialize K1 = Z
+      Kokkos::deep_copy(K1, Z_local);
       Kokkos::fence();
 
       if (KLFT_VERBOSITY > 2)
@@ -263,16 +266,15 @@ struct WilsonFlow {
 
       // --- Stage 2 ---
       // Y2 = h * (1/2) * K1
-      // V2 = exp(Y2) * V0
       update_field_RKMK(field_bak, field, K1, 0.5 * eps);
       Kokkos::fence();
 
       stapleField<DGaugeFieldType>(this->field, this->tmp_staple);
       Kokkos::fence();
 
-      calc_Z_LieAlgebra(this->field, this->tmp_staple, Z);
+      calc_Z_LieAlgebra(this->field, this->tmp_staple, Z_local);
       // K2 = Z - 0.5 * [Y2, Z]
-      compute_stage_K(K2, Z, K1, 0.5 * eps);
+      compute_stage_K(K2, Z_local, K1, 0.5 * eps);
       Kokkos::fence();
 
       if (KLFT_VERBOSITY > 2)
@@ -280,16 +282,15 @@ struct WilsonFlow {
 
       // --- Stage 3 ---
       // Y3 = h * (3/4) * K2
-      // V3 = exp(Y3) * V0
       update_field_RKMK(field_bak, field, K2, 0.75 * eps);
       Kokkos::fence();
 
       stapleField<DGaugeFieldType>(this->field, this->tmp_staple);
       Kokkos::fence();
 
-      calc_Z_LieAlgebra(this->field, this->tmp_staple, Z);
+      calc_Z_LieAlgebra(this->field, this->tmp_staple, Z_local);
       // K3 = Z - 0.5 * [Y3, Z]
-      compute_stage_K(K3, Z, K2, 0.75 * eps);
+      compute_stage_K(K3, Z_local, K2, 0.75 * eps);
       Kokkos::fence();
 
       if (KLFT_VERBOSITY > 2)
@@ -304,7 +305,7 @@ struct WilsonFlow {
       Kokkos::fence();
 
       // Calculate Z(V1) for error estimate
-      calc_Z_LieAlgebra(this->field, this->tmp_staple, Z);
+      calc_Z_LieAlgebra(this->field, this->tmp_staple, Z_local);
       Kokkos::fence();
 
       if (KLFT_VERBOSITY > 2)
@@ -315,17 +316,18 @@ struct WilsonFlow {
       real_t err = 0.0;
       real_t total_volume = L0 * L1 * L2 * L3 * 4.0;
 
+      // Note: We use Z_local in the capture now
+      auto policy = Policy<rank>({0, 0, 0, 0}, this->field.dimensions);
       Kokkos::parallel_reduce(
-          "WilsonFlow_Error_Calc",
-          Kokkos::MDRangePolicy<Kokkos::Rank<rank>>({0, 0, 0, 0},
-                                                    {L0, L1, L2, L3}),
-          KOKKOS_LAMBDA(const index_t i0, const index_t i1, const index_t i2,
-                        const index_t i3, real_t& local_err) {
+          "WilsonFlow_Error_Calc", policy,
+          KOKKOS_LAMBDA(size_t i0, size_t i1, size_t i2, size_t i3,
+                        real_t& local_err) {
+            real_t lerr = 0.0;
             for (index_t mu = 0; mu < 4; ++mu) {
               SUNAdj<Nc> k1_loc = K1(i0, i1, i2, i3, mu);
               SUNAdj<Nc> k2_loc = K2(i0, i1, i2, i3, mu);
               SUNAdj<Nc> k3_loc = K3(i0, i1, i2, i3, mu);
-              SUNAdj<Nc> z_loc = Z(i0, i1, i2, i3, mu);
+              SUNAdj<Nc> z_loc = Z_local(i0, i1, i2, i3, mu);
 
               SUNAdj<Nc> omega_3 =
                   (k1_loc * (2.0 / 9.0) + k2_loc * (1.0 / 3.0) +
@@ -339,8 +341,9 @@ struct WilsonFlow {
               real_t omega_norm = Kokkos::sqrt(norm2<Nc>(omega_3));
 
               real_t scale = aparams.abs_tol + aparams.rel_tol * omega_norm;
-              local_err += Kokkos::pow(diff_norm / scale, 2);
+              lerr += Kokkos::pow(diff_norm / scale, 2);
             }
+            local_err += lerr;
           },
           err);
       Kokkos::fence();
