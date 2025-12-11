@@ -315,6 +315,7 @@ struct WilsonFlow {
       // --- Error Estimate ---
       real_t err = 0.0;
       real_t total_volume = L0 * L1 * L2 * L3 * 4.0;
+      real_t eps_local = eps;
 
       // Note: We use Z_local in the capture now
       auto policy = Policy<rank>({0, 0, 0, 0}, this->field.dimensions);
@@ -332,10 +333,10 @@ struct WilsonFlow {
               SUNAdj<Nc> omega_3 =
                   (k1_loc * (2.0 / 9.0) + k2_loc * (1.0 / 3.0) +
                    k3_loc * (4.0 / 9.0)) *
-                  eps;
+                  eps_local;
               SUNAdj<Nc> diff = (k1_loc * (5.0 / 72.0) - k2_loc * (1.0 / 12.0) -
                                  k3_loc * (1.0 / 9.0) + z_loc * (1.0 / 8.0)) *
-                                eps;
+                                eps_local;
 
               real_t diff_norm = Kokkos::sqrt(norm2<Nc>(diff));
               real_t omega_norm = Kokkos::sqrt(norm2<Nc>(omega_3));
