@@ -178,6 +178,7 @@ int verify_adaptive_wilsonflow(const std::string& input_file,
 
   // Set precision for floating point numbers in the output file
   output_file_RK3 << std::fixed << std::setprecision(8);
+  output_file_adaptive << std::fixed << std::setprecision(8);
   bool header_written = false;
 
   Kokkos::Timer timer;
@@ -185,19 +186,11 @@ int verify_adaptive_wilsonflow(const std::string& input_file,
   real_t acc_sum{0.0};
   real_t acc_rate{0.0};
 
-  std::vector<real_t> topological_charges_RK3;
-  std::vector<real_t> topological_charges_adaptive;
-
   WilsonFlow<DGaugeFieldType> wflowRK3(hamiltonian_field.gauge_field,
                                        gaugeObsParamsRK3.wilson_flow_params);
   WilsonFlow<DGaugeFieldType> wflowAdaptive(
       hamiltonian_field.gauge_field, gaugeObsParamsAdaptive.wilson_flow_params);
-  topological_charges_RK3.push_back(
-      get_topological_charge<DGaugeFieldType>(hamiltonian_field.gauge_field));
-  topological_charges_adaptive.push_back(
-      getActionDensity<DGaugeFieldType>(hamiltonian_field.gauge_field));
 
-  // output_file_adaptive
   // Write the header only once, before the first line of data
   if (!header_written) {
     output_file_adaptive << "hmc_step, topological_charge";
@@ -210,8 +203,6 @@ int verify_adaptive_wilsonflow(const std::string& input_file,
   // hmc loop
   for (size_t step = 0; step < integratorParams.nsteps; ++step) {
     timer.reset();
-    topological_charges_RK3.clear();
-    topological_charges_adaptive.clear();
 
     // perform hmc_step
     accept = hmc.hmc_step();
