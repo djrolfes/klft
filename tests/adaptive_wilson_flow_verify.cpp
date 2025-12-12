@@ -114,6 +114,7 @@ int verify_adaptive_wilsonflow(const std::string& input_file,
   }
   GaugeObservableParams gaugeObsParamsRK3 = gaugeObsParamsAdaptive;
   gaugeObsParamsRK3.wilson_flow_params.style = WilsonFlowStyle::RK3;
+  gaugeObsParamsRK3.wilson_flow_params.eps = 0.01;
 
   simLogParams.log_filename = (simLogParams.log_filename);
 
